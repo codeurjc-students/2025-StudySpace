@@ -4,6 +4,8 @@
 
 ## 📜 Introducción
 
+
+
 ---
 
 ## 📌 Fase 1
@@ -20,7 +22,9 @@ Prototipos de las pantallas finales de la aplicación web y una breve descripcio
   ![Foto pantalla selcionarCampus](images/screens/SelectCampus.png)
 * * **Pantalla seleccionar dia y hora para la reserva**
   ![Foto pantalla hourAndDay](images/screens/selectDayAndHourAvatar.png)
-* * **Pantalla seleccionar aula dentro de ese campus y esa fecha**
+* **Pantalla seleccionar aula dentro de ese campus y esa fecha**
+
+Aquí seran capaces de comprobar la información y detalles del aula proporcionados para los diferentes tipos de usuarios.
   ![Foto pantalla selectRoom](images/screens/selectRoom.png)
 * * **Pantalla seleccionar opciones del administrador**
   ![Foto pantalla startScreenAdmin](images/screens/startScreenAdmin.png)
@@ -31,11 +35,15 @@ Prototipos de las pantallas finales de la aplicación web y una breve descripcio
 * **Pantalla selecionar el aula a editar o borrarla**
   ![Foto pantalla editOrDeleteRoom](images/screens/editOrDeleteRoom.png)
 * **Pantalla editar aulas existentes**
+
+Con un campo especial para activar o desactivar la disponibilidad del aula si la situación (obras, reformas, ...) lo requiere.
   ![Foto pantalla editRoom](images/screens/editRoomScreen.png)
 * **Pantalla seleccionar usuario para el administrador**
   ![Foto pantalla selectUserAdmin](images/screens/selectUserAdmin.png)
 * **Pantalla administrar al usuario correspondiente como administrador**
   ![Foto pantalla editUserAdmin](images/screens/editUserAdmin.png)
+* **Pantalla para editar el perfil de usuario**
+    ![Foto pantalla editUserAdmin](images/screens/editProfile.png)
 
 
 
@@ -43,6 +51,16 @@ Prototipos de las pantallas finales de la aplicación web y una breve descripcio
 
 
 ### Funcionalidades diferentes tipos de usuarios
+
+| Funcionalidades                                             | Usuario Anónimo | Usuario Registrado | Usuario Administrador |
+|-------------------------------------------------------------|:---------------:|:------------------:|:---------------------:|
+| Visualizar los detalles del aula (software, ubicación, ...) |        ✅        |         ✅          |           ✅           |
+| Visualizar la disponibilidad de las aulas                   |        ✅        |         ✅          |           ✅           |
+| Crear/Cancelar tu propia reserva                            |                 |         ✅          |           ✅           |
+| Cancelar las reservas de otros usuarios                     |                 |                    |           ✅           |
+| Modificar/Borrar información del perfil                     |                 |         ✅          |           ✅           |
+| Borrar otros usuarios o reservas de sus perfiles            |                 |                    |           ✅           |
+| Añadir/Modificar/Borrar aulas                               |                 |                    |           ✅           |
 
 
 ### Diagrama de Entidades
