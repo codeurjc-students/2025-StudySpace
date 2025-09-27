@@ -19,7 +19,7 @@ Prototipos de las pantallas finales de la aplicación web y una breve descripcio
 * **Pantalla de inciar sesion**
   ![Foto pantalla iniciar sesion](images/screens/logIn.png)
 * **Pantalla seleccionar campus**
-  ![Foto pantalla selcionarCampus](images/screens/SelectCampus.png)
+  ![Foto pantalla selcionarCampus](images/screens/selectCampus.png)
 * * **Pantalla seleccionar dia y hora para la reserva**
   ![Foto pantalla hourAndDay](images/screens/selectDayAndHourAvatar.png)
 * **Pantalla seleccionar aula dentro de ese campus y esa fecha**
@@ -43,11 +43,22 @@ Con un campo especial para activar o desactivar la disponibilidad del aula si la
 * **Pantalla administrar al usuario correspondiente como administrador**
   ![Foto pantalla editUserAdmin](images/screens/editUserAdmin.png)
 * **Pantalla para editar el perfil de usuario**
-    ![Foto pantalla editUserAdmin](images/screens/editProfile.png)
+  ![Foto pantalla editProfile](images/screens/editProfile.png)
+* **Pantalla de exito al reservar un aula correctamente**
+  ![Foto pantalla successfullReservation](images/screens/successfullReservation.png)
+* **Pantalla para recordar registrarse al usuario anónimo**
+  ![Foto pantalla notRegistredTryToBook](images/screens/notRegistredTryToBook.png)
 
 
 
-### Diagrama de Navegación
+### Diagramas de Navegación
+Diagrama de navegación para reservar un aula y ver su disponibilidad.
+
+![Foto pantalla diagramaNavegacion(NoAdmin)](images/diagrams/diagramaNavegacion(NoAdmin).png)
+
+Diagrama de navegación de la acciones posibles siendo un administrador.
+
+![Foto pantalla notRegistredTryToBook](images/diagrams/diagramaNavegacion(Admin).png)
 
 
 ### Funcionalidades diferentes tipos de usuarios
