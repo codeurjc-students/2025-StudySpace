@@ -1,8 +1,9 @@
 package com.urjcservice.Backend.Entities;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
-public class Book {
+public class Reservation {
 
     private Long id; //Primary key
     private Date startDate;
@@ -11,9 +12,9 @@ public class Book {
     private Room room;  //one room can have many bookings
     private String reason;
 
-    public Book() {
+    public Reservation() {
     }
-    public Book(Long id, Date startDate, Date endDate, User user, Room room, String reason) {
+    public Reservation(Long id, Date startDate, Date endDate, User user, Room room, String reason) {
         this.id = id;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -59,5 +60,36 @@ public class Book {
     }
 
 
+
+    public Long getRoomId() {
+        return id;
+    }
+
+    public void setRoomId(Long roomId) {
+        this.id = roomId;
+    }
+
+    public Long getUserId() {
+        return user.getId();
+    }
+
+    public void setUserId(Long userId) {
+        this.user.setId(userId);
+    }
+    public Date getStartTime() {
+        return startDate;
+    }
+
+    public void setStartTime(Date startTime) {
+        this.startDate = startTime;
+    }
+
+    public Date getEndTime() {
+        return endDate;
+    }
+
+    public void setEndTime(Date endTime) {
+        this.endDate = endTime;
+    }
 
 }
