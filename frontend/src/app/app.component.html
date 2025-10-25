@@ -4,9 +4,9 @@
       </div>
       <div class="navbar-right">
         <!-- Usar href aquí sólo proporciona navegación normal; routerLink no funciona en index.html -->
-        <a href="/login" class="nav-link" (click)="goToPage()">Log In</a>
+        <button routerLink="/login" class="nav-link">Log In</button>
         <a href="/auth/register" class="nav-link">Register</a>
-        <button class="continue-btn" (click)="goToPage()">Continue without logging in</button>
+        <button class="continue-btn">Continue without logging in</button>
       </div>
     </header>
 

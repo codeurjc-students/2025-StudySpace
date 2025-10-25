@@ -10,7 +10,9 @@ public class Room {
         QUINTANA
     }
 
+    
     private Long id;
+
     private String name; //primary key
     private Integer capacity;
     private CampusType Camp; 
@@ -35,12 +37,15 @@ public class Room {
     public Long getId() {
         return id;
     }
+
     public void setId(Long id) {
         this.id = id;
     }
+
     public String getName() {
         return name;
     }
+
     public void setName(String name) {
         this.name = name;
     }

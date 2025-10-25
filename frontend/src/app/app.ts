@@ -8,5 +8,8 @@ import { RouterOutlet } from '@angular/router';
   styleUrl: './app.scss'
 })
 export class App {
+goToPage() {
+throw new Error('Method not implemented.');
+}
   protected readonly title = signal('frontend');
 }
