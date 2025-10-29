@@ -1,6 +1,9 @@
 package com.urjcservice.Backend.Entities;
 
 import java.sql.Blob;
+import java.util.ArrayList;
+import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class User {
 
@@ -16,6 +19,7 @@ public class User {
     private String name;
     private UserType type; //admin, user not-registered and registered
     private Blob picture;
+    private List<Reservation> reservations = new ArrayList<>();
 
     public User() {
     }
@@ -63,5 +67,29 @@ public class User {
     }
     public void setPicture(Blob picture) {
         this.picture = picture;
+    }
+
+    @JsonIgnore
+    public List<Reservation> getReservations() {
+        return reservations;
+    }
+
+    public void setReservations(List<Reservation> reservations) {
+        this.reservations = reservations;
+    }
+
+    public void addReservation(Reservation reservation) {
+        if (reservation != null && !this.reservations.contains(reservation)) {
+            this.reservations.add(reservation);
+            reservation.setUser(this);
+        }
+    }
+
+    public void removeReservation(Reservation reservation) {
+        if (reservation != null && this.reservations.remove(reservation)) {
+            if (reservation.getUser() == this) {
+                reservation.setUser(null);
+            }
+        }
     }
 }
