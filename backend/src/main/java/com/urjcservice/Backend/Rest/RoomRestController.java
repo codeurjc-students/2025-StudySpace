@@ -55,12 +55,9 @@ public class RoomRestController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteRoom(@PathVariable Long id) {
-        boolean deleted = roomService.deleteById(id);
-        if (deleted) {
-            return ResponseEntity.noContent().build(); // Devuelve 204 No Content si se elimina correctamente
-        } else {
-            return ResponseEntity.notFound().build(); // Devuelve 404 Not Found si no se encuentra la Room
-        }
+    public ResponseEntity<Room> deleteRoom(@PathVariable Long id) {
+        Optional<Room> deleted = roomService.deleteById(id);
+        return deleted.map(ResponseEntity::ok)
+                      .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

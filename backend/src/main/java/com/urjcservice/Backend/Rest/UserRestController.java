@@ -55,12 +55,9 @@ public class UserRestController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        boolean deleted = userService.deleteById(id);
-        if (deleted) {
-            return ResponseEntity.noContent().build(); // Devuelve 204 No Content si se elimina correctamente
-        } else {
-            return ResponseEntity.notFound().build(); // Devuelve 404 Not Found si no se encuentra
-        }
+    public ResponseEntity<User> deleteUser(@PathVariable Long id) {
+        Optional<User> deleted = userService.deleteById(id);
+        return deleted.map(ResponseEntity::ok)
+                      .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

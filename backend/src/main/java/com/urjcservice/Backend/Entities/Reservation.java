@@ -62,34 +62,21 @@ public class Reservation {
 
 
     public Long getRoomId() {
-        return id;
+        return room != null ? room.getId() : null;
     }
 
     public void setRoomId(Long roomId) {
-        this.id = roomId;
+        if (this.room == null) this.room = new Room();
+        this.room.setId(roomId);
     }
 
     public Long getUserId() {
-        return user.getId();
+        return user != null ? user.getId() : null;
     }
 
     public void setUserId(Long userId) {
+        if (this.user == null) this.user = new User();
         this.user.setId(userId);
-    }
-    public Date getStartTime() {
-        return startDate;
-    }
-
-    public void setStartTime(Date startTime) {
-        this.startDate = startTime;
-    }
-
-    public Date getEndTime() {
-        return endDate;
-    }
-
-    public void setEndTime(Date endTime) {
-        this.endDate = endTime;
     }
 
 }

@@ -30,16 +30,19 @@ public class ReservationService {
         return reservations.stream().filter(reservation -> reservation.getId().equals(id)).findFirst(); // Busca por ID
     }
 
-    public boolean deleteById(Long id) {
-        return reservations.removeIf(reservation -> reservation.getId().equals(id)); // Elimina por ID
+    public Optional<Reservation> deleteById(Long id) {
+        Optional<Reservation> existing = findById(id);
+        existing.ifPresent(reservations::remove);
+        return existing; // Elimina por ID y devuelve la entidad eliminada si existía
     }
 
     public Optional<Reservation> updateReservation(Long id, Reservation updatedReservation) {
         return findById(id).map(existingReservation -> {
             existingReservation.setRoomId(updatedReservation.getRoomId());
             existingReservation.setUserId(updatedReservation.getUserId());
-            existingReservation.setStartTime(updatedReservation.getStartTime());
-            existingReservation.setEndTime(updatedReservation.getEndTime());
+            existingReservation.setStartDate(updatedReservation.getStartDate());
+            existingReservation.setEndDate(updatedReservation.getEndDate());
+            existingReservation.setReason(updatedReservation.getReason());
             return existingReservation;
         });
     }
@@ -52,11 +55,14 @@ public class ReservationService {
             if (partialReservation.getUserId() != null) {
                 existingReservation.setUserId(partialReservation.getUserId());
             }
-            if (partialReservation.getStartTime() != null) {
-                existingReservation.setStartTime(partialReservation.getStartTime());
+            if (partialReservation.getStartDate() != null) {
+                existingReservation.setStartDate(partialReservation.getStartDate());
             }
-            if (partialReservation.getEndTime() != null) {
-                existingReservation.setEndTime(partialReservation.getEndTime());
+            if (partialReservation.getEndDate() != null) {
+                existingReservation.setEndDate(partialReservation.getEndDate());
+            }
+            if (partialReservation.getReason() != null) {
+                existingReservation.setReason(partialReservation.getReason());
             }
             return existingReservation;
         });

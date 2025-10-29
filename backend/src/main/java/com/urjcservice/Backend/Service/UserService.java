@@ -30,8 +30,10 @@ public class UserService {
         return users.stream().filter(user -> user.getId().equals(id)).findFirst(); // Busca por ID
     }
 
-    public boolean deleteById(Long id) {
-        return users.removeIf(user -> user.getId().equals(id)); // Elimina por ID
+    public Optional<User> deleteById(Long id) {
+        Optional<User> existing = findById(id);
+        existing.ifPresent(users::remove);
+        return existing; // Elimina por ID y devuelve la entidad eliminada si existía
     }
 
     public Optional<User> updateUser(Long id, User updatedUser) {

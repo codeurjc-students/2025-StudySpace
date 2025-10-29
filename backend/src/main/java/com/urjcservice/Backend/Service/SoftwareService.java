@@ -30,8 +30,10 @@ public class SoftwareService {
         return softwareList.stream().filter(software -> software.getId().equals(id)).findFirst(); // Busca por ID
     }
 
-    public boolean deleteById(Long id) {
-        return softwareList.removeIf(software -> software.getId().equals(id)); // Elimina por ID
+    public Optional<Software> deleteById(Long id) {
+        Optional<Software> existing = findById(id);
+        existing.ifPresent(softwareList::remove);
+        return existing; // Elimina por ID y devuelve la entidad eliminada si existía
     }
 
     public Optional<Software> updateSoftware(Long id, Software updatedSoftware) {

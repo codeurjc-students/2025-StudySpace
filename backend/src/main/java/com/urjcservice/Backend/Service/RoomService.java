@@ -30,8 +30,10 @@ public class RoomService {
         return rooms.stream().filter(room -> room.getId().equals(id)).findFirst(); // Busca la Room por ID
     }
 
-    public boolean deleteById(Long id) {
-        return rooms.removeIf(room -> room.getId().equals(id)); // Elimina la Room por ID
+    public Optional<Room> deleteById(Long id) {
+        Optional<Room> existing = findById(id);
+        existing.ifPresent(rooms::remove);
+        return existing; // Elimina la Room por ID y devuelve la entidad eliminada si existía
     }
 
     public Optional<Room> updateRoom(Long id, Room updatedRoom) {

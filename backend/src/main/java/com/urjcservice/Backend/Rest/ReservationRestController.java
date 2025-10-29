@@ -55,12 +55,9 @@ public class ReservationRestController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteReservation(@PathVariable Long id) {
-        boolean deleted = reservationService.deleteById(id);
-        if (deleted) {
-            return ResponseEntity.noContent().build(); // Devuelve 204 No Content si se elimina correctamente
-        } else {
-            return ResponseEntity.notFound().build(); // Devuelve 404 Not Found si no se encuentra
-        }
+    public ResponseEntity<Reservation> deleteReservation(@PathVariable Long id) {
+        Optional<Reservation> deleted = reservationService.deleteById(id);
+        return deleted.map(ResponseEntity::ok)
+                      .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
