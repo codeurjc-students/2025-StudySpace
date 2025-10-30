@@ -1,5 +1,9 @@
 package com.urjcservice.Backend.Entities;
 
+import java.util.ArrayList;
+import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class Room {
 
     public enum CampusType {
@@ -19,6 +23,7 @@ public class Room {
     private String place;
     private String coordenades;
     private Software[] equipment;
+    private List<Reservation> reservations = new ArrayList<>();
 
     
 
@@ -79,6 +84,29 @@ public class Room {
     }
     public void setEquipment(Software[] equipment) {
         this.equipment = equipment;
+    }
+    @JsonIgnore
+    public List<Reservation> getReservations() {
+        return reservations;
+    }
+
+    public void setReservations(List<Reservation> reservations) {
+        this.reservations = reservations;
+    }
+
+    public void addReservation(Reservation reservation) {
+        if (reservation != null && !this.reservations.contains(reservation)) {
+            this.reservations.add(reservation);
+            reservation.setRoom(this);
+        }
+    }
+
+    public void removeReservation(Reservation reservation) {
+        if (reservation != null && this.reservations.remove(reservation)) {
+            if (reservation.getRoom() == this) {
+                reservation.setRoom(null);
+            }
+        }
     }
     
 
