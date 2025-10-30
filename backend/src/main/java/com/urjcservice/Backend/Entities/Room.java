@@ -22,7 +22,7 @@ public class Room {
     private CampusType Camp; 
     private String place;
     private String coordenades;
-    private Software[] equipment;
+    private List<Software> software = new ArrayList<>();
     private List<Reservation> reservations = new ArrayList<>();
 
     
@@ -30,14 +30,14 @@ public class Room {
     public Room() {
     }
     public Room(Long id, String name, Integer capacity, CampusType camp, String place, String coordenades,
-            Software[] equipment) {
+            List<Software> software) {
         this.id = id;
         this.name = name;
         this.capacity = capacity;
         Camp = camp;
         this.place = place;
         this.coordenades = coordenades;
-        this.equipment = equipment;
+        this.software = software;
     }
     public Long getId() {
         return id;
@@ -79,11 +79,25 @@ public class Room {
     public void setCoordenades(String coordenades) {
         this.coordenades = coordenades;
     }
-    public Software[] getEquipment() {
-        return equipment;
+    public List<Software> getSoftware() {
+        return software;
     }
-    public void setEquipment(Software[] equipment) {
-        this.equipment = equipment;
+
+    public void setSoftware(List<Software> software) {
+        this.software = software;
+    }
+
+    public void addSoftware(Software s) {
+        if (s != null && !this.software.contains(s)) {
+            this.software.add(s);
+            s.addRoom(this);
+        }
+    }
+
+    public void removeSoftware(Software s) {
+        if (s != null && this.software.remove(s)) {
+            s.removeRoom(this);
+        }
     }
     @JsonIgnore
     public List<Reservation> getReservations() {

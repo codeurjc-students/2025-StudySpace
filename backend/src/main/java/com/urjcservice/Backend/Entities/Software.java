@@ -1,20 +1,27 @@
 package com.urjcservice.Backend.Entities;
 
+import java.util.ArrayList;
+import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class Software {
 
     private Long id;
     private String name; //Primary key
     private Float version;
     private String description;
+    private List<Room> rooms = new ArrayList<>();
 
     public Software() {
     }
+
     public Software(Long id, String name, Float version, String description) {
         this.id = id;
         this.name = name;
         this.version = version;
         this.description = description;
     }
+
     public Long getId() {
         return id;
     }
@@ -30,19 +37,43 @@ public class Software {
     public void setName(String name) {
         this.name = name;
     }
+
     public Float getVersion() {
         return version;
     }
+
     public void setVersion(Float version) {
         this.version = version;
     }
+
     public String getDescription() {
         return description;
     }
+
     public void setDescription(String description) {
         this.description = description;
     }
 
+    @JsonIgnore
+    public List<Room> getRooms() {
+        return rooms;
+    }
 
+    public void setRooms(List<Room> rooms) {
+        this.rooms = rooms;
+    }
+
+    public void addRoom(Room room) {
+        if (room != null && !this.rooms.contains(room)) {
+            this.rooms.add(room);
+            room.addSoftware(this);
+        }
+    }
+
+    public void removeRoom(Room room) {
+        if (room != null && this.rooms.remove(room)) {
+            room.removeSoftware(this);
+        }
+    }
 
 }

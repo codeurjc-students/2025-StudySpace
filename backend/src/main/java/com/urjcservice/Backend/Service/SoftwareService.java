@@ -1,6 +1,7 @@
 package com.urjcservice.Backend.Service;
 
 import com.urjcservice.Backend.Entities.Software;
+import com.urjcservice.Backend.Entities.Room;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -32,7 +33,16 @@ public class SoftwareService {
 
     public Optional<Software> deleteById(Long id) {
         Optional<Software> existing = findById(id);
-        existing.ifPresent(softwareList::remove);
+        existing.ifPresent(s -> {
+            // remove associations from rooms
+            if (s.getRooms() != null) {
+                List<Room> copy = new ArrayList<>(s.getRooms());
+                for (Room r : copy) {
+                    r.removeSoftware(s);
+                }
+            }
+            softwareList.remove(s);
+        });
         return existing; // Elimina por ID y devuelve la entidad eliminada si existía
     }
 
