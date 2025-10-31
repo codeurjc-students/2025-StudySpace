@@ -1,9 +1,12 @@
 package com.urjcservice.Backend.Entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
+@Entity
+@Table(name = "rooms")
 public class Room {
 
     public enum CampusType {
@@ -15,6 +18,8 @@ public class Room {
     }
 
     
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name; //primary key
@@ -22,7 +27,16 @@ public class Room {
     private CampusType Camp; 
     private String place;
     private String coordenades;
+    @ManyToMany
+    @JoinTable(
+        name = "room_software",
+        joinColumns = @JoinColumn(name = "room_id"),
+        inverseJoinColumns = @JoinColumn(name = "software_id")
+    )
     private List<Software> software = new ArrayList<>();
+
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Reservation> reservations = new ArrayList<>();
 
     
@@ -90,13 +104,17 @@ public class Room {
     public void addSoftware(Software s) {
         if (s != null && !this.software.contains(s)) {
             this.software.add(s);
-            s.addRoom(this);
+            if (s.getRooms() == null || !s.getRooms().contains(this)) {
+                s.getRooms().add(this);
+            }
         }
     }
 
     public void removeSoftware(Software s) {
         if (s != null && this.software.remove(s)) {
-            s.removeRoom(this);
+            if (s.getRooms() != null) {
+                s.getRooms().remove(this);
+            }
         }
     }
     @JsonIgnore

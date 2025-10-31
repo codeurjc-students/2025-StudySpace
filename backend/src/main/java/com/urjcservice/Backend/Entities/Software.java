@@ -1,15 +1,23 @@
 package com.urjcservice.Backend.Entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
+@Entity
+@Table(name = "softwares")
 public class Software {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name; //Primary key
     private Float version;
     private String description;
+
+    @ManyToMany(mappedBy = "software")
+    @JsonIgnore
     private List<Room> rooms = new ArrayList<>();
 
     public Software() {
@@ -66,13 +74,17 @@ public class Software {
     public void addRoom(Room room) {
         if (room != null && !this.rooms.contains(room)) {
             this.rooms.add(room);
-            room.addSoftware(this);
+            if (room.getSoftware() == null || !room.getSoftware().contains(this)) {
+                room.getSoftware().add(this);
+            }
         }
     }
 
     public void removeRoom(Room room) {
         if (room != null && this.rooms.remove(room)) {
-            room.removeSoftware(this);
+            if (room.getSoftware() != null) {
+                room.getSoftware().remove(this);
+            }
         }
     }
 

@@ -27,8 +27,8 @@ public class RoomRestController {
     @GetMapping("/{id}")
     public ResponseEntity<Room> getRoomById(@PathVariable Long id) {
         Optional<Room> room = roomService.findById(id);
-        return room.map(ResponseEntity::ok) // Devuelve 200 OK si se encuentra la Room
-                   .orElseGet(() -> ResponseEntity.notFound().build()); // Devuelve 404 Not Found si no se encuentra
+    return room.map(ResponseEntity::ok) // Returns 200 OK if the Room is found
+           .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
     }
 
     @PostMapping("/")
@@ -42,16 +42,16 @@ public class RoomRestController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Room> updateRoom(@PathVariable Long id, @RequestBody Room updatedRoom) {
-        Optional<Room> room = roomService.updateRoom(id, updatedRoom);
-        return room.map(ResponseEntity::ok) // Devuelve 200 OK si se actualiza correctamente
-                   .orElseGet(() -> ResponseEntity.notFound().build()); // Devuelve 404 Not Found si no se encuentra
+    Optional<Room> room = roomService.updateRoom(id, updatedRoom);
+    return room.map(ResponseEntity::ok) // Returns 200 OK if updated successfully
+           .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<Room> patchRoom(@PathVariable Long id, @RequestBody Room partialRoom) {
-        Optional<Room> room = roomService.patchRoom(id, partialRoom);
-        return room.map(ResponseEntity::ok) // Devuelve 200 OK si se actualiza parcialmente
-                   .orElseGet(() -> ResponseEntity.notFound().build()); // Devuelve 404 Not Found si no se encuentra
+    Optional<Room> room = roomService.patchRoom(id, partialRoom);
+    return room.map(ResponseEntity::ok) // Returns 200 OK if partially updated
+           .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
     }
 
     @DeleteMapping("/{id}")

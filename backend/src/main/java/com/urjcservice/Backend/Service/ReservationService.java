@@ -3,174 +3,176 @@ package com.urjcservice.Backend.Service;
 import com.urjcservice.Backend.Entities.Reservation;
 import com.urjcservice.Backend.Entities.User;
 import com.urjcservice.Backend.Entities.Room;
+import com.urjcservice.Backend.Repositories.ReservationRepository;
+import com.urjcservice.Backend.Repositories.UserRepository;
+import com.urjcservice.Backend.Repositories.RoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class ReservationService {
 
-    private final List<Reservation> reservations = new ArrayList<>();
-    private final AtomicLong idCounter = new AtomicLong(1);
+    @Autowired
+    private ReservationRepository reservationRepository;
 
     @Autowired
-    private UserService userService;
+    private UserRepository userRepository;
 
     @Autowired
-    private RoomService roomService;
+    private RoomRepository roomRepository;
 
-    public List<Reservation> findAll() {
-        return new ArrayList<>(reservations); // Devuelve una copia para evitar modificaciones externas
+    public java.util.List<Reservation> findAll() {
+        return reservationRepository.findAll();
     }
 
     public Reservation save(Reservation reservation) {
-        if (reservation.getId() == null) {
-            reservation.setId(idCounter.getAndIncrement()); // Asigna un ID único
-        }
-
-        // Si la reserva tiene userId o user, enlazar con el usuario y añadir la reserva a su lista
+        // link user
         Long uid = reservation.getUserId();
         if (uid != null) {
-            Optional<User> userOpt = userService.findById(uid);
-            userOpt.ifPresent(user -> {
+            userRepository.findById(uid).ifPresent(user -> {
                 reservation.setUser(user);
-                user.addReservation(reservation);
             });
         } else if (reservation.getUser() != null && reservation.getUser().getId() != null) {
-            Optional<User> userOpt = userService.findById(reservation.getUser().getId());
-            userOpt.ifPresent(user -> {
-                reservation.setUser(user);
-                user.addReservation(reservation);
-            });
+            userRepository.findById(reservation.getUser().getId()).ifPresent(reservation::setUser);
         }
 
-        // Si la reserva tiene roomId o room, enlazar con la room y añadir la reserva a su lista
+        // link room
         Long rid = reservation.getRoomId();
         if (rid != null) {
-            Optional<Room> roomOpt = roomService.findById(rid);
-            roomOpt.ifPresent(room -> {
+            roomRepository.findById(rid).ifPresent(room -> {
                 reservation.setRoom(room);
-                room.addReservation(reservation);
             });
         } else if (reservation.getRoom() != null && reservation.getRoom().getId() != null) {
-            Optional<Room> roomOpt = roomService.findById(reservation.getRoom().getId());
-            roomOpt.ifPresent(room -> {
-                reservation.setRoom(room);
-                room.addReservation(reservation);
-            });
+            roomRepository.findById(reservation.getRoom().getId()).ifPresent(reservation::setRoom);
         }
 
-        reservations.add(reservation);
-        return reservation;
+        Reservation saved = reservationRepository.save(reservation);
+
+        // maintain bidirectional relations
+        if (saved.getUser() != null) {
+            User u = saved.getUser();
+            if (!u.getReservations().contains(saved)) {
+                u.getReservations().add(saved);
+                userRepository.save(u);
+            }
+        }
+        if (saved.getRoom() != null) {
+            Room r = saved.getRoom();
+            if (!r.getReservations().contains(saved)) {
+                r.getReservations().add(saved);
+                roomRepository.save(r);
+            }
+        }
+
+        return saved;
     }
 
     public Optional<Reservation> findById(Long id) {
-        return reservations.stream().filter(reservation -> reservation.getId().equals(id)).findFirst(); // Busca por ID
+        return reservationRepository.findById(id);
     }
 
     public Optional<Reservation> deleteById(Long id) {
-        Optional<Reservation> existing = findById(id);
+        Optional<Reservation> existing = reservationRepository.findById(id);
         existing.ifPresent(res -> {
-            // quitar de la lista global
-            reservations.remove(res);
-            // quitar de la lista del usuario si está asociado
             if (res.getUser() != null) {
-                res.getUser().removeReservation(res);
+                User u = res.getUser();
+                u.getReservations().remove(res);
+                userRepository.save(u);
             }
-            // quitar de la lista de la room si está asociada
             if (res.getRoom() != null) {
-                res.getRoom().removeReservation(res);
+                Room r = res.getRoom();
+                r.getReservations().remove(res);
+                roomRepository.save(r);
             }
+            reservationRepository.delete(res);
         });
-        return existing; // Elimina por ID y devuelve la entidad eliminada si existía
+        return existing;
     }
 
     public Optional<Reservation> updateReservation(Long id, Reservation updatedReservation) {
-        return findById(id).map(existingReservation -> {
-            // Manage user association changes
+        return reservationRepository.findById(id).map(existingReservation -> {
+            // user
             User previousUser = existingReservation.getUser();
-
-            Long newUserId = updatedReservation.getUserId();
             User newUser = null;
-            if (newUserId != null) {
-                newUser = userService.findById(newUserId).orElse(null);
-            } else if (updatedReservation.getUser() != null && updatedReservation.getUser().getId() != null) {
-                newUser = userService.findById(updatedReservation.getUser().getId()).orElse(null);
-            }
+            Long newUserId = updatedReservation.getUserId();
+            if (newUserId != null) newUser = userRepository.findById(newUserId).orElse(null);
+            else if (updatedReservation.getUser() != null && updatedReservation.getUser().getId() != null)
+                newUser = userRepository.findById(updatedReservation.getUser().getId()).orElse(null);
 
             if (previousUser != null && (newUser == null || !previousUser.getId().equals(newUser.getId()))) {
-                previousUser.removeReservation(existingReservation);
+                previousUser.getReservations().remove(existingReservation);
+                userRepository.save(previousUser);
             }
             if (newUser != null && (previousUser == null || !newUser.getId().equals(previousUser.getId()))) {
-                newUser.addReservation(existingReservation);
+                newUser.getReservations().add(existingReservation);
+                userRepository.save(newUser);
             }
 
-            // Manage room association changes
+            // room
             Room previousRoom = existingReservation.getRoom();
-
-            Long newRoomId = updatedReservation.getRoomId();
             Room newRoom = null;
-            if (newRoomId != null) {
-                newRoom = roomService.findById(newRoomId).orElse(null);
-            } else if (updatedReservation.getRoom() != null && updatedReservation.getRoom().getId() != null) {
-                newRoom = roomService.findById(updatedReservation.getRoom().getId()).orElse(null);
-            }
+            Long newRoomId = updatedReservation.getRoomId();
+            if (newRoomId != null) newRoom = roomRepository.findById(newRoomId).orElse(null);
+            else if (updatedReservation.getRoom() != null && updatedReservation.getRoom().getId() != null)
+                newRoom = roomRepository.findById(updatedReservation.getRoom().getId()).orElse(null);
 
             if (previousRoom != null && (newRoom == null || !previousRoom.getId().equals(newRoom.getId()))) {
-                previousRoom.removeReservation(existingReservation);
+                previousRoom.getReservations().remove(existingReservation);
+                roomRepository.save(previousRoom);
             }
             if (newRoom != null && (previousRoom == null || !newRoom.getId().equals(previousRoom.getId()))) {
-                newRoom.addReservation(existingReservation);
+                newRoom.getReservations().add(existingReservation);
+                roomRepository.save(newRoom);
             }
 
             existingReservation.setUser(newUser);
+            existingReservation.setRoom(newRoom);
             existingReservation.setStartDate(updatedReservation.getStartDate());
             existingReservation.setEndDate(updatedReservation.getEndDate());
             existingReservation.setReason(updatedReservation.getReason());
-            return existingReservation;
+
+            return reservationRepository.save(existingReservation);
         });
     }
 
     public Optional<Reservation> patchReservation(Long id, Reservation partialReservation) {
-        return findById(id).map(existingReservation -> {
+        return reservationRepository.findById(id).map(existingReservation -> {
             if (partialReservation.getRoomId() != null || partialReservation.getRoom() != null) {
                 Room previousRoom = existingReservation.getRoom();
-                Long newRoomId = partialReservation.getRoomId();
                 Room newRoom = null;
-                if (newRoomId != null) {
-                    newRoom = roomService.findById(newRoomId).orElse(null);
-                } else if (partialReservation.getRoom() != null && partialReservation.getRoom().getId() != null) {
-                    newRoom = roomService.findById(partialReservation.getRoom().getId()).orElse(null);
-                }
+                Long newRoomId = partialReservation.getRoomId();
+                if (newRoomId != null) newRoom = roomRepository.findById(newRoomId).orElse(null);
+                else if (partialReservation.getRoom() != null && partialReservation.getRoom().getId() != null)
+                    newRoom = roomRepository.findById(partialReservation.getRoom().getId()).orElse(null);
 
                 if (previousRoom != null && (newRoom == null || !previousRoom.getId().equals(newRoom.getId()))) {
-                    previousRoom.removeReservation(existingReservation);
+                    previousRoom.getReservations().remove(existingReservation);
+                    roomRepository.save(previousRoom);
                 }
                 if (newRoom != null && (previousRoom == null || !newRoom.getId().equals(previousRoom.getId()))) {
-                    newRoom.addReservation(existingReservation);
+                    newRoom.getReservations().add(existingReservation);
+                    roomRepository.save(newRoom);
                 }
                 existingReservation.setRoom(newRoom);
             }
 
             if (partialReservation.getUserId() != null || partialReservation.getUser() != null) {
                 User previousUser = existingReservation.getUser();
-                Long newUserId = partialReservation.getUserId();
                 User newUser = null;
-                if (newUserId != null) {
-                    newUser = userService.findById(newUserId).orElse(null);
-                } else if (partialReservation.getUser() != null && partialReservation.getUser().getId() != null) {
-                    newUser = userService.findById(partialReservation.getUser().getId()).orElse(null);
-                }
+                Long newUserId = partialReservation.getUserId();
+                if (newUserId != null) newUser = userRepository.findById(newUserId).orElse(null);
+                else if (partialReservation.getUser() != null && partialReservation.getUser().getId() != null)
+                    newUser = userRepository.findById(partialReservation.getUser().getId()).orElse(null);
 
                 if (previousUser != null && (newUser == null || !previousUser.getId().equals(newUser.getId()))) {
-                    previousUser.removeReservation(existingReservation);
+                    previousUser.getReservations().remove(existingReservation);
+                    userRepository.save(previousUser);
                 }
                 if (newUser != null && (previousUser == null || !newUser.getId().equals(previousUser.getId()))) {
-                    newUser.addReservation(existingReservation);
+                    newUser.getReservations().add(existingReservation);
+                    userRepository.save(newUser);
                 }
                 existingReservation.setUser(newUser);
             }
@@ -184,7 +186,7 @@ public class ReservationService {
             if (partialReservation.getReason() != null) {
                 existingReservation.setReason(partialReservation.getReason());
             }
-            return existingReservation;
+            return reservationRepository.save(existingReservation);
         });
     }
 }

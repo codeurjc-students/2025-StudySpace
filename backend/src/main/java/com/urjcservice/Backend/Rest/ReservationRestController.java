@@ -27,8 +27,8 @@ public class ReservationRestController {
     @GetMapping("/{id}")
     public ResponseEntity<Reservation> getReservationById(@PathVariable Long id) {
         Optional<Reservation> reservation = reservationService.findById(id);
-        return reservation.map(ResponseEntity::ok) // Devuelve 200 OK si se encuentra
-                          .orElseGet(() -> ResponseEntity.notFound().build()); // Devuelve 404 Not Found si no se encuentra
+    return reservation.map(ResponseEntity::ok) // Returns 200 OK if found
+              .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
     }
 
     @PostMapping("/")
@@ -42,16 +42,16 @@ public class ReservationRestController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Reservation> updateReservation(@PathVariable Long id, @RequestBody Reservation updatedReservation) {
-        Optional<Reservation> reservation = reservationService.updateReservation(id, updatedReservation);
-        return reservation.map(ResponseEntity::ok) // Devuelve 200 OK si se actualiza correctamente
-                          .orElseGet(() -> ResponseEntity.notFound().build()); // Devuelve 404 Not Found si no se encuentra
+    Optional<Reservation> reservation = reservationService.updateReservation(id, updatedReservation);
+    return reservation.map(ResponseEntity::ok) // Returns 200 OK if updated successfully
+              .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<Reservation> patchReservation(@PathVariable Long id, @RequestBody Reservation partialReservation) {
-        Optional<Reservation> reservation = reservationService.patchReservation(id, partialReservation);
-        return reservation.map(ResponseEntity::ok) // Devuelve 200 OK si se actualiza parcialmente
-                          .orElseGet(() -> ResponseEntity.notFound().build()); // Devuelve 404 Not Found si no se encuentra
+    Optional<Reservation> reservation = reservationService.patchReservation(id, partialReservation);
+    return reservation.map(ResponseEntity::ok) // Returns 200 OK if partially updated
+              .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
     }
 
     @DeleteMapping("/{id}")

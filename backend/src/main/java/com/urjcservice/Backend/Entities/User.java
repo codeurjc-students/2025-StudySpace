@@ -1,10 +1,13 @@
 package com.urjcservice.Backend.Entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.List;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
+@Entity
+@Table(name = "users")
 public class User {
 
     public enum UserType {
@@ -13,12 +16,16 @@ public class User {
         USER_REGISTERED
     }
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String email; //Primary key
     private String password;
     private String name;
     private UserType type; //admin, user not-registered and registered
     private Blob picture;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Reservation> reservations = new ArrayList<>();
 
     public User() {

@@ -1,58 +1,54 @@
 package com.urjcservice.Backend.Service;
 
 import com.urjcservice.Backend.Entities.User;
+import com.urjcservice.Backend.Repositories.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class UserService {
 
-    private final List<User> users = new ArrayList<>();
-    private final AtomicLong idCounter = new AtomicLong(1);
+    @Autowired
+    private UserRepository userRepository;
 
     public List<User> findAll() {
-        return new ArrayList<>(users); // Devuelve una copia para evitar modificaciones externas
+        return userRepository.findAll();
     }
 
     public User save(User user) {
-        if (user.getId() == null) {
-            user.setId(idCounter.getAndIncrement()); // Asigna un ID único
-        }
-        users.add(user);
-        return user;
+        return userRepository.save(user);
     }
 
     public Optional<User> findById(Long id) {
-        return users.stream().filter(user -> user.getId().equals(id)).findFirst(); // Busca por ID
+        return userRepository.findById(id);
     }
 
     public Optional<User> deleteById(Long id) {
-        Optional<User> existing = findById(id);
-        existing.ifPresent(users::remove);
-        return existing; // Elimina por ID y devuelve la entidad eliminada si existía
+        Optional<User> existing = userRepository.findById(id);
+        existing.ifPresent(userRepository::delete);
+        return existing;
     }
 
     public Optional<User> updateUser(Long id, User updatedUser) {
-        return findById(id).map(existingUser -> {
+        return userRepository.findById(id).map(existingUser -> {
             existingUser.setName(updatedUser.getName());
             existingUser.setEmail(updatedUser.getEmail());
-            return existingUser;
+            return userRepository.save(existingUser);
         });
     }
 
     public Optional<User> patchUser(Long id, User partialUser) {
-        return findById(id).map(existingUser -> {
+        return userRepository.findById(id).map(existingUser -> {
             if (partialUser.getName() != null) {
                 existingUser.setName(partialUser.getName());
             }
             if (partialUser.getEmail() != null) {
                 existingUser.setEmail(partialUser.getEmail());
             }
-            return existingUser;
+            return userRepository.save(existingUser);
         });
     }
 }

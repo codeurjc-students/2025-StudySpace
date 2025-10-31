@@ -27,8 +27,8 @@ public class UserRestController {
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
         Optional<User> user = userService.findById(id);
-        return user.map(ResponseEntity::ok) // Devuelve 200 OK si se encuentra
-                   .orElseGet(() -> ResponseEntity.notFound().build()); // Devuelve 404 Not Found si no se encuentra
+    return user.map(ResponseEntity::ok) // Returns 200 OK if found
+           .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
     }
 
     @PostMapping("/")
@@ -43,15 +43,15 @@ public class UserRestController {
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
         Optional<User> user = userService.updateUser(id, updatedUser);
-        return user.map(ResponseEntity::ok) // Devuelve 200 OK si se actualiza correctamente
-                   .orElseGet(() -> ResponseEntity.notFound().build()); // Devuelve 404 Not Found si no se encuentra
+    return user.map(ResponseEntity::ok) // Returns 200 OK if updated successfully
+           .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<User> patchUser(@PathVariable Long id, @RequestBody User partialUser) {
         Optional<User> user = userService.patchUser(id, partialUser);
-        return user.map(ResponseEntity::ok) // Devuelve 200 OK si se actualiza parcialmente
-                   .orElseGet(() -> ResponseEntity.notFound().build()); // Devuelve 404 Not Found si no se encuentra
+    return user.map(ResponseEntity::ok) // Returns 200 OK if partially updated
+           .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
     }
 
     @DeleteMapping("/{id}")
