@@ -6,8 +6,9 @@
         <router-outlet> 
         <!-- Usar href aquí sólo proporciona navegación normal; routerLink no funciona en index.html -->
         <button (click)="goToLogIn()">Log In</button>
-        <a href="/auth/register" class="nav-link">Register</a>
-        <button class="continue-btn">Continue without logging in</button>
+        <button (click)="goToLogIn()">Register</button>
+        <a href="/auth/register" class="nav-link">Back</a>
+        
         </router-outlet>
       </div>
     </header>
@@ -21,6 +22,6 @@
 
       <div class="hero-image">
         <!-- Ruta correcta: assets/... (asegúrate de que el fichero exista exactamente en frontend/src/assets/...) -->
-        <img src="assets/images/webImages/AulasSinOrdena.png" alt="Study Space classroom" />
+        <img src="assets/AulasSinOrdena.jpg" alt="Study Space classroom" style="width: 600px; height: auto;"/>
       </div>
     </main>
