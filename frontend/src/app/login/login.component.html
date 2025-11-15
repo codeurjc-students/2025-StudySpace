@@ -1,144 +1,34 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Login - Ejemplo</title>
-  <style>
-    :root{--bg:#f4f7fb;--card:#fff;--accent:#2563eb;--muted:#6b7280}
-    *{box-sizing:border-box}
-    body{font-family:Inter, system-ui, Arial, sans-serif;background:var(--bg);margin:0;min-height:100vh;display:grid;place-items:center;padding:24px}
-    .card{width:100%;max-width:420px;background:var(--card);border-radius:12px;box-shadow:0 6px 20px rgba(20,20,40,.08);padding:28px}
-    h1{margin:0 0 8px;font-size:20px}
-    p.lead{margin:0 0 18px;color:var(--muted);font-size:14px}
-    .field{margin-bottom:14px}
-    label{display:block;font-size:13px;color:#111827;margin-bottom:6px}
-    input[type="email"],input[type="password"]{width:100%;padding:10px 12px;border:1px solid #e6e9ef;border-radius:8px;font-size:15px}
-    .row{display:flex;gap:12px;align-items:center}
-    .actions{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
-    .btn{background:var(--accent);color:#fff;padding:10px 14px;border-radius:8px;border:0;font-weight:600;cursor:pointer}
-    .btn:disabled{opacity:.6;cursor:not-allowed}
-    .muted{color:var(--muted);font-size:13px}
-    .inline{display:inline-block}
-    .error{color:#b91c1c;font-size:13px;margin-top:6px}
-    .small{font-size:13px}
-    .helper{font-size:13px;color:var(--muted);margin-top:8px}
-    .toggle-pass{background:transparent;border:0;cursor:pointer;font-size:13px;color:var(--muted)}
-    @media (max-width:480px){.card{padding:20px}}
-  </style>
-</head>
-<body>
-  <main class="card" aria-labelledby="title">
-    <h1 id="title">Access your account</h1>
-    <p class="lead">Introduce your email and password to log in.</p>
-
-    <form id="loginForm" action="/login" method="POST" novalidate>
-      <div class="field">
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" inputmode="email" autocomplete="email" required placeholder="tucorreo@ejemplo.com">
-        <div id="emailError" class="error" aria-live="polite" hidden></div>
-      </div>
-
-      <div class="field">
-        <label for="password">Password</label>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input id="password" name="password" type="password" autocomplete="current-password" required minlength="8" placeholder="********">
-          <button type="button" id="togglePass" class="toggle-pass" aria-label="Mostrar contraseña">Mostrar</button>
+<div *ngIf="!loginService.isLogged()" class="d-flex align-items-center p-2">
+    <form (ngSubmit)="logIn(user.value, password.value)">
+        <div class="d-flex">
+            <input #user type="text" class="form-control me-3" name="username" placeholder="Username">
+            <input #password type="password" class="form-control me-3" name="password" placeholder="Password">
+            <button type="submit" class="btn btn-primary btn-nowrap w-50">
+                Log In
+            </button>
         </div>
-        <div id="passError" class="error" aria-live="polite" hidden></div>
-      </div>
-
-      <div class="actions">
-        <label class="small"><input type="checkbox" name="remember" value="1"> Remember me</label>
-        <a href="#" class="muted small">¿Forgot your password?</a>
-      </div>
-
-      <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
-        <button id="submitBtn" class="btn" type="submit">Login</button>
-        <div id="loading" class="muted" aria-hidden="true" style="display:none">Validating…</div>
-      </div>
-
-      <p class="helper">Don't you have an account? <a href="#">Register</a></p>
     </form>
+</div>
 
-    <div id="serverMessage" class="error" aria-live="polite" hidden></div>
-  </main>
+<ul *ngIf="loginService.isLogged()" class="navbar-nav d-flex align-items-center">
+    <li class="nav-item">
+        <span class="navbar-text fs-3 text-white mx-3">{{loginService.user.name}}</span>
+    </li>
+    <li class="nav-item">
+        <button (click)="logOut()" class="btn btn-primary btn-nowrap" type="submit">Log Out</button>
+    </li>
+</ul>
 
-  <script>
-    const form = document.getElementById('loginForm');
-    const email = document.getElementById('email');
-    const password = document.getElementById('password');
-    const emailError = document.getElementById('emailError');
-    const passError = document.getElementById('passError');
-    const serverMessage = document.getElementById('serverMessage');
-    const submitBtn = document.getElementById('submitBtn');
-    const loading = document.getElementById('loading');
-    const toggle = document.getElementById('togglePass');
-
-    toggle.addEventListener('click', ()=>{
-      if(password.type === 'password'){ password.type = 'text'; toggle.textContent = 'Ocultar'; toggle.setAttribute('aria-label','Ocultar contraseña'); }
-      else { password.type = 'password'; toggle.textContent = 'Mostrar'; toggle.setAttribute('aria-label','Mostrar contraseña'); }
-    });
-
-    function validateEmail(){
-      const val = email.value.trim();
-      if(!val){ emailError.hidden = false; emailError.textContent = 'El correo es obligatorio.'; return false; }
-      // simple regex de comprobación (mejor validación en servidor)
-      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if(!re.test(val)){ emailError.hidden = false; emailError.textContent = 'Introduce un correo válido.'; return false; }
-      emailError.hidden = true; emailError.textContent = '';
-      return true;
-    }
-
-    function validatePassword(){
-      const val = password.value;
-      if(!val){ passError.hidden = false; passError.textContent = 'La contraseña es obligatoria.'; return false; }
-      if(val.length < 8){ passError.hidden = false; passError.textContent = 'La contraseña debe tener al menos 8 caracteres.'; return false; }
-      passError.hidden = true; passError.textContent = '';
-      return true;
-    }
-
-    email.addEventListener('input', validateEmail);
-    password.addEventListener('input', validatePassword);
-
-    form.addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      serverMessage.hidden = true;
-
-      const okEmail = validateEmail();
-      const okPass = validatePassword();
-      if(!okEmail || !okPass) return;
-
-      submitBtn.disabled = true; loading.style.display = 'block';
-
-      // Ejemplo: envío con fetch. En producción, usa HTTPS y valida en servidor.
-      try{
-        const formData = new FormData(form);
-        const payload = Object.fromEntries(formData.entries());
-
-        // POST al endpoint de autenticación (ajusta la URL a la tuya)
-        const res = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-
-        if(!res.ok){
-          const text = await res.text();
-          serverMessage.hidden = false; serverMessage.textContent = text || 'Error en la autenticación.';
-        } else {
-          // Ejemplo: redirigir al usuario tras login correcto
-          const data = await res.json();
-          // si el servidor devuelve { redirect: "/dashboard" }
-          if(data.redirect) window.location.href = data.redirect;
-          else window.location.href = '/dashboard';
-        }
-      }catch(err){
-        serverMessage.hidden = false; serverMessage.textContent = 'No se pudo conectar con el servidor.';
-      } finally{
-        submitBtn.disabled = false; loading.style.display = 'none';
-      }
-    });
-  </script>
-</body>
-</html>
+<!-- Login Error Modal -->
+<ng-template #loginErrorModal let-modal>
+    <div class="modal-header bg-danger text-white">
+        <h4 class="modal-title">Login Error</h4>
+        <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="modal-body">
+        <p>Incorrect username or password. Please try again.</p>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="modal.close()">Close</button>
+    </div>
+</ng-template>

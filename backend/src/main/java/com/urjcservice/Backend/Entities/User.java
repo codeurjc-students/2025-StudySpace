@@ -20,9 +20,14 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String email; //Primary key
-    private String password;
+    private String encodedPassword;
     private String name;
     private UserType type; //admin, user not-registered and registered
+
+    
+    @ElementCollection(fetch = FetchType.EAGER)//for later autentication
+    private List<String> roles;
+
     private Blob picture;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
@@ -34,7 +39,7 @@ public class User {
     public User(Long id, String email, String password, String name, UserType type) {
         this.id = id;
         this.email = email;
-        this.password = password;
+        this.encodedPassword = password;
         this.name = name;
         this.type = type;
     }
@@ -51,11 +56,11 @@ public class User {
     public void setEmail(String email) {
         this.email = email;
     }
-    public String getPassword() {
-        return password;
+    public String getEncodedPassword() {
+        return encodedPassword;
     }
-    public void setPassword(String password) {
-        this.password = password;
+    public void setEncodedPassword(String password) {
+        this.encodedPassword = password;
     }
     public String getName() {
         return name;
@@ -98,5 +103,11 @@ public class User {
                 reservation.setUser(null);
             }
         }
+    }
+    public List<String> getRoles() {
+        return roles;
+    }
+    public void setRoles(List<String> roles) {
+        this.roles = roles;
     }
 }
