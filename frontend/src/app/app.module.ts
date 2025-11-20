@@ -12,6 +12,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LoginComponent } from './login/login.component';
 import { HomeComponent } from './home/home.component';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 @NgModule({
   declarations: [
@@ -27,7 +28,8 @@ import { HomeComponent } from './home/home.component';
     HttpClientModule,
 
     // 4. Add FormsModule to imports array
-    FormsModule
+    FormsModule,
+      NgbModule
   ],
   providers: [],
   bootstrap: [AppComponent]

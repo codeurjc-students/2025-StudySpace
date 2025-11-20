@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { LoginService } from './login/login.service';
 
 @Component({
   selector: 'app-root',
@@ -8,12 +9,9 @@ import { Router } from '@angular/router';
 })
 export class AppComponent {
   title = 'frontend';
-  constructor(private router: Router) {}
+  constructor(public loginService: LoginService,private router: Router) {}
   goToLogIn() {
     console.log('Navegando a login...');
-    
-    // 4. Usamos el router para navegar a la ruta '/login'
-    // (Ref: Tema 4, página 16)
     this.router.navigate(['/login']);
   }
 }
