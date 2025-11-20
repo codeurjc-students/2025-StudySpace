@@ -1,0 +1,54 @@
+
+
+
+
+<div *ngIf="room" class="container mt-5 mb-5">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">{{ room?.name }}</h2>
+            <span class="badge bg-light text-dark fs-6">{{ room?.camp }}</span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <img src="assets/AulasSinOrdena.jpg" class="img-fluid rounded mb-3 shadow-sm" alt="Room Image">
+                </div>
+                <div class="col-md-6">
+                    <h4 class="text-primary">Detalles</h4>
+                    <ul class="list-group list-group-flush mb-4">
+                        <li class="list-group-item"><strong>Capacity:</strong> {{ room?.capacity }} personas</li>
+                        <li class="list-group-item"><strong>Ubication:</strong> {{ room?.place }}</li>
+                    </ul>
+
+                    <h4 class="text-primary">Avaliable software in the room</h4>
+                    <div *ngIf="room.software && room.software.length > 0; else noSoftware">
+                        <div class="list-group">
+                            <div *ngFor="let soft of room.software" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1 fw-bold">{{ soft.name }}</h6>
+                                    <small>v{{ soft.version }}</small>
+                                </div>
+                                <p class="mb-1 small">{{ soft.description }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <ng-template #noSoftware>
+                        <div class="alert alert-secondary">Esta aula no tiene software específico asignado.</div>
+                    </ng-template>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer d-flex justify-content-between">
+            <button routerLink="/" class="btn btn-secondary">
+                &laquo; Back
+            </button>
+            <button class="btn btn-success">Book room</button>
+        </div>
+    </div>
+</div>
+
+<div *ngIf="!room" class="text-center mt-5">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>

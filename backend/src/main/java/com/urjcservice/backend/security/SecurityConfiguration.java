@@ -65,6 +65,8 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authorize -> authorize
                         // PUBLIC PAGES
                         .requestMatchers("/").permitAll()
+                        .requestMatchers("/error").permitAll()
+                        .requestMatchers("/api/rooms/**").permitAll()
                         // allows pre-flight requests (for CORS)
                     .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         // PRIVATE PAGES

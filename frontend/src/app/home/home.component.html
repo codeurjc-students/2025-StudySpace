@@ -1,9 +1,50 @@
-<div class="hero-text">
-        <h2>Welcome to StudySpace</h2>
-        <p>A website designed to help you find the classroom that best suits your needs.</p>
-      </div>
+<div class="hero-text text-center mb-5">
+    <h2>Welcome to StudySpace</h2>
+    <p>A website designed to help you to find the classroom that best suits your needs.</p>
+</div>
 
-      <div class="hero-image">
-        <!-- Ruta correcta: assets/... (asegúrate de que el fichero exista exactamente en frontend/src/assets/...) -->
-        <img src="assets/AulasSinOrdena.jpg" alt="Study Space classroom" style="width: 600px; height: auto;"/>
-      </div>
+<div class="hero-image mt-5 text-center">
+    <img src="assets/AulasSinOrdena.jpg" alt="Study Space classroom" style="max-width: 80%; height: auto; border-radius: 8px;"/>
+</div>
+
+
+<div class="container">
+    <h3 class="mb-4">Available Rooms</h3>
+
+    <div *ngIf="rooms.length === 0" class="alert alert-info">
+        There are no avaliable rooms in this moment.
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        <div *ngFor="let room of rooms" class="col">
+            
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">{{ room.name }}</h5>
+                </div>
+                
+                <div class="card-body">
+                    <p class="card-text">
+                        <strong>Campus:</strong> {{ room.camp }}<br>
+                        <strong>Ubication:</strong> {{ room.place }}<br>
+                        <strong>Capacity:</strong> {{ room.capacity }} people
+                    </p>
+                    
+                    <div *ngIf="room.software && room.software.length > 0">
+                        <small class="text-muted fw-bold">Software disponible:</small>
+                        <ul class="ps-3 mb-0" style="font-size: 0.9rem;">
+                            <li *ngFor="let s of room.software">{{ s.name }}</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-white border-top-0">
+                    <button [routerLink]="['/rooms', room.id]" class="btn btn-outline-primary btn-sm w-100">
+                        Show Details
+                    </button>
+                </div>
+            </div>
+            </div>
+    </div>
+</div>
+
