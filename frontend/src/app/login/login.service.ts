@@ -16,6 +16,16 @@ export class LoginService {
 
   constructor(private http: HttpClient) { }
 
+  register(name: string, email: string, pass: string): Observable<any> {
+    const body = {
+        name: name,
+        email: email,
+        password: pass
+    };
+    // Hacemos un POST al endpoint que acabamos de crear en Java
+    return this.http.post('http://localhost:8080/api/auth/register', body);
+  }
+
   logIn(user: string, pass: string): Observable<any> {
     const authHeader = 'Basic ' + btoa(user + ':' + pass);
     const headers = new HttpHeaders({ 

@@ -14,13 +14,15 @@ import { LoginComponent } from './login/login.component';
 import { HomeComponent } from './home/home.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { RoomDetailComponent } from './components/room-detail/room-detail.component';
+import { RegisterComponent } from './login/register/register.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
     HomeComponent,
-    RoomDetailComponent
+    RoomDetailComponent,
+    RegisterComponent
   ],
   imports: [
     BrowserModule,

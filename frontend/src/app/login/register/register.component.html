@@ -1,0 +1,32 @@
+<div class="d-flex align-items-center p-5 justify-content-center" style="min-height: 60vh;">
+    <div class="card p-4 shadow" style="max-width: 400px; width: 100%;">
+        <h3 class="mb-4 text-center">Register</h3>
+        
+        <form (ngSubmit)="onRegister(nameInput.value, emailInput.value, passInput.value)">
+            
+            <div class="mb-3">
+                <label for="name" class="form-label">Name</label>
+                <input #nameInput type="text" class="form-control" id="name" placeholder="Enter your name" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input #emailInput type="email" class="form-control" id="email" placeholder="name@example.com" required>
+            </div>
+            
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input #passInput type="password" class="form-control" id="password" placeholder="Create a password" required>
+            </div>
+            
+            <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-success btn-lg">
+                    Sign Up
+                </button>
+                <button type="button" class="btn btn-outline-secondary" routerLink="/login">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

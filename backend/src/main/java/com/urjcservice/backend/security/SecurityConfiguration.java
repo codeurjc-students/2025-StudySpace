@@ -1,8 +1,9 @@
 package com.urjcservice.backend.security;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager; // <--- IMPORTANTE
+import org.springframework.security.authentication.AuthenticationManager; 
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration; // <--- IMPORTANTE
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -26,12 +27,15 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfiguration {
 
+    @Autowired
+    public RepositoryUserDetailsService userDetailService;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // --- ESTE ES EL BLOQUE QUE TE FALTABA ---
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
@@ -41,11 +45,12 @@ public class SecurityConfiguration {
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService());
+        authProvider.setUserDetailsService(userDetailService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
 
+    /*
     @Bean
     public InMemoryUserDetailsManager userDetailsService() {
         UserDetails user = User.builder()
@@ -54,7 +59,7 @@ public class SecurityConfiguration {
                 .roles("USER")
                 .build();
         return new InMemoryUserDetailsManager(user);
-    }
+    }*/
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -67,6 +72,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/rooms/**").permitAll()
+                        .requestMatchers("/api/auth/register").permitAll()
                         // allows pre-flight requests (for CORS)
                     .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         // PRIVATE PAGES
