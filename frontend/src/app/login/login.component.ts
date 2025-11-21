@@ -11,7 +11,7 @@ import { Router } from '@angular/router';
 export class LoginComponent {
 @ViewChild('loginErrorModal') loginErrorModal!: TemplateRef<any>;
 
-  // Inyectamos el servicio de Login, el de Modales y el Router
+  //put the loginService in the constructor, router and modalService too
   constructor(
     public loginService: LoginService, 
     private modalService: NgbModal,
@@ -20,14 +20,14 @@ export class LoginComponent {
 
   logIn(user: string, pass: string) {
     this.loginService.logIn(user, pass).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         console.log("Login correcto:", response);
-        // Opcional: Redirigir a otra página al loguear
+        // Optional: Redirect to home or another page after successful login
         // this.router.navigate(['/home']);
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error("Error en login:", error);
-        // Abrir el modal de error que tienes en el HTML
+      
         this.modalService.open(this.loginErrorModal);
       }
     });
