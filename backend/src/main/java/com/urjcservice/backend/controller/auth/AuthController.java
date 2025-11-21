@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -21,34 +23,47 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // Clase auxiliar para recibir los datos del JSON
+    // for JSON data
     public static class RegisterRequest {
         public String name;
         public String email;
         public String password;
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<User> me() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        // Fetch user details from the repository
+        return userRepository.findByEmail(auth.getName())
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         
-        // 1. Comprobar si el email ya existe
+        // Check if the email already exists
         if (userRepository.findByEmail(request.email).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("Error: El email ya está en uso.");
         }
 
-        // 2. Crear el nuevo usuario
+        // Create new user account
         User newUser = new User();
         newUser.setName(request.name);
         newUser.setEmail(request.email);
-        // IMPORTANTE: Encriptar la contraseña antes de guardarla
+        // Encrypt the password before saving
         newUser.setEncodedPassword(passwordEncoder.encode(request.password));
         
-        // Asignar roles y tipo por defecto
+        // Set default user type and roles
         newUser.setType(User.UserType.USER_REGISTERED);
         newUser.setRoles(Arrays.asList("USER"));
 
-        // 3. Guardar en la base de datos
+        //Save on the repository
         userRepository.save(newUser);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(newUser);

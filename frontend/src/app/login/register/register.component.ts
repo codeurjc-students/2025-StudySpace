@@ -17,15 +17,15 @@ export class RegisterComponent {
   onRegister(name: string, email: string, pass: string) {
     this.loginService.register(name, email, pass).subscribe({
       next: (response) => {
-        alert('Usuario registrado con éxito. Ahora puedes iniciar sesión.');
-        this.router.navigate(['/login']); // Redirigir al login tras registrarse
+        alert('User successfully registered. You can now log in.');
+        this.router.navigate(['/login']); // Redirect to login page
       },
       error: (err) => {
         console.error(err);
         if (err.status === 409) {
-            alert('Ese email ya está registrado.');
+            alert('That email is already registered. Please use a different email.');
         } else {
-            alert('Error al registrar usuario. Inténtalo de nuevo.');
+            alert('Error registering user. Please try again.');
         }
       }
     });

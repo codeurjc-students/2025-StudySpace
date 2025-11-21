@@ -47,3 +47,23 @@
 .navbar-right .nav-button-cta:hover {
   opacity: 0.9; /* Pequeño efecto al pasar el ratón */
 }
+
+/* Style for the small header icon */
+.profile-icon-header {
+    width: 40px;
+    height: 40px;
+    object-fit: cover; /* It ensures that the image is not distorted. */
+    border: 2px solid #fff; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.profile-icon-header:hover {
+    transform: scale(1.05); /* Small effect when hovering the mouse */
+}
+
+/* Remove the arrow that Bootstrap adds by default to dropdowns */
+.no-arrow::after {
+    display: none !important;
+}

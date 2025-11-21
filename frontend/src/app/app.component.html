@@ -7,15 +7,37 @@
     <ng-container *ngIf="!loginService.isLogged()">
       <button (click)="goToLogIn()">Log In</button>
       <button class="btn btn-outline-light ms-2" routerLink="/register">Register</button>
-      <!--<button (click)="goToLogIn()">Register</button> -->
     </ng-container>
 
-    <div *ngIf="loginService.isLogged()" class="d-flex align-items-center">
-        <span class="navbar-text fs-3 text-white mx-3">
-            {{ loginService.currentUser?.name }}
-        </span>
-        <button (click)="loginService.logOut()" class="btn btn-primary">Log Out</button>
+    <div *ngIf="loginService.isLogged()" ngbDropdown placement="bottom-end" class="d-inline-block ms-3">
+    
+        <button type="button" class="btn p-0 no-arrow d-flex flex-column align-items-center" id="dropdownProfile" ngbDropdownToggle>
+            <img src="assets/user_placeholder.png" alt="Profile" class="rounded-circle profile-icon-header">
+            
+            <span class="text-white small mt-1" style="font-size: 0.8rem; font-weight: 500;">
+                {{ loginService.currentUser?.name }}
+            </span>
+        </button>
+
+        <div ngbDropdownMenu aria-labelledby="dropdownProfile" class="p-3 shadow dropdown-menu-end" style="min-width: 250px;">
+        
+        <div class="text-center mb-3">
+             <img src="assets/user_placeholder.png" alt="Profile" class="rounded-circle mb-2 shadow-sm" style="width: 80px; height: 80px; object-fit: cover;">
+             <h5 class="mb-1 fw-bold">{{ loginService.currentUser?.name }}</h5>
+             
+             <a [routerLink]="['/profile']" class="btn btn-sm btn-primary mt-2 w-100">
+                View My Profile
+             </a>
+         </div>
+         
+         <div class="dropdown-divider"></div>
+         
+         <button (click)="loginService.logOut()" ngbDropdownItem class="text-danger py-2 text-center border rounded mt-2 btn-outline-danger">
+            Log out
+         </button>
+        </div>
     </div>
+
   </div>
 </header>
 
