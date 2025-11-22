@@ -1,0 +1,65 @@
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { ReservationService } from '../../services/reservation.service';
+import { RoomsService } from '../../services/rooms.service'; 
+import { RoomDTO } from '../../dtos/room.dto';
+
+@Component({
+  selector: 'app-reservation-form',
+  templateUrl: './reservation-form.component.html',
+  styleUrls: ['./reservation-form.component.css']
+})
+export class ReservationFormComponent implements OnInit {
+
+  
+  rooms: RoomDTO[] = [];
+  roomId: number | null = null;
+  
+  startDate: string = '';
+  endDate: string = '';
+  reason: string = '';
+
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private reservationService: ReservationService,
+    private roomsService: RoomsService
+  ) {}
+
+  ngOnInit(): void {
+    //we obtain the roomId from the route parameters
+    /*const id = this.route.snapshot.paramMap.get('roomId');
+    if (id) {
+      this.roomId = +id;
+    }*/
+   this.roomsService.getRooms().subscribe({
+        next: (data) => {
+            this.rooms = data;
+            if (this.rooms.length > 0) this.roomId = this.rooms[0].id;
+        },
+        error: (err) => console.error('Error cargando aulas', err)
+    });
+  }
+
+  onSubmit() {
+    if (this.roomId && this.startDate && this.endDate) {
+      //transform to Date objects the string inputs
+      const start = new Date(this.startDate);
+      const end = new Date(this.endDate);
+
+      this.reservationService.createReservation(this.roomId, start, end, this.reason).subscribe({
+        next: (res) => {
+          alert('Reservation successfully created!');
+          // send to the profile where the user can see their reservations
+          this.router.navigate(['/profile']); 
+        },
+        error: (err) => {
+          console.error(err);
+          alert('Error creating reservation. Please try again.');
+        }
+      });
+    } else {
+        alert('Please fill in the dates.');
+    }
+  }
+}

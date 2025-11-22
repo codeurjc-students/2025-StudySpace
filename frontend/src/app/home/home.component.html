@@ -7,12 +7,19 @@
     <img src="assets/AulasSinOrdena.jpg" alt="Study Space classroom" style="max-width: 80%; height: auto; border-radius: 8px;"/>
 </div>
 
-
 <div class="container">
-    <h3 class="mb-4">Available Rooms</h3>
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">Available Rooms</h3>
 
+        <button *ngIf="loginService.isLogged()" 
+                [routerLink]="['/reservations/create']" 
+                class="btn btn-success shadow-sm">
+                📅 Book a room
+        </button>
+    </div>
     <div *ngIf="rooms.length === 0" class="alert alert-info">
-        There are no avaliable rooms in this moment.
+        There are no available rooms in this moment.
     </div>
 
     <div class="row row-cols-1 row-cols-md-3 g-4">
@@ -31,7 +38,7 @@
                     </p>
                     
                     <div *ngIf="room.software && room.software.length > 0">
-                        <small class="text-muted fw-bold">Software disponible:</small>
+                        <small class="text-muted fw-bold">Available software:</small>
                         <ul class="ps-3 mb-0" style="font-size: 0.9rem;">
                             <li *ngFor="let s of room.software">{{ s.name }}</li>
                         </ul>
@@ -44,7 +51,6 @@
                     </button>
                 </div>
             </div>
-            </div>
+        </div>
     </div>
 </div>
-

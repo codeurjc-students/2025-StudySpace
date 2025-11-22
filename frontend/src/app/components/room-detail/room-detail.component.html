@@ -42,6 +42,18 @@
             <button routerLink="/" class="btn btn-secondary">
                 &laquo; Back
             </button>
+            <!--<button *ngIf="!loginService.isLogged()" 
+                [routerLink]="['/login']" 
+                class="btn btn-success">
+                Log in to book
+            </button>
+
+            <button *ngIf="loginService.isLogged()" 
+                    [routerLink]="['/reservations/create', room.id]" 
+                    class="btn btn-success">
+                Book Room
+            </button>-->
+            
             <!--<button class="btn btn-success">Book room</button>-->
         </div>
     </div>

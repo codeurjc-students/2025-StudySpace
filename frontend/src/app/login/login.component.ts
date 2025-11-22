@@ -1,7 +1,8 @@
 import { Component, ViewChild, TemplateRef } from '@angular/core';
-import { LoginService } from './login.service'; // Asegúrate que la ruta sea correcta
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap'; // Necesario para tu modal de error
-import { Router } from '@angular/router';
+import { LoginService } from './login.service'; 
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap'; 
+import { Router, ActivatedRoute  } from '@angular/router';
+
 
 @Component({
   selector: 'app-login',
@@ -15,7 +16,8 @@ export class LoginComponent {
   constructor(
     public loginService: LoginService, 
     private modalService: NgbModal,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   logIn(user: string, pass: string) {
@@ -24,9 +26,17 @@ export class LoginComponent {
         console.log("Login correcto:", response);
         // Optional: Redirect to home or another page after successful login
         // this.router.navigate(['/home']);
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'];
+        if (returnUrl) {
+            this.router.navigateByUrl(returnUrl);
+        } else {
+            //Instead of going to '/profile', let's go to '/reservations/create'
+            //this.router.navigate(['/reservations/create']); 
+            this.router.navigate(['/']); 
+        }
       },
       error: (error: any) => {
-        console.error("Error en login:", error);
+        console.error("Login error:", error);
       
         this.modalService.open(this.loginErrorModal);
       }

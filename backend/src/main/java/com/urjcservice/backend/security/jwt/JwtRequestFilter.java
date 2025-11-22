@@ -33,7 +33,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
-
+		/*
 		try {
 			var claims = jwtTokenProvider.validateToken(request, true);
 			var userDetails = userDetailsService.loadUserByUsername(claims.getSubject());
@@ -49,7 +49,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 				log.error("Exception processing JWT Token: ", ex);
 			}			
 		}
-
+		*/
 		filterChain.doFilter(request, response);
 	}	
 

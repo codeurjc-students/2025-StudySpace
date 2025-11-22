@@ -6,6 +6,7 @@ import { RoomDetailComponent } from './components/room-detail/room-detail.compon
 import { RegisterComponent } from './login/register/register.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { authGuard } from './auth.guard';
+import { ReservationFormComponent } from './components/reservation-form/reservation-form.component';
 
 
 const routes: Routes = [
@@ -17,7 +18,12 @@ const routes: Routes = [
   { 
     path: 'profile', 
     component: UserProfileComponent, 
-    canActivate: [authGuard] 
+    canActivate: [authGuard] // only authenticated users can access
+  },
+  { 
+    path: 'reservations/create', 
+    component: ReservationFormComponent,
+    canActivate: [authGuard] // only authenticated users can access
   },
   {path: '**', redirectTo: '' }
 ];
