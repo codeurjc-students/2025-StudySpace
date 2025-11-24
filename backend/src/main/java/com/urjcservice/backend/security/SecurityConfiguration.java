@@ -73,16 +73,17 @@ public class SecurityConfiguration {
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/rooms/**").permitAll()
                         .requestMatchers("/api/auth/register").permitAll()
+                        .requestMatchers("/api/auth/login").permitAll()
                         // allows pre-flight requests (for CORS)
                     .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         // PRIVATE PAGES
                         .anyRequest().authenticated())
-                .formLogin(formLogin -> formLogin
+                /*.formLogin(formLogin -> formLogin
                         .loginPage("/login")
                         .failureUrl("/loginerror")
                         .defaultSuccessUrl("/private")
                         .permitAll()
-                )
+                )*/
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/")

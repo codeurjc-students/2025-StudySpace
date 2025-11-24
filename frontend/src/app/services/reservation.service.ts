@@ -24,6 +24,6 @@ export class ReservationService {
       'X-Requested-With': 'XMLHttpRequest' // This prevents Spring from displaying the browser login pop-up
     });
     //post request with auth header
-    return this.http.post('/api/reservations/create', body);
+    return this.http.post('/api/reservations/create', body, { headers });
   }
 }
