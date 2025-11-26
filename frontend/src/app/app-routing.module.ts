@@ -7,6 +7,7 @@ import { RegisterComponent } from './login/register/register.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { authGuard } from './auth.guard';
 import { ReservationFormComponent } from './components/reservation-form/reservation-form.component';
+import { AdminMenuComponent } from './components/admin-menu/admin-menu.component';
 
 
 const routes: Routes = [
@@ -24,6 +25,11 @@ const routes: Routes = [
     path: 'reservations/create', 
     component: ReservationFormComponent,
     canActivate: [authGuard] // only authenticated users can access
+  },
+  { 
+    path: 'admin', 
+    component: AdminMenuComponent, 
+    canActivate: [authGuard] 
   },
   {path: '**', redirectTo: '' }
 ];

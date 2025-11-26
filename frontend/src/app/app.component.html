@@ -5,7 +5,7 @@
   
   <div class="navbar-right">
     <ng-container *ngIf="!loginService.isLogged()">
-      <button (click)="goToLogIn()">Log In</button>
+      <button class="btn btn-outline-light me-2" (click)="goToLogIn()">Log In</button>
       <button class="btn btn-outline-light ms-2" routerLink="/register">Register</button>
     </ng-container>
 

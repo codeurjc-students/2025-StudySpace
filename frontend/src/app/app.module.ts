@@ -13,6 +13,7 @@ import { RoomDetailComponent } from './components/room-detail/room-detail.compon
 import { RegisterComponent } from './login/register/register.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { ReservationFormComponent } from './components/reservation-form/reservation-form.component';
+import { AdminMenuComponent } from './components/admin-menu/admin-menu.component';
 
 
 
@@ -24,7 +25,8 @@ import { ReservationFormComponent } from './components/reservation-form/reservat
     RoomDetailComponent,
     RegisterComponent,
     UserProfileComponent,
-    ReservationFormComponent
+    ReservationFormComponent,
+    AdminMenuComponent
   ],
   imports: [
     BrowserModule,

@@ -9,15 +9,8 @@
 
 <div class="container">
     
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="mb-0">Available Rooms</h3>
+    <h3 class="mb-4 mt-5 pt-3">Available Rooms</h3>
 
-        <button *ngIf="loginService.isLogged()" 
-                [routerLink]="['/reservations/create']" 
-                class="btn btn-success shadow-sm">
-                📅 Book a room
-        </button>
-    </div>
     <div *ngIf="rooms.length === 0" class="alert alert-info">
         There are no available rooms in this moment.
     </div>
@@ -53,4 +46,17 @@
             </div>
         </div>
     </div>
+
+    <div *ngIf="loginService.isLogged()" class="text-center mt-5 mb-5">
+        <button [routerLink]="['/reservations/create']" class="btn btn-success btn-lg shadow px-5">
+            📅 Book a room
+        </button>
+        <!-- Admin button-->
+        <button *ngIf="loginService.isAdmin()" 
+                [routerLink]="['/admin']" 
+                class="btn btn-dark btn-lg shadow px-5">
+            ⚙️ Admin Dashboard
+        </button>
+    </div>
+
 </div>

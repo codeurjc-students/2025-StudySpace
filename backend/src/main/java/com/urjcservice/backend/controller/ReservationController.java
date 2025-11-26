@@ -38,19 +38,19 @@ public class ReservationController {
     @PostMapping("/create")
     public ResponseEntity<?> createReservation(@RequestBody ReservationRequest request) {
         
-        // 1. Obtener el usuario logueado de la sesión de seguridad
+       
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String email = auth.getName(); // En tu caso configuramos que el "name" sea el email
+        String email = auth.getName(); 
         
         Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuario no encontrado.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found.");
         }
 
-        // 2. Obtener el aula
+        
         Optional<Room> roomOpt = roomRepository.findById(request.roomId);
         if (roomOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Aula no encontrada.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Room not found.");
         }
 
         // 3. Crear la reserva
@@ -58,9 +58,8 @@ public class ReservationController {
         reservation.setStartDate(request.startDate);
         reservation.setEndDate(request.endDate);
         reservation.setReason(request.reason);
-        reservation.setUser(userOpt.get()); // Asignamos el usuario logueado
-        reservation.setRoom(roomOpt.get()); // Asignamos el aula seleccionada
-
+        reservation.setUser(userOpt.get()); 
+        reservation.setRoom(roomOpt.get()); 
         reservationRepository.save(reservation);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(reservation);
