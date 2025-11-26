@@ -14,6 +14,9 @@ import { RegisterComponent } from './login/register/register.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { ReservationFormComponent } from './components/reservation-form/reservation-form.component';
 import { AdminMenuComponent } from './components/admin-menu/admin-menu.component';
+import { ManageRoomsComponent } from './components/manage-rooms/manage-rooms.component';
+import { ManageUsersComponent } from './components/manage-users/manage-users.component';
+import { OccupancyStatsComponent } from './components/occupancy-stats/occupancy-stats.component';
 
 
 
@@ -26,7 +29,10 @@ import { AdminMenuComponent } from './components/admin-menu/admin-menu.component
     RegisterComponent,
     UserProfileComponent,
     ReservationFormComponent,
-    AdminMenuComponent
+    AdminMenuComponent,
+    ManageRoomsComponent,
+    ManageUsersComponent,
+    OccupancyStatsComponent
   ],
   imports: [
     BrowserModule,

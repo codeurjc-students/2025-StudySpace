@@ -1,1 +1,28 @@
-<p>admin-menu works!</p>
+<div class="container d-flex flex-column align-items-center justify-content-center" style="min-height: 70vh;">
+    
+    <h2 class="mb-4 fw-bold">Welcome Admin</h2>
+
+    <div class="card shadow border-0 p-5" style="width: 100%; max-width: 400px; background-color: #f3f4f6;">
+        <div class="d-grid gap-3">
+            
+            <button routerLink="/admin/rooms" class="btn btn-light border py-3 text-secondary fw-bold shadow-sm user-select-none" style="transition: 0.3s;">
+                Edit the rooms
+            </button>
+
+            <button routerLink="/admin/users" class="btn btn-light border py-3 text-secondary fw-bold shadow-sm user-select-none" style="transition: 0.3s;">
+                Manage Users
+            </button>
+
+            <button routerLink="/admin/stats" class="btn btn-light border py-3 text-secondary fw-bold shadow-sm user-select-none" style="transition: 0.3s;">
+                Occupancy Statistics
+            </button>
+
+        </div>
+    </div>
+
+
+    <div class="w-100 mt-5" style="max-width: 800px;">
+        <button routerLink="/" class="btn btn-dark px-4 py-2">Back</button>
+    </div>
+
+</div>

@@ -8,6 +8,10 @@ import { UserProfileComponent } from './components/user-profile/user-profile.com
 import { authGuard } from './auth.guard';
 import { ReservationFormComponent } from './components/reservation-form/reservation-form.component';
 import { AdminMenuComponent } from './components/admin-menu/admin-menu.component';
+import { ManageRoomsComponent } from './components/manage-rooms/manage-rooms.component';
+import { ManageUsersComponent } from './components/manage-users/manage-users.component';
+import { OccupancyStatsComponent } from './components/occupancy-stats/occupancy-stats.component';
+import { adminGuard } from './admin.guard';
 
 
 const routes: Routes = [
@@ -25,12 +29,12 @@ const routes: Routes = [
     path: 'reservations/create', 
     component: ReservationFormComponent,
     canActivate: [authGuard] // only authenticated users can access
-  },
-  { 
-    path: 'admin', 
-    component: AdminMenuComponent, 
-    canActivate: [authGuard] 
-  },
+  }, 
+  //admin routes
+  { path: 'admin', component: AdminMenuComponent, canActivate: [adminGuard] },
+  { path: 'admin/rooms', component: ManageRoomsComponent, canActivate: [adminGuard] },
+  { path: 'admin/users', component: ManageUsersComponent, canActivate: [adminGuard] },
+  { path: 'admin/stats', component: OccupancyStatsComponent, canActivate: [adminGuard] },
   {path: '**', redirectTo: '' }
 ];
 
