@@ -19,7 +19,7 @@ public class ReservationRestController {
     @Autowired
     private ReservationService reservationService;
 
-    @GetMapping("/")
+    @GetMapping
     public List<Reservation> getAllReservations() {
         return reservationService.findAll();
     }
@@ -31,7 +31,7 @@ public class ReservationRestController {
               .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
     }
 
-    @PostMapping("/")
+    @PostMapping
     public ResponseEntity<Reservation> createReservation(@RequestBody Reservation reservation) {
         Reservation savedReservation = reservationService.save(reservation);
 

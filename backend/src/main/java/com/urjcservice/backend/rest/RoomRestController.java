@@ -1,63 +1,93 @@
-package com.urjcservice.backend.rest;
+package com.urjcservice.backend.rest; 
 
 import com.urjcservice.backend.entities.Room;
-import com.urjcservice.backend.service.RoomService;
+import com.urjcservice.backend.entities.Software;
+import com.urjcservice.backend.repositories.RoomRepository;
+import com.urjcservice.backend.repositories.SoftwareRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.springframework.web.servlet.support.ServletUriComponentsBuilder.fromCurrentRequest;
-
 @RestController
-@RequestMapping("/api/rooms")
+@RequestMapping("/api/rooms") 
 public class RoomRestController {
 
     @Autowired
-    private RoomService roomService;
+    private RoomRepository roomRepository;
+    
+    @Autowired
+    private SoftwareRepository softwareRepository;
 
-    @GetMapping("/")
+    //internal DTO for room requests on frontend
+    public static class RoomRequest {
+        public String name;
+        public Integer capacity;
+        public Room.CampusType camp;
+        public String place;
+        public String coordenades;
+        public List<Long> softwareIds;
+    }
+
+    @GetMapping
     public List<Room> getAllRooms() {
-        return roomService.findAll();
+        return roomRepository.findAll();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Room> getRoomById(@PathVariable Long id) {
-        Optional<Room> room = roomService.findById(id);
-    return room.map(ResponseEntity::ok) // Returns 200 OK if the Room is found
-           .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
+        return roomRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/")
-    public ResponseEntity<Room> createRoom(@RequestBody Room room) {
-        Room savedRoom = roomService.save(room);
-
-        URI location = fromCurrentRequest().path("/{id}").buildAndExpand(savedRoom.getId()).toUri();
-
-        return ResponseEntity.created(location).body(savedRoom);
+    @PostMapping
+    public ResponseEntity<Room> createRoom(@RequestBody RoomRequest request) {
+        Room room = new Room();
+        return saveRoomData(room, request, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Room> updateRoom(@PathVariable Long id, @RequestBody Room updatedRoom) {
-    Optional<Room> room = roomService.updateRoom(id, updatedRoom);
-    return room.map(ResponseEntity::ok) // Returns 200 OK if updated successfully
-           .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
+    public ResponseEntity<Room> updateRoom(@PathVariable Long id, @RequestBody RoomRequest request) {
+        Optional<Room> roomOpt = roomRepository.findById(id);
+        if (roomOpt.isPresent()) {
+            return saveRoomData(roomOpt.get(), request, HttpStatus.OK);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
-
-    @PatchMapping("/{id}")
-    public ResponseEntity<Room> patchRoom(@PathVariable Long id, @RequestBody Room partialRoom) {
-    Optional<Room> room = roomService.patchRoom(id, partialRoom);
-    return room.map(ResponseEntity::ok) // Returns 200 OK if partially updated
-           .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
-    }
-
+    
     @DeleteMapping("/{id}")
-    public ResponseEntity<Room> deleteRoom(@PathVariable Long id) {
-        Optional<Room> deleted = roomService.deleteById(id);
-        return deleted.map(ResponseEntity::ok)
-                      .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<Void> deleteRoom(@PathVariable Long id) {
+        if (roomRepository.existsById(id)) {
+            roomRepository.deleteById(id);
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    
+    private ResponseEntity<Room> saveRoomData(Room room, RoomRequest request, HttpStatus status) {
+        if (request.name != null) room.setName(request.name);
+        if (request.capacity != null) room.setCapacity(request.capacity);
+        if (request.camp != null) room.setCamp(request.camp);
+        if (request.place != null) room.setPlace(request.place);
+        if (request.coordenades != null) room.setCoordenades(request.coordenades);
+
+       
+        if (request.softwareIds != null) {
+            List<Software> softwares = softwareRepository.findAllById(request.softwareIds);
+            room.setSoftware(softwares);
+        } else {
+            // If no software IDs provided, clear the association, if not comment the line bellow
+             room.setSoftware(new ArrayList<>());
+        }
+
+        Room savedRoom = roomRepository.save(room);
+        return ResponseEntity.status(status).body(savedRoom);
     }
 }

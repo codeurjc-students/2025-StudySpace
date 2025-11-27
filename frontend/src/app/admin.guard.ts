@@ -10,7 +10,7 @@ export const adminGuard: CanActivateFn = (route, state) => {
   if (loginService.isAdmin()) {
     return true; 
   } else {
-    alert("⛔ ACCESS DENIED\n\nYou do not have administrator permissions to access this section.");
+    alert("⛔ ACCESS DENIED⛔\n\nYou do not have administrator permissions to access this section.");
     return router.createUrlTree(['/']); 
   }
 };

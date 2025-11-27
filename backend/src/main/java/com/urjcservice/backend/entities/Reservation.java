@@ -15,6 +15,7 @@ public class Reservation {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties("reservations") //to avoid infinite recursion during serialization
     private User user; //one user can have many bookings
 
     @ManyToOne

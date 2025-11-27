@@ -17,6 +17,9 @@ import { AdminMenuComponent } from './components/admin-menu/admin-menu.component
 import { ManageRoomsComponent } from './components/manage-rooms/manage-rooms.component';
 import { ManageUsersComponent } from './components/manage-users/manage-users.component';
 import { OccupancyStatsComponent } from './components/occupancy-stats/occupancy-stats.component';
+import { RoomFormComponent } from './components/room-form/room-form.component';
+import { ManageSoftwaresComponent } from './components/manage-softwares/manage-softwares.component';
+import { SoftwareFormComponent } from './components/software-form/software-form.component';
 
 
 
@@ -32,7 +35,10 @@ import { OccupancyStatsComponent } from './components/occupancy-stats/occupancy-
     AdminMenuComponent,
     ManageRoomsComponent,
     ManageUsersComponent,
-    OccupancyStatsComponent
+    OccupancyStatsComponent,
+    RoomFormComponent,
+    ManageSoftwaresComponent,
+    SoftwareFormComponent
   ],
   imports: [
     BrowserModule,

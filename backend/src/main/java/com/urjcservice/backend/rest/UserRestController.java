@@ -19,7 +19,7 @@ public class UserRestController {
     @Autowired
     private UserService userService;
 
-    @GetMapping("/")
+    @GetMapping
     public List<User> getAllUsers() {
         return userService.findAll();
     }
@@ -31,7 +31,7 @@ public class UserRestController {
            .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
     }
 
-    @PostMapping("/")
+    @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user) {
         User savedUser = userService.save(user);
 
@@ -59,5 +59,13 @@ public class UserRestController {
         Optional<User> deleted = userService.deleteById(id);
         return deleted.map(ResponseEntity::ok)
                       .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    //for getting reservations of a user
+    @GetMapping("/{id}/reservations")
+    public ResponseEntity<List<com.urjcservice.backend.entities.Reservation>> getUserReservations(@PathVariable Long id) {
+        return userService.findById(id)
+                .map(user -> ResponseEntity.ok(user.getReservations()))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

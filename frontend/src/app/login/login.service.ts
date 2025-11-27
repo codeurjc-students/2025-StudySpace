@@ -91,10 +91,9 @@ export class LoginService {
 
     return this.http.get<UserDTO>('http://localhost:8080/api/auth/me', { headers }).pipe(
       switchMap(userData => {
-          return this.http.get<any>(`http://localhost:8080/api/users/${userData.id}/reservations?projection=withRoom`, { headers }).pipe(
-              map(res => {
-                 const reservations = res._embedded ? res._embedded.reservations : [];
-                 userData.reservations = reservations;
+          return this.http.get<any>(`http://localhost:8080/api/users/${userData.id}/reservations`, { headers }).pipe(
+              map(reservations => {
+                 userData.reservations = reservations || [];
                  return userData;
               }),
               // If the booking upload fails, we return the user without bookings to avoid blocking them.

@@ -1,0 +1,39 @@
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Manage Software</h2>
+        <button class="btn btn-success" routerLink="/admin/softwares/create">
+            <i class="fa fa-plus"></i> + Add Software
+        </button>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Version</th>
+                        <th>Description</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let soft of softwares">
+                        <td>{{ soft.name }}</td>
+                        <td>v{{ soft.version }}</td>
+                        <td>{{ soft.description }}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-primary me-2" 
+                                    [routerLink]="['/admin/softwares/edit', soft.id]">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger" 
+                                    (click)="deleteSoftware(soft.id)">Delete</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="mt-4">
+        <button routerLink="/admin" class="btn btn-secondary">Back to Menu</button>
+    </div>
+</div>

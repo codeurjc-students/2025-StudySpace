@@ -1,0 +1,57 @@
+<div class="container mt-5 mb-5 d-flex justify-content-center">
+    <div class="card shadow p-4" style="max-width: 700px; width: 100%;">
+        
+        <h3 class="mb-4 text-center text-primary fw-bold">
+            {{ isEditMode ? 'Edit Room' : 'Create New Room' }}
+        </h3>
+
+        <form (ngSubmit)="save()" #roomForm="ngForm">
+            
+            <div class="mb-3">
+                <label class="form-label fw-bold">Name</label>
+                <input type="text" name="name" [(ngModel)]="room.name" class="form-control" required>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Capacity</label>
+                    <input type="number" name="capacity" [(ngModel)]="room.capacity" class="form-control" required>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Campus</label>
+                    <select name="camp" [(ngModel)]="room.camp" class="form-select">
+                        <option *ngFor="let c of campusOptions" [value]="c">{{ c }}</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Location</label>
+                <input type="text" name="place" [(ngModel)]="room.place" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Coordinates</label>
+                <input type="text" name="coordenades" [(ngModel)]="room.coordenades" class="form-control">
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-bold">Installed Software</label>
+                <select name="softwareIds" [(ngModel)]="room.softwareIds" class="form-select" multiple style="height: 150px;">
+                    <option *ngFor="let soft of availableSoftware" [value]="soft.id">
+                        {{ soft.name }} (v{{ soft.version }})
+                    </option>
+                </select>
+                <small class="text-muted">Hold Ctrl (Windows) or Cmd (Mac) to select multiple options.</small>
+            </div>
+            <div class="d-flex justify-content-between pt-3 border-top">
+                <button type="button" class="btn btn-outline-secondary" routerLink="/admin/rooms">Cancel</button>
+                <button type="submit" class="btn btn-success px-4" [disabled]="!roomForm.form.valid">
+                    <i class="fa fa-save"></i> {{ isEditMode ? 'Update' : 'Save' }}
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>

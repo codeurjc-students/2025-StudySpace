@@ -1,7 +1,8 @@
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Manage Rooms</h2>
-        <button class="btn btn-success">
+        
+        <button class="btn btn-success" routerLink="/admin/rooms/create">
             <i class="fa fa-plus"></i> + Create New Room
         </button>
     </div>
@@ -19,26 +20,25 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <!--  *ngFor="let room of rooms" -->
-                    <tr>
-                        <td>1</td>
-                        <td>Example1</td>
-                        <td>30</td>
-                        <td><span class="badge bg-info text-dark">MOSTOLES</span></td>
+                    <tr *ngFor="let room of rooms">
+                        <td>{{ room.id }}</td>
+                        <td>{{ room.name }}</td>
+                        <td>{{ room.capacity }}</td>
+                        <td><span class="badge bg-info text-dark">{{ room.camp }}</span></td>
                         <td class="text-end">
-                            <button class="btn btn-sm btn-outline-primary me-2">Edit</button>
-                            <button class="btn btn-sm btn-outline-danger">Delete</button>
+                            <button class="btn btn-sm btn-outline-primary me-2" 
+                                    [routerLink]="['/admin/rooms/edit', room.id]">
+                                Edit
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" (click)="deleteRoom(room.id)">
+                                Delete
+                            </button>
                         </td>
                     </tr>
-                    
-                    <tr>
-                        <td>2</td>
-                        <td>Example2</td>
-                        <td>20</td>
-                        <td><span class="badge bg-warning text-dark">ALCORCON</span></td>
-                        <td class="text-end">
-                            <button class="btn btn-sm btn-outline-primary me-2">Edit</button>
-                            <button class="btn btn-sm btn-outline-danger">Delete</button>
+
+                    <tr *ngIf="rooms.length === 0">
+                        <td colspan="5" class="text-center py-3 text-muted">
+                            No rooms found.
                         </td>
                     </tr>
                 </tbody>

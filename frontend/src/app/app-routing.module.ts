@@ -12,6 +12,9 @@ import { ManageRoomsComponent } from './components/manage-rooms/manage-rooms.com
 import { ManageUsersComponent } from './components/manage-users/manage-users.component';
 import { OccupancyStatsComponent } from './components/occupancy-stats/occupancy-stats.component';
 import { adminGuard } from './admin.guard';
+import { RoomFormComponent } from './components/room-form/room-form.component';
+import { ManageSoftwaresComponent } from './components/manage-softwares/manage-softwares.component';
+import { SoftwareFormComponent } from './components/software-form/software-form.component';
 
 
 const routes: Routes = [
@@ -33,7 +36,12 @@ const routes: Routes = [
   //admin routes
   { path: 'admin', component: AdminMenuComponent, canActivate: [adminGuard] },
   { path: 'admin/rooms', component: ManageRoomsComponent, canActivate: [adminGuard] },
+  { path: 'admin/rooms/create', component: RoomFormComponent, canActivate: [adminGuard] },
+  { path: 'admin/rooms/edit/:id', component: RoomFormComponent, canActivate: [adminGuard] },
   { path: 'admin/users', component: ManageUsersComponent, canActivate: [adminGuard] },
+  { path: 'admin/softwares', component: ManageSoftwaresComponent, canActivate: [adminGuard] },
+  { path: 'admin/softwares/create', component: SoftwareFormComponent, canActivate: [adminGuard] },
+  { path: 'admin/softwares/edit/:id', component: SoftwareFormComponent, canActivate: [adminGuard] },
   { path: 'admin/stats', component: OccupancyStatsComponent, canActivate: [adminGuard] },
   {path: '**', redirectTo: '' }
 ];
