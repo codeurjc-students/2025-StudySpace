@@ -35,10 +35,12 @@
                                         title="Change Role">
                                     {{ user.roles.includes('ADMIN') ? '⬇️ User' : '⬆️ Admin' }}
                                 </button>
-                                
-                                <button class="btn btn-sm btn-outline-info" (click)="viewReservations(user)" title="See Reservations">
+                                <button class="btn btn-sm btn-outline-info" 
+                                    [routerLink]="['/admin/users', user.id, 'reservations']" 
+                                    title="See Reservations">
                                     📅 Books
                                 </button>
+                                
 
                                 <button class="btn btn-sm"
                                         [class.btn-outline-dark]="!user.blocked"

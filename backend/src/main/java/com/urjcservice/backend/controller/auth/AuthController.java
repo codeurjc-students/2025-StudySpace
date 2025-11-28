@@ -30,6 +30,11 @@ public class AuthController {
         public String password;
     }
 
+    public static class UserUpdateRequest {
+        public String name;
+        public String email;
+    }
+
     @GetMapping("/me")
     public ResponseEntity<User> me() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -67,5 +72,28 @@ public class AuthController {
         userRepository.save(newUser);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<User> updateMe(@RequestBody UserUpdateRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        //it search by the email of the logged user
+        Optional<User> userOpt = userRepository.findByEmail(auth.getName());
+        
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            
+            //only if data is provided
+            if (request.name != null && !request.name.isEmpty()) user.setName(request.name);
+            
+            
+            userRepository.save(user);
+            return ResponseEntity.ok(user);
+        }
+        return ResponseEntity.notFound().build();
     }
 }

@@ -20,6 +20,7 @@ import { OccupancyStatsComponent } from './components/occupancy-stats/occupancy-
 import { RoomFormComponent } from './components/room-form/room-form.component';
 import { ManageSoftwaresComponent } from './components/manage-softwares/manage-softwares.component';
 import { SoftwareFormComponent } from './components/software-form/software-form.component';
+import { ManageReservationsComponent } from './components/manage-reservations/manage-reservations.component';
 
 
 
@@ -38,7 +39,8 @@ import { SoftwareFormComponent } from './components/software-form/software-form.
     OccupancyStatsComponent,
     RoomFormComponent,
     ManageSoftwaresComponent,
-    SoftwareFormComponent
+    SoftwareFormComponent,
+    ManageReservationsComponent
   ],
   imports: [
     BrowserModule,

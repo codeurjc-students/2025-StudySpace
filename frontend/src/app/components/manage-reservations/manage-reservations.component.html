@@ -1,0 +1,76 @@
+<div class="container mt-5 mb-5">
+    <h2 class="mb-4">Manage User Reservations</h2>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Room</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Reason</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let res of reservations">
+                        <td>{{ res.id }}</td>
+                        <td>
+                            <span class="badge bg-info text-dark">{{ res.room?.name || 'Unknown' }}</span>
+                        </td>
+                        <td>{{ res.startDate | date:'short' }}</td>
+                        <td>{{ res.endDate | date:'short' }}</td>
+                        <td>{{ res.reason }}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-primary me-2" (click)="startEdit(res)">✏️ Edit</button>
+                            <button class="btn btn-sm btn-outline-danger" (click)="deleteReservation(res.id)">🗑️</button>
+                        </td>
+                    </tr>
+                    <tr *ngIf="reservations.length === 0">
+                        <td colspan="6" class="text-center py-4">This user has no reservations.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div *ngIf="editingReservation" class="card shadow border-warning mt-4">
+        <div class="card-header bg-warning text-dark fw-bold">
+            Editing Reservation #{{ editingReservation.id }}
+        </div>
+        <div class="card-body">
+            <form (ngSubmit)="saveEdit()">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Change Room</label>
+                        <select [(ngModel)]="editingReservation.roomId" name="roomId" class="form-select">
+                            <option *ngFor="let r of rooms" [value]="r.id">{{ r.name }}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Reason</label>
+                        <input type="text" [(ngModel)]="editingReservation.reason" name="reason" class="form-control">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Start Date</label>
+                        <input type="datetime-local" [(ngModel)]="editingReservation.startDate" name="startDate" class="form-control">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">End Date</label>
+                        <input type="datetime-local" [(ngModel)]="editingReservation.endDate" name="endDate" class="form-control">
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-secondary" (click)="cancelEdit()">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <button routerLink="/admin/users" class="btn btn-secondary">Back to Users</button>
+    </div>
+</div>

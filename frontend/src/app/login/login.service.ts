@@ -82,6 +82,23 @@ export class LoginService {
         }
     });
   }
+
+  updateProfile(name: string, email: string): Observable<any> {
+    const body = { name, email };
+    const headers = new HttpHeaders({
+        'Authorization': this.auth,
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+    });
+    return this.http.put('http://localhost:8080/api/auth/me', body, { headers });
+  }
+
+
+
+  //Check this method to make it beterrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
+  public reloadUser(): Observable<UserDTO> {
+      return this.getCurrentUser();
+  }
   //auxiliary methods
   private getCurrentUser(): Observable<UserDTO> {
     const headers = new HttpHeaders({ 

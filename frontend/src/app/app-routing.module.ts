@@ -15,6 +15,7 @@ import { adminGuard } from './admin.guard';
 import { RoomFormComponent } from './components/room-form/room-form.component';
 import { ManageSoftwaresComponent } from './components/manage-softwares/manage-softwares.component';
 import { SoftwareFormComponent } from './components/software-form/software-form.component';
+import { ManageReservationsComponent } from './components/manage-reservations/manage-reservations.component';
 
 
 const routes: Routes = [
@@ -38,10 +39,14 @@ const routes: Routes = [
   { path: 'admin/rooms', component: ManageRoomsComponent, canActivate: [adminGuard] },
   { path: 'admin/rooms/create', component: RoomFormComponent, canActivate: [adminGuard] },
   { path: 'admin/rooms/edit/:id', component: RoomFormComponent, canActivate: [adminGuard] },
+
   { path: 'admin/users', component: ManageUsersComponent, canActivate: [adminGuard] },
+  { path: 'admin/users/:userId/reservations', component: ManageReservationsComponent, canActivate: [adminGuard] },
+  
   { path: 'admin/softwares', component: ManageSoftwaresComponent, canActivate: [adminGuard] },
   { path: 'admin/softwares/create', component: SoftwareFormComponent, canActivate: [adminGuard] },
   { path: 'admin/softwares/edit/:id', component: SoftwareFormComponent, canActivate: [adminGuard] },
+
   { path: 'admin/stats', component: OccupancyStatsComponent, canActivate: [adminGuard] },
   {path: '**', redirectTo: '' }
 ];
