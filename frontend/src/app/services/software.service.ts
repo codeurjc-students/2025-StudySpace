@@ -19,10 +19,10 @@ export class SoftwareService {
   constructor(private http: HttpClient,  private loginService: LoginService) { }
 
   getAllSoftwares(): Observable<SoftwareDTO[]> {
-    return this.http.get<SoftwareDTO[]>(BASE_URL);
+    return this.http.get<SoftwareDTO[]>(BASE_URL, { headers: this.getAuthHeaders() });
   }
   getSoftware(id: number | string): Observable<SoftwareDTO> {
-    return this.http.get<SoftwareDTO>(`${BASE_URL}/${id}`);
+    return this.http.get<SoftwareDTO>(`${BASE_URL}/${id}`, { headers: this.getAuthHeaders() });
   }
 
   createSoftware(data: any): Observable<any> {
