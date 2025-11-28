@@ -3,56 +3,63 @@
 
     <div class="card shadow-sm">
         <div class="card-body p-0">
-            <table class="table table-align-middle mb-0">
+            <table class="table table-align-middle mb-0 table-hover">
                 <thead class="table-light">
                     <tr>
                         <th>User</th>
                         <th>Email</th>
-                        <th>Role</th>
+                        <th>Status</th>
                         <th class="text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Regular User -->
-                    <tr>
+                    <tr *ngFor="let user of users" [class.table-danger]="user.blocked">
                         <td>
                             <div class="d-flex align-items-center">
                                 <img src="assets/user_placeholder.png" class="rounded-circle me-2" width="30">
-                                <strong>Alfonso</strong>
+                                <strong>{{ user.name }}</strong>
+                                <span *ngIf="user.roles.includes('ADMIN')" class="badge bg-primary ms-2">ADMIN</span>
                             </div>
                         </td>
-                        <td>{{'alfonso@test.com'}}</td>
-                        <td><span class="badge bg-secondary">USER</span></td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            <span *ngIf="user.blocked" class="badge bg-danger">BLOCKED</span>
+                            <span *ngIf="!user.blocked" class="badge bg-success">ACTIVE</span>
+                        </td>
                         <td class="text-center">
                             <div class="btn-group">
-                                <button class="btn btn-sm btn-outline-warning" title="Promote to Admin">⬆️ Admin</button>
-                                <button class="btn btn-sm btn-outline-info" title="Modify Reservations">📅 Books</button>
-                                <button class="btn btn-sm btn-outline-dark" title="Block User">🚫 Block</button>
-                                <button class="btn btn-sm btn-outline-danger" title="Delete User">🗑️</button>
+                                <button class="btn btn-sm" 
+                                        [class.btn-outline-warning]="!user.roles.includes('ADMIN')"
+                                        [class.btn-outline-secondary]="user.roles.includes('ADMIN')"
+                                        (click)="toggleAdmin(user)"
+                                        title="Change Role">
+                                    {{ user.roles.includes('ADMIN') ? '⬇️ User' : '⬆️ Admin' }}
+                                </button>
+                                
+                                <button class="btn btn-sm btn-outline-info" (click)="viewReservations(user)" title="See Reservations">
+                                    📅 Books
+                                </button>
+
+                                <button class="btn btn-sm"
+                                        [class.btn-outline-dark]="!user.blocked"
+                                        [class.btn-success]="user.blocked"
+                                        (click)="toggleBlock(user)"
+                                        title="Block/Unblock">
+                                    {{ user.blocked ? '🔓 Unblock' : '🚫 Block' }}
+                                </button>
+
+                                <button class="btn btn-sm btn-outline-danger" (click)="deleteUser(user)" title="Delete User">
+                                    🗑️
+                                </button>
                             </div>
-                        </td>
-                    </tr>
-                    
-                    <!--Admin -->
-                    <tr>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <img src="assets/user_placeholder.png" class="rounded-circle me-2" width="30">
-                                <strong>SuperAdmin</strong>
-                            </div>
-                        </td>
-                        <td>{{'admin@studyspace.com'}}</td>
-                        <td><span class="badge bg-primary">ADMIN</span></td>
-                        <td class="text-center">
-                            <span class="text-muted small">No actions</span>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
-
+    
     <div class="mt-4">
-        <button routerLink="/admin" class="btn btn-secondary">Back to Admin menu</button>
+        <button routerLink="/admin" class="btn btn-secondary">Back to Menu</button>
     </div>
 </div>

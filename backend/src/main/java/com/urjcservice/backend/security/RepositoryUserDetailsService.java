@@ -36,6 +36,10 @@ public class RepositoryUserDetailsService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(), 
                 user.getEncodedPassword(), 
+                true, // enabled
+                true, // accountNonExpired
+                true, // credentialsNonExpired
+                !user.isBlocked(), // accountNonLocked (if blocked false)
                 roles);
     }
 	/*

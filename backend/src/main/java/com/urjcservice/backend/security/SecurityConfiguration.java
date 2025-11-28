@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager; 
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration; // <--- IMPORTANTE
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration; 
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -18,6 +18,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import com.urjcservice.backend.security.jwt.UnauthorizedHandlerJwt;
 import java.util.Arrays; 
 import java.util.List;
 
@@ -30,6 +31,9 @@ public class SecurityConfiguration {
     @Autowired
     public RepositoryUserDetailsService userDetailService;
 
+    @Autowired
+    private UnauthorizedHandlerJwt unauthorizedHandler;
+    
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -40,7 +44,10 @@ public class SecurityConfiguration {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
-    // ----------------------------------------
+    
+
+
+
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
@@ -86,10 +93,16 @@ public class SecurityConfiguration {
                 )*/
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/")
+                        .logoutSuccessHandler((request, response, authentication) -> response.setStatus(200))
                         .permitAll()
                 )
-                .httpBasic(Customizer.withDefaults());
+                .httpBasic(basic -> basic
+                    .authenticationEntryPoint(unauthorizedHandler)
+                )
+                .exceptionHandling(exception -> exception
+                    .authenticationEntryPoint(unauthorizedHandler) // También para excepciones generales
+                );
+                //.httpBasic(Customizer.withDefaults());
         // Disable CSRF at the moment
         http.csrf(csrf -> csrf.disable());
         return http.build();

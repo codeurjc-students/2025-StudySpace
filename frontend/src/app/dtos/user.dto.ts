@@ -5,4 +5,6 @@ export interface UserDTO {
     roles: string[];
     
     reservations: any[]; 
+
+    blocked: boolean;
 }

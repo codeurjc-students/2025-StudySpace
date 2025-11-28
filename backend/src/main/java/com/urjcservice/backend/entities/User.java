@@ -23,6 +23,7 @@ public class User {
     private String encodedPassword;
     private String name;
     private UserType type; //admin, user not-registered and registered
+    private boolean blocked = false;//in order to block users
 
     
     @ElementCollection(fetch = FetchType.EAGER)//for later autentication
@@ -109,5 +110,11 @@ public class User {
     }
     public void setRoles(List<String> roles) {
         this.roles = roles;
+    }
+    public boolean isBlocked() {
+        return blocked;
+    }
+    public void setBlocked(boolean blocked) {
+        this.blocked = blocked;
     }
 }

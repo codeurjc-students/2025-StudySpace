@@ -24,6 +24,21 @@ public class UserRestController {
         return userService.findAll();
     }
 
+    @PutMapping("/{id}/role")
+    public ResponseEntity<User> changeRole(@PathVariable Long id, @RequestParam String role) {
+        return userService.changeRole(id, role)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    
+    @PutMapping("/{id}/block")
+    public ResponseEntity<User> toggleBlock(@PathVariable Long id) {
+        return userService.toggleBlock(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
         Optional<User> user = userService.findById(id);

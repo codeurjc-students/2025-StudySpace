@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router'; // Para leer el ID de la URL
-import { RoomsService } from '../../services/rooms.service'; // Ajusta la ruta si es necesario
+import { RoomsService } from '../../services/rooms.service'; 
 import { RoomDTO } from '../../dtos/room.dto';
 
 @Component({

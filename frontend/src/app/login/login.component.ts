@@ -35,10 +35,28 @@ export class LoginComponent {
             this.router.navigate(['/']); 
         }
       },
-      error: (error: any) => {
-        console.error("Login error:", error);
+
+
+      error: (err: any) => {
+        console.error("Login error:", err);
       
-        this.modalService.open(this.loginErrorModal);
+        if (err.status === 401) {
+             
+            const serverMessage = err.error?.error || "";
+
+            
+            if (serverMessage && serverMessage.includes("locked")) {
+                 alert("⛔ ACCESS DENIED\n\n Your account has been LOCKED by an administrator.\n Contact support.");
+            } else {
+                 alert("Login failed. Please check your email and password.");
+            }
+            
+            
+            this.loginService.logOut(); 
+            this.router.navigate(['/']);
+        } else {
+             this.modalService.open(this.loginErrorModal);
+        }
       }
     });
   }

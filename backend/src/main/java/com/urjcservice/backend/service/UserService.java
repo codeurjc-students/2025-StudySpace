@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Arrays;
+
 
 @Service
 public class UserService {
@@ -51,4 +53,31 @@ public class UserService {
             return userRepository.save(existingUser);
         });
     }
+
+    //to upgrade or downgrade permisions
+    public Optional<User> changeRole(Long id, String role) {
+        return userRepository.findById(id).map(user -> {
+            //to avoid duplicities and conflicts
+            user.getRoles().clear(); 
+            
+            if ("ADMIN".equals(role)) {
+                user.getRoles().addAll(Arrays.asList("USER", "ADMIN"));
+                user.setType(User.UserType.ADMIN);
+            } else {
+                user.getRoles().add("USER");
+                user.setType(User.UserType.USER_REGISTERED);
+            }
+            return userRepository.save(user);
+        });
+    }
+
+    //to block or unblock a user
+    public Optional<User> toggleBlock(Long id) {
+        return userRepository.findById(id).map(user -> {
+            user.setBlocked(!user.isBlocked()); //inverts the value
+            return userRepository.save(user);
+        });
+    }
+
+
 }
