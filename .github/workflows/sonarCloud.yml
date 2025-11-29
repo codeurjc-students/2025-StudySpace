@@ -27,7 +27,7 @@ jobs:
 
       - name: Build and Test Backend
         working-directory: ./backend
-        run: mvn clean test jacoco:report #mvn clean verify -DskipTests=false
+        run: mvn clean test jacoco:report -U #mvn clean verify -DskipTests=false
 
      
       #FRONTEND
