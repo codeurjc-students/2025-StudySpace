@@ -1,62 +1,30 @@
-name: CI - SonarCloud Fix
+name: Debug POM Content
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    types: [opened, synchronize, reopened]
+on: [push, workflow_dispatch]
 
 jobs:
-  sonarcloud:
-    name: Build, Test and Analyze
+  debug:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-     
-      - name: Set up JDK 17
+      
+      - name: Setup Java
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
-         
 
-
-      - name: Debug & Clean
-        run: |
-          echo "=== ESTRUCTURA DE ARCHIVOS ==="
-          ls -R backend/src/main/java
-          echo "=== BORRANDO CACHÉ MAVEN ==="
-          rm -rf ~/.m2/repository
-
-     
-      - name: Build and Test Backend
+      - name: 🔍 DIAGNÓSTICO 1 - Ver archivo real
         working-directory: ./backend
         run: |
-          mvn dependency:go-offline -B
-          mvn clean test jacoco:report -U
+          echo "=== CONTENIDO EXACTO DE POM.XML ==="
+          cat pom.xml
+          echo "==================================="
 
-   
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      - name: Install Frontend Dependencies
-        working-directory: ./frontend
-        run: npm ci
-
-      - name: Test Frontend
-        working-directory: ./frontend
-        run: npm test -- --no-watch --no-progress --browsers=ChromeHeadless --code-coverage
-
-   
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: 🔍 DIAGNÓSTICO 2 - Ver qué interpreta Maven
+        working-directory: ./backend
+        run: |
+          echo "=== DEPENDENCIAS QUE VE MAVEN ==="
+          # Esto nos dirá si Maven está ignorando el bloque dependencies
+          mvn help:effective-pom
