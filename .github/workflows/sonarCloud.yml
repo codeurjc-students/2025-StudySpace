@@ -1,4 +1,4 @@
-name: SonarCloud Scan 
+name: SonarCloud Full Stack Scan
 
 on:
   push:
@@ -6,10 +6,11 @@ on:
       - main
   pull_request:
     types: [opened, synchronize, reopened]
+
 jobs:
   build-and-analyze:
-    name: Build, Test and Analyze
-    runs-on: ubuntu-latest 
+    name: Build and Analyze Full Stack
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -17,14 +18,12 @@ jobs:
         with:
           fetch-depth: 0  
 
-     
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '17' 
+          java-version: '17'
           distribution: 'temurin'
 
-     
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
@@ -33,14 +32,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-     
-      - name: Build and Analyze with Maven
-        working-directory: ./backend 
+      
+      - name: Build Backend (Java)
+        working-directory: ./backend
+        run: mvn -B clean verify -DskipTests
+
+      
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}   
-        run: |
-          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -DskipTests \
-            -Dsonar.projectKey=codeurjc-students_2025-StudySpace \
-            -Dsonar.organization=codeurjc-students \
-            -Dsonar.host.url=https://sonarcloud.io
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
