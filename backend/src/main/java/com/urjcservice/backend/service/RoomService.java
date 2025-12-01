@@ -61,7 +61,7 @@ public class RoomService {
         return existing;
     }
 
-    public Optional<Room> updateRoom(Long id, Room updatedRoom) {
+    /*public Optional<Room> updateRoom(Long id, Room updatedRoom) {
         return roomRepository.findById(id).map(existingRoom -> {
             existingRoom.setName(updatedRoom.getName());
             existingRoom.setCapacity(updatedRoom.getCapacity());
@@ -94,9 +94,64 @@ public class RoomService {
 
             return roomRepository.save(existingRoom);
         });
+    }*/
+
+    public Optional<Room> updateRoom(Long id, Room updatedRoom) {
+        return roomRepository.findById(id).map(existingRoom -> {
+            updateRoomBasicInfo(existingRoom, updatedRoom);
+            updateRoomSoftware(existingRoom, updatedRoom.getSoftware());
+            
+            return roomRepository.save(existingRoom);
+        });
     }
 
-    public Optional<Room> patchRoom(Long id, Room partialRoom) {
+    //auxiliar methods 
+    private void updateRoomBasicInfo(Room existing, Room updated) {
+        existing.setName(updated.getName());
+        existing.setCapacity(updated.getCapacity());
+    }
+
+    private void updateRoomSoftware(Room existing, List<Software> newSoftwareList) {
+        List<Software> newList = newSoftwareList != null ? newSoftwareList : new ArrayList<>();
+        
+        removeOldSoftware(existing, newList);
+        addNewSoftware(existing, newList);
+    }
+
+    private void removeOldSoftware(Room existing, List<Software> newList) {
+        List<Software> toRemove = new ArrayList<>();
+        for (Software s : existing.getSoftware()) {
+            boolean stillExists = newList.stream()
+                .anyMatch(n -> n.getId() != null && n.getId().equals(s.getId()));
+            if (!stillExists) {
+                toRemove.add(s);
+            }
+        }
+        for (Software s : toRemove) {
+            existing.removeSoftware(s);
+            softwareRepository.save(s);
+        }
+    }
+
+    private void addNewSoftware(Room existing, List<Software> newList) {
+        for (Software s : newList) {
+            if (s == null) continue;
+            
+            if (s.getId() != null) {
+                softwareRepository.findById(s.getId()).ifPresent(found -> {
+                    if (!existing.getSoftware().contains(found)) {
+                        existing.addSoftware(found);
+                    }
+                });
+            } else {
+                Software created = softwareRepository.save(s);
+                existing.addSoftware(created);
+            }
+        }
+    }
+
+
+    /*public Optional<Room> patchRoom(Long id, Room partialRoom) {
         return roomRepository.findById(id).map(existingRoom -> {
             if (partialRoom.getName() != null) {
                 existingRoom.setName(partialRoom.getName());
@@ -133,5 +188,31 @@ public class RoomService {
 
             return roomRepository.save(existingRoom);
         });
+    }*/
+    public Optional<Room> patchRoom(Long id, Room partialRoom) {
+        return roomRepository.findById(id).map(existingRoom -> {
+            // Delegamos en métodos auxiliares específicos para PATCH
+            patchRoomBasicInfo(existingRoom, partialRoom);
+            patchRoomSoftware(existingRoom, partialRoom.getSoftware());
+            
+            return roomRepository.save(existingRoom);
+        });
+    }
+
+    private void patchRoomBasicInfo(Room existing, Room partial) {
+        if (partial.getName() != null) {
+            existing.setName(partial.getName());
+        }
+        if (partial.getCapacity() != null) {
+            existing.setCapacity(partial.getCapacity());
+        }
+    }
+
+    private void patchRoomSoftware(Room existing, List<Software> newList) {
+        //if we dont update the list is null
+        if (newList != null) {
+            removeOldSoftware(existing, newList);
+            addNewSoftware(existing, newList);
+        }
     }
 }

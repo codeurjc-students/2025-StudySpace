@@ -55,7 +55,7 @@ public class ReservationService {
     }
 
     
-    public Optional<Reservation> updateReservation(Long id, Reservation updatedReservation) {
+    /*public Optional<Reservation> updateReservation(Long id, Reservation updatedReservation) {
         return reservationRepository.findById(id).map(existingReservation -> {
             
             //update only if changed
@@ -88,6 +88,40 @@ public class ReservationService {
             
             return reservationRepository.save(existingReservation);
         });
+    }*/
+
+    public Optional<Reservation> updateReservation(Long id, Reservation updatedReservation) {
+        return reservationRepository.findById(id).map(existingReservation -> {
+            updateReservationUser(existingReservation, updatedReservation.getUserId());
+            updateReservationRoom(existingReservation, updatedReservation.getRoomId());
+            updateReservationDetails(existingReservation, updatedReservation);
+            return reservationRepository.save(existingReservation);
+        });
+    }
+
+    //auxiliar methods
+    private void updateReservationUser(Reservation reservation, Long newUserId) {
+        if (newUserId != null) {
+            userRepository.findById(newUserId).ifPresent(reservation::setUser);
+        }
+    }
+
+    private void updateReservationRoom(Reservation reservation, Long newRoomId) {
+        if (newRoomId != null) {
+            roomRepository.findById(newRoomId).ifPresent(reservation::setRoom);
+        }
+    }
+
+    private void updateReservationDetails(Reservation existing, Reservation updated) {
+        if (updated.getStartDate() != null) {
+            existing.setStartDate(updated.getStartDate());
+        }
+        if (updated.getEndDate() != null) {
+            existing.setEndDate(updated.getEndDate());
+        }
+        if (updated.getReason() != null) {
+            existing.setReason(updated.getReason());
+        }
     }
 
    

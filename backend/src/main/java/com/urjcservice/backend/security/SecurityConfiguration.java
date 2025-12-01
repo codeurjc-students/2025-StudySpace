@@ -28,11 +28,11 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfiguration {
 
-    @Autowired
-    public RepositoryUserDetailsService userDetailService;
+   /* @Autowired
+    public RepositoryUserDetailsService userDetailService;*/
 
-    @Autowired
-    private UnauthorizedHandlerJwt unauthorizedHandler;
+    /*@Autowired
+    private UnauthorizedHandlerJwt unauthorizedHandler;*/
     
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -50,7 +50,7 @@ public class SecurityConfiguration {
 
 
     @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
+    public DaoAuthenticationProvider authenticationProvider(RepositoryUserDetailsService userDetailService) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailService);
         authProvider.setPasswordEncoder(passwordEncoder());
@@ -69,8 +69,10 @@ public class SecurityConfiguration {
     }*/
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.authenticationProvider(authenticationProvider());
+    public SecurityFilterChain filterChain(HttpSecurity http,
+        UnauthorizedHandlerJwt unauthorizedHandler,
+        RepositoryUserDetailsService userDetailService) throws Exception {
+        http.authenticationProvider(authenticationProvider(userDetailService));
         http
         // activate cors here
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))

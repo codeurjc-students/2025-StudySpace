@@ -49,12 +49,12 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<Object> register(@RequestBody RegisterRequest request) {
         
         // Check if the email already exists
         if (userRepository.findByEmail(request.email).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Error: El email ya está en uso.");
+                    .body("Error: The email is already in use.");
         }
 
         // Create new user account

@@ -27,7 +27,7 @@ public class ReservationController {
     @Autowired
     private RoomRepository roomRepository;
 
-    // Clase auxiliar para recibir los datos del JSON
+    //auxiliar class to receive reservation data from frontend(JSON)
     public static class ReservationRequest {
         public Long roomId;
         public Date startDate;
@@ -36,7 +36,7 @@ public class ReservationController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> createReservation(@RequestBody ReservationRequest request) {
+    public ResponseEntity<Object> createReservation(@RequestBody ReservationRequest request) {
         
        
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -53,7 +53,7 @@ public class ReservationController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Room not found.");
         }
 
-        // 3. Crear la reserva
+        // Create the reservation
         Reservation reservation = new Reservation();
         reservation.setStartDate(request.startDate);
         reservation.setEndDate(request.endDate);
