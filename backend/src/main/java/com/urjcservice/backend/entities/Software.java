@@ -81,10 +81,9 @@ public class Software {
     }
 
     public void removeRoom(Room room) {
-        if (room != null && this.rooms.remove(room)) {
-            if (room.getSoftware() != null) {
-                room.getSoftware().remove(this);
-            }
+        if (room != null && this.rooms.remove(room) && room.getSoftware() != null){
+            room.getSoftware().remove(this);
+            
         }
     }
 

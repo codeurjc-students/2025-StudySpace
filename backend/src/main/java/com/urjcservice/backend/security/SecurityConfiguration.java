@@ -28,11 +28,7 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfiguration {
 
-   /* @Autowired
-    public RepositoryUserDetailsService userDetailService;*/
-
-    /*@Autowired
-    private UnauthorizedHandlerJwt unauthorizedHandler;*/
+   
     
     @Bean
     public PasswordEncoder passwordEncoder() {

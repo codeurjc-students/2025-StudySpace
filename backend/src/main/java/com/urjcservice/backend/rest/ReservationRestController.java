@@ -16,8 +16,12 @@ import static org.springframework.web.servlet.support.ServletUriComponentsBuilde
 @RequestMapping("/api/reservations")
 public class ReservationRestController {
 
-    @Autowired
-    private ReservationService reservationService;
+    
+    private final ReservationService reservationService;
+    
+    public ReservationRestController(ReservationService reservationService) {
+        this.reservationService = reservationService;
+    }
 
     @GetMapping
     public List<Reservation> getAllReservations() {

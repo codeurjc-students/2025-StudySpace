@@ -20,12 +20,19 @@ import java.util.Optional;
 @RequestMapping("/api/reservations")
 public class ReservationController {
 
-    @Autowired
-    private ReservationRepository reservationRepository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private RoomRepository roomRepository;
+    
+
+    private final ReservationRepository reservationRepository;
+    private final UserRepository userRepository;
+    private final RoomRepository roomRepository;
+    
+    public ReservationController(ReservationRepository reservationRepository,
+                                 UserRepository userRepository,
+                                 RoomRepository roomRepository) {
+        this.reservationRepository = reservationRepository;
+        this.userRepository = userRepository;
+        this.roomRepository = roomRepository;
+    }
 
     //auxiliar class to receive reservation data from frontend(JSON)
     public static class ReservationRequest {

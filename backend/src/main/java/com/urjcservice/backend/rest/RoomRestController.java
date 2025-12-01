@@ -17,11 +17,18 @@ import java.util.Optional;
 @RequestMapping("/api/rooms") 
 public class RoomRestController {
 
-    @Autowired
+    /*@Autowired
     private RoomRepository roomRepository;
     
     @Autowired
-    private SoftwareRepository softwareRepository;
+    private SoftwareRepository softwareRepository;*/
+    private final  RoomRepository roomRepository;
+    private final SoftwareRepository softwareRepository;
+    public RoomRestController(RoomRepository roomRepository,
+                              SoftwareRepository softwareRepository) {
+        this.roomRepository = roomRepository;
+        this.softwareRepository = softwareRepository;
+    }
 
     //internal DTO for room requests on frontend
     public static class RoomRequest {

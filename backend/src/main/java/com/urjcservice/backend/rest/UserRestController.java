@@ -16,8 +16,12 @@ import static org.springframework.web.servlet.support.ServletUriComponentsBuilde
 @RequestMapping("/api/users")
 public class UserRestController {
 
-    @Autowired
-    private UserService userService;
+   
+    private final UserService userService;
+    
+    public UserRestController(UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping
     public List<User> getAllUsers() {

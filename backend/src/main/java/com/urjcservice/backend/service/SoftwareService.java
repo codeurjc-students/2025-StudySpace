@@ -14,11 +14,15 @@ import java.util.Optional;
 @Service
 public class SoftwareService {
 
-    @Autowired
-    private SoftwareRepository softwareRepository;
-
-    @Autowired
-    private RoomRepository roomRepository;
+    
+    private final SoftwareRepository softwareRepository;
+    private final RoomRepository roomRepository;
+    
+    public SoftwareService(SoftwareRepository softwareRepository,
+                           RoomRepository roomRepository) {
+        this.softwareRepository = softwareRepository;
+        this.roomRepository = roomRepository;
+    }
 
     public List<Software> findAll() {
         return softwareRepository.findAll();

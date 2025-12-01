@@ -18,8 +18,13 @@ import jakarta.servlet.http.HttpServletResponse;
 @RequestMapping("/api/auth")
 public class LoginController {
 	
-	@Autowired
-	private UserLoginService userService;
+	
+
+	private final UserLoginService userService;
+	
+	public LoginController(UserLoginService userService) {
+		this.userService = userService;
+	}
 
 	@PostMapping("/login")
 	public ResponseEntity<AuthResponse> login(

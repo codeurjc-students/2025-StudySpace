@@ -111,10 +111,9 @@ public class Room {
     }
 
     public void removeSoftware(Software s) {
-        if (s != null && this.software.remove(s)) {
-            if (s.getRooms() != null) {
-                s.getRooms().remove(this);
-            }
+        if (s != null && this.software.remove(s) && s.getRooms() != null){
+            s.getRooms().remove(this);
+            
         }
     }
     @JsonIgnore
@@ -134,10 +133,9 @@ public class Room {
     }
 
     public void removeReservation(Reservation reservation) {
-        if (reservation != null && this.reservations.remove(reservation)) {
-            if (reservation.getRoom() == this) {
-                reservation.setRoom(null);
-            }
+        if (reservation != null && this.reservations.remove(reservation) && reservation.getRoom() == this){
+            reservation.setRoom(null);
+            
         }
     }
     

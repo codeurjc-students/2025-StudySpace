@@ -99,10 +99,9 @@ public class User {
     }
 
     public void removeReservation(Reservation reservation) {
-        if (reservation != null && this.reservations.remove(reservation)) {
-            if (reservation.getUser() == this) {
-                reservation.setUser(null);
-            }
+        if (reservation != null && this.reservations.remove(reservation) && reservation.getUser() == this) {
+            reservation.setUser(null);
+            
         }
     }
     public List<String> getRoles() {

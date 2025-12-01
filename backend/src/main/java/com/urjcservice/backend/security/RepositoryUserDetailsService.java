@@ -17,8 +17,12 @@ import com.urjcservice.backend.repositories.UserRepository;
 @Service
 public class RepositoryUserDetailsService implements UserDetailsService {
 
-	@Autowired
-	private UserRepository userRepository;
+	
+    private final UserRepository userRepository;
+    
+    public RepositoryUserDetailsService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
 	@Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
