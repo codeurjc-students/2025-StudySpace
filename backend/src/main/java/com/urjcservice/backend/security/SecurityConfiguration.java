@@ -19,6 +19,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.urjcservice.backend.security.jwt.UnauthorizedHandlerJwt;
+import org.springframework.http.HttpMethod;
 import java.util.Arrays; 
 import java.util.List;
 
@@ -53,16 +54,6 @@ public class SecurityConfiguration {
         return authProvider;
     }
 
-    /*
-    @Bean
-    public InMemoryUserDetailsManager userDetailsService() {
-        UserDetails user = User.builder()
-                .username("user")
-                .password(passwordEncoder().encode("pass"))
-                .roles("USER")
-                .build();
-        return new InMemoryUserDetailsManager(user);
-    }*/
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
@@ -76,20 +67,13 @@ public class SecurityConfiguration {
                         // PUBLIC PAGES
                         .requestMatchers("/").permitAll()
                         .requestMatchers("/error").permitAll()
-                        /*/.requestMatchers("/api/rooms/**").permitAll()*/
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/rooms/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/rooms/**").permitAll()
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
                         // allows pre-flight requests (for CORS)
-                    .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // PRIVATE PAGES
                         .anyRequest().authenticated())
-                /*.formLogin(formLogin -> formLogin
-                        .loginPage("/login")
-                        .failureUrl("/loginerror")
-                        .defaultSuccessUrl("/private")
-                        .permitAll()
-                )*/
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessHandler((request, response, authentication) -> response.setStatus(200))
@@ -99,7 +83,7 @@ public class SecurityConfiguration {
                     .authenticationEntryPoint(unauthorizedHandler)
                 )
                 .exceptionHandling(exception -> exception
-                    .authenticationEntryPoint(unauthorizedHandler) // También para excepciones generales
+                    .authenticationEntryPoint(unauthorizedHandler) //for general exceptions
                 );
                 //.httpBasic(Customizer.withDefaults());
         // Disable CSRF at the moment
