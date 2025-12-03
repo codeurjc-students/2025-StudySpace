@@ -59,41 +59,6 @@ public class ReservationService {
     }
 
     
-    /*public Optional<Reservation> updateReservation(Long id, Reservation updatedReservation) {
-        return reservationRepository.findById(id).map(existingReservation -> {
-            
-            //update only if changed
-            Long newUserId = updatedReservation.getUserId();
-            if (newUserId != null) {
-                //only asigned the user not saving it, hibernate will manage the rest
-                User newUser = userRepository.findById(newUserId).orElse(null);
-                if (newUser != null) {
-                    existingReservation.setUser(newUser);
-                }
-            }
-
-            //update only if changed
-            Long newRoomId = updatedReservation.getRoomId();
-            if (newRoomId != null) {
-                Room newRoom = roomRepository.findById(newRoomId).orElse(null);
-                if (newRoom != null) {
-                    existingReservation.setRoom(newRoom);
-                }
-            }
-
-            //update only if changed
-            if (updatedReservation.getStartDate() != null) 
-                existingReservation.setStartDate(updatedReservation.getStartDate());
-            if (updatedReservation.getEndDate() != null) 
-                existingReservation.setEndDate(updatedReservation.getEndDate());
-            if (updatedReservation.getReason() != null) 
-                existingReservation.setReason(updatedReservation.getReason());
-
-            
-            return reservationRepository.save(existingReservation);
-        });
-    }*/
-
     public Optional<Reservation> updateReservation(Long id, Reservation updatedReservation) {
         return reservationRepository.findById(id).map(existingReservation -> {
             updateReservationUser(existingReservation, updatedReservation.getUserId());

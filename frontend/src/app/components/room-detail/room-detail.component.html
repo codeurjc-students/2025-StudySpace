@@ -11,7 +11,7 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
-                    <img src="assets/AulasSinOrdena.jpg" class="img-fluid rounded mb-3 shadow-sm" alt="Room Image">
+                    <img src="assets/AulasSinOrdena.jpg" class="img-fluid rounded mb-3 shadow-sm" alt="Classroom view">
                 </div>
                 <div class="col-md-6">
                     <h4 class="text-primary">Detalles</h4>
@@ -33,7 +33,7 @@
                         </div>
                     </div>
                     <ng-template #noSoftware>
-                        <div class="alert alert-secondary">Esta aula no tiene software específico asignado.</div>
+                        <div class="alert alert-secondary">This classroom does not have any specific software assigned.</div>
                     </ng-template>
                 </div>
             </div>
@@ -42,19 +42,6 @@
             <button routerLink="/" class="btn btn-secondary">
                 &laquo; Back
             </button>
-            <!--<button *ngIf="!loginService.isLogged()" 
-                [routerLink]="['/login']" 
-                class="btn btn-success">
-                Log in to book
-            </button>
-
-            <button *ngIf="loginService.isLogged()" 
-                    [routerLink]="['/reservations/create', room.id]" 
-                    class="btn btn-success">
-                Book Room
-            </button>-->
-            
-            <!--<button class="btn btn-success">Book room</button>-->
         </div>
     </div>
 </div>

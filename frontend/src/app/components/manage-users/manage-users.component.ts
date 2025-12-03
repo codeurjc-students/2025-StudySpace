@@ -11,7 +11,7 @@ export class ManageUsersComponent implements OnInit {
 
   users: UserDTO[] = [];
 
-  constructor(private userService: UserService) { }
+  constructor(private readonly userService: UserService) { }
 
   ngOnInit(): void {
     this.loadUsers();

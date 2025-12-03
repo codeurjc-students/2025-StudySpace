@@ -9,7 +9,7 @@ import { SoftwareService, SoftwareDTO } from '../../services/software.service';
 export class ManageSoftwaresComponent implements OnInit {
   softwares: SoftwareDTO[] = [];
 
-  constructor(private softwareService: SoftwareService) { }
+  constructor(private readonly softwareService: SoftwareService) { }
 
   ngOnInit(): void {
     this.loadSoftwares();

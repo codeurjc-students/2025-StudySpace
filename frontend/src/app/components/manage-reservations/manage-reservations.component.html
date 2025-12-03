@@ -44,22 +44,22 @@
             <form (ngSubmit)="saveEdit()">
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Change Room</label>
-                        <select [(ngModel)]="editingReservation.roomId" name="roomId" class="form-select">
+                        <label class="form-label" for="roomSelect">Change Room</label>
+                        <select id="roomSelect" [(ngModel)]="editingReservation.roomId" name="roomId" class="form-select">
                             <option *ngFor="let r of rooms" [value]="r.id">{{ r.name }}</option>
                         </select>
                     </div>
                     <div class="col-md-12 mb-3">
-                        <label class="form-label">Reason</label>
-                        <input type="text" [(ngModel)]="editingReservation.reason" name="reason" class="form-control">
+                        <label class="form-label" for="reasonInput">Reason</label>
+                        <input id="reasonInput" type="text" [(ngModel)]="editingReservation.reason" name="reason" class="form-control">
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Start Date</label>
-                        <input type="datetime-local" [(ngModel)]="editingReservation.startDate" name="startDate" class="form-control">
+                        <label class="form-label" for="startDateInput">Start Date</label>
+                        <input id="startDateInput" type="datetime-local" [(ngModel)]="editingReservation.startDate" name="startDate" class="form-control">
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">End Date</label>
-                        <input type="datetime-local" [(ngModel)]="editingReservation.endDate" name="endDate" class="form-control">
+                        <label class="form-label" for="endDateInput">End Date</label>
+                        <input id="endDateInput" type="datetime-local" [(ngModel)]="editingReservation.endDate" name="endDate" class="form-control">
                     </div>
                 </div>
                 <div class="d-flex justify-content-end gap-2">

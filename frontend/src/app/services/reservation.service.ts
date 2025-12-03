@@ -41,13 +41,8 @@ export class ReservationService {
       endDate: endDate,
       reason: reason
     };
-    /*const authHeader = this.loginService.auth || localStorage.getItem('auth') || '';*/
-    /*const headers = new HttpHeaders({
-      'Authorization': authHeader,
-      'Content-Type': 'application/json',
-      'X-Requested-With': 'XMLHttpRequest' // This prevents Spring from displaying the browser login pop-up
-    });*/
-    //post request with auth header
+    
     return this.http.post('/api/reservations/create', body, { headers: this.getHeaders() });
   }
+  
 }

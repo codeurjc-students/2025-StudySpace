@@ -19,9 +19,9 @@ export class ManageReservationsComponent implements OnInit {
   rooms: RoomDTO[] = []; 
 
   constructor(
-    private route: ActivatedRoute,
-    private reservationService: ReservationService,
-    private roomsService: RoomsService
+    private readonly route: ActivatedRoute,
+    private readonly reservationService: ReservationService,
+    private readonly roomsService: RoomsService
   ) {}
 
   ngOnInit(): void {

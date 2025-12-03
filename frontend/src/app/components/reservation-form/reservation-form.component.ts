@@ -20,18 +20,14 @@ export class ReservationFormComponent implements OnInit {
   reason: string = '';
 
   constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private reservationService: ReservationService,
-    private roomsService: RoomsService
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
+    private readonly reservationService: ReservationService,
+    private readonly roomsService: RoomsService
   ) {}
 
   ngOnInit(): void {
     //we obtain the roomId from the route parameters
-    /*const id = this.route.snapshot.paramMap.get('roomId');
-    if (id) {
-      this.roomId = +id;
-    }*/
    this.roomsService.getRooms().subscribe({
         next: (data) => {
             this.rooms = data;

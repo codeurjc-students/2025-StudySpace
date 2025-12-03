@@ -85,7 +85,6 @@ public class SecurityConfiguration {
                 .exceptionHandling(exception -> exception
                     .authenticationEntryPoint(unauthorizedHandler) //for general exceptions
                 );
-                //.httpBasic(Customizer.withDefaults());
         // Disable CSRF at the moment
         http.csrf(csrf -> csrf.disable());
         return http.build();

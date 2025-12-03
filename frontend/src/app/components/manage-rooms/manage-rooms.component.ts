@@ -10,7 +10,7 @@ import { RoomDTO } from '../../dtos/room.dto';
 export class ManageRoomsComponent implements OnInit {
   rooms: RoomDTO[] = [];
 
-  constructor(private roomsService: RoomsService) { }
+  constructor(private readonly roomsService: RoomsService) { }
 
   ngOnInit(): void {
     this.loadRooms();

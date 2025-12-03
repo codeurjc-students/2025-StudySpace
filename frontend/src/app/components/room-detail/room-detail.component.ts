@@ -13,12 +13,12 @@ export class RoomDetailComponent implements OnInit {
   room: RoomDTO | undefined;
 
   constructor(
-    private route: ActivatedRoute,
-    private roomsService: RoomsService
+    private readonly route: ActivatedRoute,
+    private readonly roomsService: RoomsService
   ) {}
 
   ngOnInit(): void {
-    // Leemos el parámetro 'id' de la URL
+    //from url we obtain the room id
     const id = this.route.snapshot.params['id'];
     if (id) {
       this.roomsService.getRoom(id).subscribe({

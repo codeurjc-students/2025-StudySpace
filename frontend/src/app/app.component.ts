@@ -9,7 +9,7 @@ import { LoginService } from './login/login.service';
 })
 export class AppComponent {
   title = 'frontend';
-  constructor(public loginService: LoginService,private router: Router) {}
+  constructor(public loginService: LoginService,private readonly router: Router) {}
   goToLogIn() {
     console.log('Navegando a login...');
     this.router.navigate(['/login']);
