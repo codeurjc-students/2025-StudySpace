@@ -76,7 +76,8 @@ public class SecurityConfiguration {
                         // PUBLIC PAGES
                         .requestMatchers("/").permitAll()
                         .requestMatchers("/error").permitAll()
-                        .requestMatchers("/api/rooms/**").permitAll()
+                        /*/.requestMatchers("/api/rooms/**").permitAll()*/
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/rooms/**").permitAll()
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
                         // allows pre-flight requests (for CORS)
