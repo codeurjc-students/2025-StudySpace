@@ -8,6 +8,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.annotation.DirtiesContext;
+import java.util.UUID;
 
 import com.urjcservice.backend.repositories.UserRepository;
 
@@ -18,6 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)  //to reset DB after each test
 public class UserApiTest {
 
     @Autowired
@@ -34,7 +37,7 @@ public class UserApiTest {
 
     @Test
     public void testRegisterUser() throws Exception {
-        String randomEmail = "testuser_" + System.currentTimeMillis() + "@example.com";//random email to avoid conflicts
+        String randomEmail = "testuser_" + UUID.randomUUID().toString() + "@example.com";//random email to avoid conflicts
         
         String newUser = """
             {
