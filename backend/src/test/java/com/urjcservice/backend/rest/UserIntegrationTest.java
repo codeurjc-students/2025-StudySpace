@@ -19,13 +19,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class UserApiTest { 
+public class UserIntegrationTest { 
 
     @Autowired
     private MockMvc mockMvc;
 
     @Test
-    public void testRegisterUser() throws Exception {
+    public void testRegisterUserUnique() throws Exception {
         String uniqueEmail = "test_" + UUID.randomUUID().toString() + "@example.com";
         
         String newUser = """
