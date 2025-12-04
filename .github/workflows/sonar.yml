@@ -46,7 +46,6 @@ jobs:
       - name: Run Backend Tests (with Jacoco)
         run: |
           cd backend
-          # 'verify' ejecuta los tests y genera el reporte de Jacoco
           mvn clean verify -DskipTests=false
 
       
