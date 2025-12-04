@@ -34,18 +34,20 @@ public class UserApiTest {
 
     @Test
     public void testRegisterUser() throws Exception {
+        String randomEmail = "testuser_" + System.currentTimeMillis() + "@example.com";//random email to avoid conflicts
+        
         String newUser = """
             {
                 "name": "TestUser",
-                "email": "testuser@example.com",
+                "email": "%s",
                 "password": "password123"
             }
-        """;
+        """.formatted(randomEmail);
 
         mockMvc.perform(post("/api/auth/register")
                 .content(newUser)
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated()); //201
+                .andExpect(status().isCreated()); // 201
     }
 
     @Test
