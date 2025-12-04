@@ -20,6 +20,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.urjcservice.backend.security.jwt.UnauthorizedHandlerJwt;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import java.util.Arrays; 
 import java.util.List;
 
@@ -67,7 +68,8 @@ public class SecurityConfiguration {
                         // PUBLIC PAGES
                         .requestMatchers("/").permitAll()
                         .requestMatchers("/error").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/rooms/**").permitAll()
+                        /*.requestMatchers(HttpMethod.GET, "/api/rooms/**").permitAll()*/
+                        .requestMatchers(new AntPathRequestMatcher("/api/rooms/**", "GET")).permitAll()
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
                         // allows pre-flight requests (for CORS)
@@ -75,7 +77,8 @@ public class SecurityConfiguration {
                         // PRIVATE PAGES
                         .anyRequest().authenticated())
                 .logout(logout -> logout
-                        .logoutUrl("/logout")
+                        /*.logoutUrl("/logout")*/
+                        .logoutUrl("/api/auth/logout")
                         .logoutSuccessHandler((request, response, authentication) -> response.setStatus(200))
                         .permitAll()
                 )
