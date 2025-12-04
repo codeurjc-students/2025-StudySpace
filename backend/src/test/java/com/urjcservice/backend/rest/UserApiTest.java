@@ -36,7 +36,7 @@ public class UserApiTest {
     }
 
     @Test
-    public void testRegisterUser() throws Exception {
+    public void testRegisterUserWithUUID() throws Exception {
         String randomEmail = "testuser_" + UUID.randomUUID().toString() + "@example.com";//random email to avoid conflicts
         
         String newUser = """
