@@ -91,15 +91,16 @@ describe('ManageReservationsComponent', () => {
 
   it('should save edits successfully', () => {
     spyOn(window, 'alert'); 
-    component.editingReservation = { id: 1, reason: 'Updated Reason' };
+    const reservationData = { id: 1, reason: 'Updated Reason' };//to avoid null
+    component.editingReservation = reservationData;
     reservationServiceSpy.updateReservation.and.returnValue(of({}));
 
     component.saveEdit();
 
-    expect(reservationServiceSpy.updateReservation).toHaveBeenCalledWith(1, component.editingReservation);
+    expect(reservationServiceSpy.updateReservation).toHaveBeenCalledWith(1, reservationData);
     expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/successfully/));
     expect(component.editingReservation).toBeNull(); //close edition
-    expect(reservationServiceSpy.getReservationsByUser).toHaveBeenCalled(); 
+    expect(reservationServiceSpy.getReservationsByUser).toHaveBeenCalled(); //reload
   });
 
   it('should handle error when saving edits', () => {
