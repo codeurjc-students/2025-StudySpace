@@ -1,10 +1,10 @@
-name: SonarCloud Analysis
+name: SonarCloud Full Analysis
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
+    types: [opened, synchronize, reopened]
 
 jobs:
   sonar:
@@ -12,59 +12,63 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0  
 
       
-      #FRONTEND(lcov.info)
-      
+      #FRONTEND(LCOV)
+
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install Frontend Dependencies
-        run: |
-          cd frontend
-          npm ci
+        working-directory: ./frontend
+        run: npm ci
 
-      - name: Run Frontend Tests (with Coverage)
-        run: |
-          cd frontend
-          npx ng test --no-watch --code-coverage --browsers=ChromeHeadless
+      - name: Run Frontend Tests
+        working-directory: ./frontend
+        run: npx ng test --no-watch --code-coverage --browsers=ChromeHeadless
 
       
-      #BACKEND
-      
+      #BACKEND (JACOCO)
+     
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
-          java-version: 17
+          java-version: '17'
           distribution: 'temurin'
+          cache: 'maven'
 
-      - name: Run Backend Tests (with Jacoco)
-        run: |
-          cd backend
-          mvn clean verify -DskipTests=false
+      - name: Build and Test Backend
+        working-directory: ./backend
+        run: mvn -B clean verify
 
       
       #SONARCLOUD
-    
+      
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
             -Dsonar.projectKey=codeurjc-students_2025-StudySpace
             -Dsonar.organization=codeurjc-students
             
-          
+            -Dsonar.sources=backend/src/main/java,frontend/src
+            -Dsonar.tests=backend/src/test/java,frontend/src
+            
+            -Dsonar.java.binaries=backend/target/classes
+            
             -Dsonar.javascript.lcov.reportPaths=frontend/coverage/frontend/lcov.info
             -Dsonar.coverage.jacoco.xmlReportPaths=backend/target/site/jacoco/jacoco.xml
-            
             
             -Dsonar.exclusions=**/dtos/**,**/dto/**,**/entities/**,**/model/**,**/config/**,**/constants/**,**/*.spec.ts,**/main.ts,**/environment.ts,**/*.module.ts
             -Dsonar.coverage.exclusions=**/dtos/**,**/dto/**,**/entities/**,**/model/**,**/config/**,**/constants/**,**/*.spec.ts,**/main.ts,**/environment.ts,**/*.module.ts
