@@ -17,11 +17,7 @@ import java.util.Optional;
 @RequestMapping("/api/rooms") 
 public class RoomRestController {
 
-    /*@Autowired
-    private RoomRepository roomRepository;
     
-    @Autowired
-    private SoftwareRepository softwareRepository;*/
     private final  RoomRepository roomRepository;
     private final SoftwareRepository softwareRepository;
     public RoomRestController(RoomRepository roomRepository,

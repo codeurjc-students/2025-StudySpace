@@ -17,12 +17,13 @@ import org.springframework.http.ResponseEntity;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-//mock to avoid using the real database
+
 @ExtendWith(MockitoExtension.class)
 public class RoomServiceTest {
 
@@ -32,43 +33,86 @@ public class RoomServiceTest {
     @Mock
     private SoftwareRepository softwareRepository;
 
-
     @InjectMocks
-    private RoomRestController roomController; 
+    private RoomService roomService;
 
     @Test
-    public void testCreateRoomWithSoftware() {
-        
-        RoomRequest request = new RoomRequest();
-        request.name = "Aula Nueva";
-        request.capacity = 30;
-        request.camp = Room.CampusType.MOSTOLES;
-        request.softwareIds = Arrays.asList(1L, 2L);
-
-        Software soft1 = new Software(); soft1.setId(1L);
-        Software soft2 = new Software(); soft2.setId(2L);
-
-        
-        when(softwareRepository.findAllById(request.softwareIds)).thenReturn(Arrays.asList(soft1, soft2));
-        when(roomRepository.save(any(Room.class))).thenAnswer(i -> i.getArguments()[0]);
-
-
-        ResponseEntity<Room> response = roomController.createRoom(request);
-
-        //verify
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals("Aula Nueva", response.getBody().getName());
-        assertEquals(2, response.getBody().getSoftware().size()); 
+    public void testFindAll() {
+        when(roomRepository.findAll()).thenReturn(Arrays.asList(new Room(), new Room()));
+        List<Room> result = roomService.findAll();
+        assertEquals(2, result.size());
     }
 
     @Test
-    public void testUpdateRoomNotFound() {
-        when(roomRepository.findById(99L)).thenReturn(Optional.empty());
+    public void testSaveRoomWithSoftware() {
+        // Given
+        Room room = new Room();
+        room.setName("Lab 1");
+        
+        Software soft = new Software();
+        soft.setId(1L);
+        room.setSoftware(Arrays.asList(soft));
 
-        RoomRequest request = new RoomRequest();
-        ResponseEntity<Room> response = roomController.updateRoom(99L, request);
+        when(softwareRepository.findById(1L)).thenReturn(Optional.of(soft));
+        when(roomRepository.save(any(Room.class))).thenReturn(room);
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        // When
+        Room result = roomService.save(room);
+
+        //Verify
+        assertNotNull(result);
+        verify(softwareRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    public void testUpdateRoomAddingAndRemovingSoftware() {
+        Long roomId = 1L;
+        
+        // already existing software 
+        Software softA = new Software(); softA.setId(10L); softA.setName("Old Soft");
+        
+        // new software to add
+        Software softB = new Software(); softB.setId(20L); softB.setName("New Soft");
+
+        // already existing room 
+        Room existingRoom = new Room();
+        existingRoom.setId(roomId);
+        existingRoom.setName("Old Name");
+        existingRoom.setSoftware(new ArrayList<>(Arrays.asList(softA))); // Mutable list
+
+        // new data
+        Room updateData = new Room();
+        updateData.setName("New Name");
+        updateData.setCapacity(50);
+        updateData.setSoftware(Arrays.asList(softB));
+
+        // Mocks
+        when(roomRepository.findById(roomId)).thenReturn(Optional.of(existingRoom));
+        when(softwareRepository.findById(20L)).thenReturn(Optional.of(softB));
+        when(roomRepository.save(any(Room.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        // Ejecución
+        Optional<Room> result = roomService.updateRoom(roomId, updateData);
+
+        //Verify
+        assertTrue(result.isPresent());
+        assertEquals("New Name", result.get().getName());
+        assertEquals(1, result.get().getSoftware().size());
+        assertEquals(20L, result.get().getSoftware().get(0).getId());
+        
+        verify(roomRepository).save(existingRoom);
+    }
+
+    @Test
+    public void testDeleteRoom() {
+        Long id = 1L;
+        Room room = new Room();
+        room.setId(id);
+        
+        when(roomRepository.findById(id)).thenReturn(Optional.of(room));
+        
+        roomService.deleteById(id);
+        
+        verify(roomRepository).delete(room);
     }
 }

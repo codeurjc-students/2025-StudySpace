@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.hamcrest.Matchers.is;
 
 @SpringBootTest
@@ -59,5 +60,44 @@ public class SoftwareApiTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated()) // 201 Created
                 .andExpect(jsonPath("$.name", is("Eclipse IDE")));
+    }
+
+
+    @Test
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    public void testDeleteSoftwareAsAdmin() throws Exception {
+        //software for larter delete
+        String softwareJson = """
+            { "name": "To Delete", "version": 1.0, "description": "Temp" }
+        """;
+        
+        // to obtain id
+        String response = mockMvc.perform(post("/api/softwares")
+                .content(softwareJson)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        
+        //should parser id?
+        
+        //simulate 1 id
+        mockMvc.perform(delete("/api/softwares/1")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent()); // 204
+    }
+
+    @Test
+    @WithMockUser(username = "user", roles = {"USER"})
+    public void testDeleteSoftwareAsUserForbidden() throws Exception {
+        mockMvc.perform(delete("/api/softwares/1")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden()); // 403
+    }
+    
+    @Test
+    public void testGetSingleSoftwareNotFound() throws Exception {
+        mockMvc.perform(get("/api/softwares/9999")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound()); // 404
     }
 }
