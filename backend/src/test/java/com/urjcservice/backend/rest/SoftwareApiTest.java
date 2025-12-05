@@ -78,10 +78,9 @@ public class SoftwareApiTest {
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         
-        //should parser id?
+        Integer id = com.jayway.jsonpath.JsonPath.read(response, "$.id");
         
-        //simulate 1 id
-        mockMvc.perform(delete("/api/softwares/1")
+        mockMvc.perform(delete("/api/softwares/" + id)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent()); // 204
     }
@@ -95,6 +94,7 @@ public class SoftwareApiTest {
     }
     
     @Test
+    @WithMockUser(username = "admin", roles = {"ADMIN"})//in order to access through security
     public void testGetSingleSoftwareNotFound() throws Exception {
         mockMvc.perform(get("/api/softwares/9999")
                 .contentType(MediaType.APPLICATION_JSON))

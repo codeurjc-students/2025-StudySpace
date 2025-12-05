@@ -68,8 +68,8 @@ public class SecurityConfiguration {
                         // PUBLIC PAGES
                         .requestMatchers("/").permitAll()
                         .requestMatchers("/error").permitAll()
-                        /*.requestMatchers(HttpMethod.GET, "/api/rooms/**").permitAll()*/
                         .requestMatchers(new AntPathRequestMatcher("/api/rooms/**", "GET")).permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/softwares/**").hasRole("ADMIN")
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
                         // allows pre-flight requests (for CORS)

@@ -18,14 +18,75 @@ import static org.springframework.web.servlet.support.ServletUriComponentsBuilde
 @RequestMapping("/api/softwares")
 public class SoftwareRestController {
 
-    /*@Autowired
-    private SoftwareService softwareService;
+    private final SoftwareService softwareService;
 
-    @Autowired
-    private SoftwareRepository softwareRepository;*/
+    public SoftwareRestController(SoftwareService softwareService) {
+        this.softwareService = softwareService;
+    }
+
+    // DTO 
+    public static class SoftwareRequest {
+        public String name;
+        public Float version;
+        public String description;
+    }
+
+    @GetMapping
+    public List<Software> getAllSoftware() {
+        return softwareService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Software> getSoftwareById(@PathVariable Long id) {
+        return softwareService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    public ResponseEntity<Software> createSoftware(@RequestBody SoftwareRequest request) {
+        //to dto the entity
+        Software software = new Software();
+        software.setName(request.name);
+        software.setVersion(request.version);
+        software.setDescription(request.description);
+
+        Software saved = softwareService.save(software);
+        
+        URI location = fromCurrentRequest().path("/{id}").buildAndExpand(saved.getId()).toUri();
+        return ResponseEntity.created(location).body(saved);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Software> updateSoftware(@PathVariable Long id, @RequestBody SoftwareRequest request) {
+        Software softwareData = new Software();
+        softwareData.setName(request.name);
+        softwareData.setVersion(request.version);
+        softwareData.setDescription(request.description);
+
+        return softwareService.updateSoftware(id, softwareData)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteSoftware(@PathVariable Long id) {
+        Optional<Software> deleted = softwareService.deleteById(id);
+        if (deleted.isPresent()) {
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
+
+    /*
+    private final SoftwareService softwareService;
     private final SoftwareRepository softwareRepository;
-    public SoftwareRestController(SoftwareRepository softwareRepository) {
+    public SoftwareRestController(SoftwareRepository softwareRepository, SoftwareService softwareService) {
         this.softwareRepository = softwareRepository;
+        this.softwareService = softwareService;
     }
 
     // DTO 
@@ -80,7 +141,7 @@ public class SoftwareRestController {
         
         Software saved = softwareRepository.save(software);
         return ResponseEntity.status(status).body(saved);
-    }
+    }*/
 
 
 }
