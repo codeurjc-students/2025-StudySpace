@@ -75,14 +75,10 @@ jobs:
           args: >
             -Dsonar.projectKey=codeurjc-students_2025-StudySpace
             -Dsonar.organization=codeurjc-students
-            
             -Dsonar.sources=backend/src/main/java,frontend/src
             -Dsonar.tests=backend/src/test/java,frontend/src
-            
             -Dsonar.java.binaries=backend/target/classes
-            
             -Dsonar.javascript.lcov.reportPaths=frontend/coverage/frontend/lcov.info
             -Dsonar.coverage.jacoco.xmlReportPaths=backend/target/site/jacoco/jacoco.xml
-            
             -Dsonar.exclusions=**/dtos/**,**/dto/**,**/entities/**,**/model/**,**/config/**,**/constants/**,**/*.spec.ts,**/main.ts,**/environment.ts,**/*.module.ts
             -Dsonar.coverage.exclusions=**/dtos/**,**/dto/**,**/entities/**,**/model/**,**/config/**,**/constants/**,**/*.spec.ts,**/main.ts,**/environment.ts,**/*.module.ts
