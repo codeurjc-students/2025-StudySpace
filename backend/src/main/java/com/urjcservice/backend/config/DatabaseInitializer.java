@@ -1,6 +1,12 @@
 package com.urjcservice.backend.config;
 
+import com.urjcservice.backend.entities.Reservation;
+import com.urjcservice.backend.entities.Room;
+import com.urjcservice.backend.entities.Software;
 import com.urjcservice.backend.entities.User;
+import com.urjcservice.backend.repositories.ReservationRepository;
+import com.urjcservice.backend.repositories.RoomRepository;
+import com.urjcservice.backend.repositories.SoftwareRepository;
 import com.urjcservice.backend.repositories.UserRepository;
 
 import org.slf4j.LoggerFactory;
@@ -13,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.Date;
 
 @Component
 public class DatabaseInitializer implements CommandLineRunner {
@@ -22,18 +29,27 @@ public class DatabaseInitializer implements CommandLineRunner {
     
 
     private final UserRepository userRepository;
+    private final RoomRepository roomRepository;
+    private final SoftwareRepository softwareRepository;
+    private final ReservationRepository reservationRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public DatabaseInitializer(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public DatabaseInitializer(UserRepository userRepository,
+                               RoomRepository roomRepository,
+                               SoftwareRepository softwareRepository,
+                               ReservationRepository reservationRepository,
+                               PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.roomRepository = roomRepository;
+        this.softwareRepository = softwareRepository;
+        this.reservationRepository = reservationRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public void run(String... args) throws Exception {
         
-        // we create a default admin user if it does not exist, if it exist we dont created it again
-        //search by email(primary key for user)
+        //create the admin above everything
         String adminEmail = "admin@studyspace.com"; 
         //if it is already on the database, do nothing
         if (userRepository.findByEmail(adminEmail).isEmpty()) {
@@ -49,10 +65,120 @@ public class DatabaseInitializer implements CommandLineRunner {
 
             userRepository.save(admin);
             
+            logger.info("ADMIN: " + adminEmail);
+        }
+
+
+        if (roomRepository.count() == 0) {
+            logger.info("Inserting initial test data into the database...");
+
+            // --- SOFTWARE ---
+            Software eclipse = new Software();
+            eclipse.setName("Eclipse IDE");
+            eclipse.setVersion(2023.03f);
+            eclipse.setDescription("Entorno de desarrollo Java.");
+
+            Software matlab = new Software();
+            matlab.setName("Matlab");
+            matlab.setVersion(9.5f);
+            matlab.setDescription("Plataforma de cálculo numérico.");
+
+            Software autocad = new Software();
+            autocad.setName("AutoCAD");
+            autocad.setVersion(2024.0f);
+            autocad.setDescription("Diseño asistido por computadora.");
+
+            Software office = new Software();
+            office.setName("Microsoft Office");
+            office.setVersion(365.0f);
+            office.setDescription("Paquete de ofimática.");
+
+
+
+
+            softwareRepository.saveAll(Arrays.asList(eclipse, matlab, autocad, office));
+
+
+
+
+
+            // --- ROOMS  ---
+            Room lab1 = new Room();
+            lab1.setName("Laboratorio A1");
+            lab1.setCapacity(30);
+            lab1.setCamp(Room.CampusType.MOSTOLES);
+            lab1.setPlace("Aulario II");
+            lab1.setCoordenades("40.332, -3.885");
+            lab1.setSoftware(Arrays.asList(eclipse, matlab)); 
+
+            Room aulaDiseno = new Room();
+            aulaDiseno.setName("Sala de Diseño");
+            aulaDiseno.setCapacity(15);
+            aulaDiseno.setCamp(Room.CampusType.ALCORCON);
+            aulaDiseno.setPlace("Edificio Principal");
+            aulaDiseno.setCoordenades("40.345, -3.820");
+            aulaDiseno.setSoftware(Arrays.asList(autocad)); 
+
+            Room biblioteca = new Room();
+            biblioteca.setName("Sala de Estudio 3");
+            biblioteca.setCapacity(50);
+            biblioteca.setCamp(Room.CampusType.VICALVARO);
+            biblioteca.setPlace("Biblioteca Central");
+            biblioteca.setCoordenades("40.405, -3.608");
+            biblioteca.setSoftware(Arrays.asList(office)); 
+
+
+            roomRepository.saveAll(Arrays.asList(lab1, aulaDiseno, biblioteca));
+
+
+
+
+            // --- USERS  ---
+            User student1 = new User();
+            student1.setName("Ana Estudiante");
+            student1.setEmail("ana@alumnos.urjc.es");
+            student1.setEncodedPassword(passwordEncoder.encode("pass123"));
+            student1.setRoles(Arrays.asList("USER"));
+            student1.setType(User.UserType.USER_REGISTERED);
+
+            User student2 = new User();
+            student2.setName("Carlos Profesor");
+            student2.setEmail("carlos@urjc.es");
+            student2.setEncodedPassword(passwordEncoder.encode("pass123"));
+            student2.setRoles(Arrays.asList("USER")); 
+            student2.setType(User.UserType.USER_REGISTERED);
+
+            userRepository.saveAll(Arrays.asList(student1, student2));
+
+            // --- RESERVATIONS ---
+            long now = System.currentTimeMillis();
+            long oneHour = 3600000L;
+            long oneDay = 86400000L;
+
+            
+            Reservation res1 = new Reservation();
+            res1.setStartDate(new Date(now + oneDay));
+            res1.setEndDate(new Date(now + oneDay + (2 * oneHour))); 
+            res1.setReason("Práctica de Programación");
+            res1.setUser(student1);
+            res1.setRoom(lab1);
+
+           
+            Reservation res2 = new Reservation();
+            res2.setStartDate(new Date(now + (2 * oneDay)));
+            res2.setEndDate(new Date(now + (2 * oneDay) + (4 * oneHour))); 
+            res2.setReason("Clase de Diseño Técnico");
+            res2.setUser(student2);
+            res2.setRoom(aulaDiseno);
+
+            reservationRepository.saveAll(Arrays.asList(res1, res2));
+
             logger.info("--------------------------------------");
-            logger.info(" ADMIN USER AUTOMATICALLY CREATED ");
-            logger.info(" Email: {}", adminEmail);
-            logger.info(" Pass:  admin");
+            logger.info(" Database initialized with test data:");
+            logger.info(" Rooms created: 3");
+            logger.info(" Software created: 4");
+            logger.info(" Users created: 2");
+            logger.info(" Reservations created: 2");
             logger.info("--------------------------------------");
         }
     }
