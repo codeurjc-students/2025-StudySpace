@@ -13,7 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date; // O java.time.LocalDate si prefieres
+import java.util.Date; 
 import java.util.Optional;
 
 @RestController
@@ -36,10 +36,22 @@ public class ReservationController {
 
     //auxiliar class to receive reservation data from frontend(JSON)
     public static class ReservationRequest {
-        public Long roomId;
-        public Date startDate;
-        public Date endDate;
-        public String reason;
+        private Long roomId;
+        private Date startDate;
+        private Date endDate;
+        private String reason;
+
+        public Long getRoomId() { return roomId; }
+        public void setRoomId(Long roomId) { this.roomId = roomId; }
+
+        public Date getStartDate() { return startDate; }
+        public void setStartDate(Date startDate) { this.startDate = startDate; }
+
+        public Date getEndDate() { return endDate; }
+        public void setEndDate(Date endDate) { this.endDate = endDate; }
+
+        public String getReason() { return reason; }
+        public void setReason(String reason) { this.reason = reason; }
     }
 
     @PostMapping("/create")
@@ -55,7 +67,7 @@ public class ReservationController {
         }
 
         
-        Optional<Room> roomOpt = roomRepository.findById(request.roomId);
+        Optional<Room> roomOpt = roomRepository.findById(request.getRoomId());
         if (roomOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Room not found.");
         }

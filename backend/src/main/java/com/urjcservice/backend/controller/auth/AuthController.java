@@ -29,14 +29,29 @@ public class AuthController {
 
     // for JSON data
     public static class RegisterRequest {
-        public String name;
-        public String email;
-        public String password;
+        private String name;
+        private String email;
+        private String password;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+
+        public String getPassword() { return password; }
+        public void setPassword(String password) { this.password = password; }
     }
 
     public static class UserUpdateRequest {
-        public String name;
-        public String email;
+        private String name;
+        private String email;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
     }
 
     @GetMapping("/me")
@@ -56,17 +71,17 @@ public class AuthController {
     public ResponseEntity<Object> register(@RequestBody RegisterRequest request) {
         
         // Check if the email already exists
-        if (userRepository.findByEmail(request.email).isPresent()) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("Error: The email is already in use.");
         }
 
         // Create new user account
         User newUser = new User();
-        newUser.setName(request.name);
-        newUser.setEmail(request.email);
+        newUser.setName(request.getName());
+        newUser.setEmail(request.getEmail());
         // Encrypt the password before saving
-        newUser.setEncodedPassword(passwordEncoder.encode(request.password));
+        newUser.setEncodedPassword(passwordEncoder.encode(request.getPassword()));
         
         // Set default user type and roles
         newUser.setType(User.UserType.USER_REGISTERED);

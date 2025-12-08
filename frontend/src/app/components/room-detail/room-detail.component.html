@@ -1,7 +1,3 @@
-
-
-
-
 <div *ngIf="room" class="container mt-5 mb-5">
     <div class="card shadow">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
@@ -16,11 +12,11 @@
                 <div class="col-md-6">
                     <h4 class="text-primary">Detalles</h4>
                     <ul class="list-group list-group-flush mb-4">
-                        <li class="list-group-item"><strong>Capacity:</strong> {{ room.capacity }} personas</li>
+                        <li class="list-group-item"><strong>Capacity:</strong> {{ room.capacity }} people</li>
                         <li class="list-group-item"><strong>Ubication:</strong> {{ room.place }}</li>
                     </ul>
 
-                    <h4 class="text-primary">Avaliable software in the room</h4>
+                    <h4 class="text-primary">Available software in the room</h4>
                     <div *ngIf="room.software && room.software.length > 0; else noSoftware">
                         <div class="list-group">
                             <div *ngFor="let soft of room.software" class="list-group-item list-group-item-action">
@@ -39,16 +35,15 @@
             </div>
         </div>
         <div class="card-footer d-flex justify-content-between">
-            <button routerLink="/" class="btn btn-secondary">
+            <a routerLink="/" class="btn btn-secondary">
                 &laquo; Back
-            </button>
+            </a>
         </div>
     </div>
 </div>
 
 <div *ngIf="!room" class="text-center mt-5">
-    <output class="spinner-border text-primary" role="status">
+    <output class="spinner-border text-primary">
         <span class="visually-hidden">Loading...</span>
     </output>
 </div>
-

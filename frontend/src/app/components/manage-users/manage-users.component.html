@@ -16,7 +16,7 @@
                     <tr *ngFor="let user of users" [class.table-danger]="user.blocked">
                         <td>
                             <div class="d-flex align-items-center">
-                                <img src="assets/user_placeholder.png" class="rounded-circle me-2" width="30">
+                                <img src="assets/user_placeholder.png" class="rounded-circle me-2" width="30" alt="User Avatar">
                                 <strong>{{ user.name }}</strong>
                                 <span *ngIf="user.roles.includes('ADMIN')" class="badge bg-primary ms-2">ADMIN</span>
                             </div>

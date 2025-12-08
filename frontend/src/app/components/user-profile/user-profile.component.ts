@@ -68,7 +68,7 @@ export class UserProfileComponent implements OnInit {
             next: () => {
                 alert("Reservation cancelled.");
                 
-                if (this.user && this.user.reservations) {
+                if (this.user?.reservations) {
                     this.user.reservations = this.user.reservations.filter(r => r.id !== id);
                 }
             },

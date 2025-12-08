@@ -26,9 +26,18 @@ public class SoftwareRestController {
 
     // DTO 
     public static class SoftwareRequest {
-        public String name;
-        public Float version;
-        public String description;
+        private String name;
+        private Float version;
+        private String description;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+
+        public Float getVersion() { return version; }
+        public void setVersion(Float version) { this.version = version; }
+
+        public String getDescription() { return description; }
+        public void setDescription(String description) { this.description = description; }
     }
 
     @GetMapping

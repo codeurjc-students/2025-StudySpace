@@ -33,12 +33,31 @@ public class RoomRestController {
 
     //internal DTO for room requests on frontend
     public static class RoomRequest {
-        public String name;
-        public Integer capacity;
-        public Room.CampusType camp;
-        public String place;
-        public String coordenades;
-        public List<Long> softwareIds;
+        private String name;
+        private Integer capacity;
+        private Room.CampusType camp;
+        private String place;
+        private String coordenades;
+        private List<Long> softwareIds;
+
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+
+        public Integer getCapacity() { return capacity; }
+        public void setCapacity(Integer capacity) { this.capacity = capacity; }
+
+        public Room.CampusType getCamp() { return camp; }
+        public void setCamp(Room.CampusType camp) { this.camp = camp; }
+
+        public String getPlace() { return place; }
+        public void setPlace(String place) { this.place = place; }
+
+        public String getCoordenades() { return coordenades; }
+        public void setCoordenades(String coordenades) { this.coordenades = coordenades; }
+
+        public List<Long> getSoftwareIds() { return softwareIds; }
+        public void setSoftwareIds(List<Long> softwareIds) { this.softwareIds = softwareIds; }
     }
 
     @GetMapping
@@ -57,10 +76,9 @@ public class RoomRestController {
 
     @PostMapping
     public ResponseEntity<Room> createRoom(@RequestBody RoomRequest request) {
-        // Convertimos DTO a Entidad
+        //COnvert to DTO to entity
         Room room = mapRequestToEntity(new Room(), request);
         
-        // Delegamos la lógica de guardado (y asignación de software) al servicio
         Room savedRoom = roomService.save(room);
         
         URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(savedRoom.getId()).toUri();
@@ -68,10 +86,9 @@ public class RoomRestController {
     }
     @PutMapping("/{id}")
     public ResponseEntity<Room> updateRoom(@PathVariable Long id, @RequestBody RoomRequest request) {
-        // Creamos una entidad temporal con los datos nuevos
+        //temporary to entity
         Room roomData = mapRequestToEntity(new Room(), request);
 
-        // El servicio se encarga de buscar la sala por ID y actualizarla
         return roomService.updateRoom(id, roomData)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -79,7 +96,6 @@ public class RoomRestController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRoom(@PathVariable Long id) {
-        // Usamos el servicio para borrar (esto asegura que se borren las relaciones en room_software)
         Optional<Room> deleted = roomService.deleteById(id);
         
         if (deleted.isPresent()) {
@@ -97,11 +113,11 @@ public class RoomRestController {
         if (request.place != null) room.setPlace(request.place);
         if (request.coordenades != null) room.setCoordenades(request.coordenades);
 
-        // Preparamos la lista de software basada en los IDs
+        //List of softwares
         if (request.softwareIds != null) {
             List<Software> softwares = new ArrayList<>();
             for (Long softId : request.softwareIds) {
-                // Buscamos el software real para asignarlo
+                
                 softwareService.findById(softId).ifPresent(softwares::add);
             }
             room.setSoftware(softwares);

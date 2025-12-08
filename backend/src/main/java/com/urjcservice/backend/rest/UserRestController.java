@@ -5,6 +5,7 @@ import com.urjcservice.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.urjcservice.backend.entities.Reservation;
 
 import java.net.URI;
 import java.util.List;
@@ -82,7 +83,7 @@ public class UserRestController {
 
     //for getting reservations of a user
     @GetMapping("/{id}/reservations")
-    public ResponseEntity<List<com.urjcservice.backend.entities.Reservation>> getUserReservations(@PathVariable Long id) {
+    public ResponseEntity<List<Reservation>> getUserReservations(@PathVariable Long id) {
         return userService.findById(id)
                 .map(user -> ResponseEntity.ok(user.getReservations()))
                 .orElseGet(() -> ResponseEntity.notFound().build());
