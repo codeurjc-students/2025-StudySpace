@@ -16,7 +16,7 @@ const BASE_URL = '/api/softwares';
   providedIn: 'root'
 })
 export class SoftwareService {
-  constructor(private http: HttpClient,  private loginService: LoginService) { }
+  constructor(private readonly http: HttpClient,  private readonly loginService: LoginService) { }
 
   getAllSoftwares(): Observable<SoftwareDTO[]> {
     return this.http.get<SoftwareDTO[]>(BASE_URL, { headers: this.getAuthHeaders() });

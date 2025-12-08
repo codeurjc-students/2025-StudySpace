@@ -8,7 +8,7 @@ import { LoginService } from '../login/login.service';
 })
 export class ReservationService {
 
-  constructor(private http: HttpClient, private loginService: LoginService) { }
+  constructor(private readonly http: HttpClient, private readonly loginService: LoginService) { }
 
   private getHeaders() {
     const auth = this.loginService.auth || localStorage.getItem('auth') || '';

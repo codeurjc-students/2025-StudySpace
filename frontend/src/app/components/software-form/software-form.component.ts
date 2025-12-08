@@ -18,9 +18,9 @@ export class SoftwareFormComponent implements OnInit {
   };
 
   constructor(
-    private softwareService: SoftwareService,
-    private router: Router,
-    private route: ActivatedRoute
+    private readonly softwareService: SoftwareService,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {

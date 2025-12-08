@@ -17,7 +17,7 @@ export class LoginService {
   currentUser: UserDTO | null = null;
   auth: string = '';
 
-  constructor(private http: HttpClient, private router: Router) { this.auth = localStorage.getItem('auth') || '';
+  constructor(private readonly http: HttpClient, private readonly router: Router) { this.auth = localStorage.getItem('auth') || '';
     
     if (this.auth) {
       //If credentials are saved, we request the user data from the backend.

@@ -13,7 +13,7 @@ export class HomeComponent implements OnInit {
   //hera are save the rooms
   public rooms: RoomDTO[] = [];
 
-  constructor(private roomsService: RoomsService,
+  constructor(private readonly roomsService: RoomsService,
     public loginService: LoginService
   ) {}
 

@@ -12,13 +12,13 @@ const BASE_URL = '/api/rooms';
 })
 export class RoomsService {
 
-  constructor(private http: HttpClient, private loginService: LoginService) { }
+  constructor(private readonly http: HttpClient, private readonly loginService: LoginService) { }
 
   public getRooms(): Observable<RoomDTO[]> {
     //? for the software to load along with the rooms
     return this.http.get<any>(`${BASE_URL}?projection=withSoftware`).pipe(
       map(response => {
-        if (response._embedded && response._embedded.rooms) {
+        if (response._embedded?.rooms) {
           return response._embedded.rooms;
         }
         return response;

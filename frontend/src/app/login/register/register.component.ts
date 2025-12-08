@@ -10,8 +10,8 @@ import { LoginService } from '../login.service';
 export class RegisterComponent {
 
   constructor(
-    private loginService: LoginService,
-    private router: Router
+    private readonly loginService: LoginService,
+    private readonly router: Router
   ) {}
 
   onRegister(name: string, email: string, pass: string) {

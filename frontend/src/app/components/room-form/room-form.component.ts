@@ -27,10 +27,10 @@ export class RoomFormComponent implements OnInit {
   availableSoftware: SoftwareDTO[] = [];
 
   constructor(
-    private roomsService: RoomsService,
-    private softwareService: SoftwareService,
-    private router: Router,
-    private route: ActivatedRoute
+    private readonly roomsService: RoomsService,
+    private readonly softwareService: SoftwareService,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {

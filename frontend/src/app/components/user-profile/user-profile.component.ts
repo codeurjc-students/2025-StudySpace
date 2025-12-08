@@ -16,7 +16,7 @@ export class UserProfileComponent implements OnInit {
 
   editData = { name: '', email: '' };
 
-  constructor(public loginService: LoginService, private reservationService: ReservationService, private location: Location) { }
+  constructor(public readonly loginService: LoginService, private readonly reservationService: ReservationService, private readonly location: Location) { }
 
   ngOnInit(): void {
     // We obtain the current user from the login service

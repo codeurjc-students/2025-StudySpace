@@ -8,43 +8,44 @@
         <form (ngSubmit)="save()" #roomForm="ngForm">
             
             <div class="mb-3">
-                <label class="form-label fw-bold">Name</label>
-                <input type="text" name="name" [(ngModel)]="room.name" class="form-control" required>
+                <label for="name" class="form-label fw-bold">Name</label>
+                <input id="name" type="text" name="name" [(ngModel)]="room.name" class="form-control" required>
             </div>
 
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">Capacity</label>
-                    <input type="number" name="capacity" [(ngModel)]="room.capacity" class="form-control" required>
+                    <label for="capacity" class="form-label fw-bold">Capacity</label>
+                    <input id="capacity" type="number" name="capacity" [(ngModel)]="room.capacity" class="form-control" required>
                 </div>
 
                 <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">Campus</label>
-                    <select name="camp" [(ngModel)]="room.camp" class="form-select">
+                    <label for="camp" class="form-label fw-bold">Campus</label>
+                    <select id="camp" name="camp" [(ngModel)]="room.camp" class="form-select">
                         <option *ngFor="let c of campusOptions" [value]="c">{{ c }}</option>
                     </select>
                 </div>
             </div>
 
             <div class="mb-3">
-                <label class="form-label fw-bold">Location</label>
-                <input type="text" name="place" [(ngModel)]="room.place" class="form-control" required>
+                <label for="place" class="form-label fw-bold">Location</label>
+                <input id="place" type="text" name="place" [(ngModel)]="room.place" class="form-control" required>
             </div>
 
             <div class="mb-3">
-                <label class="form-label fw-bold">Coordinates</label>
-                <input type="text" name="coordenades" [(ngModel)]="room.coordenades" class="form-control">
+                <label for="coordenades" class="form-label fw-bold">Coordinates</label>
+                <input id="coordenades" type="text" name="coordenades" [(ngModel)]="room.coordenades" class="form-control">
             </div>
 
             <div class="mb-4">
-                <label class="form-label fw-bold">Installed Software</label>
-                <select name="softwareIds" [(ngModel)]="room.softwareIds" class="form-select" multiple style="height: 150px;">
+                <label for="softwareIds" class="form-label fw-bold">Installed Software</label>
+                <select id="softwareIds" name="softwareIds" [(ngModel)]="room.softwareIds" class="form-select" multiple style="height: 150px;">
                     <option *ngFor="let soft of availableSoftware" [value]="soft.id">
                         {{ soft.name }} (v{{ soft.version }})
                     </option>
                 </select>
                 <small class="text-muted">Hold Ctrl (Windows) or Cmd (Mac) to select multiple options.</small>
             </div>
+            
             <div class="d-flex justify-content-between pt-3 border-top">
                 <button type="button" class="btn btn-outline-secondary" routerLink="/admin/rooms">Cancel</button>
                 <button type="submit" class="btn btn-success px-4" [disabled]="!roomForm.form.valid">

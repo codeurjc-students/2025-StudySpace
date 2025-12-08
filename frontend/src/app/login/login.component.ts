@@ -15,9 +15,9 @@ export class LoginComponent {
   //put the loginService in the constructor, router and modalService too
   constructor(
     public loginService: LoginService, 
-    private modalService: NgbModal,
-    private router: Router,
-    private route: ActivatedRoute
+    private readonly modalService: NgbModal,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute
   ) {}
 
   logIn(user: string, pass: string) {
@@ -45,7 +45,7 @@ export class LoginComponent {
             const serverMessage = err.error?.error || "";
 
             
-            if (serverMessage && serverMessage.includes("locked")) {
+            if (serverMessage?.includes("locked")) {
                  alert("⛔ ACCESS DENIED\n\n Your account has been LOCKED by an administrator.\n Contact support.");
             } else {
                  alert("Login failed. Please check your email and password.");

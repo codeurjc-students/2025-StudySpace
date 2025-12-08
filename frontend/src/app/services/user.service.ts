@@ -7,7 +7,7 @@ import { UserDTO } from '../dtos/user.dto';
 @Injectable({ providedIn: 'root' })
 export class UserService {
 
-  constructor(private http: HttpClient, private loginService: LoginService) { }
+  constructor(private readonly http: HttpClient, private readonly loginService: LoginService) { }
 
   private getHeaders() {
     const auth = this.loginService.auth || localStorage.getItem('auth') || '';

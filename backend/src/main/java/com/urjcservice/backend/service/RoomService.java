@@ -65,41 +65,7 @@ public class RoomService {
         return existing;
     }
 
-    /*public Optional<Room> updateRoom(Long id, Room updatedRoom) {
-        return roomRepository.findById(id).map(existingRoom -> {
-            existingRoom.setName(updatedRoom.getName());
-            existingRoom.setCapacity(updatedRoom.getCapacity());
-
-            List<Software> newList = updatedRoom.getSoftware() != null ? updatedRoom.getSoftware() : new ArrayList<>();
-
-            // remove software not in newList
-            List<Software> toRemove = new ArrayList<>();
-            for (Software s : existingRoom.getSoftware()) {
-                boolean still = newList.stream().anyMatch(n -> n.getId() != null && n.getId().equals(s.getId()));
-                if (!still) toRemove.add(s);
-            }
-            for (Software s : toRemove) {
-                existingRoom.removeSoftware(s);
-                softwareRepository.save(s);
-            }
-
-            // add new ones
-            for (Software s : newList) {
-                if (s == null) continue;
-                if (s.getId() != null) {
-                    softwareRepository.findById(s.getId()).ifPresent(found -> {
-                        if (!existingRoom.getSoftware().contains(found)) existingRoom.addSoftware(found);
-                    });
-                } else {
-                    Software created = softwareRepository.save(s);
-                    existingRoom.addSoftware(created);
-                }
-            }
-
-            return roomRepository.save(existingRoom);
-        });
-    }*/
-
+    
     public Optional<Room> updateRoom(Long id, Room updatedRoom) {
         return roomRepository.findById(id).map(existingRoom -> {
             updateRoomBasicInfo(existingRoom, updatedRoom);
@@ -155,44 +121,7 @@ public class RoomService {
     }
 
 
-    /*public Optional<Room> patchRoom(Long id, Room partialRoom) {
-        return roomRepository.findById(id).map(existingRoom -> {
-            if (partialRoom.getName() != null) {
-                existingRoom.setName(partialRoom.getName());
-            }
-            if (partialRoom.getCapacity() != null) {
-                existingRoom.setCapacity(partialRoom.getCapacity());
-            }
-
-            if (partialRoom.getSoftware() != null) {
-                List<Software> newList = partialRoom.getSoftware();
-
-                List<Software> toRemove = new ArrayList<>();
-                for (Software s : existingRoom.getSoftware()) {
-                    boolean still = newList.stream().anyMatch(n -> n.getId() != null && n.getId().equals(s.getId()));
-                    if (!still) toRemove.add(s);
-                }
-                for (Software s : toRemove) {
-                    existingRoom.removeSoftware(s);
-                    softwareRepository.save(s);
-                }
-
-                for (Software s : newList) {
-                    if (s == null) continue;
-                    if (s.getId() != null) {
-                        softwareRepository.findById(s.getId()).ifPresent(found -> {
-                            if (!existingRoom.getSoftware().contains(found)) existingRoom.addSoftware(found);
-                        });
-                    } else {
-                        Software created = softwareRepository.save(s);
-                        existingRoom.addSoftware(created);
-                    }
-                }
-            }
-
-            return roomRepository.save(existingRoom);
-        });
-    }*/
+    
     public Optional<Room> patchRoom(Long id, Room partialRoom) {
         return roomRepository.findById(id).map(existingRoom -> {
             // Delegamos en métodos auxiliares específicos para PATCH
