@@ -1,5 +1,6 @@
 package com.urjcservice.backend.service;
 
+import com.urjcservice.backend.controller.ReservationController.ReservationRequest;
 import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.entities.User;
 import com.urjcservice.backend.entities.Room;
@@ -96,5 +97,29 @@ public class ReservationService {
    
     public Optional<Reservation> patchReservation(Long id, Reservation partialReservation) {
         return updateReservation(id, partialReservation);
+    }
+    public Reservation createReservation(ReservationRequest request, String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Room room = roomRepository.findById(request.getRoomId())
+                .orElseThrow(() -> new RuntimeException("Room not found"));
+
+        Reservation reservation = new Reservation();
+        reservation.setStartDate(request.getStartDate());
+        reservation.setEndDate(request.getEndDate());
+        reservation.setReason(request.getReason());
+        reservation.setUser(user);
+        reservation.setRoom(room);
+
+        return reservationRepository.save(reservation);
+    }
+
+    public List<Reservation> getReservationsByUserEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        //this is on reposity check ittttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt
+        return reservationRepository.findByUser(user);
     }
 }

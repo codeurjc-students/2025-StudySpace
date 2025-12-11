@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { LoginService } from '../../login/login.service';
 import { ReservationService } from '../../services/reservation.service';
 import { UserDTO } from '../../dtos/user.dto';
-import { Location } from '@angular/common';//for navigation back to the previous page
+import { Location } from '@angular/common';
 
 @Component({
   selector: 'app-user-profile',
@@ -12,45 +12,45 @@ import { Location } from '@angular/common';//for navigation back to the previous
 export class UserProfileComponent implements OnInit {
 
   user: UserDTO | null = null;
-  isEditing = false;//to hide the edit profile form when you are not editing
-
+  isEditing = false;
   editData = { name: '', email: '' };
 
-  constructor(public readonly loginService: LoginService, private readonly reservationService: ReservationService, private readonly location: Location) { }
+  constructor(
+    public readonly loginService: LoginService, 
+    private readonly reservationService: ReservationService, 
+    private readonly location: Location
+  ) { }
 
   ngOnInit(): void {
-    // We obtain the current user from the login service
-    
+    // Usamos reloadUser que ahora sí existe en LoginService
     this.loginService.reloadUser().subscribe({
-        next: (freshUser) => {
+        next: (freshUser: UserDTO) => {
             this.user = freshUser;
-            
-            this.editData.name = this.user.name;
-            this.editData.email = this.user.email;
+            // Usamos optional chaining (?.) para evitar errores si viene null
+            this.editData.name = this.user?.name || '';
+            this.editData.email = this.user?.email || '';
         },
-        error: (err) => console.error("Error loading profile", err)
+        error: (err: any) => console.error("Error loading profile", err)
     });
   }
 
   goBack() {
-    this.location.back(); //for navigation back to the previous page
+    this.location.back();
   }
-
   
   saveProfile() {
     this.loginService.updateProfile(this.editData.name, this.editData.email).subscribe({
-        next: (updatedUser) => {
-            alert("Profile updated successfully. Please log in again if you changed your email address.");
+        next: (updatedUser: UserDTO) => {
+            alert("Profile updated successfully.");
             
             if (this.user) {
                 this.user.name = updatedUser.name;
-                
-                
+                // Actualizamos también el currentUser del servicio para que la UI global se entere
                 this.loginService.currentUser = this.user;
             }
             this.isEditing = false;
         },
-        error: (err) => alert("Error updating profile")
+        error: (err: any) => alert("Error updating profile")
     });
   }
 
@@ -67,12 +67,11 @@ export class UserProfileComponent implements OnInit {
         this.reservationService.deleteReservation(id).subscribe({
             next: () => {
                 alert("Reservation cancelled.");
-                
                 if (this.user?.reservations) {
                     this.user.reservations = this.user.reservations.filter(r => r.id !== id);
                 }
             },
-            error: (e) => alert("Cancellation failed.")
+            error: (e: any) => alert("Cancellation failed.")
         });
     }
   }

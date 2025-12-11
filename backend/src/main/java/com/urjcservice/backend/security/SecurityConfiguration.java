@@ -8,16 +8,20 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration; 
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.config.Customizer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import com.urjcservice.backend.security.jwt.JwtRequestFilter;
 import com.urjcservice.backend.security.jwt.UnauthorizedHandlerJwt;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -30,7 +34,8 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfiguration {
 
-   
+   @Autowired
+    private JwtRequestFilter jwtRequestFilter;
     
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -76,18 +81,19 @@ public class SecurityConfiguration {
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // PRIVATE PAGES
                         .anyRequest().authenticated())
-                .logout(logout -> logout
-                        /*.logoutUrl("/logout")*/
-                        .logoutUrl("/api/auth/logout")
-                        .logoutSuccessHandler((request, response, authentication) -> response.setStatus(200))
-                        .permitAll()
-                )
-                .httpBasic(basic -> basic
-                    .authenticationEntryPoint(unauthorizedHandler)
-                )
+                
                 .exceptionHandling(exception -> exception
                     .authenticationEntryPoint(unauthorizedHandler) //for general exceptions
                 );
+               
+        // Disable Form login Authentication
+        http.formLogin(formLogin -> formLogin.disable());    
+        // Disable Basic Authentication for jwt
+        http.httpBasic(httpBasic -> httpBasic.disable()); 
+        // Stateless session
+        http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        // Add JWT filter
+        http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);        
         // Disable CSRF at the moment
         http.csrf(csrf -> csrf.disable());
         return http.build();

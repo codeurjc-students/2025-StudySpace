@@ -1,141 +1,101 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, map, switchMap, catchError, of } from 'rxjs';
-import { UserDTO } from '../dtos/user.dto';
+import { HttpClient } from '@angular/common/http';
+import { Observable, BehaviorSubject, tap, of } from 'rxjs';
+import { UserDTO } from '../dtos/user.dto'; 
 import { Router } from '@angular/router';
 
-const BASE_URL = '/api';
-
-
-export interface User {
-    name: string;
-}
+const BASE_URL = '/api/auth';
 
 @Injectable({
   providedIn: 'root'
 })
-
 export class LoginService {
-  currentUser: UserDTO | null = null;
-  auth: string = '';
+  
+  //BehaviorSubject to update also components when user logs in/out
+  private currentUserSubject = new BehaviorSubject<UserDTO | null>(null);
+  
+  public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private readonly http: HttpClient, private readonly router: Router) { this.auth = localStorage.getItem('auth') || '';
-    
-    if (this.auth) {
-      //If credentials are saved, we request the user data from the backend.
-      this.getCurrentUser().subscribe({
-        next: (user) => {
-            this.currentUser = user;
-            console.log("Session restored:", user.name);
-        },
-        error: () => {
-            console.warn("Credentials expired or invalid. Logging out.");
-            this.logOut(); //if something goes wrong, logout
-        }
-      });
-    }
+  constructor(private http: HttpClient, private router: Router) { 
+    this.checkAuth();
   }
 
-  register(name: string, email: string, pass: string): Observable<any> {
-    const body = {
-        name: name,
-        email: email,
-        password: pass
-    };
-    
-    return this.http.post(`${BASE_URL}/auth/register`, body);
-  }
-
-  logIn(user: string, pass: string): Observable<any> {
-    const authHeader = 'Basic ' + btoa(user + ':' + pass);//encyode to base64
-    const headers = new HttpHeaders({ //not a tocken, a key value with user credentials
-        'Authorization': authHeader,  //here is the key
-        'X-Requested-With': 'XMLHttpRequest' 
+  //Check if there's an active session by requesting current user data
+  private checkAuth() {
+    this.http.get<UserDTO>(`${BASE_URL}/me`).subscribe({
+      next: (user) => {
+        console.log("Active session found:", user.name);
+        this.currentUserSubject.next(user);
+      },
+      error: () => {
+        //401 if no cookie/session
+        this.currentUserSubject.next(null);
+      }
     });
+  }
 
-    return this.http.get<UserDTO>(`${BASE_URL}/auth/me`, { headers }).pipe(
-      switchMap(userData => {//if successful, get user reservations
-          return this.http.get<any>(`${BASE_URL}/users/${userData.id}/reservations?projection=withRoom`, { headers }).pipe(
-              map(res => {
-                 const reservations = res._embedded ? res._embedded.reservations : [];
-                 userData.reservations = reservations;
-                 return userData;
-              })
-          );
-      }),
-      map(userWithReservations => {
-        this.currentUser = userWithReservations;
-        this.auth = authHeader;
-        localStorage.setItem('auth', this.auth); //on local storage of the browser
-        return userWithReservations;
+  //LOGIN
+  logIn(username: string, pass: string): Observable<any> {
+    return this.http.post<any>(`${BASE_URL}/login`, { username, password: pass }).pipe(
+      tap(() => {
+        //ask for current user data after login
+        this.checkAuth(); 
       })
     );
   }
 
+  //LOGOUT
   logOut() {
-    this.http.post(`${BASE_URL}/auth/logout`, {}).subscribe({
-        next: (response) => {
-            console.log("Successful logout");
-            this.finalizeLogout();
-        },
-        error: (error) => {
-            console.warn("Error in backend logout", error);
-            this.finalizeLogout();
-        }
+    this.http.post(`${BASE_URL}/logout`, {}).subscribe({
+      next: () => this.finalizeLogout(),
+      error: () => this.finalizeLogout()
     });
   }
 
-  updateProfile(name: string, email: string): Observable<any> {
-    const body = { name, email };
-    const headers = new HttpHeaders({
-        'Authorization': this.auth,
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-    });
-    return this.http.put(`${BASE_URL}/auth/me`, body, { headers });
+
+
+  //Public methods
+  
+  //REGISTER
+  register(name: string, email: string, pass: string): Observable<any> {
+    return this.http.post(`${BASE_URL}/register`, { name, email, password: pass });
   }
 
-
-
-  //Check this method to make it beterrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
-  public reloadUser(): Observable<UserDTO> {
-      return this.getCurrentUser();
-  }
-  //auxiliary methods
-  private getCurrentUser(): Observable<UserDTO> {
-    const headers = new HttpHeaders({ 
-        'Authorization': this.auth,
-        'X-Requested-With': 'XMLHttpRequest' 
-    });
-
-    return this.http.get<UserDTO>(`${BASE_URL}/auth/me`, { headers }).pipe(
-      switchMap(userData => {
-          return this.http.get<any>(`${BASE_URL}/users/${userData.id}/reservations`, { headers }).pipe(
-              map(reservations => {
-                 userData.reservations = reservations || [];
-                 return userData;
-              }),
-              // If the booking upload fails, we return the user without bookings to avoid blocking them.
-              catchError(() => of(userData)) 
-          );
-      })
+  updateProfile(name: string, email: string): Observable<UserDTO> {
+    return this.http.put<UserDTO>(`${BASE_URL}/me`, { name, email }).pipe(
+        tap(updatedUser => {
+            const current = this.currentUserSubject.value;
+            if (current) {
+                this.currentUserSubject.next({ ...current, ...updatedUser });
+            }
+        })
     );
   }
-  private finalizeLogout() {
-      this.currentUser = null;
-      this.auth = '';
-      localStorage.removeItem('auth');
-      
-      //back to home
-      this.router.navigate(['/']); 
+
+  // for *ngIf of HTML
+  get currentUser(): UserDTO | null {
+    return this.currentUserSubject.value;
+  }
+  
+
+  set currentUser(user: UserDTO | null) {
+      this.currentUserSubject.next(user);
   }
 
   isLogged(): boolean {
-    return this.currentUser !== null;
+    return this.currentUserSubject.value !== null;
   }
+
   isAdmin(): boolean {
-      return this.currentUser?.roles.includes('ADMIN') || false;
+    return this.currentUserSubject.value?.roles?.includes('ADMIN') || false;
+  }
+  
+  reloadUser(): Observable<UserDTO> {
+      return this.http.get<UserDTO>(`${BASE_URL}/me`);
   }
 
-
+  private finalizeLogout() {
+    this.currentUserSubject.next(null);
+    this.router.navigate(['/']);
+  }
 }

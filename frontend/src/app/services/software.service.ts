@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
-import { LoginService } from '../login/login.service';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
 export interface SoftwareDTO {
     id: number;
@@ -16,33 +15,24 @@ const BASE_URL = '/api/softwares';
   providedIn: 'root'
 })
 export class SoftwareService {
-  constructor(private readonly http: HttpClient,  private readonly loginService: LoginService) { }
+  constructor(private readonly http: HttpClient) { }
 
   getAllSoftwares(): Observable<SoftwareDTO[]> {
-    return this.http.get<SoftwareDTO[]>(BASE_URL, { headers: this.getAuthHeaders() });
+    return this.http.get<SoftwareDTO[]>(BASE_URL);
   }
   getSoftware(id: number | string): Observable<SoftwareDTO> {
-    return this.http.get<SoftwareDTO>(`${BASE_URL}/${id}`, { headers: this.getAuthHeaders() });
+    return this.http.get<SoftwareDTO>(`${BASE_URL}/${id}`);
   }
 
   createSoftware(data: any): Observable<any> {
-    return this.http.post(BASE_URL, data, { headers: this.getAuthHeaders() });
+    return this.http.post(BASE_URL, data);
   }
 
   updateSoftware(id: number, data: any): Observable<any> {
-    return this.http.put(`${BASE_URL}/${id}`, data, { headers: this.getAuthHeaders() });
+    return this.http.put(`${BASE_URL}/${id}`, data);
   }
 
   deleteSoftware(id: number): Observable<any> {
-    return this.http.delete(`${BASE_URL}/${id}`, { headers: this.getAuthHeaders() });
-  }
-
-  private getAuthHeaders(): HttpHeaders {
-    const auth = this.loginService.auth || localStorage.getItem('auth') || '';
-    return new HttpHeaders({
-        'Authorization': auth,
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-    });
+    return this.http.delete(`${BASE_URL}/${id}`);
   }
 }

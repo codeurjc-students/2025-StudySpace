@@ -124,7 +124,6 @@ public class RoomService {
     
     public Optional<Room> patchRoom(Long id, Room partialRoom) {
         return roomRepository.findById(id).map(existingRoom -> {
-            // Delegamos en métodos auxiliares específicos para PATCH
             patchRoomBasicInfo(existingRoom, partialRoom);
             patchRoomSoftware(existingRoom, partialRoom.getSoftware());
             
