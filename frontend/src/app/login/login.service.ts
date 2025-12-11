@@ -4,6 +4,8 @@ import { Observable, map, switchMap, catchError, of } from 'rxjs';
 import { UserDTO } from '../dtos/user.dto';
 import { Router } from '@angular/router';
 
+const BASE_URL = '/api';
+
 
 export interface User {
     name: string;
@@ -41,19 +43,19 @@ export class LoginService {
         password: pass
     };
     
-    return this.http.post('http://localhost:8080/api/auth/register', body);
+    return this.http.post(`${BASE_URL}/auth/register`, body);
   }
 
   logIn(user: string, pass: string): Observable<any> {
-    const authHeader = 'Basic ' + btoa(user + ':' + pass);
-    const headers = new HttpHeaders({ 
-        'Authorization': authHeader,
+    const authHeader = 'Basic ' + btoa(user + ':' + pass);//encyode to base64
+    const headers = new HttpHeaders({ //not a tocken, a key value with user credentials
+        'Authorization': authHeader,  //here is the key
         'X-Requested-With': 'XMLHttpRequest' 
     });
 
-    return this.http.get<UserDTO>('http://localhost:8080/api/auth/me', { headers }).pipe(
-      switchMap(userData => {
-          return this.http.get<any>(`http://localhost:8080/api/users/${userData.id}/reservations?projection=withRoom`, { headers }).pipe(
+    return this.http.get<UserDTO>(`${BASE_URL}/auth/me`, { headers }).pipe(
+      switchMap(userData => {//if successful, get user reservations
+          return this.http.get<any>(`${BASE_URL}/users/${userData.id}/reservations?projection=withRoom`, { headers }).pipe(
               map(res => {
                  const reservations = res._embedded ? res._embedded.reservations : [];
                  userData.reservations = reservations;
@@ -64,14 +66,14 @@ export class LoginService {
       map(userWithReservations => {
         this.currentUser = userWithReservations;
         this.auth = authHeader;
-        localStorage.setItem('auth', this.auth);
+        localStorage.setItem('auth', this.auth); //on local storage of the browser
         return userWithReservations;
       })
     );
   }
 
   logOut() {
-    this.http.post('http://localhost:8080/api/auth/logout', {}).subscribe({
+    this.http.post(`${BASE_URL}/auth/logout`, {}).subscribe({
         next: (response) => {
             console.log("Successful logout");
             this.finalizeLogout();
@@ -90,7 +92,7 @@ export class LoginService {
         'Content-Type': 'application/json',
         'X-Requested-With': 'XMLHttpRequest'
     });
-    return this.http.put('http://localhost:8080/api/auth/me', body, { headers });
+    return this.http.put(`${BASE_URL}/auth/me`, body, { headers });
   }
 
 
@@ -106,9 +108,9 @@ export class LoginService {
         'X-Requested-With': 'XMLHttpRequest' 
     });
 
-    return this.http.get<UserDTO>('http://localhost:8080/api/auth/me', { headers }).pipe(
+    return this.http.get<UserDTO>(`${BASE_URL}/auth/me`, { headers }).pipe(
       switchMap(userData => {
-          return this.http.get<any>(`http://localhost:8080/api/users/${userData.id}/reservations`, { headers }).pipe(
+          return this.http.get<any>(`${BASE_URL}/users/${userData.id}/reservations`, { headers }).pipe(
               map(reservations => {
                  userData.reservations = reservations || [];
                  return userData;
