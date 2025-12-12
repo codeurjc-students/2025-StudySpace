@@ -1,31 +1,48 @@
 <div class="container mt-5">
-    <h2 class="mb-4">Statistics Panel (Dashboard)</h2>
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Statistics Panel</h2>
+        <div class="d-flex align-items-center bg-white p-2 rounded shadow-sm border">
+            <label for="statsDate" class="me-2 fw-bold text-muted small text-uppercase">Date:</label>
+            <input 
+                type="date" 
+                id="statsDate" 
+                class="form-control form-control-sm border-0 fw-bold text-primary" 
+                style="outline: none;"
+                [(ngModel)]="selectedDate" 
+                (change)="onDateChange()">
+        </div>
+    </div>
 
-    <div class="row g-4 mb-5">
+    <div class="row g-4 mb-4">
         <div class="col-md-12">
-            <div class="card bg-light shadow-sm">
-                <div class="card-body text-center">
-                    <h3 class="fw-bold text-primary">Todays stats</h3>
-                    <p>Real-time visualization of classroom status</p>
+            <div class="card bg-primary text-white shadow-sm">
+                <div class="card-body text-center py-4">
+                    <h3 class="fw-bold mb-1">Overview for {{ selectedDate | date:'fullDate' }}</h3>
+                    <p class="mb-0 opacity-75">Metrics based on reservations for the selected day</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row mb-5">
-        <div class="col-md-6">
-            <div class="card shadow h-100">
-                <div class="card-header fw-bold">Occupated vs. Free (Today)</div>
-                <div class="card-body">
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3 mb-md-0">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-header bg-white fw-bold border-bottom-0 pt-3">
+                    <i class="bi bi-pie-chart-fill me-2 text-success"></i> Occupancy Rate (Global)
+                </div>
+                <div class="card-body" style="height: 300px;">
                     <canvas #occupancyCanvas></canvas>
                 </div>
             </div>
         </div>
 
         <div class="col-md-6">
-            <div class="card shadow h-100">
-                <div class="card-header fw-bold">Rooms with Software vs. Without Software</div>
-                <div class="card-body">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-header bg-white fw-bold border-bottom-0 pt-3">
+                    <i class="bi bi-disc-fill me-2 text-warning"></i> Software Usage (In Reserved Rooms)
+                </div>
+                <div class="card-body" style="height: 300px;">
                     <canvas #softwareCanvas></canvas>
                 </div>
             </div>
@@ -34,16 +51,20 @@
 
     <div class="row mb-5">
         <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header fw-bold">Hourly Traffic (Popular Bookings)</div>
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white fw-bold border-bottom-0 pt-3">
+                    <i class="bi bi-bar-chart-line-fill me-2 text-purple"></i> Hourly Traffic
+                </div>
                 <div class="card-body">
-                    <canvas #hourlyCanvas style="max-height: 400px;"></canvas>
+                    <canvas #hourlyCanvas style="max-height: 350px;"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="mt-4 mb-5">
-        <button routerLink="/admin" class="btn btn-secondary">Back to Admin menu</button>
+        <button routerLink="/admin" class="btn btn-outline-secondary">
+            &larr; Back to Admin menu
+        </button>
     </div>
 </div>

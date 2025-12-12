@@ -2,7 +2,6 @@ import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angula
 import { HttpClient } from '@angular/common/http';
 import { Chart, registerables } from 'chart.js';
 
-//Chart.js
 Chart.register(...registerables);
 
 @Component({
@@ -12,91 +11,141 @@ Chart.register(...registerables);
 })
 export class OccupancyStatsComponent implements OnInit, AfterViewInit {
 
-  //reference to HTML
   @ViewChild('occupancyCanvas') occupancyCanvas!: ElementRef;
   @ViewChild('hourlyCanvas') hourlyCanvas!: ElementRef;
   @ViewChild('softwareCanvas') softwareCanvas!: ElementRef;
 
+  private occupancyChartInstance: Chart | undefined;
+  private softwareChartInstance: Chart | undefined;
+  private hourlyChartInstance: Chart | undefined;
+
+  selectedDate: string = '';
   private statsUrl = '/api/stats'; 
 
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
-    
+    //YYYY-MM-DD
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = ('0' + (today.getMonth() + 1)).slice(-2);
+    const day = ('0' + today.getDate()).slice(-2);
+    this.selectedDate = `${year}-${month}-${day}`;
   }
 
-  ngAfterViewInit(): void {//load data
+  ngAfterViewInit(): void {
+    //to make sure html rendered
+    setTimeout(() => {
+      this.loadStatsAndCreateCharts();
+    }, 100);
+  }
+
+  onDateChange(): void {
     this.loadStatsAndCreateCharts();
   }
 
   loadStatsAndCreateCharts() {
-    this.http.get<any>(this.statsUrl).subscribe({
+    if (!this.selectedDate) return; 
+
+    const urlWithParams = `${this.statsUrl}?date=${this.selectedDate}`;
+
+    this.http.get<any>(urlWithParams).subscribe({
       next: (data) => {
+        this.destroyCharts(); //to clean before painting
+
         this.createOccupancyChart(data.occupiedPercentage, data.freePercentage);
+        
+        
         this.createSoftwareChart(data.roomsWithSoftwarePercentage, data.roomsWithoutSoftwarePercentage);
+        
         this.createHourlyChart(data.hourlyOccupancy);
       },
-      error: (err) => console.error('Error loading statistics', err)
+      error: (err) => console.error('Error loading stats', err)
     });
   }
 
-  //Occupancy Chart
+  destroyCharts() {
+    if (this.occupancyChartInstance) this.occupancyChartInstance.destroy();
+    if (this.softwareChartInstance) this.softwareChartInstance.destroy();
+    if (this.hourlyChartInstance) this.hourlyChartInstance.destroy();
+  }
+
   createOccupancyChart(occupied: number, free: number) {
-    new Chart(this.occupancyCanvas.nativeElement, {
+    //empty, green
+    const hasData = occupied > 0 || free > 0;
+    const dataValues = hasData ? [occupied, free] : [0, 1];
+    const bgColors = hasData ? ['#dc3545', '#198754'] : ['#e9ecef', '#e9ecef'];
+    
+    this.occupancyChartInstance = new Chart(this.occupancyCanvas.nativeElement, {
       type: 'pie',
       data: {
-        labels: ['Occupied', 'Free'],
+        labels: ['Occupied (%)', 'Free (%)'],
         datasets: [{
-          data: [occupied, free],
-          backgroundColor: ['#dc3545', '#198754'], 
+          data: dataValues,
+          backgroundColor: bgColors, 
           hoverOffset: 4
         }]
       },
-      options: { responsive: true, maintainAspectRatio: false }
+      options: { 
+        responsive: true, 
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'bottom' }
+        }
+      }
     });
   }
 
-  // Software Chart
   createSoftwareChart(withSoft: number, withoutSoft: number) {
-    new Chart(this.softwareCanvas.nativeElement, {
+    const hasData = withSoft > 0 || withoutSoft > 0;
+    const chartData = hasData ? [withSoft, withoutSoft] : [1]; 
+    const colors = hasData ? ['#0d6efd', '#ffc107'] : ['#e9ecef']; //grey, no data
+    const labels = hasData ? ['With Software (%)', 'Without Software (%)'] : ['No reservations yet'];
+
+    this.softwareChartInstance = new Chart(this.softwareCanvas.nativeElement, {
       type: 'doughnut',
       data: {
-        labels: ['with Software', 'without Software'],
+        labels: labels,
         datasets: [{
-          data: [withSoft, withoutSoft],
-          backgroundColor: ['#0d6efd', '#ffc107'], 
+          data: chartData,
+          backgroundColor: colors,
           hoverOffset: 4
         }]
       },
-      options: { responsive: true, maintainAspectRatio: false }
+      options: { 
+        responsive: true, 
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'bottom' },
+            tooltip: { enabled: hasData } 
+        }
+      }
     });
   }
 
-  //Bar Chart (Hours)
   createHourlyChart(hourlyMap: any) {
-    // Convert the Map (e.g., {9: 2, 10: 5}) to arrays for Chart.js
-    // Let's create an array of the hours of the working day 
     const hoursLabels = Array.from({length: 14}, (_, i) => i + 8); 
-    
-    // if no data 0
     const dataValues = hoursLabels.map(h => hourlyMap[h] || 0);
 
-    new Chart(this.hourlyCanvas.nativeElement, {
+    this.hourlyChartInstance = new Chart(this.hourlyCanvas.nativeElement, {
       type: 'bar',
       data: {
         labels: hoursLabels.map(h => h + ':00'),
         datasets: [{
-          label: 'Active Bookings',
+          label: 'Bookings Count',
           data: dataValues,
           backgroundColor: '#6610f2', 
-          borderWidth: 1
+          borderRadius: 4
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          y: { beginAtZero: true, ticks: { stepSize: 1 } } 
+          y: { 
+            beginAtZero: true, 
+            ticks: { stepSize: 1 } 
+          } 
         }
       }
     });
