@@ -51,6 +51,7 @@ export class RoomFormComponent implements OnInit {
         this.room.capacity = data.capacity;
         this.room.camp = data.camp;
         this.room.place = data.place;
+        this.room.coordenades = data.coordenades;
         
         // Load associated software IDs
         if (data.software) {

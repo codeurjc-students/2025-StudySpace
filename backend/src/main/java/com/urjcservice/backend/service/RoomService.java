@@ -79,6 +79,9 @@ public class RoomService {
     private void updateRoomBasicInfo(Room existing, Room updated) {
         existing.setName(updated.getName());
         existing.setCapacity(updated.getCapacity());
+        existing.setCamp(updated.getCamp());
+        existing.setPlace(updated.getPlace());
+        existing.setCoordenades(updated.getCoordenades());
     }
 
     private void updateRoomSoftware(Room existing, List<Software> newSoftwareList) {
@@ -138,6 +141,9 @@ public class RoomService {
         if (partial.getCapacity() != null) {
             existing.setCapacity(partial.getCapacity());
         }
+        if (partial.getCamp() != null) existing.setCamp(partial.getCamp());
+        if (partial.getPlace() != null) existing.setPlace(partial.getPlace());
+        if (partial.getCoordenades() != null) existing.setCoordenades(partial.getCoordenades());
     }
 
     private void patchRoomSoftware(Room existing, List<Software> newList) {

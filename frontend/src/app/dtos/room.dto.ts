@@ -5,6 +5,7 @@ export interface RoomDTO {
     name: string;      
     capacity: number;  
     camp: string;      
-    place: string;     
+    place: string; 
+    coordenades: string;   
     software: SoftwareDTO[]; 
 }
