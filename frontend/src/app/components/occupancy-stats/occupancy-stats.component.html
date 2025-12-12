@@ -1,84 +1,49 @@
 <div class="container mt-5">
-    <h2 class="mb-4">Occupancy Statistics</h2>
+    <h2 class="mb-4">Statistics Panel (Dashboard)</h2>
 
     <div class="row g-4 mb-5">
-        <div class="col-md-4">
-            <div class="card text-white bg-primary shadow h-100">
+        <div class="col-md-12">
+            <div class="card bg-light shadow-sm">
                 <div class="card-body text-center">
-                    <h1 class="display-4 fw-bold">12</h1>
-                    <p class="lead">Total Reservations</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-white bg-success shadow h-100">
-                <div class="card-body text-center">
-                    <h1 class="display-4 fw-bold">85%</h1>
-                    <p class="lead">Occupancy Rate (Today)</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-white bg-warning text-dark shadow h-100">
-                <div class="card-body text-center">
-                    <h1 class="display-4 fw-bold">Room 3</h1>
-                    <p class="lead">Most Popular Room</p>
+                    <h3 class="fw-bold text-primary">Todays stats</h3>
+                    <p>Real-time visualization of classroom status</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-header">
-            <h5 class="mb-0">Classroom Occupancy</h5>
+    <div class="row mb-5">
+        <div class="col-md-6">
+            <div class="card shadow h-100">
+                <div class="card-header fw-bold">Occupated vs. Free (Today)</div>
+                <div class="card-body">
+                    <canvas #occupancyCanvas></canvas>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <ul class="list-group list-group-flush">
-                
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <span class="fw-bold" style="width: 30%;">Example1</span>
-                    <div class="d-flex align-items-center w-50">
-                        <progress class="flex-grow-1 me-2" 
-                                  value="90" 
-                                  max="100" 
-                                  style="height: 20px; accent-color: #dc3545;" 
-                                  aria-label="Occupancy rate for Example1">
-                        </progress>
-                        <span class="fw-bold text-danger">90%</span>
-                    </div>
-                </li>
 
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <span class="fw-bold" style="width: 30%;">Example2</span>
-                    <div class="d-flex align-items-center w-50">
-                        <progress class="flex-grow-1 me-2" 
-                                  value="45" 
-                                  max="100" 
-                                  style="height: 20px; accent-color: #0d6efd;" 
-                                  aria-label="Occupancy rate for Example2">
-                        </progress>
-                        <span class="fw-bold text-primary">45%</span>
-                    </div>
-                </li>
-
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <span class="fw-bold" style="width: 30%;">Example3</span>
-                    <div class="d-flex align-items-center w-50">
-                        <progress class="flex-grow-1 me-2" 
-                                  value="10" 
-                                  max="100" 
-                                  style="height: 20px; accent-color: #198754;" 
-                                  aria-label="Occupancy rate for Example3">
-                        </progress>
-                        <span class="fw-bold text-success">10%</span>
-                    </div>
-                </li>
-
-            </ul>
+        <div class="col-md-6">
+            <div class="card shadow h-100">
+                <div class="card-header fw-bold">Rooms with Software vs. Without Software</div>
+                <div class="card-body">
+                    <canvas #softwareCanvas></canvas>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="mt-4">
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header fw-bold">Hourly Traffic (Popular Bookings)</div>
+                <div class="card-body">
+                    <canvas #hourlyCanvas style="max-height: 400px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4 mb-5">
         <button routerLink="/admin" class="btn btn-secondary">Back to Admin menu</button>
     </div>
 </div>
