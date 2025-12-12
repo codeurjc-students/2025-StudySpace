@@ -42,10 +42,10 @@ export class LoginComponent {
       
         if (err.status === 401) {
              
-            const serverMessage = err.error?.error || "";
+            const errorMsg = err.error?.message || err.error?.error || "";
 
             
-            if (serverMessage?.includes("locked")) {
+            if (errorMsg.toLowerCase().includes("locked")) {
                  alert("⛔ ACCESS DENIED\n\n Your account has been LOCKED by an administrator.\n Contact support.");
             } else {
                  alert("Login failed. Please check your email and password.");

@@ -29,9 +29,22 @@ export class UserProfileComponent implements OnInit {
             // Usamos optional chaining (?.) para evitar errores si viene null
             this.editData.name = this.user?.name || '';
             this.editData.email = this.user?.email || '';
+            this.loadReservations();
         },
         error: (err: any) => console.error("Error loading profile", err)
     });
+  }
+  // AUXILIAR METHOD
+  loadReservations() {
+      this.reservationService.getMyReservations().subscribe({
+          next: (reservations) => {
+              if (this.user) {
+                  this.user.reservations = reservations;
+                  console.log("Load reservations:", reservations);
+              }
+          },
+          error: (err) => console.error("Error loading reservations", err)
+      });
   }
 
   goBack() {

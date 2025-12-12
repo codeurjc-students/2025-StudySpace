@@ -56,6 +56,7 @@ public class SoftwareService {
         return softwareRepository.findById(id).map(existingSoftware -> {
             existingSoftware.setName(updatedSoftware.getName());
             existingSoftware.setVersion(updatedSoftware.getVersion());
+            existingSoftware.setDescription(updatedSoftware.getDescription());
             return softwareRepository.save(existingSoftware);
         });
     }
@@ -67,6 +68,9 @@ public class SoftwareService {
             }
             if (partialSoftware.getVersion() != null) {
                 existingSoftware.setVersion(partialSoftware.getVersion());
+            }
+            if (partialSoftware.getDescription() != null) {
+                existingSoftware.setDescription(partialSoftware.getDescription());
             }
             return softwareRepository.save(existingSoftware);
         });

@@ -46,7 +46,7 @@ class JwtDtosTest {
     @Test
     void testTokenType() {
         assertEquals("AuthToken", TokenType.ACCESS.cookieName);
-        assertEquals(Duration.ofMinutes(5), TokenType.ACCESS.duration);
+        assertEquals(Duration.ofMinutes(20), TokenType.ACCESS.duration);
         
         assertEquals("RefreshToken", TokenType.REFRESH.cookieName);
         assertEquals(Duration.ofDays(7), TokenType.REFRESH.duration);
