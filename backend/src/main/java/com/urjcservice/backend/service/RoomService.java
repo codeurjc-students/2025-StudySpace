@@ -2,6 +2,7 @@ package com.urjcservice.backend.service;
 
 import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.entities.Software;
+import com.urjcservice.backend.repositories.ReservationRepository;
 import com.urjcservice.backend.repositories.RoomRepository;
 import com.urjcservice.backend.repositories.SoftwareRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Date;
 
 @Service
 public class RoomService {
@@ -17,11 +19,14 @@ public class RoomService {
     
     private final RoomRepository roomRepository;
     private final SoftwareRepository softwareRepository;
+    private final ReservationRepository reservationRepository;
     
     public RoomService(RoomRepository roomRepository,
-                       SoftwareRepository softwareRepository) {
+                       SoftwareRepository softwareRepository,
+                        ReservationRepository reservationRepository) {
         this.roomRepository = roomRepository;
         this.softwareRepository = softwareRepository;
+        this.reservationRepository = reservationRepository;
     }
 
     public List<Room> findAll() {
@@ -68,9 +73,18 @@ public class RoomService {
     
     public Optional<Room> updateRoom(Long id, Room updatedRoom) {
         return roomRepository.findById(id).map(existingRoom -> {
+            //true if was active and now is disable
+            boolean isBeingDisabled = existingRoom.isActive() && !updatedRoom.isActive();
+
             updateRoomBasicInfo(existingRoom, updatedRoom);
             updateRoomSoftware(existingRoom, updatedRoom.getSoftware());
             
+            //if is disable future reservations are deleted
+            if (isBeingDisabled) {
+                //from now to the future all reservations deleted
+                reservationRepository.deleteByRoomIdAndEndDateAfter(id, new Date());    //change method in the future   IN THE FUTURE IS CANCEL RESERVATION, NOT DELETED ITTTTTTTTTTTTTTTTTTTTTTT
+            }   //deleteByRoom_IdAndEndDateAfter and also fix the problem
+
             return roomRepository.save(existingRoom);
         });
     }
@@ -82,6 +96,7 @@ public class RoomService {
         existing.setCamp(updated.getCamp());
         existing.setPlace(updated.getPlace());
         existing.setCoordenades(updated.getCoordenades());
+        existing.setActive(updated.isActive());
     }
 
     private void updateRoomSoftware(Room existing, List<Software> newSoftwareList) {

@@ -39,6 +39,7 @@ public class RoomRestController {
         private String place;
         private String coordenades;
         private List<Long> softwareIds;
+        private Boolean active;
 
 
         public String getName() { return name; }
@@ -58,6 +59,9 @@ public class RoomRestController {
 
         public List<Long> getSoftwareIds() { return softwareIds; }
         public void setSoftwareIds(List<Long> softwareIds) { this.softwareIds = softwareIds; }
+
+        public Boolean getActive() { return active; }
+        public void setActive(Boolean active) { this.active = active; }
     }
 
     @GetMapping
@@ -112,6 +116,7 @@ public class RoomRestController {
         if (request.camp != null) room.setCamp(request.camp);
         if (request.place != null) room.setPlace(request.place);
         if (request.coordenades != null) room.setCoordenades(request.coordenades);
+        if (request.active != null) room.setActive(request.active);
 
         //List of softwares
         if (request.softwareIds != null) {

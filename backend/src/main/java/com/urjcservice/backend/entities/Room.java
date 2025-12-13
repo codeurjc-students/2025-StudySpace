@@ -27,6 +27,10 @@ public class Room {
     private CampusType Camp; 
     private String place;
     private String coordenades;
+
+    @Column(nullable = false)
+    private boolean active = true;
+
     @ManyToMany
     @JoinTable(
         name = "room_software",
@@ -44,7 +48,7 @@ public class Room {
     public Room() {
     }
     public Room(Long id, String name, Integer capacity, CampusType camp, String place, String coordenades,
-            List<Software> software) {
+            List<Software> software, boolean active) {
         this.id = id;
         this.name = name;
         this.capacity = capacity;
@@ -52,6 +56,7 @@ public class Room {
         this.place = place;
         this.coordenades = coordenades;
         this.software = software;
+        this.active=active;
     }
     public Long getId() {
         return id;
@@ -116,6 +121,16 @@ public class Room {
             
         }
     }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    
     @JsonIgnore
     public List<Reservation> getReservations() {
         return reservations;
@@ -138,6 +153,8 @@ public class Room {
             
         }
     }
+
+    
     
 
 }

@@ -3,6 +3,7 @@ import { ManageRoomsComponent } from './manage-rooms.component';
 import { RoomsService } from '../../services/rooms.service';
 import { RouterTestingModule } from '@angular/router/testing'; 
 import { of } from 'rxjs';
+import { By } from '@angular/platform-browser';
 
 describe('ManageRoomsComponent', () => {
   let component: ManageRoomsComponent;
@@ -11,8 +12,8 @@ describe('ManageRoomsComponent', () => {
   // Mock for service
   const mockRoomsService = {
     getRooms: () => of([
-      { id: 1, name: 'Aula 1', capacity: 20, camp: 'MOSTOLES' },
-      { id: 2, name: 'Aula 2', capacity: 30, camp: 'ALCORCON' }
+      { id: 1, name: 'Aula Activa', capacity: 20, camp: 'MOSTOLES', active: true },
+      { id: 2, name: 'Aula Desactivada', capacity: 30, camp: 'ALCORCON', active: false }
     ]),
     deleteRoom: (id: number) => of({}) 
   };
@@ -34,10 +35,26 @@ describe('ManageRoomsComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+    expect(component.rooms.length).toBe(2);
   });
 
-  it('should load rooms on init', () => {
-    expect(component.rooms.length).toBe(2);
-    expect(component.rooms[0].name).toBe('Aula 1');
+  it('should identify active and inactive rooms correctly', () => {
+    const activeRoom = component.rooms.find(r => r.id === 1);
+    const inactiveRoom = component.rooms.find(r => r.id === 2);
+
+    expect(activeRoom?.active).toBeTrue();
+    expect(inactiveRoom?.active).toBeFalse();
+  });
+  
+  //verify CSS
+  it('should apply table-secondary class to inactive rows', () => {
+      const rows = fixture.debugElement.queryAll(By.css('tr'));
+      
+      fixture.detectChanges();
+      
+      // Verify there is bg-danger (Disabled)
+      const disabledBadge = fixture.debugElement.query(By.css('.badge.bg-danger'));
+      expect(disabledBadge).toBeTruthy();
+      expect(disabledBadge.nativeElement.textContent).toContain('Disabled');
   });
 });

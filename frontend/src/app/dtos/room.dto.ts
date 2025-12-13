@@ -7,5 +7,6 @@ export interface RoomDTO {
     camp: string;      
     place: string; 
     coordenades: string;   
+    active: boolean;
     software: SoftwareDTO[]; 
 }

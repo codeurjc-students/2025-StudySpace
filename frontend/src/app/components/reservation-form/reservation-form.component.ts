@@ -30,10 +30,15 @@ export class ReservationFormComponent implements OnInit {
     //we obtain the roomId from the route parameters
    this.roomsService.getRooms().subscribe({
         next: (data) => {
-            this.rooms = data;
-            if (this.rooms.length > 0) this.roomId = this.rooms[0].id;
+          //only active rooms
+          this.rooms = data.filter(room => room.active === true);
+          if (this.rooms.length > 0) {
+              this.roomId = this.rooms[0].id;
+          } else {
+              this.roomId = null; // no avaliable rooms
+          }
         },
-        error: (err) => console.error('Error cargando aulas', err)
+        error: (err) => console.error('Error loading rooms', err)
     });
   }
 

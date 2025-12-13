@@ -14,17 +14,27 @@
                     <tr>
                         <th>ID</th>
                         <th>Name</th>
-                        <th>Capacity</th>
+                        <th>Status</th> <th>Capacity</th>
                         <th>Campus</th>
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr *ngFor="let room of rooms">
+                    <tr *ngFor="let room of rooms" [class.table-secondary]="!room.active">
                         <td>{{ room.id }}</td>
-                        <td>{{ room.name }}</td>
+                        <td>
+                            {{ room.name }}
+                            <i *ngIf="!room.active" class="fa fa-ban text-danger ms-1" title="Disabled"></i>
+                        </td>
+                        
+                        <td>
+                            <span *ngIf="room.active" class="badge bg-success">Active</span>
+                            <span *ngIf="!room.active" class="badge bg-danger">Disabled</span>
+                        </td>
+
                         <td>{{ room.capacity }}</td>
                         <td><span class="badge bg-info text-dark">{{ room.camp }}</span></td>
+                        
                         <td class="text-end">
                             <button class="btn btn-sm btn-outline-primary me-2" 
                                     [routerLink]="['/admin/rooms/edit', room.id]">
@@ -37,7 +47,7 @@
                     </tr>
 
                     <tr *ngIf="rooms.length === 0">
-                        <td colspan="5" class="text-center py-3 text-muted">
+                        <td colspan="6" class="text-center py-3 text-muted">
                             No rooms found.
                         </td>
                     </tr>
