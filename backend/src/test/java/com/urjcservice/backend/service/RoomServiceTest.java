@@ -2,10 +2,13 @@ package com.urjcservice.backend.service;
 
 import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.entities.Software;
+import com.urjcservice.backend.repositories.ReservationRepository;
 import com.urjcservice.backend.repositories.RoomRepository;
 import com.urjcservice.backend.repositories.SoftwareRepository;
 import com.urjcservice.backend.rest.RoomRestController.RoomRequest; // Internal DTO 
 import com.urjcservice.backend.rest.RoomRestController;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,9 +21,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.List;
+import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 
@@ -32,9 +39,22 @@ public class RoomServiceTest {
 
     @Mock
     private SoftwareRepository softwareRepository;
+    @Mock
+    private ReservationRepository reservationRepository;
 
     @InjectMocks
     private RoomService roomService;
+
+    private Room activeRoom;
+
+    @BeforeEach
+    void setUp() {
+        activeRoom = new Room();
+        activeRoom.setId(1L);
+        activeRoom.setName("Lab 1");
+        activeRoom.setActive(true); 
+        activeRoom.setSoftware(new ArrayList<>());
+    }
 
     @Test
     public void testFindAll() {
@@ -42,6 +62,50 @@ public class RoomServiceTest {
         List<Room> result = roomService.findAll();
         assertEquals(2, result.size());
     }
+
+
+    
+
+    @Test
+    void testUpdateRoom_DisablingRoom_ShouldDeleteFutureReservations() {
+        // GIVEN
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(activeRoom));
+        when(roomRepository.save(any(Room.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // WHEN
+        Room updatedData = new Room();
+        updatedData.setName("Lab 1 Renamed");
+        updatedData.setActive(false);  // now its not active
+        updatedData.setSoftware(new ArrayList<>());
+
+        roomService.updateRoom(1L, updatedData);
+
+        // THEN
+        verify(reservationRepository, times(1)).deleteByRoomIdAndEndDateAfter(eq(1L), any(Date.class));
+        verify(roomRepository).save(argThat(room -> !room.isActive()));
+    }
+
+    @Test
+    void testUpdateRoom_KeepingActive_ShouldNotDeleteReservations() {
+        // GIVEN
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(activeRoom));
+        when(roomRepository.save(any(Room.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // WHEN
+        Room updatedData = new Room();
+        updatedData.setName("Lab 1");
+        updatedData.setActive(true);  //now its active
+        updatedData.setSoftware(new ArrayList<>());
+
+        roomService.updateRoom(1L, updatedData);
+
+        // THEN   no call the delete of bookings
+        verify(reservationRepository, never()).deleteByRoomIdAndEndDateAfter(anyLong(), any(Date.class));
+    }
+
+
+
+
 
     @Test
     public void testSaveRoomWithSoftware() {

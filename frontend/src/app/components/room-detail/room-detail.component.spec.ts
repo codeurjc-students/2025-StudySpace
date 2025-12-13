@@ -12,8 +12,14 @@ describe('RoomDetailComponent', () => {
 
   beforeEach(async () => {
     mockRoomsService = {
+      // Mock of disable room
       getRoom: jasmine.createSpy('getRoom').and.returnValue(of({
-        id: 1, name: 'Lab 1', capacity: 20, place: 'B1', software: []
+        id: 1, 
+        name: 'Lab Disabled', 
+        capacity: 20, 
+        place: 'B1', 
+        active: false, 
+        software: []
       }))
     };
 
@@ -24,7 +30,7 @@ describe('RoomDetailComponent', () => {
         { provide: RoomsService, useValue: mockRoomsService },
         {
           provide: ActivatedRoute,
-          useValue: { snapshot: { params: { id: '1' } } } //on url param 'id' is '1'
+          useValue: { snapshot: { params: { id: '1' } } } 
         }
       ]
     })
@@ -38,6 +44,18 @@ describe('RoomDetailComponent', () => {
   it('should create and load room details', () => {
     expect(component).toBeTruthy();
     expect(mockRoomsService.getRoom).toHaveBeenCalledWith('1');
-    expect(component.room?.name).toBe('Lab 1');
+    expect(component.room?.name).toBe('Lab Disabled');
+  });
+  it('should create and load disabled room details', () => {
+    expect(component).toBeTruthy();
+    expect(component.room?.name).toBe('Lab Disabled');
+    expect(component.room?.active).toBeFalse();
+  });
+
+  it('should show disabled warning if room is inactive', () => {
+    fixture.detectChanges();
+    const alertElement = fixture.nativeElement.querySelector('.alert.alert-danger');
+    expect(alertElement).toBeTruthy();
+    expect(alertElement.textContent).toContain('Temporarily Unavailable');
   });
 });

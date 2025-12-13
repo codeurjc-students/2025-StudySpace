@@ -17,8 +17,8 @@ describe('ReservationFormComponent UI Test', () => {
 
   const mockRoomsService = {
     getRooms: () => of([
-      { id: 1, name: 'Aula Test 1', capacity: 20 },
-      { id: 2, name: 'Aula Test 2', capacity: 30 }
+      { id: 1, name: 'Aula Test 1', capacity: 20, camp: 'MOSTOLES', active: true },
+      { id: 2, name: 'Aula Test 2', capacity: 30, camp: 'ALCORCON', active: true }
     ])
   };
 
