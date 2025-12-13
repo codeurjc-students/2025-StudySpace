@@ -19,6 +19,7 @@ export class RoomFormComponent implements OnInit {
     camp: 'MOSTOLES', 
     place: '',
     coordenades: '' ,
+    active: true,
     softwareIds: [] as number[]  // Array to hold selected software IDs
   };
 
@@ -53,6 +54,8 @@ export class RoomFormComponent implements OnInit {
         this.room.place = data.place;
         this.room.coordenades = data.coordenades;
         
+        this.room.active = (data.active !== undefined) ? data.active : true; //if undefined we asume true
+
         // Load associated software IDs
         if (data.software) {
             this.room.softwareIds = data.software.map(s => s.id);

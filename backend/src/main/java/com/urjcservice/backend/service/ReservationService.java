@@ -105,6 +105,9 @@ public class ReservationService {
         Room room = roomRepository.findById(request.getRoomId())
                 .orElseThrow(() -> new RuntimeException("Room not found"));
 
+        if (!room.isActive()) {
+        throw new RuntimeException("Reservations are not possible: The classroom is temporarily unavailable.");
+        }
         Reservation reservation = new Reservation();
         reservation.setStartDate(request.getStartDate());
         reservation.setEndDate(request.getEndDate());
