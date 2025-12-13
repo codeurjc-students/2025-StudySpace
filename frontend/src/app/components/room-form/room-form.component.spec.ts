@@ -6,29 +6,37 @@ import { FormsModule } from '@angular/forms';
 import { RoomsService } from '../../services/rooms.service';
 import { SoftwareService } from '../../services/software.service';
 import { LoginService } from '../../login/login.service';
-import { of } from 'rxjs';
-import { ActivatedRoute } from '@angular/router';
+import { of,throwError } from 'rxjs';
+import { ActivatedRoute,Router } from '@angular/router';
+
 
 describe('RoomFormComponent', () => {
   let component: RoomFormComponent;
   let fixture: ComponentFixture<RoomFormComponent>;
 
-  const mockRoomsService = {
-    createRoom: () => of({}),
-    updateRoom: () => of({}),
-    getRoom: (id: number) => of({ 
-        id: id, 
-        name: 'Test Room', 
-        active: false, 
-        software: [] 
-    })
+ const mockRoomsService = {
+    createRoom: jasmine.createSpy('createRoom'),
+    updateRoom: jasmine.createSpy('updateRoom'),
+    getRoom: jasmine.createSpy('getRoom')
   };
 
   const mockSoftwareService = {
     getAllSoftwares: () => of([{ id: 1, name: 'Java', version: 17 }])
   };
 
+  const mockRouter = { navigate: jasmine.createSpy('navigate') };
+
   beforeEach(async () => {
+    mockRoomsService.createRoom.and.returnValue(of({ id: 1 }));
+    mockRoomsService.updateRoom.and.returnValue(of({ id: 1 }));
+    
+    mockRoomsService.getRoom.and.returnValue(of({ 
+        id: 1, 
+        name: 'Test Room', 
+        active: false, 
+        software: [] 
+    }));
+
     await TestBed.configureTestingModule({
       declarations: [ RoomFormComponent ],
       imports: [
@@ -39,8 +47,10 @@ describe('RoomFormComponent', () => {
       providers: [
         { provide: RoomsService, useValue: mockRoomsService },
         { provide: SoftwareService, useValue: mockSoftwareService },
+        { provide: Router, useValue: mockRouter },
         {
           provide: ActivatedRoute,
+          // Simulamos que siempre hay un ID '1' en la URL
           useValue: { snapshot: { paramMap: { get: () => '1' } } } 
         }
       ]
@@ -51,6 +61,11 @@ describe('RoomFormComponent', () => {
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
+
+
+
+
+
   it('should create', () => {
     expect(component).toBeTruthy();
   });
@@ -77,4 +92,39 @@ describe('RoomFormComponent', () => {
      
      expect(component.room.active).toBeTrue();
   });
+
+  it('should default active to true if backend returns undefined', () => {
+     //  'as any' to avoid "Property active is missing"
+     const mockRoomNoActive = { id: 1, name: 'Old Room', software: [] } as any; 
+     
+     //return the incorrect object
+     mockRoomsService.getRoom.and.returnValue(of(mockRoomNoActive));
+     
+     component.loadRoomData(1);
+     
+     expect(component.room.active).toBeTrue();
+  });
+
+  it('should handle update error', () => {
+    spyOn(window, 'alert'); 
+    mockRoomsService.updateRoom.and.returnValue(throwError(() => 'Error updating'));
+    
+    component.isEditMode = true;
+    component.roomId = 1;
+    component.save();
+
+    expect(window.alert).toHaveBeenCalled();
+  });
+
+  it('should handle create error', () => {
+    spyOn(window, 'alert');
+    spyOn(console, 'error');
+    mockRoomsService.createRoom.and.returnValue(throwError(() => 'Error creating'));
+    
+    component.isEditMode = false;
+    component.save();
+
+    expect(window.alert).toHaveBeenCalled();
+  });
+
 });

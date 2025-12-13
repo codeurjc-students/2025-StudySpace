@@ -46,13 +46,10 @@ describe('ManageRoomsComponent', () => {
     expect(inactiveRoom?.active).toBeFalse();
   });
   
-  // Test visual opcional (verifica clases CSS)
+  //verify CSS
   it('should apply table-secondary class to inactive rows', () => {
       const rows = fixture.debugElement.queryAll(By.css('tr'));
-      // La primera fila es el header, la segunda es el aula 1 (activa), la tercera aula 2 (inactiva)
-      // Ajusta este índice según tu HTML real o usa selectores más específicos
       
-      // Nota: Angular tests a veces no renderizan todas las clases si no se fuerza detectChanges
       fixture.detectChanges();
       
       // Verify there is bg-danger (Disabled)

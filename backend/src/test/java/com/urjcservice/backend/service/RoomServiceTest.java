@@ -64,7 +64,7 @@ public class RoomServiceTest {
     }
 
 
-    
+
 
     @Test
     void testUpdateRoom_DisablingRoom_ShouldDeleteFutureReservations() {
@@ -179,4 +179,93 @@ public class RoomServiceTest {
         
         verify(roomRepository).delete(room);
     }
+
+    @Test
+    void testUpdateRoom_ReEnablingRoom_ShouldNotDeleteReservations() {
+        // GIVEN
+        Room disabledRoom = new Room();
+        disabledRoom.setId(1L);
+        disabledRoom.setName("Lab Disabled");
+        disabledRoom.setActive(false); // Disable
+        disabledRoom.setSoftware(new ArrayList<>());
+
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(disabledRoom));
+        when(roomRepository.save(any(Room.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // WHEN
+        Room updatedData = new Room();
+        updatedData.setName("Lab Enabled");
+        updatedData.setActive(true); //   now active
+        updatedData.setSoftware(new ArrayList<>());
+
+        roomService.updateRoom(1L, updatedData);
+
+        // THEN
+        verify(reservationRepository, never()).deleteByRoomIdAndEndDateAfter(anyLong(), any(Date.class));
+        verify(roomRepository).save(argThat(Room::isActive));
+    }
+
+    @Test
+    void testPatchRoom_UpdateBasicInfoOnly() {
+        Room existing = new Room();
+        existing.setId(1L);
+        existing.setName("Old");
+        
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(roomRepository.save(any(Room.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        Room partial = new Room();
+        partial.setName("New Name"); // only change name
+
+        Optional<Room> result = roomService.patchRoom(1L, partial);
+        
+        assertTrue(result.isPresent());
+        assertEquals("New Name", result.get().getName());
+    }
+
+    @Test
+    void testPatchRoom_UpdateSoftwareList() {
+        Room existing = new Room();
+        existing.setId(1L);
+        existing.setSoftware(new ArrayList<>());
+        
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(roomRepository.save(any(Room.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        Room partial = new Room();
+        Software newSoft = new Software();
+        newSoft.setId(2L);
+        newSoft.setName("Patch Soft");
+        partial.setSoftware(Arrays.asList(newSoft));
+
+        when(softwareRepository.findById(2L)).thenReturn(Optional.of(newSoft));
+
+        Optional<Room> result = roomService.patchRoom(1L, partial);
+        
+        assertTrue(result.isPresent());
+        assertEquals(1, result.get().getSoftware().size());
+    }
+    
+    @Test
+    void testPatchRoom_WithNullSoftware_ShouldNotChangeExistingSoftware() {
+        Room existing = new Room();
+        existing.setId(1L);
+        existing.setSoftware(new ArrayList<>());
+        Software s = new Software(); s.setId(1L);
+        existing.addSoftware(s);
+        
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(roomRepository.save(any(Room.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        Room partial = new Room();
+        partial.setSoftware(null); 
+
+        Optional<Room> result = roomService.patchRoom(1L, partial);
+        
+        //original list stays the same
+        assertEquals(1, result.get().getSoftware().size());
+    }
+
+
+
 }
