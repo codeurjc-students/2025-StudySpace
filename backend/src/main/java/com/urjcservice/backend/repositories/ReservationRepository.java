@@ -29,4 +29,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     @Query("SELECT r.startDate FROM Reservation r WHERE DATE(r.startDate) = :date")
     List<Date> findStartDatesByDate(@Param("date") LocalDate date);
+
+
+    @Query("SELECT r FROM Reservation r WHERE r.room.id = :roomId AND DATE(r.startDate) = :date")
+    List<Reservation> findByRoomIdAndDate(@Param("roomId") Long roomId, @Param("date") LocalDate date);
 }

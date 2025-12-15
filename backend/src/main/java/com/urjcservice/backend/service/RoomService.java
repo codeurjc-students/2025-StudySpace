@@ -2,6 +2,7 @@ package com.urjcservice.backend.service;
 
 import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.entities.Software;
+import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.repositories.ReservationRepository;
 import com.urjcservice.backend.repositories.RoomRepository;
 import com.urjcservice.backend.repositories.SoftwareRepository;
@@ -10,8 +11,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Optional;
 import java.util.Date;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.TreeMap;
 
 @Service
 public class RoomService {
@@ -168,4 +174,50 @@ public class RoomService {
             addNewSoftware(existing, newList);
         }
     }
+
+
+
+
+    public Map<String, Object> getRoomDailyStats(Long roomId, LocalDate date) {
+        List<Reservation> reservations = reservationRepository.findByRoomIdAndDate(roomId, date);
+        
+        // Map shorted by hours (8:00 to 21:00) -> true/false (occupied/free)
+        Map<Integer, Boolean> hourlyStatus = new TreeMap<>();
+        int startHour = 8;
+        int endHour = 21; 
+        // False=free
+        for (int i = startHour; i <= endHour; i++) {
+            hourlyStatus.put(i, false);
+        }
+
+        ZoneId zone = ZoneId.of("Europe/Madrid");
+
+        for (Reservation r : reservations) {
+            int hStart = r.getStartDate().toInstant().atZone(zone).getHour();
+            int hEnd = r.getEndDate().toInstant().atZone(zone).getHour();
+            
+            //fill the hours of the reservations
+            for (int h = hStart; h < hEnd; h++) {
+                if (h >= startHour && h <= endHour) {
+                    hourlyStatus.put(h, true);
+                }
+            }
+        }
+
+        //% porcentages
+        long occupiedCount = hourlyStatus.values().stream().filter(v -> v).count();
+        long totalHours = hourlyStatus.size();
+        
+        double occupiedPct = ((double) occupiedCount / totalHours) * 100;
+        double freePct = 100 - occupiedPct;
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("hourlyStatus", hourlyStatus);
+        result.put("occupiedPercentage", Math.round(occupiedPct * 100.0) / 100.0);
+        result.put("freePercentage", Math.round(freePct * 100.0) / 100.0);
+        
+        return result;
+    }
+
+
 }
