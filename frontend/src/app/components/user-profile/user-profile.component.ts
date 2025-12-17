@@ -88,4 +88,29 @@ export class UserProfileComponent implements OnInit {
         });
     }
   }
+  
+  performCancel(id: number) {
+    if (confirm("Are you sure you want to cancel this reservation?")) {
+      this.reservationService.cancelReservation(id).subscribe({
+        next: () => {
+          alert("Reservation successfully cancelled.");
+          this.loadReservations(); 
+        },
+        error: (err) => {
+          console.error(err);
+          alert("Cancellation error:");
+        }
+      });
+    }
+  }
+
+  //active only if not canceled and endDate is in the future
+  isReservationActive(res: any): boolean {
+    if (!res || !res.endDate) return false;
+    
+    const now = new Date();
+    const end = new Date(res.endDate);
+    
+    return !res.cancelled && end > now;
+}
 }

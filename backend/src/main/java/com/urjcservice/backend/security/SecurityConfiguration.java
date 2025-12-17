@@ -104,7 +104,7 @@ public class SecurityConfiguration {
         // allows Angular (port 4200)
         configuration.setAllowedOrigins(Arrays.asList("https://localhost:4200"));
         // allows HTTP methods 
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         // allows headers(Authorization for login)
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
         // allows credentials(cookies and basic auth)

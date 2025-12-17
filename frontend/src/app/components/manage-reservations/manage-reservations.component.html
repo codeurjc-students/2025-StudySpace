@@ -1,10 +1,11 @@
 <div class="container mt-5 mb-5">
-    <h2 class="mb-4">Manage User Reservations</h2>
+    <h2 class="mb-4 text-dark fw-bold">Manage User Reservations</h2>
 
-    <div class="card shadow-sm mb-4">
+    <h4 class="text-success mb-3 fw-bold">Active Reservations</h4>
+    <div class="card shadow-sm mb-5">
         <div class="card-body p-0">
             <table class="table table-hover mb-0 align-middle">
-                <thead class="table-light">
+                <thead class="table-success text-dark">
                     <tr>
                         <th>ID</th>
                         <th>Room</th>
@@ -15,22 +16,64 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr *ngFor="let res of reservations">
-                        <td>{{ res.id }}</td>
-                        <td>
-                            <span class="badge bg-info text-dark">{{ res.room?.name || 'Unknown' }}</span>
-                        </td>
-                        <td>{{ res.startDate | date:'short' }}</td>
-                        <td>{{ res.endDate | date:'short' }}</td>
-                        <td>{{ res.reason }}</td>
-                        <td class="text-end">
-                            <button class="btn btn-sm btn-outline-primary me-2" (click)="startEdit(res)">✏️ Edit</button>
-                            <button class="btn btn-sm btn-outline-danger" (click)="deleteReservation(res.id)">🗑️</button>
-                        </td>
-                    </tr>
+                    <ng-container *ngFor="let res of reservations">
+                        <tr *ngIf="isReservationActive(res)">
+                            <td>{{ res.id }}</td>
+                            <td>
+                                <span class="badge bg-info text-dark">{{ res.room?.name || 'Unknown' }}</span>
+                            </td>
+                            <td>{{ res.startDate | date:'short' }}</td>
+                            <td>{{ res.endDate | date:'short' }}</td>
+                            <td>{{ res.reason }}</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-primary me-2" (click)="startEdit(res)">✏️ Edit</button>
+                                <button class="btn btn-sm btn-outline-warning me-2" (click)="performCancel(res.id)">🚫 Cancel</button>
+                                <button class="btn btn-sm btn-outline-danger" (click)="deleteReservation(res.id)">🗑️</button>
+                            </td>
+                        </tr>
+                    </ng-container>
                     <tr *ngIf="reservations.length === 0">
-                        <td colspan="6" class="text-center py-4">This user has no reservations.</td>
+                        <td colspan="6" class="text-center py-4 text-muted">This user has no reservations.</td>
                     </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <hr class="my-5">
+
+    <h4 class="text-muted mb-3 fw-bold">History & Cancelled</h4>
+    <div class="card shadow-sm mb-4 bg-light">
+        <div class="card-body p-0">
+            <table class="table mb-0 align-middle opacity-75">
+                <thead class="table-secondary">
+                    <tr>
+                        <th>ID</th>
+                        <th>Room</th>
+                        <th>Date</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <ng-container *ngFor="let res of reservations">
+                        <tr *ngIf="!isReservationActive(res)">
+                            <td>{{ res.id }}</td>
+                            <td>
+                                <span class="text-decoration-line-through text-muted">{{ res.room?.name || 'Unknown' }}</span>
+                            </td>
+                            <td>{{ res.startDate | date:'short' }}</td>
+                            <td>{{ res.reason }}</td>
+                            <td>
+                                <span *ngIf="res.cancelled" class="badge bg-secondary">CANCELLED</span>
+                                <span *ngIf="!res.cancelled" class="badge bg-dark">EXPIRED</span>
+                            </td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-danger" (click)="deleteReservation(res.id)">🗑️ Delete Record</button>
+                            </td>
+                        </tr>
+                    </ng-container>
                 </tbody>
             </table>
         </div>

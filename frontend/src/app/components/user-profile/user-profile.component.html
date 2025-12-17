@@ -7,7 +7,6 @@
     </div>
 
     <div class="row">
-        
         <div class="col-md-4 text-center border-end">
             <div class="d-flex flex-column align-items-center">
                 <img src="assets/user_placeholder.png" alt="Profile" 
@@ -40,7 +39,6 @@
             
             <div class="mb-5">
                 <h5 class="text-muted mb-3">Contact Information</h5>
-                
                 <div class="d-flex align-items-center p-3 bg-light rounded">
                     <strong class="me-2">Email:</strong> 
                     <span class="flex-grow-1 text-muted">{{ user.email }}</span>
@@ -48,31 +46,41 @@
             </div>
 
             <div>
-                <h5 class="text-muted mb-3">My Reservations</h5>
+                <h5 class="text-primary mb-3">Active Reservations</h5>
                 
                 <div *ngIf="!user.reservations || user.reservations.length === 0" class="alert alert-info">
-                    You have no active reservations.
+                    You have no reservations yet.
                 </div>
 
+                <div class="list-group mb-4">
+                    <ng-container *ngFor="let res of user.reservations">
+                        <div *ngIf="isReservationActive(res)" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center border-start border-4 border-success">
+                            <div>
+                                <h6 class="mb-1 fw-bold text-dark">{{ res.room?.name || 'Unknown Room' }}</h6>
+                                <small class="text-muted d-block">📅 {{ res.startDate | date:'mediumDate' }}</small>
+                                <small class="text-muted">⏰ {{ res.startDate | date:'shortTime' }} - {{ res.endDate | date:'shortTime' }}</small>
+                            </div>
+                            
+                            <div class="btn-group">
+                                <button class="btn btn-outline-warning btn-sm" (click)="performCancel(res.id)">🚫 Cancel</button>
+                                <button *ngIf="loginService.isAdmin()" class="btn btn-link text-danger btn-sm text-decoration-none" (click)="cancelReservation(res.id)">Delete</button>
+                            </div>
+                        </div>
+                    </ng-container>
+                </div>
+
+                <h5 class="text-muted mb-3">History & Cancelled</h5>
                 <div class="list-group">
-                    <div *ngFor="let res of user.reservations" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="mb-1 text-primary">{{ res.room?.name || 'Unknown Room' }}</h6>
-                            <small class="text-muted d-block">
-                                📅 {{ res.startDate | date:'mediumDate' }} 
-                            </small>
-                            <small class="text-muted">
-                                ⏰ {{ res.startDate | date:'shortTime' }} - {{ res.endDate | date:'shortTime' }}
-                            </small>
-                            <p class="mb-0 mt-1 small fst-italic text-secondary">"{{ res.reason }}"</p>
+                    <ng-container *ngFor="let res of user.reservations">
+                        <div *ngIf="!isReservationActive(res)" class="list-group-item list-group-item-light d-flex justify-content-between align-items-center opacity-75">
+                            <div>
+                                <h6 class="mb-1 text-decoration-line-through text-muted">{{ res.room?.name }}</h6>
+                                <small class="text-muted">Date: {{ res.startDate | date:'mediumDate' }}</small>
+                            </div>
+                            <span *ngIf="res.cancelled" class="badge bg-secondary rounded-pill">CANCELLED</span>
+                            <span *ngIf="!res.cancelled" class="badge bg-light text-dark border rounded-pill">PAST / EXPIRED</span>
                         </div>
-                        
-                        <div class="btn-group">
-                            <button class="btn btn-outline-danger btn-sm" (click)="cancelReservation(res.id)" title="Cancel Reservation">
-                                🗑️ Cancel
-                            </button>
-                        </div>
-                    </div>
+                    </ng-container>
                 </div>
             </div>
 

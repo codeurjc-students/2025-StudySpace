@@ -34,4 +34,8 @@ export class ReservationService {
   getMyReservations(): Observable<any[]> {
     return this.http.get<any[]>('/api/reservations/my-reservations');
   }
+
+  cancelReservation(id: number): Observable<any> {//uses patch
+    return this.http.patch(`/api/reservations/${id}/cancel`, {});
+  }
 }

@@ -80,4 +80,28 @@ export class ManageReservationsComponent implements OnInit {
       });
     }
   }
+
+  isReservationActive(res: any): boolean {
+    if (!res || !res.endDate) return false;
+    const now = new Date();
+    const end = new Date(res.endDate);
+    return !res.cancelled && end > now;
+  }
+
+  performCancel(id: number) {
+    if (confirm("Are you sure you want to cancel this reservation?")) {
+      this.reservationService.cancelReservation(id).subscribe({
+        next: () => {
+          alert("Reservation successfully cancelled.");
+          this.loadReservations(); 
+        },
+        error: (err) => {
+          console.error(err);
+          alert("Cancellation error:");
+        }
+      });
+    }
+  }
+
+
 }
