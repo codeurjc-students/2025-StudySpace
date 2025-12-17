@@ -2,21 +2,21 @@ package com.urjcservice.backend.rest;
 
 import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.entities.Software;
-import com.urjcservice.backend.repositories.RoomRepository;
-import com.urjcservice.backend.repositories.SoftwareRepository;
 import com.urjcservice.backend.service.RoomService;
 import com.urjcservice.backend.service.SoftwareService;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/rooms") 
@@ -107,6 +107,24 @@ public class RoomRestController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+
+    @GetMapping("/{id}/stats")
+    public ResponseEntity<Map<String, Object>> getRoomStats(
+            @PathVariable Long id,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        
+        if (date == null) {
+            date = LocalDate.now();
+        }
+        
+        // Verify the room exist
+        if (roomService.findById(id).isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(roomService.getRoomDailyStats(id, date));
     }
     
     //auxiliar method to dto to entity

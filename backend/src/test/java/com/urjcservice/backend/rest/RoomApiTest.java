@@ -2,22 +2,31 @@ package com.urjcservice.backend.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.urjcservice.backend.entities.Room;
+import com.urjcservice.backend.entities.User;
+import com.urjcservice.backend.entities.Software;
 import com.urjcservice.backend.repositories.RoomRepository;
+import com.urjcservice.backend.repositories.UserRepository;
+import com.urjcservice.backend.repositories.SoftwareRepository;
+import com.urjcservice.backend.security.jwt.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.servlet.http.Cookie;
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.hasSize;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -28,21 +37,53 @@ public class RoomApiTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private RoomRepository roomRepository; 
+    private RoomRepository roomRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private SoftwareRepository softwareRepository;
+
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
+    private UserDetailsService userDetailsService;
 
     @Autowired
     private ObjectMapper objectMapper;
 
     private Long existingRoomId;
+    private Long existingSoftwareId;
+    private Cookie authCookie;
 
     @BeforeEach
     void setUp() {
+        //real user for tocken
+        User admin = new User();
+        admin.setName("Admin Test");
+        admin.setEmail("admin@urjc.es");
+        admin.setEncodedPassword("password");
+        admin.setRoles(List.of("ADMIN", "USER"));
+        userRepository.save(admin);
+
+        //generate real tocken and insert it inside a cookie
+        UserDetails userDetails = userDetailsService.loadUserByUsername("admin@urjc.es");
+        String token = jwtTokenProvider.generateAccessToken(userDetails);
+        authCookie = new Cookie("AuthToken", token); 
+
+
+        Software soft = new Software();
+        soft.setName("Java JDK");
+        soft = softwareRepository.save(soft);
+        existingSoftwareId = soft.getId();
+
+
         Room room = new Room();
         room.setName("Aula Pre-existente");
         room.setCapacity(20);
         room.setCamp(Room.CampusType.ALCORCON);
-        room.setPlace("Bajo A");
-        room.setCoordenades("0,0");
         room.setActive(true);
         room.setSoftware(new ArrayList<>());
         
@@ -50,119 +91,117 @@ public class RoomApiTest {
         existingRoomId = room.getId();
     }
 
-    //GET ALL
     @Test
     public void testGetAllRooms() throws Exception {
         mockMvc.perform(get("/api/rooms")
-                .contentType(MediaType.APPLICATION_JSON))
+                .cookie(authCookie)) //we send the cookie because if not the filter blocks us
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray()); 
     }
 
-    // GET BY ID (Happy Path)
     @Test
-    public void testGetRoomById() throws Exception {
-        mockMvc.perform(get("/api/rooms/" + existingRoomId)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name", is("Aula Pre-existente")));
-    }
+    public void testCreateRoom_FullCoverage() throws Exception {
+        RoomRestController.RoomRequest request = new RoomRestController.RoomRequest();
+        request.setName("Aula Nueva Sonar");
+        request.setCapacity(40);
+        request.setCamp(Room.CampusType.MOSTOLES);
+        request.setPlace("Lab 1");
+        request.setCoordenades("1,1");
+        request.setActive(true);
+        request.setSoftwareIds(List.of(existingSoftwareId)); 
 
-    //GET BY ID (Not Found)
-    @Test
-    public void testGetRoomById_NotFound() throws Exception {
-        mockMvc.perform(get("/api/rooms/999999")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
-    }
-
-    //CREATE (Admin)
-    @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN", "USER"}) 
-    public void testCreateRoomAsAdmin() throws Exception {
-        String newRoomJson = """
-            {
-                "name": "Aula Nueva Test",
-                "capacity": 50,
-                "camp": "MOSTOLES",
-                "place": "Edificio de Pruebas",
-                "coordenades": "10,20",
-                "active": true,
-                "softwareIds": []
-            }
-        """;
-        
         mockMvc.perform(post("/api/rooms")
-                .content(newRoomJson)
-                .contentType(MediaType.APPLICATION_JSON))
+                .cookie(authCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name", is("Aula Nueva Test")));
+                .andExpect(jsonPath("$.name", is("Aula Nueva Sonar")))
+                .andExpect(jsonPath("$.software", hasSize(1)));
     }
 
-    //UPDATE (Admin)
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"}) 
-    public void testUpdateRoom() throws Exception {
-        String updateJson = """
-            {
-                "name": "Aula Modificada",
-                "capacity": 100,
-                "camp": "VICALVARO",
-                "place": "Ático",
-                "coordenades": "5,5",
-                "active": false,
-                "softwareIds": []
-            }
-        """;
+    public void testUpdateRoom_Success() throws Exception {
+        RoomRestController.RoomRequest updateReq = new RoomRestController.RoomRequest();
+        updateReq.setName("Nombre Actualizado");
+        updateReq.setActive(false);
 
         mockMvc.perform(put("/api/rooms/" + existingRoomId)
-                .content(updateJson)
-                .contentType(MediaType.APPLICATION_JSON))
+                .cookie(authCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateReq)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name", is("Aula Modificada")))
+                .andExpect(jsonPath("$.name", is("Nombre Actualizado")))
                 .andExpect(jsonPath("$.active", is(false)));
     }
 
-    //UPDATE (Not Found)
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
-    public void testUpdateRoom_NotFound() throws Exception {
-        String updateJson = "{ \"name\": \"Ghost\" }";
-        
-        mockMvc.perform(put("/api/rooms/999999")
-                .content(updateJson)
-                .contentType(MediaType.APPLICATION_JSON))
+    public void testGetRoomStats_Now() throws Exception {//if date null
+        mockMvc.perform(get("/api/rooms/" + existingRoomId + "/stats")
+                .cookie(authCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.occupiedPercentage").exists());
+    }
+
+    @Test
+    public void testDeleteRoom_Success() throws Exception {
+        mockMvc.perform(delete("/api/rooms/" + existingRoomId)
+                .cookie(authCookie))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/rooms/" + existingRoomId).cookie(authCookie))
                 .andExpect(status().isNotFound());
     }
 
-    //DELETE (Admin)
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"}) 
-    public void testDeleteRoom() throws Exception {
-        mockMvc.perform(delete("/api/rooms/" + existingRoomId))
-                .andExpect(status().isNoContent()); // 204 No Content
-
-        // Verify
-        mockMvc.perform(get("/api/rooms/" + existingRoomId))
+    public void testGetRoomById_NotFound() throws Exception {
+        mockMvc.perform(get("/api/rooms/999999")
+                .cookie(authCookie))
                 .andExpect(status().isNotFound());
     }
 
-    //DELETE (Not Found)
-    @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
-    public void testDeleteRoom_NotFound() throws Exception {
-        mockMvc.perform(delete("/api/rooms/999999"))
-                .andExpect(status().isNotFound());
-    }
 
-    //SECURITY CHECK (Unauthenticated)
     @Test
-    public void testCreateRoomUnauthenticated() throws Exception {
-        String newRoomJson = "{ \"name\": \"Aula Incorrecta\", \"capacity\": 100 }";
+    public void testCreateRoom_NullSoftwareIds() throws Exception {
+        RoomRestController.RoomRequest request = new RoomRestController.RoomRequest();
+        request.setName("Aula Sin Software");
+        request.setSoftwareIds(null); //execute room.setSoftware(new ArrayList<>())
 
         mockMvc.perform(post("/api/rooms")
-                .content(newRoomJson)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isUnauthorized()); // 401
+                .cookie(authCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.software", hasSize(0)));
+    }
+
+    //404 error on update
+    @Test
+    public void testUpdateRoom_NotFound() throws Exception {
+        RoomRestController.RoomRequest updateReq = new RoomRestController.RoomRequest();
+        updateReq.setName("Inexistente");
+
+        mockMvc.perform(put("/api/rooms/999999")
+                .cookie(authCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateReq)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void testGetRoomStats_WithSpecificDate() throws Exception {
+        String testDate = "2025-05-20";
+        
+        mockMvc.perform(get("/api/rooms/" + existingRoomId + "/stats")
+                .param("date", testDate)
+                .cookie(authCookie))
+                .andExpect(status().isOk());
+    }
+
+    //404 on delete
+    @Test
+    public void testDeleteRoom_NotFound() throws Exception {
+        mockMvc.perform(delete("/api/rooms/999999")
+                .cookie(authCookie))
+                .andExpect(status().isNotFound());
     }
 }

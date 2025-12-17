@@ -39,4 +39,8 @@ export class RoomsService {
   public deleteRoom(id: number): Observable<any> {
     return this.http.delete(`${BASE_URL}/${id}`);
   }
+
+  public getRoomStats(id: number, date: string): Observable<any> {
+    return this.http.get<any>(`${BASE_URL}/${id}/stats?date=${date}`);
+  }
 }

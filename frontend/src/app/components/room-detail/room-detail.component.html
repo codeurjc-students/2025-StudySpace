@@ -1,6 +1,6 @@
 <div *ngIf="room" class="container mt-5 mb-5">
-    <div class="card shadow">
-        
+    
+    <div class="card shadow mb-5">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center">
                 <h2 class="mb-0">{{ room.name }}</h2>
@@ -12,31 +12,26 @@
         </div>
 
         <div class="card-body">
-            
             <div *ngIf="!room.active" class="alert alert-danger d-flex align-items-center mb-4" role="alert">
                 <i class="fa fa-exclamation-circle fa-2x me-3"></i>
                 <div>
                     <h5 class="alert-heading fw-bold mb-1">Temporarily Unavailable</h5>
-                    <p class="mb-0">This classroom is currently under maintenance or disabled. Reservations cannot be made at this time.</p>
+                    <p class="mb-0">This classroom is currently under maintenance or disabled.</p>
                 </div>
             </div>
 
             <div class="row">
                 <div class="col-md-6">
-                    <img src="assets/AulasSinOrdena.jpg" 
-                         class="img-fluid rounded mb-3 shadow-sm" 
-                         alt="Classroom view"
-                         [style.filter]="!room.active ? 'grayscale(100%)' : 'none'">
+                     <img src="assets/AulasSinOrdena.jpg" class="img-fluid rounded mb-3 shadow-sm" alt="Classroom view"
+                          [style.filter]="!room.active ? 'grayscale(100%)' : 'none'">
                 </div>
-
                 <div class="col-md-6">
                     <h4 class="text-primary">Details</h4>
                     <ul class="list-group list-group-flush mb-4">
                         <li class="list-group-item"><strong>Capacity:</strong> {{ room.capacity }} people</li>
                         <li class="list-group-item"><strong>Location:</strong> {{ room.place }}</li>
                     </ul>
-
-                    <h4 class="text-primary">Available software in the room</h4>
+                    <h4 class="text-primary">Available software</h4>
                     <div *ngIf="room.software && room.software.length > 0; else noSoftware">
                         <div class="list-group">
                             <div *ngFor="let soft of room.software" class="list-group-item list-group-item-action">
@@ -44,21 +39,49 @@
                                     <h6 class="mb-1 fw-bold">{{ soft.name }}</h6>
                                     <small>v{{ soft.version }}</small>
                                 </div>
-                                <p class="mb-1 small">{{ soft.description }}</p>
                             </div>
                         </div>
                     </div>
                     <ng-template #noSoftware>
-                        <div class="alert alert-secondary">This classroom does not have any specific software assigned.</div>
+                        <div class="alert alert-secondary">No specific software assigned.</div>
                     </ng-template>
                 </div>
             </div>
         </div>
+    </div>
 
+    <div class="card shadow border-0">
+        <div class="card-header bg-white pt-3 border-bottom-0 d-flex justify-content-between align-items-center flex-wrap">
+            <h3 class="text-primary mb-0"><i class="fa fa-bar-chart me-2"></i>Availability & Occupancy</h3>
+            
+            <div class="d-flex align-items-center mt-2 mt-md-0">
+                <label for="statsDate" class="me-2 fw-bold text-muted small text-uppercase">Check Date:</label>
+                <input type="date" id="statsDate" 
+                       class="form-control form-control-sm border fw-bold text-primary" 
+                       [(ngModel)]="selectedDate" (change)="onDateChange()">
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8 mb-4 mb-md-0">
+                    <h6 class="text-center text-muted fw-bold mb-3">Hourly Schedule (8:00 - 21:00)</h6>
+                    <div style="height: 300px;">
+                        <canvas #hourlyCanvas></canvas>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <h6 class="text-center text-muted fw-bold mb-3">Daily Occupancy Rate</h6>
+                    <div style="height: 250px;">
+                        <canvas #occupancyCanvas></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <div class="card-footer d-flex justify-content-between">
-            <a routerLink="/" class="btn btn-secondary">
-                &laquo; Back
-            </a>
+            <a routerLink="/" class="btn btn-secondary">&laquo; Back to List</a>
         </div>
     </div>
 </div>
