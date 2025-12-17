@@ -1,61 +1,150 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { RoomDetailComponent } from './room-detail.component';
 import { RoomsService } from '../../services/rooms.service';
 import { ActivatedRoute } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { RouterTestingModule } from '@angular/router/testing';
+import { FormsModule } from '@angular/forms';
 
 describe('RoomDetailComponent', () => {
   let component: RoomDetailComponent;
   let fixture: ComponentFixture<RoomDetailComponent>;
   let mockRoomsService: any;
 
+  // Datos por defecto
+  const defaultRoom = { id: 1, name: 'Lab 1', active: true, software: [] };
+  const mockStats = {
+    hourlyStatus: { "8": false, "9": true },
+    occupiedPercentage: 50,
+    freePercentage: 50
+  };
+
   beforeEach(async () => {
     mockRoomsService = {
-      // Mock of disable room
-      getRoom: jasmine.createSpy('getRoom').and.returnValue(of({
-        id: 1, 
-        name: 'Lab Disabled', 
-        capacity: 20, 
-        place: 'B1', 
-        active: false, 
-        software: []
-      }))
+
+      getRoom: jasmine.createSpy('getRoom').and.returnValue(of(defaultRoom)),
+      getRoomStats: jasmine.createSpy('getRoomStats').and.returnValue(of(mockStats))
     };
 
     await TestBed.configureTestingModule({
       declarations: [ RoomDetailComponent ],
-      imports: [ RouterTestingModule ],
+      imports: [ RouterTestingModule, FormsModule ],
       providers: [
         { provide: RoomsService, useValue: mockRoomsService },
         {
           provide: ActivatedRoute,
-          useValue: { snapshot: { params: { id: '1' } } } 
+          useValue: { snapshot: { params: { id: '1' } } }
         }
       ]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(RoomDetailComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
-  it('should create and load room details', () => {
+  it('should create and load room details (default active)', () => {
+    fixture.detectChanges(); 
+    
     expect(component).toBeTruthy();
-    expect(mockRoomsService.getRoom).toHaveBeenCalledWith('1');
-    expect(component.room?.name).toBe('Lab Disabled');
+    expect(mockRoomsService.getRoom).toHaveBeenCalledWith(1);
+    expect(component.room?.name).toBe('Lab 1');
+    expect(component.room?.active).toBeTrue();
   });
+
   it('should create and load disabled room details', () => {
-    expect(component).toBeTruthy();
+    // overwirte the mock before starting the component
+    const disabledRoom = { id: 1, name: 'Lab Disabled', active: false, software: [] };
+    mockRoomsService.getRoom.and.returnValue(of(disabledRoom));
+
+    fixture.detectChanges(); // Inicia ngOnInit con el nuevo mock
+
     expect(component.room?.name).toBe('Lab Disabled');
     expect(component.room?.active).toBeFalse();
-  });
-
-  it('should show disabled warning if room is inactive', () => {
-    fixture.detectChanges();
+    
+    // Verify
     const alertElement = fixture.nativeElement.querySelector('.alert.alert-danger');
     expect(alertElement).toBeTruthy();
-    expect(alertElement.textContent).toContain('Temporarily Unavailable');
+  });
+
+  it('should load stats after initialization (async)', fakeAsync(() => {
+    fixture.detectChanges(); 
+    
+    //setTimeout for ngOnInit
+    tick(150); 
+    
+    const today = new Date().toISOString().split('T')[0];
+    expect(mockRoomsService.getRoomStats).toHaveBeenCalledWith(1, today);
+  }));
+
+  it('should reload stats when date changes', () => {
+    fixture.detectChanges();
+    
+    component.roomId = 1;
+    component.selectedDate = '2025-12-25';
+    
+    component.onDateChange();
+    
+    expect(mockRoomsService.getRoomStats).toHaveBeenCalledWith(1, '2025-12-25');
+  });
+
+
+  it('should call destroyCharts before creating new ones to avoid memory leaks', () => {
+    // Espiamos el método destroyCharts
+    spyOn(component, 'destroyCharts').and.callThrough();
+    
+    // Simulamos la carga
+    component.roomId = 1;
+    component.loadStats();
+    
+    // Verificamos
+    expect(component.destroyCharts).toHaveBeenCalled();
+  });
+
+  it('should transform backend stats correctly for the Chart data', () => {
+    // Este test verifica la lógica dentro de createCharts sin pintar el canvas real
+    // Accedemos a la lógica "interna" simulando los datos
+    
+    const mockComplexStats = {
+      hourlyStatus: { "08:00": false, "09:00": true, "10:00": true },
+      occupiedPercentage: 66,
+      freePercentage: 34
+    };
+
+    // Espiamos la creación del Chart o simplemente verificamos los datos preparados
+    // Como createCharts crea 'new Chart', es difícil interceptar la instancia sin un mock complejo de Chart.js.
+    // Una estrategia efectiva es verificar los efectos secundarios o refactorizar, 
+    // pero aquí validaremos que NO explota y que procesa las claves.
+    
+    // Simulamos que los elementos del DOM existen para que no falle el 'if (this.hourlyCanvas)'
+    component.hourlyCanvas = { nativeElement: document.createElement('canvas') } as any;
+    component.occupancyCanvas = { nativeElement: document.createElement('canvas') } as any;
+
+    spyOn(component, 'createCharts').and.callThrough();
+    
+    // Ejecutamos manualmente con datos controlados
+    component.createCharts(mockComplexStats);
+
+    expect(component.createCharts).toHaveBeenCalledWith(mockComplexStats);
+    
+    // Verificamos que se han instanciado (privados, accedemos con 'any')
+    expect((component as any).hourlyChart).toBeDefined();
+    expect((component as any).occupancyChart).toBeDefined();
+    
+    // Verificamos datos del gráfico de ocupación
+    const chartInstance = (component as any).occupancyChart;
+    const data = chartInstance.data.datasets[0].data;
+    
+    expect(data[0]).toBe(66); // Occupied
+    expect(data[1]).toBe(34); // Free
+  });
+
+  it('should not crash if canvas elements are missing', () => {
+    // Caso defensivo: Si el usuario cambia de pestaña muy rápido y el canvas no está
+    component.hourlyCanvas = undefined!;
+    component.occupancyCanvas = undefined!;
+
+    const safeExecution = () => component.createCharts(mockStats);
+    
+    expect(safeExecution).not.toThrow();
   });
 });

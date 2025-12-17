@@ -2,6 +2,7 @@ package com.urjcservice.backend.service;
 
 import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.entities.Software;
+import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.repositories.ReservationRepository;
 import com.urjcservice.backend.repositories.RoomRepository;
 import com.urjcservice.backend.repositories.SoftwareRepository;
@@ -17,11 +18,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.time.LocalDate; 
+import java.time.ZoneId;    
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.List;
 import java.util.Date;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -264,6 +268,110 @@ public class RoomServiceTest {
         
         //original list stays the same
         assertEquals(1, result.get().getSoftware().size());
+    }
+
+    @Test
+    void testGetRoomDailyStats() {
+        // GIVEN
+        Long roomId = 1L;
+        LocalDate date = LocalDate.now();
+        
+        //(2 hours)
+        Reservation r1 = new Reservation();
+        r1.setStartDate(Date.from(date.atTime(10, 0).atZone(ZoneId.of("Europe/Madrid")).toInstant()));
+        r1.setEndDate(Date.from(date.atTime(12, 0).atZone(ZoneId.of("Europe/Madrid")).toInstant()));
+        
+        when(reservationRepository.findByRoomIdAndDate(roomId, date))
+            .thenReturn(Arrays.asList(r1));
+
+        // WHEN
+        Map<String, Object> stats = roomService.getRoomDailyStats(roomId, date);
+
+        // THEN
+        assertNotNull(stats);
+        
+        @SuppressWarnings("unchecked")
+        Map<Integer, Boolean> hourlyStatus = (Map<Integer, Boolean>) stats.get("hourlyStatus");
+        
+        
+        assertTrue(hourlyStatus.get(10), "The 10 o'clock hour must be occupied.");
+        assertTrue(hourlyStatus.get(11), "The 11 o'clock hour must be occupied.");
+        assertFalse(hourlyStatus.get(9), "The 9 o'clock hour must be free");
+        
+        // Verificamos porcentajes: 2 horas ocupadas de 14 posibles (8 a 21) = 14.29%
+        double expectedOccupied = Math.round((2.0 / 14.0 * 100) * 100.0) / 100.0;
+        assertEquals(expectedOccupied, stats.get("occupiedPercentage"));
+    }
+
+
+
+    @Test
+    void testGetRoomDailyStats_NoReservations_ShouldReturnZero() {
+        // GIVEN
+        Long roomId = 1L;
+        LocalDate date = LocalDate.now();
+        
+        // Mock devolviendo lista vacía
+        when(reservationRepository.findByRoomIdAndDate(roomId, date))
+            .thenReturn(new ArrayList<>());
+
+        // WHEN
+        Map<String, Object> stats = roomService.getRoomDailyStats(roomId, date);
+
+        // THEN
+        assertEquals(0.0, stats.get("occupiedPercentage"));
+        assertEquals(100.0, stats.get("freePercentage"));
+        
+        @SuppressWarnings("unchecked")
+        Map<Integer, Boolean> hourlyStatus = (Map<Integer, Boolean>) stats.get("hourlyStatus");
+        // Verificar que ninguna hora está marcada como true
+        assertFalse(hourlyStatus.values().stream().anyMatch(Boolean::booleanValue));
+    }
+
+    @Test
+    void testGetRoomDailyStats_FullOccupancy() {
+        // GIVEN
+        Long roomId = 1L;
+        LocalDate date = LocalDate.now();
+        ZoneId zone = ZoneId.of("Europe/Madrid");
+
+        // Reserva que cubre todo el día
+        Reservation r1 = new Reservation();
+        r1.setStartDate(Date.from(date.atTime(8, 0).atZone(zone).toInstant()));
+        
+        // CAMBIO AQUÍ: Poner 22:00 para que cubra la franja de las 21:00
+        r1.setEndDate(Date.from(date.atTime(22, 0).atZone(zone).toInstant())); 
+
+        when(reservationRepository.findByRoomIdAndDate(roomId, date))
+            .thenReturn(Arrays.asList(r1));
+
+        // WHEN
+        Map<String, Object> stats = roomService.getRoomDailyStats(roomId, date);
+
+        // THEN
+        assertEquals(100.0, stats.get("occupiedPercentage"));
+        assertEquals(0.0, stats.get("freePercentage"));
+    }
+    
+    @Test
+    void testGetRoomDailyStats_ReservationOutsideBounds_ShouldIgnore() {
+        // GIVEN: Una reserva a las 22:00 (fuera del rango 8-21)
+        Long roomId = 1L;
+        LocalDate date = LocalDate.now();
+        ZoneId zone = ZoneId.of("Europe/Madrid");
+
+        Reservation r1 = new Reservation();
+        r1.setStartDate(Date.from(date.atTime(22, 0).atZone(zone).toInstant()));
+        r1.setEndDate(Date.from(date.atTime(23, 0).atZone(zone).toInstant()));
+
+        when(reservationRepository.findByRoomIdAndDate(roomId, date))
+            .thenReturn(Arrays.asList(r1));
+
+        // WHEN
+        Map<String, Object> stats = roomService.getRoomDailyStats(roomId, date);
+
+        // THEN: No debe contar como ocupada
+        assertEquals(0.0, stats.get("occupiedPercentage"));
     }
 
 
