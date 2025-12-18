@@ -205,4 +205,36 @@ describe('UserProfileComponent', () => {
   expect(component.editData.name).toBe('');
   expect(component.editData.email).toBe('');
   });
+
+
+
+
+  it('should handle null user in reloadUser and set default strings', () => {
+  // Cubre la rama del pipe/subscribe donde el usuario podría ser null
+  (loginService.reloadUser as jasmine.Spy).and.returnValue(of(null));
+  component.ngOnInit();
+  expect(component.editData.name).toBe('');
+  expect(component.editData.email).toBe('');
+});
+
+it('saveProfile: should not crash if user is null', () => {
+  // Cubre la rama 'if (this.user)' falsa en saveProfile()
+  component.user = null;
+  const updated = { name: 'New' } as any;
+  spyOn(loginService, 'updateProfile').and.returnValue(of(updated));
+  spyOn(window, 'alert');
+
+  component.saveProfile();
+  expect(loginService.currentUser).toBeNull(); 
+});
+
+it('cancelReservation: should work even if user.reservations is undefined', () => {
+  // Cubre el optional chaining 'this.user?.reservations'
+  spyOn(window, 'confirm').and.returnValue(true);
+  spyOn(reservationService, 'deleteReservation').and.returnValue(of({}));
+  component.user = { ...mockUser, reservations: undefined as any };
+
+  component.cancelReservation(99);
+  expect(window.alert).toHaveBeenCalled();
+});
 });

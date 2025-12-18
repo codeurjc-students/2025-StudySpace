@@ -12,13 +12,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.Optional;
 import java.util.Date;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -127,6 +131,52 @@ public class ReservationServiceTest {
     }
 
 
+
+
+    @Test
+    void testCancelByIdSecure_Forbidden() {
+        Reservation res = new Reservation();
+        User owner = new User();
+        owner.setEmail("owner@test.com");
+        res.setUser(owner);
+
+        when(reservationRepository.findById(1L)).thenReturn(Optional.of(res));
+
+        // Usuario que no es dueño ni admin
+        assertThrows(AccessDeniedException.class, () -> {
+            reservationService.cancelByIdSecure(1L, "other@test.com", false);
+        });
+    }
+
+    @Test
+    void testCreateReservation_UserNotFound() {
+        ReservationRequest req = new ReservationRequest();
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> {
+            reservationService.createReservation(req, "missing@test.com");
+        }, "User not found");
+    }
+
+    @Test
+    void testCreateReservation_OverlapError() {
+        String email = "user@test.com";
+        ReservationRequest req = new ReservationRequest();
+        req.setRoomId(1L);
+        req.setStartDate(new Date());
+        req.setEndDate(new Date());
+
+        Room room = new Room(); room.setActive(true);
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(new User()));
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+        // Simulamos que hay un solapamiento
+        when(reservationRepository.findOverlappingReservations(any(), any(), any()))
+            .thenReturn(Arrays.asList(new Reservation()));
+
+        assertThrows(RuntimeException.class, () -> {
+            reservationService.createReservation(req, email);
+        }, "The room is already reserved");
+    }
 
 } 
 
