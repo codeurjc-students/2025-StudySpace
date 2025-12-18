@@ -14,6 +14,8 @@ export class UserProfileComponent implements OnInit {
   user: UserDTO | null = null;
   isEditing = false;
   editData = { name: '', email: '' };
+  isChangingPassword = false;
+  passwordData = { oldPassword: '', newPassword: '' };
 
   constructor(
     public readonly loginService: LoginService, 
@@ -112,5 +114,36 @@ export class UserProfileComponent implements OnInit {
     const end = new Date(res.endDate);
     
     return !res.cancelled && end > now;
+  }
+
+  changePassword() {
+    if (!this.passwordData.oldPassword || !this.passwordData.newPassword) {
+      alert("Please fill in both password fields.");
+      return;
+    }
+    this.loginService.changePassword(this.passwordData.oldPassword, this.passwordData.newPassword).subscribe({
+      next: (response) => {
+        alert("Password updated successfully!");
+        this.toggleChangePassword(); //clean data
+      },
+      error: (err) => {
+        console.error(err);
+        //for 400 form backend
+        const msg = err.error?.message || "Failed to update password. Check your current password.";
+        alert(msg);
+      }
+    });
+  }
+
+
+
+  toggleChangePassword() { //clean data
+    this.isChangingPassword = !this.isChangingPassword;
+    this.passwordData = { oldPassword: '', newPassword: '' };
+  }
+
+  
 }
-}
+
+
+

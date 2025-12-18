@@ -13,7 +13,6 @@ export class LoginService {
   
   //BehaviorSubject to update also components when user logs in/out
   private currentUserSubject = new BehaviorSubject<UserDTO | null>(null);
-  
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(private http: HttpClient, private router: Router) { 
@@ -94,8 +93,22 @@ export class LoginService {
       return this.http.get<UserDTO>(`${BASE_URL}/me`);
   }
 
+
+
+  changePassword(oldPassword: string, newPassword: string): Observable<any> {
+    return this.http.post(`${BASE_URL}/change-password`, 
+      { oldPassword, newPassword }, 
+      { withCredentials: true }
+    );
+  }
+
+
+  
   private finalizeLogout() {
     this.currentUserSubject.next(null);
     this.router.navigate(['/']);
   }
+
+ 
+  
 }

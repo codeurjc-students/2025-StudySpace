@@ -2,6 +2,9 @@ package com.urjcservice.backend.controller.auth;
 
 import com.urjcservice.backend.entities.User;
 import com.urjcservice.backend.repositories.UserRepository;
+import com.urjcservice.backend.security.jwt.AuthResponse;
+import com.urjcservice.backend.service.UserService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,14 +20,17 @@ import java.util.Optional;
 @RequestMapping("/api/auth")
 public class AuthController {
 
+    private final UserService userService;     ///CHANGE THE USER REPOSITORY TO USER SERVICEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+
     
 
     private final UserRepository userRepository;
     
     private final PasswordEncoder passwordEncoder;
-    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder,UserService userService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userService = userService;
     }
 
     // for JSON data
@@ -52,6 +58,17 @@ public class AuthController {
 
         public String getEmail() { return email; }
         public void setEmail(String email) { this.email = email; }
+    }
+
+
+    public static class ChangePasswordRequest {
+        private String oldPassword;
+        private String newPassword;
+
+        public String getOldPassword() { return oldPassword; }
+        public void setOldPassword(String oldPassword) { this.oldPassword = oldPassword; }
+        public String getNewPassword() { return newPassword; }
+        public void setNewPassword(String newPassword) { this.newPassword = newPassword; }
     }
 
     @GetMapping("/me")
@@ -115,4 +132,29 @@ public class AuthController {
         }
         return ResponseEntity.notFound().build();
     }
+
+
+
+
+    @PostMapping("/change-password")
+    public ResponseEntity<AuthResponse> changePassword(@RequestBody ChangePasswordRequest request) {
+        // obtain user email
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String email = auth.getName();
+        
+        boolean success = userService.changePassword(email, request.getOldPassword(), request.getNewPassword());
+
+        if (success) {
+            return ResponseEntity.ok(new AuthResponse(AuthResponse.Status.SUCCESS, "Password successfully updated"));
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new AuthResponse(AuthResponse.Status.FAILURE, "The current password is incorrect"));
+        }
+    }
+
+
 }
