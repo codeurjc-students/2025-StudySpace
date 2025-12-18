@@ -6,7 +6,8 @@ import { FormsModule } from '@angular/forms'; // for [(ngModel)]
 import { ReservationService } from '../../services/reservation.service';
 import { RoomsService } from '../../services/rooms.service';
 import { LoginService } from '../../login/login.service';
-import { of } from 'rxjs';
+import { of, throwError} from 'rxjs';
+import { Router } from '@angular/router';
 
 
 
@@ -14,6 +15,8 @@ import { of } from 'rxjs';
 describe('ReservationFormComponent UI Test', () => {
   let component: ReservationFormComponent;
   let fixture: ComponentFixture<ReservationFormComponent>;
+  let reservationService: ReservationService; 
+  let router: Router;
 
   const mockRoomsService = {
     getRooms: () => of([
@@ -26,21 +29,21 @@ describe('ReservationFormComponent UI Test', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [ ReservationFormComponent ],
-      imports: [
-        HttpClientTestingModule,
-        RouterTestingModule,
-        FormsModule
-      ],
+      imports: [ HttpClientTestingModule, RouterTestingModule, FormsModule ],
       providers: [
         ReservationService,
         LoginService,
         { provide: RoomsService, useValue: mockRoomsService }
       ]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(ReservationFormComponent);
     component = fixture.componentInstance;
+    
+    // Inyección de servicios para que estén disponibles en los tests
+    reservationService = TestBed.inject(ReservationService);
+    router = TestBed.inject(Router);
+    
     fixture.detectChanges();
   });
 
@@ -65,6 +68,66 @@ describe('ReservationFormComponent UI Test', () => {
     //Verify 'disabled' of HTML
     expect(button.disabled).toBeTrue();
   });
+
+
+
+
+
+
+
+  it('should filter only active rooms and select the first one', () => {
+    expect(component.rooms.length).toBe(2);
+    expect(component.rooms[0].id).toBe(1);
+    expect(component.roomId).toBe(1);
+  });
+
+  it('should handle no available rooms', () => {
+    component.rooms = [];
+    component.roomId = null;
+    fixture.detectChanges();
+    expect(component.roomId).toBeNull();
+  });
+
+  it('onSubmit: should alert if dates are missing', () => {
+    spyOn(window, 'alert');
+    component.startDate = '';
+    component.onSubmit();
+    expect(window.alert).toHaveBeenCalledWith('Please fill in the dates.');
+  });
+
+  it('onSubmit: should call service and navigate on success', () => {
+    spyOn(reservationService, 'createReservation').and.returnValue(of({}));
+    spyOn(router, 'navigate');
+    spyOn(window, 'alert');
+
+    component.roomId = 1;
+    component.startDate = '2025-01-01T10:00';
+    component.endDate = '2025-01-01T12:00';
+    
+    component.onSubmit();
+
+    expect(reservationService.createReservation).toHaveBeenCalled();
+    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/success/));
+    expect(router.navigate).toHaveBeenCalledWith(['/profile']);
+  });
+
+  it('onSubmit: should handle error from service', () => {
+    spyOn(reservationService, 'createReservation').and.returnValue(throwError(() => new Error('API Error')));
+    spyOn(window, 'alert');
+
+    component.roomId = 1;
+    component.startDate = '2025-01-01T10:00';
+    component.endDate = '2025-01-01T12:00';
+    
+    component.onSubmit();
+
+    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/Error/));
+  });
+
+
+
+
+
 });
 
 

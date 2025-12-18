@@ -16,7 +16,7 @@ describe('ManageReservationsComponent', () => {
 
   beforeEach(async () => {
     //mocks
-    reservationServiceSpy = jasmine.createSpyObj('ReservationService', ['getReservationsByUser', 'deleteReservation', 'updateReservation']);
+    reservationServiceSpy = jasmine.createSpyObj('ReservationService', ['getReservationsByUser', 'deleteReservation', 'updateReservation','cancelReservation']);
     roomsServiceSpy = jasmine.createSpyObj('RoomsService', ['getRooms']);
 
     await TestBed.configureTestingModule({
@@ -67,11 +67,10 @@ describe('ManageReservationsComponent', () => {
 
     expect(window.confirm).toHaveBeenCalled();
     expect(reservationServiceSpy.deleteReservation).toHaveBeenCalledWith(1);
-    // Debe recargar la lista
     expect(reservationServiceSpy.getReservationsByUser).toHaveBeenCalledTimes(2); 
   });
 
-  it('should NOT delete reservation when cancelled', () => {//simulate cancel
+  it('should NOT delete reservation when cancelled', () => {
     spyOn(window, 'confirm').and.returnValue(false);
 
     component.deleteReservation(1);
@@ -112,4 +111,80 @@ describe('ManageReservationsComponent', () => {
 
     expect(window.alert).toHaveBeenCalledWith('Update error');
   });
+  it('should clear editingReservation on cancelEdit', () => {
+    component.editingReservation = { id: 1 };
+    component.cancelEdit();
+    expect(component.editingReservation).toBeNull();
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+  it('should prepare reservation for editing and handle room object', () => {
+    const mockRes = { id: 5, room: { id: 99, name: 'Sala X' } };
+    component.startEdit(mockRes);
+    expect(component.editingReservation.roomId).toBe(99);
+  });
+  it('should clear editingReservation on cancelEdit', () => {
+    component.editingReservation = { id: 1 };
+    component.cancelEdit();
+    expect(component.editingReservation).toBeNull();
+  });
+
+  it('should prepare reservation for editing and handle room object', () => {
+    const mockRes = { id: 5, room: { id: 99, name: 'Sala X' } };
+    component.startEdit(mockRes);
+    expect(component.editingReservation.roomId).toBe(99);
+  });
+
+  it('isReservationActive should return true for future non-cancelled reservations', () => {
+    const futureDate = new Date();
+    futureDate.setFullYear(futureDate.getFullYear() + 1);
+    const res = { endDate: futureDate, cancelled: false };
+    expect(component.isReservationActive(res)).toBeTrue();
+  });
+  it('isReservationActive should return false for past or cancelled reservations', () => {
+    const pastDate = new Date();
+    pastDate.setFullYear(pastDate.getFullYear() - 1);
+    expect(component.isReservationActive({ endDate: pastDate, cancelled: false })).toBeFalse();
+    expect(component.isReservationActive({ endDate: new Date(), cancelled: true })).toBeFalse();
+    expect(component.isReservationActive(null)).toBeFalse();
+  });
+
+
+  it('should performCancel when confirmed', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    spyOn(window, 'alert');
+    reservationServiceSpy.cancelReservation.and.returnValue(of({}));
+    
+    component.performCancel(1);
+    
+    expect(reservationServiceSpy.cancelReservation).toHaveBeenCalledWith(1);
+    expect(reservationServiceSpy.getReservationsByUser).toHaveBeenCalledTimes(2);
+  });
+  it('should handle error in performCancel', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    spyOn(window, 'alert');
+    reservationServiceSpy.cancelReservation.and.returnValue(throwError(() => new Error('Err')));
+    
+    component.performCancel(1);
+    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/error/));
+  });
+
+  it('should delete reservation when confirmed', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    reservationServiceSpy.deleteReservation.and.returnValue(of({}));
+    component.deleteReservation(1);
+    expect(reservationServiceSpy.deleteReservation).toHaveBeenCalledWith(1);
+  });
+
 });
