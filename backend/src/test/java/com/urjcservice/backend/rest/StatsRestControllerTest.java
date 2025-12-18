@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(StatsRestController.class)
 @AutoConfigureMockMvc(addFilters = false) //Desactivate filters for avoid using tokens and prove the real functionality of the file
-public class StatsApiTest {
+public class StatsRestControllerTest {
 
     @Autowired
     private MockMvc mockMvc;

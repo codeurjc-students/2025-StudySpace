@@ -23,17 +23,19 @@ public class Reservation {
     private Room room;  //one room can have many bookings
 
     private String reason;
+    private boolean cancelled = false;
 
     public Reservation() {
     }
 
-    public Reservation(Long id, Date startDate, Date endDate, User user, Room room, String reason) {
+    public Reservation(Long id, Date startDate, Date endDate, User user, Room room, String reason, boolean cancelled) {
         this.id = id;
         this.startDate = startDate;
         this.endDate = endDate;
         this.user = user;
         this.room = room;
         this.reason = reason;
+        this.cancelled=cancelled;
     }
 
     public Long getId() {
@@ -101,5 +103,8 @@ public class Reservation {
         if (this.user == null) this.user = new User();
         this.user.setId(userId);
     }
+
+    public boolean isCancelled() { return cancelled; }
+    public void setCancelled(boolean cancelled) { this.cancelled = cancelled; }
 
 }

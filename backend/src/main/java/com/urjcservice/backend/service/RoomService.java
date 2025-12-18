@@ -88,8 +88,9 @@ public class RoomService {
             //if is disable future reservations are deleted
             if (isBeingDisabled) {
                 //from now to the future all reservations deleted
-                reservationRepository.deleteByRoomIdAndEndDateAfter(id, new Date());    //change method in the future   IN THE FUTURE IS CANCEL RESERVATION, NOT DELETED ITTTTTTTTTTTTTTTTTTTTTTT
+                reservationRepository.cancelByRoomIdAndEndDateAfter(id, new Date());    //Now cancel not delete
             }   //deleteByRoom_IdAndEndDateAfter and also fix the problem
+
 
             return roomRepository.save(existingRoom);
         });

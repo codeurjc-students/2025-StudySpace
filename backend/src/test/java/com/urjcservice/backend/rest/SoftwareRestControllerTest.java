@@ -19,7 +19,7 @@ import static org.hamcrest.Matchers.is;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-public class SoftwareApiTest {
+public class SoftwareRestControllerTest {
 
     @Autowired
     private MockMvc mockMvc;

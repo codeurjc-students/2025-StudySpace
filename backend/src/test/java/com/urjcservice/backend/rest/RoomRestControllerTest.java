@@ -31,7 +31,7 @@ import static org.hamcrest.Matchers.hasSize;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional 
-public class RoomApiTest {
+public class RoomRestControllerTest {
 
     @Autowired
     private MockMvc mockMvc;

@@ -71,7 +71,7 @@ public class RoomServiceTest {
 
 
     @Test
-    void testUpdateRoom_DisablingRoom_ShouldDeleteFutureReservations() {
+    void testUpdateRoom_DisablingRoom_ShouldCancelFutureReservations() {
         // GIVEN
         when(roomRepository.findById(1L)).thenReturn(Optional.of(activeRoom));
         when(roomRepository.save(any(Room.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -85,7 +85,7 @@ public class RoomServiceTest {
         roomService.updateRoom(1L, updatedData);
 
         // THEN
-        verify(reservationRepository, times(1)).deleteByRoomIdAndEndDateAfter(eq(1L), any(Date.class));
+        verify(reservationRepository, times(1)).cancelByRoomIdAndEndDateAfter(eq(1L), any(Date.class));
         verify(roomRepository).save(argThat(room -> !room.isActive()));
     }
 
@@ -372,6 +372,53 @@ public class RoomServiceTest {
 
         // THEN: No debe contar como ocupada
         assertEquals(0.0, stats.get("occupiedPercentage"));
+    }
+
+
+
+
+
+
+    @Test
+    void testSaveRoomWithNewSoftware() {
+        // Caso donde el software no tiene ID y debe guardarse
+        Room room = new Room();
+        Software newSoft = new Software(); // sin ID
+        room.setSoftware(Arrays.asList(newSoft));
+
+        when(softwareRepository.save(any(Software.class))).thenReturn(newSoft);
+        when(roomRepository.save(any(Room.class))).thenReturn(room);
+
+        roomService.save(room);
+
+        verify(softwareRepository).save(newSoft);
+    }
+
+    @Test
+    void testDeleteRoomNotFound() {
+        when(roomRepository.findById(99L)).thenReturn(Optional.empty());
+        Optional<Room> result = roomService.deleteById(99L);
+        assertFalse(result.isPresent());
+        verify(roomRepository, never()).delete(any());
+    }
+
+    @Test
+    void testPatchRoomUpdateAllFields() {
+        Room existing = new Room();
+        existing.setId(1L);
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(roomRepository.save(any(Room.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        Room partial = new Room();
+        partial.setCapacity(100);
+        partial.setPlace("Planta 2");
+        partial.setCoordenades("40.3,-3.8");
+
+        Optional<Room> result = roomService.patchRoom(1L, partial);
+        
+        assertEquals(100, result.get().getCapacity());
+        assertEquals("Planta 2", result.get().getPlace());
+        assertEquals("40.3,-3.8", result.get().getCoordenades());
     }
 
 
