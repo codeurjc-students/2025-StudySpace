@@ -231,6 +231,7 @@ it('saveProfile: should not crash if user is null', () => {
 it('cancelReservation: should work even if user.reservations is undefined', () => {
   // Cubre el optional chaining 'this.user?.reservations'
   spyOn(window, 'confirm').and.returnValue(true);
+  spyOn(window, 'alert');
   spyOn(reservationService, 'deleteReservation').and.returnValue(of({}));
   component.user = { ...mockUser, reservations: undefined as any };
 
