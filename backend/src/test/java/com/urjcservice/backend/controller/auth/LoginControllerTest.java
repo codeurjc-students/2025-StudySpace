@@ -38,8 +38,7 @@ public class LoginControllerTest {
 
     @BeforeEach
     public void setup() {
-        // standaloneSetup ignora los filtros de seguridad globales (SecurityConfiguration)
-        // permitiéndonos probar el controlador sin recibir 401.
+        // standaloneSetup for ignoring security filters
         this.mockMvc = MockMvcBuilders.standaloneSetup(loginController).build();
     }
 
@@ -47,7 +46,6 @@ public class LoginControllerTest {
     public void testLogin_Success() throws Exception {
         AuthResponse successResponse = new AuthResponse(AuthResponse.Status.SUCCESS, "Logged in");
         
-        // Simulamos el comportamiento del servicio
         when(userLoginService.login(any(HttpServletResponse.class), any(LoginRequest.class)))
             .thenReturn(ResponseEntity.ok(successResponse));
 
@@ -65,7 +63,6 @@ public class LoginControllerTest {
     public void testRefresh_WithCookie_Success() throws Exception {
         AuthResponse refreshResponse = new AuthResponse(AuthResponse.Status.SUCCESS, "Token refreshed");
         
-        // Verificamos que se llame al servicio con el valor de la cookie
         when(userLoginService.refresh(any(HttpServletResponse.class), eq("some-refresh-token")))
             .thenReturn(ResponseEntity.ok(refreshResponse));
 
@@ -79,7 +76,6 @@ public class LoginControllerTest {
     public void testRefresh_WithoutCookie_CallsServiceWithNull() throws Exception {
         AuthResponse failureResponse = new AuthResponse(AuthResponse.Status.FAILURE, "Missing token");
         
-        // El controlador debe manejar la ausencia de la cookie enviando null al servicio
         when(userLoginService.refresh(any(HttpServletResponse.class), eq(null)))
             .thenReturn(ResponseEntity.ok(failureResponse));
 
@@ -90,7 +86,6 @@ public class LoginControllerTest {
 
     @Test
     public void testLogout_Success() throws Exception {
-        // El servicio devuelve el mensaje que el controlador envolverá en un AuthResponse
         when(userLoginService.logout(any(HttpServletResponse.class))).thenReturn("logout successfully");
 
         mockMvc.perform(post("/api/auth/logout"))

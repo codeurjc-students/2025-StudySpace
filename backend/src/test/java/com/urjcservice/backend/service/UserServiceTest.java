@@ -66,7 +66,6 @@ public class UserServiceTest {
 
     @Test
     public void testChangePassword_Success() {
-        // Preparación
         String email = "test@urjc.es";
         String oldPass = "1234";
         String newPass = "5678";
@@ -75,15 +74,13 @@ public class UserServiceTest {
         user.setEncodedPassword("encoded_1234");
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        // Simulamos que la contraseña antigua coincide
         when(passwordEncoder.matches(oldPass, "encoded_1234")).thenReturn(true);
-        // Simulamos el hasheo de la nueva
         when(passwordEncoder.encode(newPass)).thenReturn("encoded_5678");
 
-        // Ejecución
+
         boolean result = userService.changePassword(email, oldPass, newPass);
 
-        // Verificación
+        // Verify
         assertTrue(result);
         assertEquals("encoded_5678", user.getEncodedPassword());
         verify(userRepository).save(user);

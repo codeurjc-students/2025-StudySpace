@@ -287,18 +287,7 @@ public class AuthControllerTest {
                 .andExpect(jsonPath("$.name").value("Original Name")); 
     }
 
-    /*@Test
-    public void testUserUpdateRequest_GettersAndSetters() {// alomejor borrar
-        // Instanciamos la clase interna de AuthController
-        AuthController.UserUpdateRequest request = new AuthController.UserUpdateRequest();
-        
-        // Probamos setters y getters
-        request.setName("Juan");
-        request.setEmail("juan@test.com");
-        
-        assert(request.getName().equals("Juan"));
-        assert(request.getEmail().equals("juan@test.com"));
-    }*/
+    
 
 
 }
