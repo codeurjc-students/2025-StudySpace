@@ -124,7 +124,7 @@ public class AuthController {
             User user = userOpt.get();
             
             //only if data is provided
-            if (request.name != null && !request.name.isEmpty()) user.setName(request.name);
+            if (request.getName() != null && !request.getName().isEmpty()) user.setName(request.getName());
             
             
             userRepository.save(user);

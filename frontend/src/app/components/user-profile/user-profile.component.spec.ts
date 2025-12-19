@@ -210,32 +210,82 @@ describe('UserProfileComponent', () => {
 
 
   it('should handle null user in reloadUser and set default strings', () => {
-  // Cubre la rama del pipe/subscribe donde el usuario podría ser null
-  (loginService.reloadUser as jasmine.Spy).and.returnValue(of(null));
-  component.ngOnInit();
-  expect(component.editData.name).toBe('');
-  expect(component.editData.email).toBe('');
-});
+    // Cubre la rama del pipe/subscribe donde el usuario podría ser null
+    (loginService.reloadUser as jasmine.Spy).and.returnValue(of(null));
+    component.ngOnInit();
+    expect(component.editData.name).toBe('');
+    expect(component.editData.email).toBe('');
+  });
 
-it('saveProfile: should not crash if user is null', () => {
-  // Cubre la rama 'if (this.user)' falsa en saveProfile()
-  component.user = null;
-  const updated = { name: 'New' } as any;
-  spyOn(loginService, 'updateProfile').and.returnValue(of(updated));
-  spyOn(window, 'alert');
+  it('saveProfile: should not crash if user is null', () => {
+    // Cubre la rama 'if (this.user)' falsa en saveProfile()
+    component.user = null;
+    const updated = { name: 'New' } as any;
+    spyOn(loginService, 'updateProfile').and.returnValue(of(updated));
+    spyOn(window, 'alert');
 
-  component.saveProfile();
-  expect(loginService.currentUser).toBeNull(); 
-});
+    component.saveProfile();
+    expect(loginService.currentUser).toBeNull(); 
+  });
 
-it('cancelReservation: should work even if user.reservations is undefined', () => {
-  // Cubre el optional chaining 'this.user?.reservations'
-  spyOn(window, 'confirm').and.returnValue(true);
-  spyOn(window, 'alert');
-  spyOn(reservationService, 'deleteReservation').and.returnValue(of({}));
-  component.user = { ...mockUser, reservations: undefined as any };
+  it('cancelReservation: should work even if user.reservations is undefined', () => {
+    // Cubre el optional chaining 'this.user?.reservations'
+    spyOn(window, 'confirm').and.returnValue(true);
+    spyOn(window, 'alert');
+    spyOn(reservationService, 'deleteReservation').and.returnValue(of({}));
+    component.user = { ...mockUser, reservations: undefined as any };
 
-  component.cancelReservation(99);
-  expect(window.alert).toHaveBeenCalled();
-});
+    component.cancelReservation(99);
+    expect(window.alert).toHaveBeenCalled();
+  });
+
+
+
+
+  
+
+  it('should toggle isChangingPassword and reset password data', () => {
+    component.isChangingPassword = false;
+    component.passwordData = { oldPassword: 'abc', newPassword: 'def' };
+    
+    component.toggleChangePassword();
+    
+    expect(component.isChangingPassword).toBeTrue();
+    expect(component.passwordData.oldPassword).toBe('');
+  });
+
+  it('changePassword should alert if fields are empty', () => {
+    spyOn(window, 'alert');
+    component.passwordData = { oldPassword: '', newPassword: '' };
+    component.changePassword();
+    expect(window.alert).toHaveBeenCalledWith("Please fill in both password fields.");
+  });
+
+  it('changePassword should call service and close form on success', () => {
+    spyOn(loginService, 'changePassword').and.returnValue(of({ status: 'SUCCESS' }));
+    spyOn(window, 'alert');
+    const toggleSpy = spyOn(component, 'toggleChangePassword');
+
+    component.passwordData = { oldPassword: 'old', newPassword: 'new' };
+    component.changePassword();
+
+    expect(loginService.changePassword).toHaveBeenCalledWith('old', 'new');
+    expect(window.alert).toHaveBeenCalledWith("Password updated successfully!");
+    expect(toggleSpy).toHaveBeenCalled();
+  });
+
+  it('changePassword should show error message on failure', () => {
+    const errorResponse = { error: { message: 'Incorrect current password' } };
+    spyOn(loginService, 'changePassword').and.returnValue(throwError(() => errorResponse));
+    spyOn(window, 'alert');
+
+    component.passwordData = { oldPassword: 'wrong', newPassword: 'new' };
+    component.changePassword();
+
+    expect(window.alert).toHaveBeenCalledWith('Incorrect current password');
+  });
+
+
+
+
 });

@@ -7,17 +7,24 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
-   @Mock
+    @Mock
     private UserRepository userRepository;
+
+    @Mock 
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserService userService;
@@ -53,4 +60,109 @@ public class UserServiceTest {
         assertTrue(user.getRoles().contains("ADMIN"));
         assertEquals(User.UserType.ADMIN, user.getType());
     }
+
+
+
+
+    @Test
+    public void testChangePassword_Success() {
+        // Preparación
+        String email = "test@urjc.es";
+        String oldPass = "1234";
+        String newPass = "5678";
+        User user = new User();
+        user.setEmail(email);
+        user.setEncodedPassword("encoded_1234");
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        // Simulamos que la contraseña antigua coincide
+        when(passwordEncoder.matches(oldPass, "encoded_1234")).thenReturn(true);
+        // Simulamos el hasheo de la nueva
+        when(passwordEncoder.encode(newPass)).thenReturn("encoded_5678");
+
+        // Ejecución
+        boolean result = userService.changePassword(email, oldPass, newPass);
+
+        // Verificación
+        assertTrue(result);
+        assertEquals("encoded_5678", user.getEncodedPassword());
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    public void testChangePassword_WrongOldPassword() {
+        String email = "test@urjc.es";
+        User user = new User();
+        user.setEncodedPassword("encoded_real");
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("wrong_pass", "encoded_real")).thenReturn(false);
+
+        boolean result = userService.changePassword(email, "wrong_pass", "new_pass");
+
+        assertFalse(result);
+        verify(userRepository, never()).save(any());
+    }
+
+
+
+
+
+    @Test
+    public void testFindAll() {
+        when(userRepository.findAll()).thenReturn(Arrays.asList(new User(), new User()));
+        List<User> result = userService.findAll();
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    public void testFindById_Found() {
+        User user = new User();
+        user.setId(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        Optional<User> result = userService.findById(1L);
+        assertTrue(result.isPresent());
+    }
+
+    @Test
+    public void testDeleteById_Success() {
+        User user = new User();
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        Optional<User> result = userService.deleteById(1L);
+        verify(userRepository).delete(user);
+        assertTrue(result.isPresent());
+    }
+
+    @Test
+    public void testUpdateUser_Success() {
+        User existing = new User();
+        existing.setName("Old");
+        User updated = new User();
+        updated.setName("New");
+        updated.setEmail("new@test.com");
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(userRepository.save(any())).thenAnswer(i -> i.getArguments()[0]);
+
+        Optional<User> result = userService.updateUser(1L, updated);
+        assertEquals("New", result.get().getName());
+    }
+
+    @Test
+    public void testPatchUser_OnlyName() {
+        User existing = new User();
+        existing.setName("Old Name");
+        existing.setEmail("keep@test.com");
+        User partial = new User();
+        partial.setName("New Name");
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(userRepository.save(any())).thenAnswer(i -> i.getArguments()[0]);
+
+        Optional<User> result = userService.patchUser(1L, partial);
+        assertEquals("New Name", result.get().getName());
+        assertEquals("keep@test.com", result.get().getEmail());
+    }
+
+    
 }
