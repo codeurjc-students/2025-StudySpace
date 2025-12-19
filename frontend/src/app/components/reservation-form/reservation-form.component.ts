@@ -52,7 +52,7 @@ export class ReservationFormComponent implements OnInit {
         next: (res) => {
           alert('Reservation successfully created!');
           // send to the profile where the user can see their reservations
-          this.router.navigate(['/profile']); 
+          this.router.navigate(['/']); 
         },
         error: (err) => {
           console.error(err);
