@@ -3,6 +3,7 @@ package com.urjcservice.backend.service;
 import com.urjcservice.backend.entities.User;
 import com.urjcservice.backend.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,12 +13,13 @@ import java.util.Arrays;
 
 @Service
 public class UserService {
-
+    private final PasswordEncoder passwordEncoder;
     
     private final UserRepository userRepository;
     
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public List<User> findAll() {
@@ -82,6 +84,21 @@ public class UserService {
             return userRepository.save(user);
         });
     }
+
+
+
+
+    public boolean changePassword(String email, String oldPassword, String newPassword) {
+    return userRepository.findByEmail(email).map(user -> {
+        //passed password match with the actual one
+        if (!passwordEncoder.matches(oldPassword, user.getEncodedPassword())) {
+            return false;
+        }
+        user.setEncodedPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        return true;
+    }).orElse(false);
+}
 
 
 }
