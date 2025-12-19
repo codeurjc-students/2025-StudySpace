@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { UserService } from '../../services/user.service';
+import { LoginService } from '../../login/login.service';
 import { UserDTO } from '../../dtos/user.dto';
 
 @Component({
@@ -11,7 +12,10 @@ export class ManageUsersComponent implements OnInit {
 
   users: UserDTO[] = [];
 
-  constructor(private readonly userService: UserService) { }
+  constructor(
+    private readonly userService: UserService,
+    private readonly loginService: LoginService
+  ) { }
 
   ngOnInit(): void {
     this.loadUsers();
@@ -19,7 +23,10 @@ export class ManageUsersComponent implements OnInit {
 
   loadUsers() {
     this.userService.getUsers().subscribe({
-        next: (data) => this.users = data,
+        next: (data) => { //filter by our id
+            const currentUserId = this.loginService.currentUser?.id;
+            this.users = data.filter(user => user.id !== currentUserId);
+        },
         error: (e) => console.error(e)
     });
   }

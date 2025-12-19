@@ -4,11 +4,13 @@ import { UserService } from '../../services/user.service';
 import { of } from 'rxjs';
 import { RouterTestingModule } from '@angular/router/testing';
 import { UserDTO } from '../../dtos/user.dto'; 
+import { LoginService } from '../../login/login.service';
 
 describe('ManageUsersComponent', () => {
   let component: ManageUsersComponent;
   let fixture: ComponentFixture<ManageUsersComponent>;
   let mockUserService: any;
+  let mockLoginService: any;
 
   // Mock users
   const mockUser1: UserDTO = { 
@@ -37,11 +39,16 @@ describe('ManageUsersComponent', () => {
       deleteUser: jasmine.createSpy('deleteUser').and.returnValue(of({}))
     };
 
+    mockLoginService = {
+      currentUser: mockUser1 
+    };
+
     await TestBed.configureTestingModule({
       declarations: [ ManageUsersComponent ],
       imports: [ RouterTestingModule ],
       providers: [
-        { provide: UserService, useValue: mockUserService }
+        { provide: UserService, useValue: mockUserService },
+        { provide: LoginService, useValue: mockLoginService }
       ]
     })
     .compileComponents();
@@ -53,7 +60,7 @@ describe('ManageUsersComponent', () => {
 
   it('should create and load users', () => {
     expect(component).toBeTruthy();
-    expect(component.users.length).toBe(2);
+    expect(component.users.length).toBe(1);
     expect(mockUserService.getUsers).toHaveBeenCalled();
   });
 
@@ -91,5 +98,16 @@ describe('ManageUsersComponent', () => {
     spyOn(window, 'alert');
     component.viewReservations(mockUser1);
     expect(window.alert).toHaveBeenCalled();
+  });
+
+  it('should filter out the current logged-in user from the list', () => {// 2 users and only one on the list, not us
+    mockLoginService.currentUser = mockUser1; 
+
+    component.loadUsers();
+
+    // Verificaciones
+    expect(component.users.length).toBe(1); 
+    expect(component.users).not.toContain(mockUser1); 
+    expect(component.users).toContain(mockUserAdmin); 
   });
 });
