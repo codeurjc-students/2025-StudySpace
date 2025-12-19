@@ -108,7 +108,7 @@ describe('ReservationFormComponent UI Test', () => {
 
     expect(reservationService.createReservation).toHaveBeenCalled();
     expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/success/));
-    expect(router.navigate).toHaveBeenCalledWith(['/profile']);
+    expect(router.navigate).toHaveBeenCalledWith(['/']);
   });
 
   it('onSubmit: should handle error from service', () => {
