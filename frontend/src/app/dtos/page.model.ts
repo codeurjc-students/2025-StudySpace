@@ -3,7 +3,9 @@ export interface Page<T> {
   totalPages: number;    
   totalElements: number; 
   last: boolean;         
-  first: boolean;        
-  number: number;       
-  size: number;          
+  first: boolean;              
+  size: number; 
+  number: number; 
+  numberOfElements: number;  
+  sort: any[];         
 }

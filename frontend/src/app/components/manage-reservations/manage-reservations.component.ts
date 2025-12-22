@@ -33,7 +33,7 @@ export class ManageReservationsComponent implements OnInit {
     }
     
     //loadRooms
-    this.roomsService.getRooms().subscribe(data => this.rooms = data);
+    this.roomsService.getRooms().subscribe(data => this.rooms = data.content);
   }
 
   loadReservations() {

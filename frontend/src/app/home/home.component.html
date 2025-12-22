@@ -47,14 +47,41 @@
         </div>
     </div>
 
+    <nav aria-label="Page navigation" class="mt-5" *ngIf="pageData && pageData.totalPages > 1">
+        <ul class="pagination justify-content-center shadow-sm">
+            
+            <li class="page-item" [class.disabled]="pageData.first">
+                <a class="page-link" (click)="loadPage(currentPage - 1)" style="cursor: pointer;">
+                    Anterior
+                </a>
+            </li>
+
+            <li class="page-item" *ngFor="let p of getPagesArray()" [class.active]="p === currentPage">
+                <a class="page-link" (click)="loadPage(p)" style="cursor: pointer;">
+                    {{ p + 1 }}
+                </a>
+            </li>
+
+            <li class="page-item" [class.disabled]="pageData.last">
+                <a class="page-link" (click)="loadPage(currentPage + 1)" style="cursor: pointer;">
+                    Siguiente
+                </a>
+            </li>
+
+        </ul>
+        <div class="text-center text-muted mt-2">
+            <small>Página {{ currentPage + 1 }} de {{ pageData.totalPages }} (Total: {{ pageData.totalElements }} aulas)</small>
+        </div>
+    </nav>
+
     <div *ngIf="loginService.isLogged()" class="text-center mt-5 mb-5">
         <button [routerLink]="['/reservations/create']" class="btn btn-success btn-lg shadow px-5">
             📅 Book a room
         </button>
-        <!-- Admin button-->
+        
         <button *ngIf="loginService.isAdmin()" 
                 [routerLink]="['/admin']" 
-                class="btn btn-dark btn-lg shadow px-5">
+                class="btn btn-dark btn-lg shadow px-5 ms-2">
             ⚙️ Admin Dashboard
         </button>
     </div>

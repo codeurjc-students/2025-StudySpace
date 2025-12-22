@@ -31,7 +31,7 @@ export class ReservationFormComponent implements OnInit {
    this.roomsService.getRooms().subscribe({
         next: (data) => {
           //only active rooms
-          this.rooms = data.filter(room => room.active === true);
+          this.rooms = data.content.filter((room:RoomDTO) => room.active === true);
           if (this.rooms.length > 0) {
               this.roomId = this.rooms[0].id;
           } else {

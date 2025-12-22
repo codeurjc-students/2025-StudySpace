@@ -19,7 +19,7 @@ export class ManageRoomsComponent implements OnInit {
   loadRooms() {
     this.roomsService.getRooms().subscribe({
       next: (data) => {
-        this.rooms = data;
+        this.rooms = data.content;
       },
       error: (err) => console.error('Error loading rooms', err)
     });
