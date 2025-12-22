@@ -7,13 +7,16 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
 import java.util.List;
 import java.time.LocalDate;
 import java.util.Date;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
-    List<Reservation> findByUser(User user);
+    Page<Reservation> findByUser(User user,Pageable pageable);
     
     @Modifying
     @Transactional
@@ -28,11 +31,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     long countOccupiedWithSoftwareByDate(@Param("date") LocalDate date);
 
     @Query("SELECT r.startDate FROM Reservation r WHERE DATE(r.startDate) = :date")
-    List<Date> findStartDatesByDate(@Param("date") LocalDate date);
+    Page<Date> findStartDatesByDate(@Param("date") LocalDate date,Pageable pageable);
 
 
     @Query("SELECT r FROM Reservation r WHERE r.room.id = :roomId AND DATE(r.startDate) = :date")
-    List<Reservation> findByRoomIdAndDate(@Param("roomId") Long roomId, @Param("date") LocalDate date);
+    Page<Reservation> findByRoomIdAndDate(@Param("roomId") Long roomId, @Param("date") LocalDate date,Pageable pageable);
 
 
 
@@ -41,9 +44,10 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @Query("SELECT r FROM Reservation r WHERE r.room.id = :roomId " +
        "AND r.cancelled = false " +
        "AND r.startDate < :endDate AND r.endDate > :startDate")
-        List<Reservation> findOverlappingReservations(@Param("roomId") Long roomId, 
+        Page<Reservation> findOverlappingReservations(@Param("roomId") Long roomId, 
                                                     @Param("startDate") Date startDate, 
-                                                    @Param("endDate") Date endDate);
+                                                    @Param("endDate") Date endDate,
+                                                    Pageable pageable);
 
 
     @Modifying

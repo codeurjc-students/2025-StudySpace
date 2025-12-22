@@ -8,6 +8,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageImpl;
 
 import java.time.LocalDate;
 import java.time.Instant;
@@ -16,6 +19,7 @@ import java.util.Collections;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,7 +47,7 @@ public class StatsServiceTest {
 
         // Mock dates for hourly grouping, simulate a DB timestamp (e.g. 10:00 UTC)
         Date dateMock = Date.from(Instant.parse("2025-12-12T10:00:00Z")); 
-        when(resRepo.findStartDatesByDate(today)).thenReturn(Arrays.asList(dateMock));
+        when(resRepo.findStartDatesByDate(today,any(Pageable.class))).thenReturn(new PageImpl<>(Arrays.asList(dateMock)));
 
         // WHEN
         DashboardStatsDTO result = statsService.getStats(today);
@@ -61,7 +65,7 @@ public class StatsServiceTest {
         //Hourly Grouping
         // Verify map is not empty and repositories were called
         assertFalse(result.getHourlyOccupancy().isEmpty());
-        verify(resRepo).findStartDatesByDate(today);
+        verify(resRepo).findStartDatesByDate(today, any(Pageable.class));
     }
 
     @Test
@@ -84,7 +88,7 @@ public class StatsServiceTest {
         
         when(roomRepo.countTotalRooms()).thenReturn(10L);
         when(resRepo.countOccupiedRoomsByDate(today)).thenReturn(0L);
-        when(resRepo.findStartDatesByDate(today)).thenReturn(Collections.emptyList());
+        when(resRepo.findStartDatesByDate(today, any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
 
         DashboardStatsDTO result = statsService.getStats(today);
         //Verify

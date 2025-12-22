@@ -7,7 +7,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageImpl;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -107,9 +111,9 @@ public class UserServiceTest {
 
     @Test
     public void testFindAll() {
-        when(userRepository.findAll()).thenReturn(Arrays.asList(new User(), new User()));
-        List<User> result = userService.findAll();
-        assertEquals(2, result.size());
+        when(userRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Arrays.asList(new User(), new User())));
+        Page<User> result = userService.findAll(PageRequest.of(0, 10));
+        assertEquals(2, result.getContent().size());
     }
 
     @Test

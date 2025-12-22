@@ -13,6 +13,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+
 
 import java.util.Optional;
 import java.util.Date;
@@ -170,8 +175,8 @@ public class ReservationServiceTest {
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(new User()));
         when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
         // Simulamos que hay un solapamiento
-        when(reservationRepository.findOverlappingReservations(any(), any(), any()))
-            .thenReturn(Arrays.asList(new Reservation()));
+        when(reservationRepository.findOverlappingReservations(any(), any(), any(),any(Pageable.class)))
+            .thenReturn(new PageImpl<>(Arrays.asList(new Reservation())));
 
         assertThrows(RuntimeException.class, () -> {
             reservationService.createReservation(req, email);

@@ -1,12 +1,14 @@
 package com.urjcservice.backend.rest;
 
 import com.urjcservice.backend.entities.Software;
-import com.urjcservice.backend.repositories.SoftwareRepository;
 import com.urjcservice.backend.service.SoftwareService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
 import java.net.URI;
 import java.util.List;
@@ -41,8 +43,8 @@ public class SoftwareRestController {
     }
 
     @GetMapping
-    public List<Software> getAllSoftware() {
-        return softwareService.findAll();
+    public Page<Software> getAllSoftware(@PageableDefault(size = 10) Pageable pageable) {//if frontend dont send size, default 10
+        return softwareService.findAll(pageable);
     }
 
     @GetMapping("/{id}")
