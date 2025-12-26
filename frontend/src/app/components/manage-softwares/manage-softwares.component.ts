@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { SoftwareService, SoftwareDTO } from '../../services/software.service';
+import { Page } from '../../dtos/page.model';
 
 @Component({
   selector: 'app-manage-softwares',
@@ -8,18 +9,27 @@ import { SoftwareService, SoftwareDTO } from '../../services/software.service';
 })
 export class ManageSoftwaresComponent implements OnInit {
   softwares: SoftwareDTO[] = [];
+  pageData?: Page<SoftwareDTO>;
+  currentPage: number = 0;
 
   constructor(private readonly softwareService: SoftwareService) { }
 
   ngOnInit(): void {
-    this.loadSoftwares();
+    this.loadPage(0);
   }
 
-  loadSoftwares() {
-    this.softwareService.getAllSoftwares().subscribe({
-        next: (data) => this.softwares = data,
+  loadPage(page: number) {
+    this.softwareService.getAllSoftwares(page).subscribe({
+        next: (data) => {
+            this.pageData = data;
+            this.softwares = data.content; 
+            this.currentPage = data.number;
+        },
         error: (e) => console.error(e)
     });
+  }
+  getPagesArray(): number[] {//helper to create an array with the number of pages, maybe not necessaryyyyyyyyyyyyyyyyyyyyyyyyy
+    return Array.from({ length: this.pageData?.totalPages || 0 }, (_, i) => i);
   }
 
   deleteSoftware(id: number) {

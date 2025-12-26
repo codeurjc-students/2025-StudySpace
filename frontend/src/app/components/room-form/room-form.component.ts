@@ -1,7 +1,8 @@
 import { Component,OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { RoomsService } from '../../services/rooms.service';
-import { SoftwareService, SoftwareDTO } from '../../services/software.service'; 
+import { SoftwareService, SoftwareDTO } from '../../services/software.service';
+import { Page } from '../../dtos/page.model'; 
 
 @Component({
   selector: 'app-room-form',
@@ -35,8 +36,12 @@ export class RoomFormComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.softwareService.getAllSoftwares().subscribe(data => this.availableSoftware = data);
-
+    this.softwareService.getAllSoftwares(0, 100).subscribe({//pool of 100 softwares, check if beteter solution
+        next: (data) => {
+            this.availableSoftware = data.content;
+        },
+        error: (err) => console.error('Error loading software:', err)
+    });
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isEditMode = true;

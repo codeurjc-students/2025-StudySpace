@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { CanActivateFn,Router, UrlTree } from '@angular/router';
-import { LoginService } from './login/login.service';
+import { LoginService } from '../login/login.service';
 
 import { adminGuard } from './admin.guard';
 

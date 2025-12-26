@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { Page } from '../dtos/page.model';
 
 export interface SoftwareDTO {
     id: number;
@@ -17,8 +18,8 @@ const BASE_URL = '/api/softwares';
 export class SoftwareService {
   constructor(private readonly http: HttpClient) { }
 
-  getAllSoftwares(): Observable<SoftwareDTO[]> {
-    return this.http.get<SoftwareDTO[]>(BASE_URL);
+  getAllSoftwares(page: number = 0, size: number = 10): Observable<Page<SoftwareDTO>> {
+    return this.http.get<Page<SoftwareDTO>>(`${BASE_URL}?page=${page}&size=${size}`);
   }
   getSoftware(id: number | string): Observable<SoftwareDTO> {
     return this.http.get<SoftwareDTO>(`${BASE_URL}/${id}`);
