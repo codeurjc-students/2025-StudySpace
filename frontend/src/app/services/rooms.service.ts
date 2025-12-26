@@ -14,14 +14,6 @@ export class RoomsService {
   constructor(private readonly http: HttpClient) { }
 
   public getRooms(page: number = 0, size: number = 10): Observable<Page<RoomDTO>> {
-    /*return this.http.get<any>(`${BASE_URL}?projection=withSoftware`).pipe(
-      map(response => {
-        if (response._embedded?.rooms) {
-          return response._embedded.rooms;
-        }
-        return response;
-      })
-    );*/
     return this.http.get<Page<RoomDTO>>(`${BASE_URL}?page=${page}&size=${size}`);
   }
   

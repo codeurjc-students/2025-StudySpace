@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { Page } from '../dtos/page.model';
 
 @Injectable({
   providedIn: 'root'
@@ -31,8 +32,8 @@ export class ReservationService {
     return this.http.post('/api/reservations/create', body);
   }
 
-  getMyReservations(): Observable<any[]> {
-    return this.http.get<any[]>('/api/reservations/my-reservations');
+  getMyReservations(page: number = 0, size: number = 10): Observable<Page<any>> {
+    return this.http.get<Page<any>>(`/api/reservations/my-reservations?page=${page}&size=${size}`);
   }
 
   cancelReservation(id: number): Observable<any> {//uses patch

@@ -52,7 +52,7 @@
             
             <li class="page-item" [class.disabled]="pageData.first">
                 <a class="page-link" (click)="loadPage(currentPage - 1)" style="cursor: pointer;">
-                    Anterior
+                    Previous
                 </a>
             </li>
 
@@ -64,13 +64,13 @@
 
             <li class="page-item" [class.disabled]="pageData.last">
                 <a class="page-link" (click)="loadPage(currentPage + 1)" style="cursor: pointer;">
-                    Siguiente
+                    Next
                 </a>
             </li>
 
         </ul>
         <div class="text-center text-muted mt-2">
-            <small>Página {{ currentPage + 1 }} de {{ pageData.totalPages }} (Total: {{ pageData.totalElements }} aulas)</small>
+            <small>Showing page {{ currentPage + 1 }} of {{ pageData.totalPages }}</small>
         </div>
     </nav>
 

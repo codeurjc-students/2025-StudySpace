@@ -67,7 +67,7 @@
         <ul class="pagination justify-content-center">
             
             <li class="page-item" [class.disabled]="pageData.first">
-                <a class="page-link" (click)="loadUsers(currentPage - 1)" style="cursor: pointer;">Anterior</a>
+                <a class="page-link" (click)="loadUsers(currentPage - 1)" style="cursor: pointer;">Previous</a>
             </li>
 
             <li class="page-item" *ngFor="let p of getPagesArray()" [class.active]="p === currentPage">
@@ -75,12 +75,12 @@
             </li>
 
             <li class="page-item" [class.disabled]="pageData.last">
-                <a class="page-link" (click)="loadUsers(currentPage + 1)" style="cursor: pointer;">Siguiente</a>
+                <a class="page-link" (click)="loadUsers(currentPage + 1)" style="cursor: pointer;">Next</a>
             </li>
 
         </ul>
         <div class="text-center text-muted mt-2">
-            <small>Page {{ currentPage + 1 }} of {{ pageData.totalPages }} (Total: {{ pageData.totalElements }})</small>
+            <small>Showing page {{ currentPage + 1 }} of {{ pageData.totalPages }}</small>
         </div>
     </nav>
     

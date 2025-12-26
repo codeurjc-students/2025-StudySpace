@@ -14,7 +14,8 @@
                     <tr>
                         <th>ID</th>
                         <th>Name</th>
-                        <th>Status</th> <th>Capacity</th>
+                        <th>Status</th> 
+                        <th>Capacity</th>
                         <th>Campus</th>
                         <th class="text-end">Actions</th>
                     </tr>
@@ -55,6 +56,27 @@
             </table>
         </div>
     </div>
+
+    <nav aria-label="Page navigation" class="mt-4" *ngIf="pageData && pageData.totalPages > 1">
+        <ul class="pagination justify-content-center">
+            
+            <li class="page-item" [class.disabled]="pageData.first">
+                <a class="page-link" (click)="loadRooms(currentPage - 1)" style="cursor: pointer;">Previous</a>
+            </li>
+
+            <li class="page-item" *ngFor="let p of getPagesArray()" [class.active]="p === currentPage">
+                <a class="page-link" (click)="loadRooms(p)" style="cursor: pointer;">{{ p + 1 }}</a>
+            </li>
+
+            <li class="page-item" [class.disabled]="pageData.last">
+                <a class="page-link" (click)="loadRooms(currentPage + 1)" style="cursor: pointer;">Next</a>
+            </li>
+
+        </ul>
+        <div class="text-center text-muted mt-2">
+            <small>Showing page {{ currentPage + 1 }} of {{ pageData.totalPages }}</small>
+        </div>
+    </nav>
 
     <div class="mt-4">
         <button routerLink="/admin" class="btn btn-secondary">Back to Admin menu</button>

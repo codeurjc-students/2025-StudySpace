@@ -3,6 +3,7 @@ import { LoginService } from '../../login/login.service';
 import { ReservationService } from '../../services/reservation.service';
 import { UserDTO } from '../../dtos/user.dto';
 import { Location } from '@angular/common';
+import { Page } from '../../dtos/page.model';
 
 @Component({
   selector: 'app-user-profile',
@@ -12,6 +13,9 @@ import { Location } from '@angular/common';
 export class UserProfileComponent implements OnInit {
 
   user: UserDTO | null = null;
+  reservations: any[] = [];
+  pageData?: Page<any>;     
+  currentPage: number = 0;
   isEditing = false;
   editData = { name: '', email: '' };
   isChangingPassword = false;
@@ -31,22 +35,25 @@ export class UserProfileComponent implements OnInit {
             // Usamos optional chaining (?.) para evitar errores si viene null
             this.editData.name = this.user?.name || '';
             this.editData.email = this.user?.email || '';
-            this.loadReservations();
+            this.loadReservations(0);
         },
         error: (err: any) => console.error("Error loading profile", err)
     });
   }
   // AUXILIAR METHOD
-  loadReservations() {
-      this.reservationService.getMyReservations().subscribe({
-          next: (reservations) => {
-              if (this.user) {
-                  this.user.reservations = reservations;
-                  console.log("Load reservations:", reservations);
-              }
-          },
-          error: (err) => console.error("Error loading reservations", err)
-      });
+  loadReservations(page: number) {
+    this.reservationService.getMyReservations(page).subscribe({
+      next: (data) => {
+        this.pageData = data;
+        this.reservations = data.content; 
+        this.currentPage = data.number;
+      },
+      error: (err) => console.error('Error loading reservations', err)
+    });
+  }
+
+  getPagesArray(): number[] {//check if necesaryyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+    return Array.from({ length: this.pageData?.totalPages || 0 }, (_, i) => i);
   }
 
   goBack() {
@@ -96,7 +103,7 @@ export class UserProfileComponent implements OnInit {
       this.reservationService.cancelReservation(id).subscribe({
         next: () => {
           alert("Reservation successfully cancelled.");
-          this.loadReservations(); 
+          this.loadReservations(this.currentPage); 
         },
         error: (err) => {
           console.error(err);
