@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.Sort; 
+import org.springframework.data.web.SortDefault;
 
 import java.util.Date;
 import java.util.List;
@@ -58,7 +60,10 @@ public class ReservationController {
     }
 
     @GetMapping("/my-reservations")
-    public ResponseEntity<Page<Reservation>> getMyReservations(@PageableDefault(size = 10) Pageable pageable) {
+    public ResponseEntity<Page<Reservation>> getMyReservations(
+        @PageableDefault(size = 10) 
+        @SortDefault(sort = "startDate", direction = Sort.Direction.DESC)
+        Pageable pageable) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
 
