@@ -36,7 +36,7 @@ export class RoomFormComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.softwareService.getAllSoftwares(0, 100).subscribe({//pool of 100 softwares, check if beteter solution
+    this.softwareService.getAllSoftwares(0, 100).subscribe({//pool of 100 softwares, check if beteter solution, just for the moment the solution
         next: (data) => {
             this.availableSoftware = data.content;
         },

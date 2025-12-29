@@ -28,7 +28,7 @@ export class ReservationFormComponent implements OnInit {
 
   ngOnInit(): void {
     //we obtain the roomId from the route parameters
-   this.roomsService.getRooms().subscribe({
+   this.roomsService.getRooms(0,1000).subscribe({//for the moment we get a lot of rooms to avoid not seen some rooms
         next: (data) => {
           //only active rooms
           this.rooms = data.content.filter((room:RoomDTO) => room.active === true);
