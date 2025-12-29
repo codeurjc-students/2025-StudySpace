@@ -14,7 +14,7 @@ export class AuthInterceptor implements HttpInterceptor {
   constructor() {}
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    
+    /*
     // 1. Intentamos leer la cookie 'AuthToken'
     const token = this.getCookie('AuthToken');
 
@@ -36,5 +36,14 @@ export class AuthInterceptor implements HttpInterceptor {
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
     return null;
+  }*/
+
+
+  const authReq = request.clone({
+      withCredentials: true 
+    });
+
+    
+    return next.handle(authReq);
   }
 }

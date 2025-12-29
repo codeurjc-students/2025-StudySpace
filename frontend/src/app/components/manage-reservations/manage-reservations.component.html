@@ -1,85 +1,9 @@
 <div class="container mt-5 mb-5">
     <h2 class="mb-4 text-dark fw-bold">Manage User Reservations</h2>
 
-    <h4 class="text-success mb-3 fw-bold">Active Reservations</h4>
-    <div class="card shadow-sm mb-5">
-        <div class="card-body p-0">
-            <table class="table table-hover mb-0 align-middle">
-                <thead class="table-success text-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>Room</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Reason</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <ng-container *ngFor="let res of reservations">
-                        <tr *ngIf="isReservationActive(res)">
-                            <td>{{ res.id }}</td>
-                            <td>
-                                <span class="badge bg-info text-dark">{{ res.room?.name || 'Unknown' }}</span>
-                            </td>
-                            <td>{{ res.startDate | date:'short' }}</td>
-                            <td>{{ res.endDate | date:'short' }}</td>
-                            <td>{{ res.reason }}</td>
-                            <td class="text-end">
-                                <button class="btn btn-sm btn-outline-primary me-2" (click)="startEdit(res)">✏️ Edit</button>
-                                <button class="btn btn-sm btn-outline-warning me-2" (click)="performCancel(res.id)">🚫 Cancel</button>
-                                <button class="btn btn-sm btn-outline-danger" (click)="deleteReservation(res.id)">🗑️</button>
-                            </td>
-                        </tr>
-                    </ng-container>
-                    <tr *ngIf="reservations.length === 0">
-                        <td colspan="6" class="text-center py-4 text-muted">This user has no reservations.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
 
-    <hr class="my-5">
 
-    <h4 class="text-muted mb-3 fw-bold">History & Cancelled</h4>
-    <div class="card shadow-sm mb-4 bg-light">
-        <div class="card-body p-0">
-            <table class="table mb-0 align-middle opacity-75">
-                <thead class="table-secondary">
-                    <tr>
-                        <th>ID</th>
-                        <th>Room</th>
-                        <th>Date</th>
-                        <th>Reason</th>
-                        <th>Status</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <ng-container *ngFor="let res of reservations">
-                        <tr *ngIf="!isReservationActive(res)">
-                            <td>{{ res.id }}</td>
-                            <td>
-                                <span class="text-decoration-line-through text-muted">{{ res.room?.name || 'Unknown' }}</span>
-                            </td>
-                            <td>{{ res.startDate | date:'short' }}</td>
-                            <td>{{ res.reason }}</td>
-                            <td>
-                                <span *ngIf="res.cancelled" class="badge bg-secondary">CANCELLED</span>
-                                <span *ngIf="!res.cancelled" class="badge bg-dark">EXPIRED</span>
-                            </td>
-                            <td class="text-end">
-                                <button class="btn btn-sm btn-outline-danger" (click)="deleteReservation(res.id)">🗑️ Delete Record</button>
-                            </td>
-                        </tr>
-                    </ng-container>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div *ngIf="editingReservation" class="card shadow border-warning mt-4">
+    <div *ngIf="editingReservation" class="card shadow-lg mb-4 border-warning">
         <div class="card-header bg-warning text-dark fw-bold">
             Editing Reservation #{{ editingReservation.id }}
         </div>
@@ -87,22 +11,22 @@
             <form (ngSubmit)="saveEdit()">
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label" for="roomSelect">Change Room</label>
-                        <select id="roomSelect" [(ngModel)]="editingReservation.roomId" name="roomId" class="form-select">
+                        <label class="form-label">Room</label>
+                        <select [(ngModel)]="editingReservation.roomId" name="roomId" class="form-select">
                             <option *ngFor="let r of rooms" [value]="r.id">{{ r.name }}</option>
                         </select>
                     </div>
-                    <div class="col-md-12 mb-3">
-                        <label class="form-label" for="reasonInput">Reason</label>
-                        <input id="reasonInput" type="text" [(ngModel)]="editingReservation.reason" name="reason" class="form-control">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Reason</label>
+                        <input type="text" [(ngModel)]="editingReservation.reason" name="reason" class="form-control">
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label" for="startDateInput">Start Date</label>
-                        <input id="startDateInput" type="datetime-local" [(ngModel)]="editingReservation.startDate" name="startDate" class="form-control">
+                        <label class="form-label">Start Date</label>
+                        <input type="datetime-local" [(ngModel)]="editingReservation.startDate" name="startDate" class="form-control">
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label" for="endDateInput">End Date</label>
-                        <input id="endDateInput" type="datetime-local" [(ngModel)]="editingReservation.endDate" name="endDate" class="form-control">
+                        <label class="form-label">End Date</label>
+                        <input type="datetime-local" [(ngModel)]="editingReservation.endDate" name="endDate" class="form-control">
                     </div>
                 </div>
                 <div class="d-flex justify-content-end gap-2">
@@ -112,6 +36,90 @@
             </form>
         </div>
     </div>
+
+
+
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Room</th>
+                        <th>Dates</th>
+                        <th>Status</th>
+                        <th>Reason</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let res of reservations">
+                        <td>{{ res.id }}</td>
+                        <td>
+                            <span class="fw-bold">{{ res.room?.name || 'Unknown' }}</span>
+                        </td>
+                        <td>
+                            <div class="small">
+                                <div>Start: {{ res.startDate | date:'short' }}</div>
+                                <div>End: &nbsp;{{ res.endDate | date:'short' }}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <span *ngIf="res.cancelled" class="badge bg-secondary">CANCELLED</span>
+                            <span *ngIf="!res.cancelled && isReservationActive(res)" class="badge bg-success">ACTIVE</span>
+                            <span *ngIf="!res.cancelled && !isReservationActive(res)" class="badge bg-light text-dark border">COMPLETED</span>
+                        </td>
+                        <td class="text-muted fst-italic">{{ res.reason }}</td>
+                        <td class="text-end">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" (click)="startEdit(res)" title="Edit">
+                                    ✏️
+                                </button>
+                                
+                                <button *ngIf="isReservationActive(res) && !res.cancelled" 
+                                        class="btn btn-sm btn-outline-warning" 
+                                        (click)="performCancel(res.id)" 
+                                        title="Cancel">
+                                    🚫
+                                </button>
+
+                                <button class="btn btn-sm btn-outline-danger" 
+                                        (click)="deleteReservation(res.id)" 
+                                        title="Delete Permanently">
+                                    🗑️
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr *ngIf="reservations.length === 0">
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            This user has no reservations.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <nav aria-label="Page navigation" class="mt-4" *ngIf="pageData && pageData.totalPages > 1">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" [class.disabled]="pageData.first">
+                <a class="page-link" (click)="loadReservations(currentPage - 1)" style="cursor: pointer;">Previous</a>
+            </li>
+            <li class="page-item" *ngFor="let p of getPagesArray()" [class.active]="p === currentPage">
+                <a class="page-link" (click)="loadReservations(p)" style="cursor: pointer;">{{ p + 1 }}</a>
+            </li>
+            <li class="page-item" [class.disabled]="pageData.last">
+                <a class="page-link" (click)="loadReservations(currentPage + 1)" style="cursor: pointer;">Next</a>
+            </li>
+        </ul>
+        <div class="text-center text-muted mt-2">
+            <small>Page {{ currentPage + 1 }} of {{ pageData.totalPages }}</small>
+        </div>
+    </nav>
+
+    
 
     <div class="mt-4">
         <button routerLink="/admin/users" class="btn btn-secondary">Back to Users</button>

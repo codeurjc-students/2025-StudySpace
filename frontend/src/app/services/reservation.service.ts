@@ -10,8 +10,8 @@ export class ReservationService {
 
   constructor(private readonly http: HttpClient) { }
 
-  getReservationsByUser(userId: number): Observable<any[]> {
-    return this.http.get<any[]>(`/api/users/${userId}/reservations`);
+  getReservationsByUser(userId: number, page: number = 0, size: number = 10): Observable<Page<any>> {
+    return this.http.get<Page<any>>(`/api/users/${userId}/reservations?page=${page}&size=${size}`);
   }
   
   deleteReservation(id: number): Observable<any> {

@@ -30,12 +30,16 @@ export class UserProfileComponent implements OnInit {
   ngOnInit(): void {
     // Usamos reloadUser que ahora sí existe en LoginService
     this.loginService.reloadUser().subscribe({
-        next: (freshUser: UserDTO) => {
+        next: (freshUser: UserDTO | null) => {
+          if(freshUser){
             this.user = freshUser;
             // Usamos optional chaining (?.) para evitar errores si viene null
-            this.editData.name = this.user?.name || '';
-            this.editData.email = this.user?.email || '';
+            this.editData.name = this.user.name;
+            this.editData.email = this.user.email;
             this.loadReservations(0);
+          }else{
+            console.warn("No user session found in profile.");
+          }
         },
         error: (err: any) => console.error("Error loading profile", err)
     });

@@ -159,6 +159,13 @@ public class ReservationService {
         return reservationRepository.findByUser(user, pageable);
     }
 
+    public Page<Reservation> getReservationsByUserId(Long userId, Pageable pageable) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        return reservationRepository.findByUser(user, pageable);
+    }
+
 
 
 

@@ -3,16 +3,20 @@ package com.urjcservice.backend.rest;
 import com.urjcservice.backend.entities.User;
 import com.urjcservice.backend.service.UserService;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.SortDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.urjcservice.backend.entities.Reservation;
+import com.urjcservice.backend.service.ReservationService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.Sort;
 
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
+
 
 import static org.springframework.web.servlet.support.ServletUriComponentsBuilder.fromCurrentRequest;
 
@@ -22,9 +26,11 @@ public class UserRestController {
 
    
     private final UserService userService;
+    private final ReservationService reservationService;
     
-    public UserRestController(UserService userService) {
+    public UserRestController(UserService userService, ReservationService reservationService) {
         this.userService = userService;
+        this.reservationService = reservationService;
     }
 
     @GetMapping
@@ -86,9 +92,11 @@ public class UserRestController {
 
     //for getting reservations of a user
     @GetMapping("/{id}/reservations")
-    public ResponseEntity<List<Reservation>> getUserReservations(@PathVariable Long id) {
-        return userService.findById(id)
-                .map(user -> ResponseEntity.ok(user.getReservations()))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<Page<Reservation>> getUserReservations(@PathVariable Long id,
+            @PageableDefault(size = 10) 
+            @SortDefault(sort = "startDate", direction = Sort.Direction.DESC) 
+            Pageable pageable
+    ) {
+        return ResponseEntity.ok(reservationService.getReservationsByUserId(id, pageable));
     }
 }
