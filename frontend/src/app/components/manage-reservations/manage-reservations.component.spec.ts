@@ -42,11 +42,29 @@ describe('ManageReservationsComponent', () => {
     fixture = TestBed.createComponent(ManageReservationsComponent);
     component = fixture.componentInstance;
     
-    //default answer
-    reservationServiceSpy.getReservationsByUser.and.returnValue(of([
-      { id: 1, reason: 'Test Booking', startDate: new Date(), endDate: new Date(), room: { id: 10, name: 'Lab 1' } }
-    ]));
-    roomsServiceSpy.getRooms.and.returnValue(of([{ id: 10, name: 'Lab 1' } as any]));
+    //default answer - return Page objects
+    reservationServiceSpy.getReservationsByUser.and.returnValue(of({
+      content: [ { id: 1, reason: 'Test Booking', startDate: new Date(), endDate: new Date(), room: { id: 10, name: 'Lab 1' } } ],
+      totalPages: 1,
+      totalElements: 1,
+      last: true,
+      first: true,
+      size: 10,
+      number: 0,
+      numberOfElements: 1,
+      sort: []
+    }));
+    roomsServiceSpy.getRooms.and.returnValue(of({
+      content: [ { id: 10, name: 'Lab 1' } ],
+      totalPages: 1,
+      totalElements: 1,
+      last: true,
+      first: true,
+      size: 10,
+      number: 0,
+      numberOfElements: 1,
+      sort: []
+    } as any));
 
     fixture.detectChanges();//for ngOninit
   });
@@ -54,7 +72,7 @@ describe('ManageReservationsComponent', () => {
   it('should init correctly and load reservations', () => {
     expect(component).toBeTruthy();
     expect(component.userId).toBe(123);
-    expect(reservationServiceSpy.getReservationsByUser).toHaveBeenCalledWith(123);
+    expect(reservationServiceSpy.getReservationsByUser).toHaveBeenCalledWith(123, 0);
     expect(component.reservations.length).toBe(1);
     expect(roomsServiceSpy.getRooms).toHaveBeenCalled();
   });

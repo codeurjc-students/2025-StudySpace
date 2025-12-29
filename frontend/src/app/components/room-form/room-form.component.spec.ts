@@ -21,7 +21,7 @@ describe('RoomFormComponent', () => {
   };
 
   const mockSoftwareService = {
-    getAllSoftwares: () => of([{ id: 1, name: 'Java', version: 17 }])
+    getAllSoftwares: () => of({ content: [{ id: 1, name: 'Java', version: 17 }], totalPages: 1, totalElements: 1, first: true, last: true, number: 0, size: 1 })
   };
 
   const mockRouter = { navigate: jasmine.createSpy('navigate') };

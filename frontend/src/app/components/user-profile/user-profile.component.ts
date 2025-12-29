@@ -39,6 +39,8 @@ export class UserProfileComponent implements OnInit {
             this.loadReservations(0);
           }else{
             console.warn("No user session found in profile.");
+            this.user = null;
+            this.editData = { name: '', email: '' };
           }
         },
         error: (err: any) => console.error("Error loading profile", err)
@@ -87,7 +89,7 @@ export class UserProfileComponent implements OnInit {
     return pages;
   }
 
-  
+
   goBack() {
     this.location.back();
   }

@@ -40,7 +40,17 @@ describe('UserProfileComponent', () => {
     location = TestBed.inject(Location);
 
     spyOn(loginService, 'reloadUser').and.returnValue(of(mockUser));
-    spyOn(reservationService, 'getMyReservations').and.returnValue(of([]));
+    spyOn(reservationService, 'getMyReservations').and.returnValue(of({
+      content: [],
+      totalPages: 0,
+      totalElements: 0,
+      last: true,
+      first: true,
+      size: 10,
+      number: 0,
+      numberOfElements: 0,
+      sort: []
+    } as any));
     
     fixture.detectChanges();
   });
@@ -143,7 +153,7 @@ describe('UserProfileComponent', () => {
   it('loadReservations should handle error', () => {
     const consoleSpy = spyOn(console, 'error');
     (reservationService.getMyReservations as jasmine.Spy).and.returnValue(throwError(() => new Error('Fail')));
-    component.loadReservations();
+    component.loadReservations(0);
     expect(consoleSpy).toHaveBeenCalledWith("Error loading reservations", jasmine.any(Error));
   });
 
@@ -153,9 +163,19 @@ describe('UserProfileComponent', () => {
   it('loadReservations: should not set reservations if user is null', () => {
   component.user = null;
   const mockReservations = [{ id: 1, reason: 'Test' }];
-  (reservationService.getMyReservations as jasmine.Spy).and.returnValue(of(mockReservations));
+  (reservationService.getMyReservations as jasmine.Spy).and.returnValue(of({
+    content: mockReservations,
+    totalPages: 1,
+    totalElements: 1,
+    last: true,
+    first: true,
+    size: 10,
+    number: 0,
+    numberOfElements: 1,
+    sort: []
+  } as any));
   
-  component.loadReservations();
+  component.loadReservations(0);
   
   // Verify
   expect(component.user).toBeNull();

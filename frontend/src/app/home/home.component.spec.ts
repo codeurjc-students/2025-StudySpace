@@ -21,7 +21,7 @@ describe('HomeComponent UI Test', () => {
 
   beforeEach(async () => {
     mockRoomsService = {
-      getRooms: jasmine.createSpy('getRooms').and.returnValue(of(mockRooms))
+      getRooms: jasmine.createSpy('getRooms').and.returnValue(of({ content: mockRooms, totalPages: 1, totalElements: mockRooms.length, first: true, last: true, number: 0, size: mockRooms.length }))
     };
 
     mockLoginService = {

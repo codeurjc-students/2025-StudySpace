@@ -33,7 +33,17 @@ describe('ManageUsersComponent', () => {
 
   beforeEach(async () => {
     mockUserService = {
-      getUsers: jasmine.createSpy('getUsers').and.returnValue(of([mockUser1, mockUserAdmin])),
+      getUsers: jasmine.createSpy('getUsers').and.returnValue(of({
+        content: [mockUser1, mockUserAdmin],
+        totalPages: 1,
+        totalElements: 2,
+        last: true,
+        first: true,
+        size: 10,
+        number: 0,
+        numberOfElements: 2,
+        sort: []
+      })),
       changeRole: jasmine.createSpy('changeRole').and.returnValue(of({})),
       toggleBlock: jasmine.createSpy('toggleBlock').and.returnValue(of({})),
       deleteUser: jasmine.createSpy('deleteUser').and.returnValue(of({}))
@@ -103,7 +113,7 @@ describe('ManageUsersComponent', () => {
   it('should filter out the current logged-in user from the list', () => {// 2 users and only one on the list, not us
     mockLoginService.currentUser = mockUser1; 
 
-    component.loadUsers();
+    component.loadUsers(0);
 
     // Verificaciones
     expect(component.users.length).toBe(1); 

@@ -11,10 +11,10 @@ describe('ManageRoomsComponent', () => {
 
   // Mock for service
   const mockRoomsService = {
-    getRooms: () => of([
+    getRooms: () => of({ content: [
       { id: 1, name: 'Aula Activa', capacity: 20, camp: 'MOSTOLES', active: true },
       { id: 2, name: 'Aula Desactivada', capacity: 30, camp: 'ALCORCON', active: false }
-    ]),
+    ], totalPages: 1, totalElements: 2, first: true, last: true, number: 0, size: 2 }),
     deleteRoom: (id: number) => of({}) 
   };
 
