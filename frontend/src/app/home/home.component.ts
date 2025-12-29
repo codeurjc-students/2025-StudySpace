@@ -46,8 +46,39 @@ export class HomeComponent implements OnInit {
   }
 
 
-  getPagesArray(): number[] {
-    return Array.from({ length: this.pageData?.totalPages || 0 }, (_, i) => i);
+  getVisiblePages(): number[] {
+    if (!this.pageData) return [];
+
+    const totalPages = this.pageData.totalPages;
+    const maxPagesToShow = 10; // Cantidad máxima de botones a mostrar
+
+    //less pages than the maximum, show all pages
+    if (totalPages <= maxPagesToShow) {
+      return Array.from({ length: totalPages }, (_, i) => i);
+    }
+
+    // many pages calculate the start and end
+    let startPage = this.currentPage - Math.floor(maxPagesToShow / 2);
+    let endPage = this.currentPage + Math.ceil(maxPagesToShow / 2);
+
+    // Ajuste si nos salimos por el principio (ej: estamos en la pág 1)
+    if (startPage < 0) {
+      startPage = 0;
+      endPage = maxPagesToShow;
+    }
+
+    // Ajuste si nos salimos por el final (ej: estamos en la última pág)
+    if (endPage > totalPages) {
+      endPage = totalPages;
+      startPage = totalPages - maxPagesToShow;
+    }
+
+    // Generamos el array de números
+    const pages = [];
+    for (let i = startPage; i < endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
   }
 
 

@@ -15,10 +15,10 @@ export class ManageSoftwaresComponent implements OnInit {
   constructor(private readonly softwareService: SoftwareService) { }
 
   ngOnInit(): void {
-    this.loadPage(0);
+    this.loadSoftwares(0);
   }
 
-  loadPage(page: number) {
+  loadSoftwares(page: number) {
     this.softwareService.getAllSoftwares(page).subscribe({
         next: (data) => {
             this.pageData = data;
@@ -28,8 +28,35 @@ export class ManageSoftwaresComponent implements OnInit {
         error: (e) => console.error(e)
     });
   }
-  getPagesArray(): number[] {//helper to create an array with the number of pages, maybe not necessaryyyyyyyyyyyyyyyyyyyyyyyyy
-    return Array.from({ length: this.pageData?.totalPages || 0 }, (_, i) => i);
+  getVisiblePages(): number[] {
+    if (!this.pageData) return [];
+
+    const totalPages = this.pageData.totalPages;
+    const maxPagesToShow = 10; 
+
+
+    if (totalPages <= maxPagesToShow) {
+      return Array.from({ length: totalPages }, (_, i) => i);
+    }
+
+    let startPage = this.currentPage - Math.floor(maxPagesToShow / 2);
+    let endPage = this.currentPage + Math.ceil(maxPagesToShow / 2);
+
+    if (startPage < 0) {
+      startPage = 0;
+      endPage = maxPagesToShow;
+    }
+
+    if (endPage > totalPages) {
+      endPage = totalPages;
+      startPage = totalPages - maxPagesToShow;
+    }
+
+    const pages = [];
+    for (let i = startPage; i < endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
   }
 
   deleteSoftware(id: number) {

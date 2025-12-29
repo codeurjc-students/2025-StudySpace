@@ -65,8 +65,35 @@ export class ManageReservationsComponent implements OnInit {
   }
 
 
-  getPagesArray(): number[] {//may be not necesaryyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
-    return Array.from({ length: this.pageData?.totalPages || 0 }, (_, i) => i);
+  getVisiblePages(): number[] {
+    if (!this.pageData) return [];
+
+    const totalPages = this.pageData.totalPages;
+    const maxPagesToShow = 10; 
+
+
+    if (totalPages <= maxPagesToShow) {
+      return Array.from({ length: totalPages }, (_, i) => i);
+    }
+
+    let startPage = this.currentPage - Math.floor(maxPagesToShow / 2);
+    let endPage = this.currentPage + Math.ceil(maxPagesToShow / 2);
+
+    if (startPage < 0) {
+      startPage = 0;
+      endPage = maxPagesToShow;
+    }
+
+    if (endPage > totalPages) {
+      endPage = totalPages;
+      startPage = totalPages - maxPagesToShow;
+    }
+
+    const pages = [];
+    for (let i = startPage; i < endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
   }
   
 

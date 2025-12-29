@@ -61,15 +61,23 @@
         <ul class="pagination justify-content-center">
             
             <li class="page-item" [class.disabled]="pageData.first">
-                <a class="page-link" (click)="loadRooms(currentPage - 1)" style="cursor: pointer;">Previous</a>
+                <a class="page-link" (click)="loadRooms(0)" style="cursor: pointer;">&laquo;&laquo;</a>
             </li>
 
-            <li class="page-item" *ngFor="let p of getPagesArray()" [class.active]="p === currentPage">
+            <li class="page-item" [class.disabled]="pageData.first">
+                <a class="page-link" (click)="loadRooms(currentPage - 1)" style="cursor: pointer;">&laquo;</a>
+            </li>
+
+            <li class="page-item" *ngFor="let p of getVisiblePages()" [class.active]="p === currentPage">
                 <a class="page-link" (click)="loadRooms(p)" style="cursor: pointer;">{{ p + 1 }}</a>
             </li>
 
             <li class="page-item" [class.disabled]="pageData.last">
-                <a class="page-link" (click)="loadRooms(currentPage + 1)" style="cursor: pointer;">Next</a>
+                <a class="page-link" (click)="loadRooms(currentPage + 1)" style="cursor: pointer;">&raquo;</a>
+            </li>
+
+            <li class="page-item" [class.disabled]="pageData.last">
+                <a class="page-link" (click)="loadRooms(pageData.totalPages - 1)" style="cursor: pointer;">&raquo;&raquo;</a>
             </li>
 
         </ul>
