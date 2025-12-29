@@ -98,8 +98,8 @@ public class ReservationRestControllerTest {
     public void testGetMyReservations() throws Exception {
         mockMvc.perform(get("/api/reservations/my-reservations"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value(testReservationId));
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(testReservationId));
     }
 
     // --- TESTS RESERVATION REST CONTROLLER (Parte REST pura) ---
@@ -109,7 +109,7 @@ public class ReservationRestControllerTest {
     public void testGetAllReservationsAsAdmin() throws Exception {
         mockMvc.perform(get("/api/reservations"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.content.length()").value(1));
     }
 
     @Test

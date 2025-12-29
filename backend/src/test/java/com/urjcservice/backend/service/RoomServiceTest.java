@@ -285,7 +285,8 @@ public class RoomServiceTest {
         r1.setStartDate(Date.from(date.atTime(10, 0).atZone(ZoneId.of("Europe/Madrid")).toInstant()));
         r1.setEndDate(Date.from(date.atTime(12, 0).atZone(ZoneId.of("Europe/Madrid")).toInstant()));
         
-        when(reservationRepository.findByRoomIdAndDate(roomId, date,any(Pageable.class)))
+        // Also mock findByRoomIdAndDate used by service
+        when(reservationRepository.findByRoomIdAndDate(eq(roomId), eq(date), any(Pageable.class)))
             .thenReturn(new PageImpl<>(Arrays.asList(r1)));
 
         // WHEN
@@ -316,7 +317,7 @@ public class RoomServiceTest {
         LocalDate date = LocalDate.now();
         
         // Mock devolviendo lista vacía
-        when(reservationRepository.findByRoomIdAndDate(roomId, date,any(Pageable.class)))
+        when(reservationRepository.findByRoomIdAndDate(eq(roomId), eq(date), any(Pageable.class)))
              .thenReturn(new PageImpl<>(Arrays.asList()));
 
         // WHEN
@@ -346,7 +347,7 @@ public class RoomServiceTest {
         // CAMBIO AQUÍ: Poner 22:00 para que cubra la franja de las 21:00
         r1.setEndDate(Date.from(date.atTime(22, 0).atZone(zone).toInstant())); 
 
-        when(reservationRepository.findByRoomIdAndDate(roomId, date,any(Pageable.class)))
+        when(reservationRepository.findByRoomIdAndDate(eq(roomId), eq(date), any(Pageable.class)))
              .thenReturn(new PageImpl<>(Arrays.asList(r1)));
 
         // WHEN
@@ -368,7 +369,7 @@ public class RoomServiceTest {
         r1.setStartDate(Date.from(date.atTime(22, 0).atZone(zone).toInstant()));
         r1.setEndDate(Date.from(date.atTime(23, 0).atZone(zone).toInstant()));
 
-        when(reservationRepository.findByRoomIdAndDate(roomId, date,any(Pageable.class)))
+        when(reservationRepository.findByRoomIdAndDate(eq(roomId), eq(date), any(Pageable.class)))
             .thenReturn(new PageImpl<>(Arrays.asList(r1)));
 
         // WHEN

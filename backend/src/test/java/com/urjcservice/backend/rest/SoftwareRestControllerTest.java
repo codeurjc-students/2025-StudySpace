@@ -41,7 +41,7 @@ public class SoftwareRestControllerTest {
         mockMvc.perform(get("/api/softwares")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()) // 200 
-                .andExpect(jsonPath("$").isArray());
+                .andExpect(jsonPath("$.content").isArray());
     }
 
     

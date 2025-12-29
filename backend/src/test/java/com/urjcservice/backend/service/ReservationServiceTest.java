@@ -26,8 +26,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -126,6 +125,8 @@ public class ReservationServiceTest {
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
         when(roomRepository.findById(roomId)).thenReturn(Optional.of(activeRoom));
+        // No overlaps expected
+        when(reservationRepository.findOverlappingReservations(any(Long.class), nullable(Date.class), nullable(Date.class), any(Pageable.class))).thenReturn(Page.empty());
         when(reservationRepository.save(any(Reservation.class))).thenReturn(new Reservation());
 
         // WHEN
@@ -175,7 +176,7 @@ public class ReservationServiceTest {
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(new User()));
         when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
         // Simulamos que hay un solapamiento
-        when(reservationRepository.findOverlappingReservations(any(), any(), any(),any(Pageable.class)))
+        when(reservationRepository.findOverlappingReservations(any(Long.class), any(Date.class), any(Date.class), any(Pageable.class)))
             .thenReturn(new PageImpl<>(Arrays.asList(new Reservation())));
 
         assertThrows(RuntimeException.class, () -> {

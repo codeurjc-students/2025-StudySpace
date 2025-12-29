@@ -57,6 +57,6 @@ public class UserRestControllerTest {
         mockMvc.perform(get("/api/users")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+                .andExpect(jsonPath("$.content").isArray());
     }
 }

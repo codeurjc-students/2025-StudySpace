@@ -19,7 +19,7 @@ import java.util.Collections;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -47,7 +47,7 @@ public class StatsServiceTest {
 
         // Mock dates for hourly grouping, simulate a DB timestamp (e.g. 10:00 UTC)
         Date dateMock = Date.from(Instant.parse("2025-12-12T10:00:00Z")); 
-        when(resRepo.findStartDatesByDate(today,any(Pageable.class))).thenReturn(new PageImpl<>(Arrays.asList(dateMock)));
+        when(resRepo.findStartDatesByDate(eq(today), any(Pageable.class))).thenReturn(new PageImpl<>(Arrays.asList(dateMock)));
 
         // WHEN
         DashboardStatsDTO result = statsService.getStats(today);
@@ -65,7 +65,7 @@ public class StatsServiceTest {
         //Hourly Grouping
         // Verify map is not empty and repositories were called
         assertFalse(result.getHourlyOccupancy().isEmpty());
-        verify(resRepo).findStartDatesByDate(today, any(Pageable.class));
+        verify(resRepo).findStartDatesByDate(eq(today), any(Pageable.class));
     }
 
     @Test
@@ -73,6 +73,8 @@ public class StatsServiceTest {
         // Edge case: 0 Rooms (Prevent Division by Zero)
         LocalDate today = LocalDate.now();
         when(roomRepo.countTotalRooms()).thenReturn(0L);
+        // Ensure repository method returns an empty page to avoid NullPointer
+        when(resRepo.findStartDatesByDate(eq(today), any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
 
         DashboardStatsDTO result = statsService.getStats(today);
         //Verify
@@ -88,7 +90,7 @@ public class StatsServiceTest {
         
         when(roomRepo.countTotalRooms()).thenReturn(10L);
         when(resRepo.countOccupiedRoomsByDate(today)).thenReturn(0L);
-        when(resRepo.findStartDatesByDate(today, any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
+        when(resRepo.findStartDatesByDate(eq(today), any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
 
         DashboardStatsDTO result = statsService.getStats(today);
         //Verify
