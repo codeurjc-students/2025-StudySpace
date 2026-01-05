@@ -69,12 +69,10 @@ describe('HomeComponent', () => {
   });
 
   it('should calculate visible pages correctly', () => {
-    // Caso: Pocas páginas
     const pages = component.getVisiblePages();
     expect(pages.length).toBe(3);
     expect(pages).toEqual([0, 1, 2]);
     
-    // Caso: return empty if no pageData
     component.pageData = undefined;
     expect(component.getVisiblePages()).toEqual([]);
   });
@@ -82,18 +80,19 @@ describe('HomeComponent', () => {
   it('should handle sliding window pagination', () => {
     component.pageData = { totalPages: 50 } as any;
     
-    // Medio
+    //begining
     component.currentPage = 25;
     let pages = component.getVisiblePages();
     expect(pages.length).toBe(10);
     expect(pages).toContain(25);
 
-    // Inicio
+    //middle
     component.currentPage = 0;
     pages = component.getVisiblePages();
     expect(pages[0]).toBe(0);
 
-    // Fin
+
+    //end
     component.currentPage = 49;
     pages = component.getVisiblePages();
     expect(pages[pages.length - 1]).toBe(49);

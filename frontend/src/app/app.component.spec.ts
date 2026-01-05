@@ -14,7 +14,7 @@ describe('AppComponent', () => {
     await TestBed.configureTestingModule({
       imports: [
         RouterTestingModule,
-        HttpClientTestingModule // Para que LoginService funcione (simula backend)
+        HttpClientTestingModule 
       ],
       declarations: [
         AppComponent
@@ -26,7 +26,7 @@ describe('AppComponent', () => {
 
     fixture = TestBed.createComponent(AppComponent);
     component = fixture.componentInstance;
-    router = TestBed.inject(Router); // Inyectamos el router para espiarlo
+    router = TestBed.inject(Router); 
     fixture.detectChanges();
   });
 
@@ -38,19 +38,15 @@ describe('AppComponent', () => {
     expect(component.title).toEqual('frontend');
   });
 
-  // --- NUEVO TEST PARA goToLogIn ---
+
   
   it('goToLogIn should log message and navigate to /login', () => {
-    // 1. Espiamos el método navigate del router
     const navigateSpy = spyOn(router, 'navigate');
     
-    // 2. Espiamos console.log para verificar que se llama (y evitar ruido en la terminal)
     spyOn(console, 'log');
 
-    // 3. Ejecutamos el método
     component.goToLogIn();
 
-    // 4. Verificaciones
     expect(console.log).toHaveBeenCalledWith('Navegando a login...');
     expect(navigateSpy).toHaveBeenCalledWith(['/login']);
   });

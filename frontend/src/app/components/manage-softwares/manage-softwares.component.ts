@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { SoftwareService, SoftwareDTO } from '../../services/software.service';
 import { Page } from '../../dtos/page.model';
+import { PaginationUtil } from '../../utils/pagination.util';
 
 @Component({
   selector: 'app-manage-softwares',
@@ -29,34 +30,7 @@ export class ManageSoftwaresComponent implements OnInit {
     });
   }
   getVisiblePages(): number[] {
-    if (!this.pageData) return [];
-
-    const totalPages = this.pageData.totalPages;
-    const maxPagesToShow = 10; 
-
-
-    if (totalPages <= maxPagesToShow) {
-      return Array.from({ length: totalPages }, (_, i) => i);
-    }
-
-    let startPage = this.currentPage - Math.floor(maxPagesToShow / 2);
-    let endPage = this.currentPage + Math.ceil(maxPagesToShow / 2);
-
-    if (startPage < 0) {
-      startPage = 0;
-      endPage = maxPagesToShow;
-    }
-
-    if (endPage > totalPages) {
-      endPage = totalPages;
-      startPage = totalPages - maxPagesToShow;
-    }
-
-    const pages = [];
-    for (let i = startPage; i < endPage; i++) {
-      pages.push(i);
-    }
-    return pages;
+    return PaginationUtil.getVisiblePages(this.pageData, this.currentPage);
   }
 
   deleteSoftware(id: number) {

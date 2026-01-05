@@ -20,7 +20,6 @@ describe('UserProfileComponent', () => {
   let mockReservationsPage: any;
 
   beforeEach(async () => {
-    // 1. REINICIALIZAMOS LOS DATOS
     mockUser = { 
       id: 1, name: 'John Doe', email: 'john@test.com', reservations: [], roles: ['USER'], blocked: false 
     };
@@ -32,7 +31,6 @@ describe('UserProfileComponent', () => {
       size: 10
     };
 
-    // 2. CREAMOS LOS ESPÍAS
     loginServiceSpy = jasmine.createSpyObj('LoginService', 
       ['reloadUser', 'updateProfile', 'changePassword', 'isAdmin', 'isLogged']
     );
@@ -54,7 +52,6 @@ describe('UserProfileComponent', () => {
     component = fixture.componentInstance;
     location = TestBed.inject(Location);
 
-    // 3. RETORNOS POR DEFECTO
     loginServiceSpy.reloadUser.and.returnValue(of(mockUser));
     loginServiceSpy.isAdmin.and.returnValue(false);
     loginServiceSpy.isLogged.and.returnValue(true);
@@ -63,7 +60,7 @@ describe('UserProfileComponent', () => {
     fixture.detectChanges(); 
   });
 
-  // --- 1. TESTS DE INICIALIZACIÓN ---
+  //initialization
 
   it('should create and load user data', () => {
     expect(component).toBeTruthy();
@@ -78,7 +75,7 @@ describe('UserProfileComponent', () => {
     expect(component.user).toBeNull();
   });
 
-  // --- 2. TESTS DE RESERVAS ---
+  //Bookings
 
   it('should load reservations successfully', () => {
     component.loadReservations(2);
@@ -127,11 +124,9 @@ describe('UserProfileComponent', () => {
     expect(reservationServiceSpy.deleteReservation).not.toHaveBeenCalled();
   });
 
-  // CORRECCIÓN: Ajustado el regex para aceptar 'Cancellation failed' o 'Error'
   it('should handle error on cancel/delete reservation', () => {
     spyOn(window, 'confirm').and.returnValue(true);
     spyOn(window, 'alert');
-    // Eliminamos spyOn(console, 'error') estricto para evitar fallos si el componente no loguea
     
     reservationServiceSpy.deleteReservation.and.returnValue(throwError(() => new Error('Fail')));
     
@@ -140,7 +135,7 @@ describe('UserProfileComponent', () => {
     expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/Error|Failed/i));
   });
 
-  // --- 3. TESTS DE PERFIL (Edición) ---
+  // edit profile
 
   it('should toggle edit mode correctly', () => {
     component.toggleEdit();
@@ -168,7 +163,6 @@ describe('UserProfileComponent', () => {
     expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/success|updated/i));
   });
 
-  // CORRECCIÓN: Ajustado el regex para aceptar 'Error updating profile'
   it('saveProfile should handle error from backend', () => {
     loginServiceSpy.updateProfile.and.returnValue(throwError(() => new Error('Update failed')));
     spyOn(window, 'alert');
@@ -178,7 +172,7 @@ describe('UserProfileComponent', () => {
     expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/Error|Failed/i));
   });
 
-  // --- 4. TESTS DE CONTRASEÑA ---
+  //Password
 
   it('changePassword should validate empty fields', () => {
     spyOn(window, 'alert');
@@ -213,7 +207,7 @@ describe('UserProfileComponent', () => {
     expect(window.alert).toHaveBeenCalledWith('Wrong password');
   });
 
-  // --- 5. LÓGICA Y PAGINACIÓN ---
+  //Pagination
 
   it('should determine if reservation is active', () => {
     const future = new Date(); future.setDate(future.getDate() + 1);
@@ -225,17 +219,15 @@ describe('UserProfileComponent', () => {
     expect(component.isReservationActive(null)).toBeFalse();
   });
 
-  // CORRECCIÓN: Ajustado a 10 páginas visibles si eso devuelve tu componente
+  
   it('pagination: should calculate visible pages correctly', () => {
     component.pageData = { totalPages: 5 } as any;
     expect(component.getVisiblePages().length).toBe(5);
 
-    // Caso: Ventana deslizante con 50 páginas
     component.pageData = { totalPages: 50 } as any;
     component.currentPage = 25;
     const pages = component.getVisiblePages();
     
-    // Aceptamos 5 o 10 dependiendo de tu configuración
     expect(pages.length).toBeGreaterThanOrEqual(5); 
     expect(pages).toContain(25);
   });

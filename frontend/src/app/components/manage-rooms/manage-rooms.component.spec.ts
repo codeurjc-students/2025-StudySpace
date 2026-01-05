@@ -1,144 +1,124 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ManageReservationsComponent } from '../manage-reservations/manage-reservations.component';
-import { ReservationService } from '../../services/reservation.service';
+import { ManageRoomsComponent } from './manage-rooms.component';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { RouterTestingModule } from '@angular/router/testing';
 import { RoomsService } from '../../services/rooms.service';
-import { ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { FormsModule } from '@angular/forms';
-import { RouterTestingModule } from '@angular/router/testing';
+import { RoomDTO } from '../../dtos/room.dto';
 
-describe('ManageReservationsComponent', () => {
-  let component: ManageReservationsComponent;
-  let fixture: ComponentFixture<ManageReservationsComponent>;
-  
-  let reservationServiceSpy: jasmine.SpyObj<ReservationService>;
+describe('ManageRoomsComponent', () => {
+  let component: ManageRoomsComponent;
+  let fixture: ComponentFixture<ManageRoomsComponent>;
   let roomsServiceSpy: jasmine.SpyObj<RoomsService>;
 
-  const mockPageData = {
-    content: [
-      { id: 1, reason: 'Test 1', startDate: new Date().toISOString(), endDate: new Date().toISOString(), cancelled: false },
-      { id: 2, reason: 'Test 2', startDate: new Date().toISOString(), endDate: new Date().toISOString(), cancelled: true }
-    ],
-    totalPages: 5,
-    number: 0,
-    size: 10,
-    first: true,
-    last: false,
-    totalElements: 50
+  const mockRoom: RoomDTO = { 
+    id: 1, 
+    name: 'Lab 1', 
+    capacity: 20, 
+    camp: 'Móstoles', 
+    place: 'Edificio 1', 
+    coordenades: '', 
+    active: true, 
+    software: [] 
   };
 
-  const mockRooms = [{ id: 101, name: 'Lab 1', active: true, capacity: 20, camp: 'MOSTOLES', place: 'B1' }];
+  const mockPage = {
+    content: [mockRoom],
+    totalPages: 3,
+    number: 0,
+    size: 10
+  };
 
   beforeEach(async () => {
-    reservationServiceSpy = jasmine.createSpyObj('ReservationService', ['getReservationsByUser', 'cancelReservation', 'updateReservation']);
-    roomsServiceSpy = jasmine.createSpyObj('RoomsService', ['getRooms']);
+    roomsServiceSpy = jasmine.createSpyObj('RoomsService', ['getRooms', 'deleteRoom']);
 
     await TestBed.configureTestingModule({
-      declarations: [ ManageReservationsComponent ],
-      imports: [ FormsModule, RouterTestingModule ],
+      declarations: [ManageRoomsComponent],
+      imports: [
+        HttpClientTestingModule, 
+        FormsModule,
+        RouterTestingModule
+      ],
       providers: [
-        { provide: ReservationService, useValue: reservationServiceSpy },
-        { provide: RoomsService, useValue: roomsServiceSpy },
-        {
-          provide: ActivatedRoute,
-          useValue: { snapshot: { paramMap: { get: () => '123' } } }
-        }
+        { provide: RoomsService, useValue: roomsServiceSpy }
       ]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(ManageReservationsComponent);
+    fixture = TestBed.createComponent(ManageRoomsComponent);
     component = fixture.componentInstance;
     
-    reservationServiceSpy.getReservationsByUser.and.returnValue(of(mockPageData as any));
-    roomsServiceSpy.getRooms.and.returnValue(of({ content: mockRooms } as any));
+    roomsServiceSpy.getRooms.and.returnValue(of(mockPage as any));
     
     fixture.detectChanges();
   });
 
-  it('should create and load initial data', () => {
+  it('should create and load rooms on init', () => {
     expect(component).toBeTruthy();
-    expect(component.userId).toBe(123);
-    expect(component.reservations.length).toBe(2);
+    expect(roomsServiceSpy.getRooms).toHaveBeenCalledWith(0);
+    expect(component.rooms.length).toBe(1);
   });
 
-  it('should start editing a reservation', () => {
-    const resToEdit = { id: 1, reason: 'Old', room: { id: 101, name: 'Lab 1' } };
-    component.startEdit(resToEdit);
-
-    expect(component.editingReservation).toBeDefined();
-    expect(component.editingReservation.id).toBe(1);
-    expect(component.editingReservation.roomId).toBe(101);
-  });
-
-  it('should cancel edit', () => {
-    component.editingReservation = { id: 1 };
-    component.cancelEdit();
-    expect(component.editingReservation).toBeNull();
-  });
-
-  // --- PRUEBA CORREGIDA ---
-  it('should save edit successfully', () => {
-    spyOn(window, 'alert');
-    // Preparamos los datos
-    const dataToUpdate = { id: 1, reason: 'Updated' };
-    component.editingReservation = dataToUpdate;
+  it('should handle error when loading rooms', () => {
+    spyOn(console, 'error');
+    roomsServiceSpy.getRooms.and.returnValue(throwError(() => new Error('Error loading')));
     
-    reservationServiceSpy.updateReservation.and.returnValue(of({}));
-
-    component.saveEdit();
-
-    // CORRECCIÓN: Usamos 'dataToUpdate' en vez de 'component.editingReservation'
-    // porque component.editingReservation se pone a null tras el éxito.
-    expect(reservationServiceSpy.updateReservation).toHaveBeenCalledWith(1, dataToUpdate);
-    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/successfully/));
-    expect(component.editingReservation).toBeNull(); 
+    component.loadRooms(1);
+    
+    expect(console.error).toHaveBeenCalled();
   });
 
-  it('should handle error when saving edit', () => {
-    spyOn(window, 'alert');
-    component.editingReservation = { id: 1 };
-    reservationServiceSpy.updateReservation.and.returnValue(throwError(() => new Error('Error')));
-
-    component.saveEdit();
-
-    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/error/));
-  });
-
-  it('should perform cancel if confirmed', () => {
+  it('should delete room if confirmed', () => {
     spyOn(window, 'confirm').and.returnValue(true);
     spyOn(window, 'alert');
-    reservationServiceSpy.cancelReservation.and.returnValue(of({}));
+    roomsServiceSpy.deleteRoom.and.returnValue(of({}));
 
-    component.performCancel(1);
+    spyOn(component, 'loadRooms'); 
 
-    expect(reservationServiceSpy.cancelReservation).toHaveBeenCalledWith(1);
-    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/successfully/));
-  });
-
-  it('should NOT perform cancel if not confirmed', () => {
-    spyOn(window, 'confirm').and.returnValue(false);
-    component.performCancel(1);
-    expect(reservationServiceSpy.cancelReservation).not.toHaveBeenCalled();
-  });
-
-  it('should correctly identify active reservations', () => {
-    const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + 1);
+    component.rooms = [{ 
+        id: 1, 
+        name: 'To Delete', 
+        capacity: 10, 
+        camp: 'Móstoles', 
+        place: '', 
+        active: true, 
+        coordenades: '', 
+        software: [] 
+    }];
     
-    const activeRes = { endDate: futureDate.toISOString(), cancelled: false };
-    const cancelledRes = { endDate: futureDate.toISOString(), cancelled: true };
-    const pastRes = { endDate: '2000-01-01', cancelled: false };
+    component.deleteRoom(1);
 
-    expect(component.isReservationActive(activeRes)).toBeTrue();
-    expect(component.isReservationActive(cancelledRes)).toBeFalse();
-    expect(component.isReservationActive(pastRes)).toBeFalse();
+    expect(roomsServiceSpy.deleteRoom).toHaveBeenCalledWith(1);
+    expect(component.rooms.length).toBe(0); 
+    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/successfully/i));
+    
+
+    expect(component.loadRooms).toHaveBeenCalledWith(component.currentPage);
   });
 
-  it('pagination: should calculate sliding window correctly', () => {
-    component.pageData = { totalPages: 20 } as any;
-    component.currentPage = 15; 
-    const pages = component.getVisiblePages();
-    expect(pages.length).toBe(10);
-    expect(pages).toContain(15);
+  it('should NOT delete room if cancelled', () => {
+    spyOn(window, 'confirm').and.returnValue(false);
+    component.deleteRoom(1);
+    expect(roomsServiceSpy.deleteRoom).not.toHaveBeenCalled();
+  });
+
+  it('should handle error on delete', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    spyOn(window, 'alert');
+    spyOn(console, 'error');
+    roomsServiceSpy.deleteRoom.and.returnValue(throwError(() => new Error('Delete failed')));
+
+    component.deleteRoom(1);
+
+    expect(console.error).toHaveBeenCalled();
+    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/Error/i));
+  });
+  
+  it('pagination logic', () => {
+    component.pageData = { totalPages: 5 } as any;
+    expect(component.getVisiblePages()).toEqual([0, 1, 2, 3, 4]);
+    
+    component.pageData = undefined;
+    expect(component.getVisiblePages()).toEqual([]);
   });
 });

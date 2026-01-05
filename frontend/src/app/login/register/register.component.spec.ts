@@ -41,13 +41,11 @@ describe('RegisterComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  // --- TESTS DE REGISTRO ---
 
   it('should register successfully and redirect to login', () => {
     spyOn(window, 'alert');
     const navigateSpy = spyOn(router, 'navigate');
     
-    // Simulamos respuesta exitosa
     mockLoginService.register.and.returnValue(of({}));
 
     component.onRegister('Test User', 'test@test.com', '1234');
@@ -59,9 +57,9 @@ describe('RegisterComponent', () => {
 
   it('should show specific alert for 409 Conflict (Email Exists)', () => {
     spyOn(window, 'alert');
-    spyOn(console, 'error'); // Silenciar log de error
+    spyOn(console, 'error');
     
-    // Simulamos error 409
+    //409
     const errorResponse = { status: 409 };
     mockLoginService.register.and.returnValue(throwError(() => errorResponse));
 
@@ -74,7 +72,6 @@ describe('RegisterComponent', () => {
     spyOn(window, 'alert');
     spyOn(console, 'error');
     
-    // Simulamos error 500
     const errorResponse = { status: 500 };
     mockLoginService.register.and.returnValue(throwError(() => errorResponse));
 

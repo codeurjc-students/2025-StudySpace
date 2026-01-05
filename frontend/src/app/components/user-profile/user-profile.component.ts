@@ -4,6 +4,7 @@ import { ReservationService } from '../../services/reservation.service';
 import { UserDTO } from '../../dtos/user.dto';
 import { Location } from '@angular/common';
 import { Page } from '../../dtos/page.model';
+import { PaginationUtil } from '../../utils/pagination.util';
 
 @Component({
   selector: 'app-user-profile',
@@ -28,12 +29,10 @@ export class UserProfileComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    // Usamos reloadUser que ahora sí existe en LoginService
     this.loginService.reloadUser().subscribe({
         next: (freshUser: UserDTO | null) => {
           if(freshUser){
             this.user = freshUser;
-            // Usamos optional chaining (?.) para evitar errores si viene null
             this.editData.name = this.user.name;
             this.editData.email = this.user.email;
             this.loadReservations(0);
@@ -59,34 +58,7 @@ export class UserProfileComponent implements OnInit {
   }
 
   getVisiblePages(): number[] {
-    if (!this.pageData) return [];
-
-    const totalPages = this.pageData.totalPages;
-    const maxPagesToShow = 10; 
-
-
-    if (totalPages <= maxPagesToShow) {
-      return Array.from({ length: totalPages }, (_, i) => i);
-    }
-
-    let startPage = this.currentPage - Math.floor(maxPagesToShow / 2);
-    let endPage = this.currentPage + Math.ceil(maxPagesToShow / 2);
-
-    if (startPage < 0) {
-      startPage = 0;
-      endPage = maxPagesToShow;
-    }
-
-    if (endPage > totalPages) {
-      endPage = totalPages;
-      startPage = totalPages - maxPagesToShow;
-    }
-
-    const pages = [];
-    for (let i = startPage; i < endPage; i++) {
-      pages.push(i);
-    }
-    return pages;
+    return PaginationUtil.getVisiblePages(this.pageData, this.currentPage);
   }
 
 
@@ -101,7 +73,6 @@ export class UserProfileComponent implements OnInit {
             
             if (this.user) {
                 this.user.name = updatedUser.name;
-                // Actualizamos también el currentUser del servicio para que la UI global se entere
                 this.loginService.currentUser = this.user;
             }
             this.isEditing = false;

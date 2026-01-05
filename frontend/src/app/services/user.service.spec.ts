@@ -27,6 +27,7 @@ describe('UserService', () => {
     req.flush({});
   });
 
+
   it('should change role to ADMIN', () => {
     service.changeRole(1, true).subscribe();
 

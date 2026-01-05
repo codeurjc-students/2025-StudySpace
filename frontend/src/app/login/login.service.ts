@@ -28,10 +28,8 @@ export class LoginService {
         return; 
     }
 
-    // Si la marca existe, preguntamos al backend.
     this.http.get<UserDTO>(`${BASE_URL}/me`).pipe(
       catchError(error => {
-        // Si el token expiró o es inválido, borramos la marca y devolvemos null
         localStorage.removeItem('is_logged_in'); 
         return of(null); 
       })

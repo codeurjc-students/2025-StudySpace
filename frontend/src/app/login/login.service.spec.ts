@@ -18,7 +18,6 @@ describe('LoginService', () => {
       providers: [ LoginService ]
     });
     
-    // IMPORTANTE: No inyectamos LoginService aquí para poder configurar localStorage antes del constructor en los tests
     httpMock = TestBed.inject(HttpTestingController);
   });
 
@@ -27,16 +26,12 @@ describe('LoginService', () => {
     localStorage.clear();
   });
 
-  // --- 1. TEST INICIALIZACIÓN (Constructor) ---
 
   it('should verify auth on startup if token exists', () => {
-    // 1. Configuramos el entorno ANTES de crear el servicio
     localStorage.setItem('is_logged_in', 'true');
     
-    // 2. Al inyectar, se dispara el constructor -> checkAuth() -> GET
     service = TestBed.inject(LoginService);
 
-    // 3. Esperamos la petición automática del constructor
     const req = httpMock.expectOne('/api/auth/me');
     expect(req.request.method).toBe('GET');
     req.flush(mockUser);
@@ -47,7 +42,7 @@ describe('LoginService', () => {
 
   it('should clear auth if token is invalid on startup', () => {
     localStorage.setItem('is_logged_in', 'true');
-    service = TestBed.inject(LoginService); // Constructor dispara GET
+    service = TestBed.inject(LoginService); 
 
     const req = httpMock.expectOne('/api/auth/me');
     req.flush('Invalid token', { status: 401, statusText: 'Unauthorized' });
@@ -56,22 +51,20 @@ describe('LoginService', () => {
     expect(localStorage.getItem('is_logged_in')).toBeNull();
   });
 
-  // --- 2. LOGIN & LOGOUT ---
+
 
   it('logIn should post to API, then checkAuth (GET), and update state', () => {
-    service = TestBed.inject(LoginService); // Constructor vacío (sin token)
+    service = TestBed.inject(LoginService); 
 
     service.logIn('user', 'pass').subscribe();
 
-    // 1. Esperamos el POST del login
     const reqLogin = httpMock.expectOne('/api/auth/login');
     expect(reqLogin.request.method).toBe('POST');
-    reqLogin.flush({}); // Respondemos al login
+    reqLogin.flush({}); 
 
-    // 2. El tap() del login llama a checkAuth(), que dispara un GET. Debemos gestionarlo.
     const reqMe = httpMock.expectOne('/api/auth/me');
     expect(reqMe.request.method).toBe('GET');
-    reqMe.flush(mockUser); // Respondemos con el usuario
+    reqMe.flush(mockUser); 
 
     expect(service.currentUser).toEqual(mockUser);
     expect(localStorage.getItem('is_logged_in')).toBe('true');
@@ -80,7 +73,6 @@ describe('LoginService', () => {
   it('logOut should post to API and clear state', () => {
     service = TestBed.inject(LoginService); 
     
-    // Simulamos estado logueado
     service.currentUser = mockUser;
     localStorage.setItem('is_logged_in', 'true');
 
@@ -94,7 +86,7 @@ describe('LoginService', () => {
     expect(localStorage.getItem('is_logged_in')).toBeNull();
   });
 
-  // --- 3. OTROS MÉTODOS ---
+
 
   it('updateProfile should put to API and update local observable', () => {
     service = TestBed.inject(LoginService);

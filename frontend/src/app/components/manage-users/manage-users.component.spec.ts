@@ -35,7 +35,7 @@ describe('ManageUsersComponent', () => {
     };
 
     mockLoginService = {
-      currentUser: { id: 999 } // ID que no está en la lista para no filtrar
+      currentUser: { id: 999 } 
     };
 
     await TestBed.configureTestingModule({
@@ -59,7 +59,7 @@ describe('ManageUsersComponent', () => {
   });
 
   it('should handle error when loading users', () => {
-    spyOn(console, 'error'); // Silenciamos el error de consola
+    spyOn(console, 'error'); 
     mockUserService.getUsers.and.returnValue(throwError(() => new Error('Load error')));
     component.loadUsers(1);
     expect(console.error).toHaveBeenCalled();
@@ -97,15 +97,12 @@ describe('ManageUsersComponent', () => {
   it('should handle error when deleting user', () => {
     spyOn(window, 'confirm').and.returnValue(true);
     spyOn(window, 'alert');
-    // CORRECCIÓN CLAVE: Espiamos console.error para que el test runner no lo marque como fallo real
     spyOn(console, 'error'); 
 
-    // Simulamos el error
     mockUserService.deleteUser.and.returnValue(throwError(() => new Error('Delete failed')));
 
     component.deleteUser(mockUser1);
 
-    // Verificamos
     expect(console.error).toHaveBeenCalled(); // Verificamos que se imprimió el error
     expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/Error/)); // Verificamos la alerta
   });

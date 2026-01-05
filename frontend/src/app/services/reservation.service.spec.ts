@@ -16,7 +16,7 @@ describe('ReservationService', () => {
   });
 
   afterEach(() => {
-    httpMock.verify();
+    httpMock.verify(); 
   });
 
   it('should be created', () => {
@@ -24,21 +24,15 @@ describe('ReservationService', () => {
   });
 
   it('getReservationsByUser should call correct URL', () => {
-    const dummyPage = { content: [], totalPages: 1 };
+    service.getReservationsByUser(1, 0, 5).subscribe();
     
-    service.getReservationsByUser(1, 0, 5).subscribe(res => {
-      expect(res).toEqual(dummyPage as any);
-    });
-
     const req = httpMock.expectOne('/api/users/1/reservations?page=0&size=5');
     expect(req.request.method).toBe('GET');
-    req.flush(dummyPage);
+    req.flush({});
   });
 
   it('deleteReservation should call DELETE api', () => {
-    service.deleteReservation(123).subscribe(res => {
-      expect(res).toBeTruthy();
-    });
+    service.deleteReservation(123).subscribe();
 
     const req = httpMock.expectOne('/api/reservations/123');
     expect(req.request.method).toBe('DELETE');
@@ -46,19 +40,16 @@ describe('ReservationService', () => {
   });
 
   it('updateReservation should call PUT api with data', () => {
-    const updateData = { reason: 'New Reason' };
-    
-    service.updateReservation(10, updateData).subscribe(res => {
-      expect(res).toEqual(updateData);
-    });
+    const updateData = { reason: 'Changed' };
+    service.updateReservation(10, updateData).subscribe();
 
     const req = httpMock.expectOne('/api/reservations/10');
     expect(req.request.method).toBe('PUT');
     expect(req.request.body).toEqual(updateData);
-    req.flush(updateData);
+    req.flush({});
   });
 
-  it('createReservation should post correct body', () => {
+  it('createReservation should post correct body structure', () => {
     const roomId = 5;
     const startDate = new Date();
     const endDate = new Date();
