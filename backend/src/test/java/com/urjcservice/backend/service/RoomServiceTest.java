@@ -316,7 +316,7 @@ public class RoomServiceTest {
         Long roomId = 1L;
         LocalDate date = LocalDate.now();
         
-        // Mock devolviendo lista vacía
+        //mock empty list
         when(reservationRepository.findByRoomIdAndDate(eq(roomId), eq(date), any(Pageable.class)))
              .thenReturn(new PageImpl<>(Arrays.asList()));
 
@@ -329,7 +329,7 @@ public class RoomServiceTest {
         
         @SuppressWarnings("unchecked")
         Map<Integer, Boolean> hourlyStatus = (Map<Integer, Boolean>) stats.get("hourlyStatus");
-        // Verificar que ninguna hora está marcada como true
+        //no one is true
         assertFalse(hourlyStatus.values().stream().anyMatch(Boolean::booleanValue));
     }
 
@@ -340,11 +340,9 @@ public class RoomServiceTest {
         LocalDate date = LocalDate.now();
         ZoneId zone = ZoneId.of("Europe/Madrid");
 
-        // Reserva que cubre todo el día
         Reservation r1 = new Reservation();
         r1.setStartDate(Date.from(date.atTime(8, 0).atZone(zone).toInstant()));
         
-        // CAMBIO AQUÍ: Poner 22:00 para que cubra la franja de las 21:00
         r1.setEndDate(Date.from(date.atTime(22, 0).atZone(zone).toInstant())); 
 
         when(reservationRepository.findByRoomIdAndDate(eq(roomId), eq(date), any(Pageable.class)))
@@ -360,7 +358,7 @@ public class RoomServiceTest {
     
     @Test
     void testGetRoomDailyStats_ReservationOutsideBounds_ShouldIgnore() {
-        // GIVEN: Una reserva a las 22:00 (fuera del rango 8-21)
+        // GIVEN: out range 22:00
         Long roomId = 1L;
         LocalDate date = LocalDate.now();
         ZoneId zone = ZoneId.of("Europe/Madrid");
@@ -375,7 +373,7 @@ public class RoomServiceTest {
         // WHEN
         Map<String, Object> stats = roomService.getRoomDailyStats(roomId, date);
 
-        // THEN: No debe contar como ocupada
+        // THEN
         assertEquals(0.0, stats.get("occupiedPercentage"));
     }
 
@@ -386,9 +384,8 @@ public class RoomServiceTest {
 
     @Test
     void testSaveRoomWithNewSoftware() {
-        // Caso donde el software no tiene ID y debe guardarse
         Room room = new Room();
-        Software newSoft = new Software(); // sin ID
+        Software newSoft = new Software(); // without ID
         room.setSoftware(Arrays.asList(newSoft));
 
         when(softwareRepository.save(any(Software.class))).thenReturn(newSoft);

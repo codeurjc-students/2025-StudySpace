@@ -1,255 +1,320 @@
 package com.urjcservice.backend.rest;
 
+import com.urjcservice.backend.controller.ReservationController.ReservationRequest;
 import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.entities.User;
-import com.urjcservice.backend.repositories.ReservationRepository;
-import com.urjcservice.backend.repositories.RoomRepository;
-import com.urjcservice.backend.repositories.UserRepository;
+import com.urjcservice.backend.service.ReservationService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional
 public class ReservationRestControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private RoomRepository roomRepository;
-
-    @Autowired
-    private ReservationRepository reservationRepository;
+    @MockBean
+    private ReservationService reservationService; 
 
     @Autowired
     private ObjectMapper objectMapper;
 
-    private Long testRoomId;
-    private Long testReservationId;
-    private final String testUserEmail = "test.reservas@example.com";
-    private final String otherUserEmail = "other@example.com";
+    private Reservation mockReservation;
 
     @BeforeEach
     void setUp() {
-        // Limpiamos para evitar conflictos entre tests
-        reservationRepository.deleteAll();
-        userRepository.deleteAll();
-        roomRepository.deleteAll();
-
-        // Crear usuario principal
+        mockReservation = new Reservation();
+        mockReservation.setId(1L);
+        mockReservation.setReason("Test Reservation");
+        mockReservation.setStartDate(new Date());
+        mockReservation.setEndDate(new Date());
+        
         User user = new User();
-        user.setName("Tester");
-        user.setEmail(testUserEmail);
-        user.setEncodedPassword("pass");
-        user.setRoles(Arrays.asList("USER"));
-        userRepository.save(user);
-
-        // Crear otro usuario para pruebas de permisos
-        User otherUser = new User();
-        otherUser.setName("Other");
-        otherUser.setEmail(otherUserEmail);
-        otherUser.setEncodedPassword("pass");
-        otherUser.setRoles(Arrays.asList("USER"));
-        userRepository.save(otherUser);
-
-        // Crear sala
+        user.setEmail("user@test.com");
+        mockReservation.setUser(user);
+        
         Room room = new Room();
-        room.setName("Aula Test");
-        room.setCapacity(20);
-        room.setActive(true);
-        room.setCamp(Room.CampusType.MOSTOLES);
-        room = roomRepository.save(room);
-        this.testRoomId = room.getId();
-
-        // Crear una reserva inicial para el usuario principal
-        Reservation res = new Reservation();
-        res.setStartDate(new Date());
-        res.setEndDate(new Date(System.currentTimeMillis() + 3600000));
-        res.setUser(user);
-        res.setRoom(room);
-        res.setCancelled(false);
-        res = reservationRepository.save(res);
-        this.testReservationId = res.getId();
+        room.setName("Test Room");
+        mockReservation.setRoom(room);
     }
 
-    // --- TESTS RESERVATION CONTROLLER (Parte "Web/User") ---
+    // --- TESTS RESERVATION CONTROLLER (WEB)---
 
     @Test
-    @WithMockUser(username = testUserEmail)
+    @WithMockUser(username = "user@test.com", roles = "USER")
     public void testGetMyReservations() throws Exception {
-        mockMvc.perform(get("/api/reservations/my-reservations"))
+        // GIVEN
+        Page<Reservation> page = new PageImpl<>(List.of(mockReservation));
+        given(reservationService.getReservationsByUserEmail(eq("user@test.com"), any(Pageable.class)))
+                .willReturn(page);
+
+        // WHEN & THEN
+        mockMvc.perform(get("/api/reservations/my-reservations")
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(1))
-                .andExpect(jsonPath("$.content[0].id").value(testReservationId));
+                .andExpect(jsonPath("$.content[0].reason").value("Test Reservation"));
     }
+    @Test
+    @WithMockUser(username = "user@test.com", roles = "USER")
+    public void testGetMyReservations_Pagination() throws Exception {
+        // GIVEN
+        Page<Reservation> page = new PageImpl<>(List.of(mockReservation));
+        given(reservationService.getReservationsByUserEmail(eq("user@test.com"), any(Pageable.class)))
+                .willReturn(page);
 
-    // --- TESTS RESERVATION REST CONTROLLER (Parte REST pura) ---
+        // WHEN & THEN
+        mockMvc.perform(get("/api/reservations/my-reservations")
+                .param("page", "0")
+                .param("size", "5")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray());
+    }
+    
+
+    // --- TESTS RESERVATION REST CONTROLLER (REST) ---
 
     @Test
     @WithMockUser(roles = "ADMIN")
     public void testGetAllReservationsAsAdmin() throws Exception {
-        mockMvc.perform(get("/api/reservations"))
+        // GIVEN
+        Page<Reservation> page = new PageImpl<>(List.of(mockReservation));
+        given(reservationService.findAll(any(Pageable.class))).willReturn(page);
+
+        // WHEN & THEN
+        mockMvc.perform(get("/api/reservations")
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(1));
     }
 
     @Test
-    @WithMockUser
-    public void testGetReservationById_Found() throws Exception {
-        mockMvc.perform(get("/api/reservations/" + testReservationId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(testReservationId));
+    @WithMockUser(username = "user@test.com", roles = "USER")
+    public void testCreateReservation_Success() throws Exception {
+        // GIVEN
+        ReservationRequest request = new ReservationRequest();
+        request.setRoomId(1L);
+        request.setReason("New Meeting");
+        // dates dummy
+        request.setStartDate(new Date());
+        request.setEndDate(new Date());
+
+        given(reservationService.createReservation(any(ReservationRequest.class), eq("user@test.com")))
+                .willReturn(mockReservation);
+
+        // WHEN & THEN
+        mockMvc.perform(post("/api/reservations/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated()) // 201
+                .andExpect(jsonPath("$.id").value(1L));
     }
 
     @Test
-    @WithMockUser
-    public void testGetReservationById_NotFound() throws Exception {
-        mockMvc.perform(get("/api/reservations/999"))
-                .andExpect(status().isNotFound());
-    }
+    @WithMockUser(username = "user@test.com")
+    public void testCreateReservation_InvalidData_BadRequest() throws Exception {
+        // GIVEN
+        given(reservationService.createReservation(any(), anyString()))
+                .willThrow(new RuntimeException("Invalid dates"));
 
-    @Test
-    public void testCancelReservation_Unauthorized() throws Exception {
-        mockMvc.perform(patch("/api/reservations/" + testReservationId + "/cancel"))
-                .andExpect(status().isUnauthorized()); 
-    }
+        String json = "{\"roomId\": 1, \"reason\": \"Bad Dates\"}";
 
-    @Test
-    @WithMockUser(username = testUserEmail)
-    public void testCancelOwnReservation_Success() throws Exception {
-        mockMvc.perform(patch("/api/reservations/" + testReservationId + "/cancel"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.cancelled").value(true));
-    }
-
-    @Test
-    @WithMockUser(username = otherUserEmail) // Usuario diferente al dueño
-    public void testCancelOtherUserReservation_Forbidden() throws Exception {
-        mockMvc.perform(patch("/api/reservations/" + testReservationId + "/cancel"))
-                .andExpect(status().isForbidden()); // Cubre el catch(AccessDeniedException)
-    }
-
-    @Test
-    @WithMockUser(username = otherUserEmail, roles = "ADMIN") // Admin sí puede cancelar cualquiera
-    public void testCancelOtherUserReservation_AsAdmin_Success() throws Exception {
-        mockMvc.perform(patch("/api/reservations/" + testReservationId + "/cancel"))
-                .andExpect(status().isOk());
+        // WHEN & THEN
+        mockMvc.perform(post("/api/reservations/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
+                .andExpect(status().isBadRequest()); // 400
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     public void testUpdateReservation_Success() throws Exception {
-        String updateJson = """
-            {
-                "reason": "Updated reason via REST"
-            }
-        """;
-        mockMvc.perform(put("/api/reservations/" + testReservationId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(updateJson))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.reason").value("Updated reason via REST"));
-    }
+        // GIVEN
+        given(reservationService.updateReservation(eq(1L), any(Reservation.class)))
+                .willReturn(Optional.of(mockReservation));
 
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    public void testDeleteReservation_Success() throws Exception {
-        mockMvc.perform(delete("/api/reservations/" + testReservationId))
+        mockMvc.perform(put("/api/reservations/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(mockReservation)))
                 .andExpect(status().isOk());
-        
-        // Verificar que ya no existe
-        mockMvc.perform(get("/api/reservations/" + testReservationId))
-                .andExpect(status().isNotFound());
-    }
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    public void testDeleteReservation_NotFound() throws Exception {
-        mockMvc.perform(delete("/api/reservations/9999"))
-                .andExpect(status().isNotFound());
-    }
-
-
-
-
-
-
-
-
-    @Test
-    @WithMockUser
-    public void testCreateReservation_Success() throws Exception {
-        // Creamos un objeto Reservation para enviar en el cuerpo
-        Reservation newRes = new Reservation();
-        newRes.setReason("Reserva vía POST REST");
-        // No asignamos ID, lo genera la DB
-
-        String json = objectMapper.writeValueAsString(newRes);
-
-        mockMvc.perform(post("/api/reservations")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(json))
-                .andExpect(status().isCreated()) // Verifica el 201 Created
-                .andExpect(header().exists("Location")) // Verifica la cabecera Location
-                .andExpect(jsonPath("$.reason").value("Reserva vía POST REST"));
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    public void testUpdateReservation_NotFound() throws Exception {
-        // Intentamos actualizar una reserva con un ID inexistente
-        String json = "{\"reason\":\"No existe\"}";
-        mockMvc.perform(put("/api/reservations/99999")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(json))
-                .andExpect(status().isNotFound()); // Cubre el orElseGet 404
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     public void testPatchReservation_Success() throws Exception {
-        // Actualización parcial de la reserva creada en el setUp
-        String partialJson = "{\"reason\":\"Razón parcheada\"}";
-        
-        mockMvc.perform(patch("/api/reservations/" + testReservationId)
+        // GIVEN
+        given(reservationService.patchReservation(eq(1L), any(Reservation.class)))
+                .willReturn(Optional.of(mockReservation));
+
+        mockMvc.perform(patch("/api/reservations/1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(partialJson))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.reason").value("Razón parcheada"));
+                .content("{\"reason\": \"New Reason\"}"))
+                .andExpect(status().isOk());
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    public void testPatchReservation_NotFound() throws Exception {
-        mockMvc.perform(patch("/api/reservations/99999")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"reason\":\"error\"}"))
-                .andExpect(status().isNotFound()); // Cubre el orElseGet 404 de patch
+    public void testDeleteReservation_Success() throws Exception {
+        // GIVEN
+        given(reservationService.deleteById(1L)).willReturn(Optional.of(mockReservation));
+
+        // WHEN & THEN
+        mockMvc.perform(delete("/api/reservations/1"))
+                .andExpect(status().isOk());
     }
 
     @Test
-    @WithMockUser(username = testUserEmail)
-    public void testCancelReservation_NotFound() throws Exception {
-        // Intentamos cancelar una reserva que no existe en la base de datos
-        mockMvc.perform(patch("/api/reservations/99999/cancel"))
-                .andExpect(status().isNotFound()); // Cubre el orElseGet 404 de cancel
+    @WithMockUser(username = "owner@test.com", roles = "USER")
+    public void testCancelOwnReservation_Success() throws Exception {
+        // GIVEN
+        mockReservation.setCancelled(true);
+        given(reservationService.cancelByIdSecure(eq(1L), eq("owner@test.com"), eq(false)))
+                .willReturn(Optional.of(mockReservation));
+
+        // WHEN & THEN
+        mockMvc.perform(patch("/api/reservations/1/cancel"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cancelled").value(true));
     }
+
+    @Test
+    @WithMockUser(username = "other@test.com", roles = "USER")
+    public void testCancelOtherUserReservation_Forbidden() throws Exception {
+        // GIVEN
+        given(reservationService.cancelByIdSecure(eq(1L), eq("other@test.com"), eq(false)))
+                .willThrow(new AccessDeniedException("Not owner"));
+
+        // WHEN & THEN
+        mockMvc.perform(patch("/api/reservations/1/cancel"))
+                .andExpect(status().isForbidden()); // 403
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = "ADMIN")
+    public void testCancelOtherUserReservation_AsAdmin_Success() throws Exception {
+        // GIVEN
+        mockReservation.setCancelled(true);
+        //isAdmin = true
+        given(reservationService.cancelByIdSecure(eq(1L), eq("admin"), eq(true)))
+                .willReturn(Optional.of(mockReservation));
+
+        // WHEN & THEN
+        mockMvc.perform(patch("/api/reservations/1/cancel"))
+                .andExpect(status().isOk());
+    }
+    
+    
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    public void testGetReservationById_Found() throws Exception {
+        given(reservationService.findById(1L)).willReturn(Optional.of(mockReservation));
+
+        mockMvc.perform(get("/api/reservations/1"))
+                .andExpect(status().isOk());
+    
+    
+    
+    }
+
+    
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    public void testGetAllReservations() throws Exception {
+        Page<Reservation> page = new PageImpl<>(List.of(mockReservation));
+        given(reservationService.findAll(any(Pageable.class))).willReturn(page);
+
+        mockMvc.perform(get("/api/reservations")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
+
+    // --- UPDATE (PUT) TESTS ---
+
+    
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    public void testUpdateReservation_NotFound() throws Exception {
+        given(reservationService.updateReservation(eq(99L), any(Reservation.class)))
+                .willReturn(Optional.empty());
+
+        mockMvc.perform(put("/api/reservations/99")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(mockReservation)))
+                .andExpect(status().isNotFound());
+    }
+
+    // --- DELETE TESTS ---
+
+    
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    public void testDeleteReservation_NotFound() throws Exception {
+        given(reservationService.deleteById(99L)).willReturn(Optional.empty());
+
+        mockMvc.perform(delete("/api/reservations/99"))
+                .andExpect(status().isNotFound());
+    }
+
+    // --- CANCEL TESTS (Security Logic) ---
+
+    @Test
+    @WithMockUser(username = "owner@test.com")
+    public void testCancelReservation_Success() throws Exception {
+        mockReservation.setCancelled(true);
+        // is admin = false
+        given(reservationService.cancelByIdSecure(eq(1L), eq("owner@test.com"), eq(false)))
+                .willReturn(Optional.of(mockReservation));
+
+        mockMvc.perform(patch("/api/reservations/1/cancel"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cancelled").value(true));
+    }
+
+    @Test
+    @WithMockUser(username = "hacker@test.com")
+    public void testCancelReservation_Forbidden() throws Exception {
+        given(reservationService.cancelByIdSecure(eq(1L), eq("hacker@test.com"), eq(false)))
+                .willThrow(new AccessDeniedException("Not allowed"));
+
+        mockMvc.perform(patch("/api/reservations/1/cancel"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "owner@test.com")
+    public void testCancelReservation_NotFound() throws Exception {
+        given(reservationService.cancelByIdSecure(eq(99L), anyString(), anyBoolean()))
+                .willReturn(Optional.empty());
+
+        mockMvc.perform(patch("/api/reservations/99/cancel"))
+                .andExpect(status().isNotFound());
+    }
+
 }

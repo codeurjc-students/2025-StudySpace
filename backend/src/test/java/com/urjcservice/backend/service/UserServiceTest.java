@@ -165,5 +165,44 @@ public class UserServiceTest {
         assertEquals("keep@test.com", result.get().getEmail());
     }
 
+
+
+
+
+    @Test
+    public void testGetUsers_Paginated() {
+        // GIVEN
+        Pageable pageable = PageRequest.of(0, 5);
+        List<User> users = Arrays.asList(new User(), new User(), new User());
+        Page<User> page = new PageImpl<>(users);
+
+        when(userRepository.findAll(pageable)).thenReturn(page);
+
+        // WHEN
+        Page<User> result = userService.findAll(pageable);
+
+        // THEN
+        assertEquals(3, result.getContent().size());
+        verify(userRepository).findAll(pageable);
+    }
+
+    @Test
+    public void testChangeRole_UserToAdmin() {
+        // GIVEN
+        User user = new User();
+        user.setId(1L);
+        user.setRoles(new ArrayList<>(List.of("USER")));
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        // WHEN
+        Optional<User> result = userService.changeRole(1L, "ADMIN");
+
+        // THEN
+        assertTrue(result.isPresent());
+        assertTrue(result.get().getRoles().contains("ADMIN"));
+    }
+
     
 }

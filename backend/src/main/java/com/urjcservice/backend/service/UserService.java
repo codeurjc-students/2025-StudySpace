@@ -90,16 +90,23 @@ public class UserService {
 
 
     public boolean changePassword(String email, String oldPassword, String newPassword) {
-    return userRepository.findByEmail(email).map(user -> {
-        //passed password match with the actual one
-        if (!passwordEncoder.matches(oldPassword, user.getEncodedPassword())) {
-            return false;
-        }
-        user.setEncodedPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
-        return true;
-    }).orElse(false);
-}
+        return userRepository.findByEmail(email).map(user -> {
+            //passed password match with the actual one
+            if (!passwordEncoder.matches(oldPassword, user.getEncodedPassword())) {
+                return false;
+            }
+            user.setEncodedPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+            return true;
+        }).orElse(false);
+    }
+
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+    public boolean existsByEmail(String email) {
+        return userRepository.findByEmail(email).isPresent();
+    }
 
 
 }

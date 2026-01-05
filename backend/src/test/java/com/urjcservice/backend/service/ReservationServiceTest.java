@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -25,6 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -100,14 +102,13 @@ public class ReservationServiceTest {
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
         when(roomRepository.findById(roomId)).thenReturn(Optional.of(disabledRoom));
 
-        // WHEN & THEN: Esperamos que lance RuntimeException
+        // WHEN & THEN
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
             reservationService.createReservation(request, email);
         });
 
         assertEquals("Reservations are not possible: The classroom is temporarily unavailable.", exception.getMessage());
         
-        // Aseguramos que NUNCA se guardó la reserva
         verify(reservationRepository, never()).save(any(Reservation.class));
     }
     @Test
@@ -148,7 +149,6 @@ public class ReservationServiceTest {
 
         when(reservationRepository.findById(1L)).thenReturn(Optional.of(res));
 
-        // Usuario que no es dueño ni admin
         assertThrows(AccessDeniedException.class, () -> {
             reservationService.cancelByIdSecure(1L, "other@test.com", false);
         });
@@ -175,13 +175,72 @@ public class ReservationServiceTest {
         Room room = new Room(); room.setActive(true);
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(new User()));
         when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
-        // Simulamos que hay un solapamiento
+        //simulate overlaping
         when(reservationRepository.findOverlappingReservations(any(Long.class), any(Date.class), any(Date.class), any(Pageable.class)))
             .thenReturn(new PageImpl<>(Arrays.asList(new Reservation())));
 
         assertThrows(RuntimeException.class, () -> {
             reservationService.createReservation(req, email);
         }, "The room is already reserved");
+    }
+
+
+
+
+
+
+
+
+
+    @Test
+    void testGetReservationsByUserEmail_Success() {
+        // GIVEN
+        String email = "test@user.com";
+        User user = new User();
+        user.setEmail(email);
+        
+        Pageable pageable = PageRequest.of(0, 10);
+        List<Reservation> resList = Arrays.asList(new Reservation(), new Reservation());
+        Page<Reservation> page = new PageImpl<>(resList);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(reservationRepository.findByUser(user, pageable)).thenReturn(page);
+
+        // WHEN
+        Page<Reservation> result = reservationService.getReservationsByUserEmail(email, pageable);
+
+        // THEN
+        assertNotNull(result);
+        assertEquals(2, result.getContent().size());
+        verify(reservationRepository).findByUser(user, pageable);
+    }
+
+    @Test
+    void testCreateReservation_InvalidDates_StartAfterEnd() {
+        // GIVEN
+        ReservationRequest req = new ReservationRequest();
+        req.setRoomId(1L);
+        // start date after the end date
+        req.setStartDate(new Date(System.currentTimeMillis() + 10000)); 
+        req.setEndDate(new Date(System.currentTimeMillis()));     
+
+       assertThrows(RuntimeException.class, () -> {
+            reservationService.createReservation(req, "test@user.com");
+        });
+    }
+    
+    @Test
+    void testFindAll_Paginated() {
+        // GIVEN
+        Pageable pageable = PageRequest.of(1, 5);
+        when(reservationRepository.findAll(pageable)).thenReturn(Page.empty());
+
+        // WHEN
+        Page<Reservation> result = reservationService.findAll(pageable);
+
+        // THEN
+        assertNotNull(result);
+        verify(reservationRepository).findAll(pageable);
     }
 
 } 
