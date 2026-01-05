@@ -79,11 +79,24 @@ export class ManageUsersComponent implements OnInit {
     this.userService.toggleBlock(user.id).subscribe(() => this.loadUsers(this.currentPage));
   }
 
+  
+
   deleteUser(user: UserDTO) {
-    if(confirm(`Are you sure you want to delete ${user.name}? This action cannot be undone.`)) {
-        this.userService.deleteUser(user.id).subscribe(() => this.loadUsers(this.currentPage));
+    if(confirm(`Are you sure you want to delete user ${user.name}?`)) {
+      this.userService.deleteUser(user.id).subscribe({
+        next: () => {
+          this.loadUsers(this.currentPage);
+        },
+        // --- ESTE BLOQUE ES EL QUE FALTABA Y EL QUE ARREGLA EL TEST ---
+        error: (err) => {
+          console.error(err);
+          alert("Error deleting user"); // El test espera encontrar este texto
+        }
+        // --------------------------------------------------------------
+      });
     }
   }
+  
   
   //to see bookings
   viewReservations(user: UserDTO) {

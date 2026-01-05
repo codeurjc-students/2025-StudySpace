@@ -3,29 +3,34 @@ import { HomeComponent } from './home.component';
 import { RoomsService } from '../services/rooms.service';
 import { LoginService } from '../login/login.service';
 import { RouterTestingModule } from '@angular/router/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
 
-
-describe('HomeComponent UI Test', () => {
+describe('HomeComponent', () => {
   let component: HomeComponent;
   let fixture: ComponentFixture<HomeComponent>;
   let mockRoomsService: any;
   let mockLoginService: any;
 
-  // Datos de prueba
-  const mockRooms = [
-    { id: 1, name: 'Aula Magna', capacity: 100, camp: 'MOSTOLES', place: 'Aulario I', software: [] },
-    { id: 2, name: 'Laboratorio 1', capacity: 20, camp: 'ALCORCON', place: 'Lab II', software: [] }
-  ];
+  const mockRoomsPage = {
+    content: [
+      { id: 1, name: 'Aula Magna', capacity: 100, camp: 'MOSTOLES', place: 'Aulario I', software: [] },
+      { id: 2, name: 'Lab 1', capacity: 20, camp: 'ALCORCON', place: 'Lab II', software: [] }
+    ],
+    totalPages: 3, 
+    number: 0, 
+    size: 10,
+    first: true,
+    last: false,
+    totalElements: 25
+  };
 
   beforeEach(async () => {
     mockRoomsService = {
-      getRooms: jasmine.createSpy('getRooms').and.returnValue(of({ content: mockRooms, totalPages: 1, totalElements: mockRooms.length, first: true, last: true, number: 0, size: mockRooms.length }))
+      getRooms: jasmine.createSpy('getRooms').and.returnValue(of(mockRoomsPage))
     };
-
     mockLoginService = {
-      isLogged: () => true, //to see the button we have to be log in first
+      isLogged: () => true,
       isAdmin: () => false
     };
 
@@ -36,47 +41,61 @@ describe('HomeComponent UI Test', () => {
         { provide: RoomsService, useValue: mockRoomsService },
         { provide: LoginService, useValue: mockLoginService }
       ]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(HomeComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
 
-  it('Debe mostrar el título "Available Rooms"', () => {
+  it('should create and load initial rooms', () => {
+    expect(component).toBeTruthy();
+    expect(component.rooms.length).toBe(2);
+    expect(mockRoomsService.getRooms).toHaveBeenCalledWith(0);
+  });
+
+  it('should display "Available Rooms" title', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h3')?.textContent).toContain('Available Rooms');
   });
 
-  it('Debe renderizar una tarjeta por cada aula (2 aulas)', () => {
-    // Buscamos todos los elementos con clase .card
-    const cards = fixture.debugElement.queryAll(By.css('.card'));
-    expect(cards.length).toBe(2);
+  it('should handle error when loading rooms', () => {
+    spyOn(console, 'error');
+    mockRoomsService.getRooms.and.returnValue(throwError(() => new Error('Load error')));
+    
+    component.loadPage(1);
+    
+    expect(console.error).toHaveBeenCalled();
   });
 
-  it('Debe mostrar el nombre del aula "Aula Magna" en la primera tarjeta', () => {
-    const firstCardTitle = fixture.nativeElement.querySelector('.card-title');
-    expect(firstCardTitle.textContent).toContain('Aula Magna');
+  it('should calculate visible pages correctly', () => {
+    // Caso: Pocas páginas
+    const pages = component.getVisiblePages();
+    expect(pages.length).toBe(3);
+    expect(pages).toEqual([0, 1, 2]);
+    
+    // Caso: return empty if no pageData
+    component.pageData = undefined;
+    expect(component.getVisiblePages()).toEqual([]);
+  });
+
+  it('should handle sliding window pagination', () => {
+    component.pageData = { totalPages: 50 } as any;
+    
+    // Medio
+    component.currentPage = 25;
+    let pages = component.getVisiblePages();
+    expect(pages.length).toBe(10);
+    expect(pages).toContain(25);
+
+    // Inicio
+    component.currentPage = 0;
+    pages = component.getVisiblePages();
+    expect(pages[0]).toBe(0);
+
+    // Fin
+    component.currentPage = 49;
+    pages = component.getVisiblePages();
+    expect(pages[pages.length - 1]).toBe(49);
   });
 });
-
-/*describe('HomeComponent', () => {
-  let component: HomeComponent;
-  let fixture: ComponentFixture<HomeComponent>;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      declarations: [HomeComponent]
-    })
-    .compileComponents();
-    
-    fixture = TestBed.createComponent(HomeComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-});*/

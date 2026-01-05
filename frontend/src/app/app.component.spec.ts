@@ -1,16 +1,20 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { AppComponent } from './app.component';
 import { LoginService } from './login/login.service';
-
+import { Router } from '@angular/router';
 
 describe('AppComponent', () => {
+  let component: AppComponent;
+  let fixture: ComponentFixture<AppComponent>;
+  let router: Router;
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [
         RouterTestingModule,
-        HttpClientTestingModule //for backend simuation
+        HttpClientTestingModule // Para que LoginService funcione (simula backend)
       ],
       declarations: [
         AppComponent
@@ -19,49 +23,35 @@ describe('AppComponent', () => {
         LoginService 
       ]
     }).compileComponents();
+
+    fixture = TestBed.createComponent(AppComponent);
+    component = fixture.componentInstance;
+    router = TestBed.inject(Router); // Inyectamos el router para espiarlo
+    fixture.detectChanges();
   });
 
   it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
+    expect(component).toBeTruthy();
   });
 
   it(`should have as title 'frontend'`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('frontend');
+    expect(component.title).toEqual('frontend');
+  });
+
+  // --- NUEVO TEST PARA goToLogIn ---
+  
+  it('goToLogIn should log message and navigate to /login', () => {
+    // 1. Espiamos el método navigate del router
+    const navigateSpy = spyOn(router, 'navigate');
+    
+    // 2. Espiamos console.log para verificar que se llama (y evitar ruido en la terminal)
+    spyOn(console, 'log');
+
+    // 3. Ejecutamos el método
+    component.goToLogIn();
+
+    // 4. Verificaciones
+    expect(console.log).toHaveBeenCalledWith('Navegando a login...');
+    expect(navigateSpy).toHaveBeenCalledWith(['/login']);
   });
 });
-
-/*describe('AppComponent', () => {
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [
-        RouterTestingModule
-      ],
-      declarations: [
-        AppComponent
-      ],
-    }).compileComponents();
-  });
-
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
-  });
-
-  it(`should have as title 'frontend'`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('frontend');
-  });
-
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, frontend');
-  });
-});*/

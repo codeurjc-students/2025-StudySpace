@@ -110,6 +110,8 @@ export class UserProfileComponent implements OnInit {
     });
   }
 
+  
+
   toggleEdit() {
     this.isEditing = !this.isEditing;
     if(this.user) { 
