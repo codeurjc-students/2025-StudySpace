@@ -25,7 +25,7 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
 
     public AuthController(PasswordEncoder passwordEncoder,UserService userService) {
-        //this.userRepository = userRepository;
+        
         this.passwordEncoder = passwordEncoder;
         this.userService = userService;
     }
@@ -46,16 +46,6 @@ public class AuthController {
         public void setPassword(String password) { this.password = password; }
     }
 
-    /*public static class UserUpdateRequest {
-        private String name;
-        private String email;
-
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
-
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-    }*/
 
 
     public static class ChangePasswordRequest {
@@ -68,18 +58,7 @@ public class AuthController {
         public void setNewPassword(String newPassword) { this.newPassword = newPassword; }
     }
 
-    /*@GetMapping("/me")
-    public ResponseEntity<User> me() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        
-        // Fetch user details from the repository
-        return userRepository.findByEmail(auth.getName())
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }*/
+    
    @GetMapping("/me")
     public ResponseEntity<User> getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

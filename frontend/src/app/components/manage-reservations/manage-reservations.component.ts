@@ -57,7 +57,7 @@ export class ManageReservationsComponent implements OnInit {
     if(confirm("Are you sure you want to delete this reservation?")) {
       this.reservationService.deleteReservation(id).subscribe({
         next:() => {
-          alert("Reservation deleted successfully."),
+          alert("Reservation deleted successfully.");
           this.loadReservations(this.currentPage)
         },
         error: () => alert("Error deleting")

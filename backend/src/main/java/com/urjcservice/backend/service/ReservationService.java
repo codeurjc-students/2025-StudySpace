@@ -19,6 +19,7 @@ import java.util.Optional;
 @Service
 public class ReservationService {
 
+    private static final String USER_NOT_FOUND_MSG = "User not found";
     
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
@@ -63,7 +64,7 @@ public class ReservationService {
     }
 
     
-    public Optional<Reservation> cancelById(Long id) { //maybe not used in future CHECK ITTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+    public Optional<Reservation> cancelById(Long id) { 
         return reservationRepository.findById(id).map(res -> {
             res.setCancelled(true); 
             return reservationRepository.save(res);
@@ -126,7 +127,7 @@ public class ReservationService {
 
     public Reservation createReservation(ReservationRequest request, String userEmail) {
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
 
         Room room = roomRepository.findById(request.getRoomId())
                 .orElseThrow(() -> new RuntimeException("Room not found"));
@@ -154,14 +155,14 @@ public class ReservationService {
 
     public Page<Reservation> getReservationsByUserEmail(String email, Pageable pageable) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
         
         return reservationRepository.findByUser(user, pageable);
     }
 
     public Page<Reservation> getReservationsByUserId(Long userId, Pageable pageable) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
         
         return reservationRepository.findByUser(user, pageable);
     }

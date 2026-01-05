@@ -43,15 +43,73 @@
                     🔒 Change Password
                 </button>
 
+                El error que muestra la imagen image_e293be.png en user-profile.component.html es idéntico al anterior: problemas de accesibilidad. Tienes etiquetas <label> para "Current Password" y "New Password" que no están vinculadas a sus respectivos <input>.
+
+Aquí tienes el archivo src/app/components/user-profile/user-profile.component.html corregido.
+
+Cambios realizados:
+Añadido id="currentPassword" al input y for="currentPassword" a su label.
+
+Añadido id="newPassword" al input y for="newPassword" a su label.
+
+Copia y pega este código completo:
+
+HTML
+
+<div class="container mt-5 mb-5" *ngIf="user">
+    
+    <div class="mb-4">
+        <button class="btn btn-outline-secondary d-flex align-items-center gap-2" (click)="goBack()">
+            &laquo; Back
+        </button>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 text-center border-end">
+            <div class="d-flex flex-column align-items-center">
+                <img src="assets/user_placeholder.png" alt="Profile" 
+                     class="rounded-circle img-fluid shadow-sm mb-3" 
+                     style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #f0f2f5;">
+                
+                <div *ngIf="!isEditing" class="d-flex align-items-center gap-2 justify-content-center">
+                    <h3 class="fw-bold mb-0">{{ user.name }}</h3>
+                    <button class="btn btn-sm btn-light rounded-circle p-2 text-secondary" (click)="toggleEdit()" title="Edit Name">
+                        ✏️
+                    </button>
+                </div>
+                
+                <div *ngIf="isEditing" class="mt-2 w-100 px-4 animate-fade-in">
+                    <label for="editName" class="form-label small fw-bold text-muted">Edit Name</label>
+                    <input id="editName" type="text" [(ngModel)]="editData.name" class="form-control mb-2 text-center" placeholder="Name">
+                    
+                    <div class="d-flex justify-content-center gap-2 mt-2">
+                        <button class="btn btn-success btn-sm px-3" (click)="saveProfile()">Save</button>
+                        <button class="btn btn-secondary btn-sm px-3" (click)="toggleEdit()">Cancel</button>
+                    </div>
+                </div>
+
+                <p class="text-muted mt-2 mb-1">{{ user.email }}</p>
+                
+                <span *ngIf="user.roles.includes('ADMIN')" class="badge bg-primary mt-2">ADMINISTRATOR</span>
+                <span *ngIf="!user.roles.includes('ADMIN')" class="badge bg-info text-dark mt-2">USER</span>
+            </div>
+
+            <hr class="my-4 w-75 mx-auto">
+
+            <div class="w-100 px-4">
+                <button class="btn btn-outline-dark w-100 mb-3" (click)="toggleChangePassword()">
+                    🔒 Change Password
+                </button>
+
                 <div *ngIf="isChangingPassword" class="card bg-light border-0 animate-fade-in mb-3">
                     <div class="card-body text-start">
                         <div class="mb-2">
-                            <label class="form-label small">Current Password</label>
-                            <input type="password" [(ngModel)]="passwordData.oldPassword" class="form-control form-control-sm">
+                            <label class="form-label small" for="currentPassword">Current Password</label>
+                            <input type="password" id="currentPassword" [(ngModel)]="passwordData.oldPassword" class="form-control form-control-sm">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small">New Password</label>
-                            <input type="password" [(ngModel)]="passwordData.newPassword" class="form-control form-control-sm">
+                            <label class="form-label small" for="newPassword">New Password</label>
+                            <input type="password" id="newPassword" [(ngModel)]="passwordData.newPassword" class="form-control form-control-sm">
                         </div>
                         <div class="d-grid gap-2">
                             <button class="btn btn-dark btn-sm" (click)="changePassword()">Update</button>
