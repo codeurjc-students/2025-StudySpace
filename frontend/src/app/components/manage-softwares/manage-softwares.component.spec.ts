@@ -4,6 +4,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { SoftwareService } from '../../services/software.service';
 import { of, throwError } from 'rxjs';
+import { PaginationComponent } from '../pagination/pagination.component';
 
 describe('ManageSoftwaresComponent', () => {
   let component: ManageSoftwaresComponent;
@@ -21,7 +22,7 @@ describe('ManageSoftwaresComponent', () => {
     softwareServiceSpy = jasmine.createSpyObj('SoftwareService', ['getAllSoftwares', 'deleteSoftware']);
 
     await TestBed.configureTestingModule({
-      declarations: [ManageSoftwaresComponent],
+      declarations: [ManageSoftwaresComponent, PaginationComponent ],
       imports: [
         HttpClientTestingModule,
         RouterTestingModule

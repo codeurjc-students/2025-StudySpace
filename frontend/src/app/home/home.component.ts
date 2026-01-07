@@ -37,9 +37,9 @@ export class HomeComponent implements OnInit {
   }
 
 
-  getVisiblePages(): number[] {
+  /*getVisiblePages(): number[] {
     return PaginationUtil.getVisiblePages(this.pageData, this.currentPage);
-  }
+  }*/
 
 
 }

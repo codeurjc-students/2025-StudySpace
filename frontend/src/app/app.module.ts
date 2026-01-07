@@ -22,6 +22,7 @@ import { ManageSoftwaresComponent } from './components/manage-softwares/manage-s
 import { SoftwareFormComponent } from './components/software-form/software-form.component';
 import { ManageReservationsComponent } from './components/manage-reservations/manage-reservations.component';
 import { AuthInterceptor } from './security/auth.interceptor';
+import { PaginationComponent } from './components/pagination/pagination.component';
 
 
 
@@ -41,7 +42,8 @@ import { AuthInterceptor } from './security/auth.interceptor';
     RoomFormComponent,
     ManageSoftwaresComponent,
     SoftwareFormComponent,
-    ManageReservationsComponent
+    ManageReservationsComponent,
+    PaginationComponent
   ],
   imports: [
     BrowserModule,

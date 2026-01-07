@@ -21,8 +21,8 @@
                 </div>
                 
                 <div *ngIf="isEditing" class="mt-2 w-100 px-4 animate-fade-in">
-                    <label for="editName" class="form-label small fw-bold text-muted">Edit Name</label>
-                    <input id="editName" type="text" [(ngModel)]="editData.name" class="form-control mb-2 text-center" placeholder="Name">
+                    <label for="uniqueEditName" class="form-label small fw-bold text-muted">Edit Name</label>
+                    <input id="uniqueEditName" type="text" [(ngModel)]="editData.name" class="form-control mb-2 text-center" placeholder="Name">
                     
                     <div class="d-flex justify-content-center gap-2 mt-2">
                         <button class="btn btn-success btn-sm px-3" (click)="saveProfile()">Save</button>
@@ -31,65 +31,6 @@
                 </div>
 
                 <p class="text-muted mt-2 mb-1">{{ user.email }}</p>
-                
-                <span *ngIf="user.roles.includes('ADMIN')" class="badge bg-primary mt-2">ADMINISTRATOR</span>
-                <span *ngIf="!user.roles.includes('ADMIN')" class="badge bg-info text-dark mt-2">USER</span>
-            </div>
-
-            <hr class="my-4 w-75 mx-auto">
-
-            <div class="w-100 px-4">
-                <button class="btn btn-outline-dark w-100 mb-3" (click)="toggleChangePassword()">
-                    🔒 Change Password
-                </button>
-
-                El error que muestra la imagen image_e293be.png en user-profile.component.html es idéntico al anterior: problemas de accesibilidad. Tienes etiquetas <label> para "Current Password" y "New Password" que no están vinculadas a sus respectivos <input>.
-
-Aquí tienes el archivo src/app/components/user-profile/user-profile.component.html corregido.
-
-Cambios realizados:
-Añadido id="currentPassword" al input y for="currentPassword" a su label.
-
-Añadido id="newPassword" al input y for="newPassword" a su label.
-
-Copia y pega este código completo:
-
-HTML
-
-<div class="container mt-5 mb-5" *ngIf="user">
-    
-    <div class="mb-4">
-        <button class="btn btn-outline-secondary d-flex align-items-center gap-2" (click)="goBack()">
-            &laquo; Back
-        </button>
-    </div>
-
-    <div class="row">
-        <div class="col-md-4 text-center border-end">
-            <div class="d-flex flex-column align-items-center">
-                <img src="assets/user_placeholder.png" alt="Profile" 
-                     class="rounded-circle img-fluid shadow-sm mb-3" 
-                     style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #f0f2f5;">
-                
-                <div *ngIf="!isEditing" class="d-flex align-items-center gap-2 justify-content-center">
-                    <h3 class="fw-bold mb-0">{{ user.name }}</h3>
-                    <button class="btn btn-sm btn-light rounded-circle p-2 text-secondary" (click)="toggleEdit()" title="Edit Name">
-                        ✏️
-                    </button>
-                </div>
-                
-                <div *ngIf="isEditing" class="mt-2 w-100 px-4 animate-fade-in">
-                    <label for="editName" class="form-label small fw-bold text-muted">Edit Name</label>
-                    <input id="editName" type="text" [(ngModel)]="editData.name" class="form-control mb-2 text-center" placeholder="Name">
-                    
-                    <div class="d-flex justify-content-center gap-2 mt-2">
-                        <button class="btn btn-success btn-sm px-3" (click)="saveProfile()">Save</button>
-                        <button class="btn btn-secondary btn-sm px-3" (click)="toggleEdit()">Cancel</button>
-                    </div>
-                </div>
-
-                <p class="text-muted mt-2 mb-1">{{ user.email }}</p>
-                
                 <span *ngIf="user.roles.includes('ADMIN')" class="badge bg-primary mt-2">ADMINISTRATOR</span>
                 <span *ngIf="!user.roles.includes('ADMIN')" class="badge bg-info text-dark mt-2">USER</span>
             </div>
@@ -124,84 +65,39 @@ HTML
             <h4 class="mb-4 fw-bold text-primary border-bottom pb-2">Reservation History</h4>
 
             <div class="list-group list-group-flush">
-                
                 <div *ngFor="let res of reservations" class="list-group-item p-3 border-bottom">
                     <div class="d-flex w-100 justify-content-between align-items-center">
-                        
                         <div>
                             <div class="d-flex align-items-center gap-2 mb-1">
                                 <h5 class="mb-0 fw-bold text-dark">
                                     {{ res.room?.name || 'Room #' + res.roomId }}
                                 </h5>
-                                
                                 <span *ngIf="res.cancelled" class="badge bg-secondary">CANCELLED</span>
                                 <span *ngIf="!res.cancelled && isReservationActive(res)" class="badge bg-success">ACTIVE</span>
                                 <span *ngIf="!res.cancelled && !isReservationActive(res)" class="badge bg-light text-dark border">COMPLETED</span>
                             </div>
-
                             <p class="mb-1 text-muted small">
-                                <i class="fa fa-calendar me-1"></i> 
-                                {{ res.startDate | date:'mediumDate' }} 
-                                <span class="mx-1">|</span> 
-                                <i class="fa fa-clock-o me-1"></i>
-                                {{ res.startDate | date:'shortTime' }} - {{ res.endDate | date:'shortTime' }}
+                                <i class="fa fa-calendar me-1"></i> {{ res.startDate | date:'mediumDate' }} <span class="mx-1">|</span> 
+                                <i class="fa fa-clock-o me-1"></i> {{ res.startDate | date:'shortTime' }} - {{ res.endDate | date:'shortTime' }}
                             </p>
-                            
                             <small *ngIf="res.reason" class="text-secondary fst-italic">"{{ res.reason }}"</small>
                         </div>
-
                         <div class="d-flex align-items-center gap-2">
-                            <button *ngIf="isReservationActive(res) && !res.cancelled" 
-                                    class="btn btn-outline-danger btn-sm" 
-                                    (click)="performCancel(res.id)">
-                                🚫 Cancel
-                            </button>
-                            
-                            <button *ngIf="loginService.isAdmin()" 
-                                    class="btn btn-link text-danger btn-sm text-decoration-none" 
-                                    (click)="cancelReservation(res.id)"
-                                    title="Admin Force Delete">
-                                🗑️
-                            </button>
+                            <button *ngIf="isReservationActive(res) && !res.cancelled" class="btn btn-outline-danger btn-sm" (click)="performCancel(res.id)">🚫 Cancel</button>
+                            <button *ngIf="loginService.isAdmin()" class="btn btn-link text-danger btn-sm text-decoration-none" (click)="cancelReservation(res.id)" title="Admin Force Delete">🗑️</button>
                         </div>
-
                     </div>
                 </div>
-
                 <div *ngIf="reservations.length === 0" class="text-center py-5 text-muted bg-light rounded mt-3">
                     <p class="mb-0">No reservations found in this page.</p>
                 </div>
-
             </div>
 
-            <nav aria-label="Page navigation" class="mt-4" *ngIf="pageData && pageData.totalPages > 1">
-        <ul class="pagination justify-content-center">
-            
-            <li class="page-item" [class.disabled]="pageData.first">
-                <a class="page-link" (click)="loadReservations(0)" style="cursor: pointer;">&laquo;&laquo;</a>
-            </li>
-
-            <li class="page-item" [class.disabled]="pageData.first">
-                <a class="page-link" (click)="loadReservations(currentPage - 1)" style="cursor: pointer;">&laquo;</a>
-            </li>
-
-            <li class="page-item" *ngFor="let p of getVisiblePages()" [class.active]="p === currentPage">
-                <a class="page-link" (click)="loadReservations(p)" style="cursor: pointer;">{{ p + 1 }}</a>
-            </li>
-
-            <li class="page-item" [class.disabled]="pageData.last">
-                <a class="page-link" (click)="loadReservations(currentPage + 1)" style="cursor: pointer;">&raquo;</a>
-            </li>
-
-            <li class="page-item" [class.disabled]="pageData.last">
-                <a class="page-link" (click)="loadReservations(pageData.totalPages - 1)" style="cursor: pointer;">&raquo;&raquo;</a>
-            </li>
-
-        </ul>
-        <div class="text-center text-muted mt-2">
-            <small>Showing page {{ currentPage + 1 }} of {{ pageData.totalPages }}</small>
-        </div>
-    </nav>
+            <app-pagination 
+                [pageData]="pageData" 
+                [currentPage]="currentPage" 
+                (pageChange)="loadReservations($event)">
+            </app-pagination>
 
         </div>
     </div>

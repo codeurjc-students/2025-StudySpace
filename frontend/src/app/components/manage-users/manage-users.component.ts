@@ -61,12 +61,11 @@ export class ManageUsersComponent implements OnInit {
         next: () => {
           this.loadUsers(this.currentPage);
         },
-        // --- ESTE BLOQUE ES EL QUE FALTABA Y EL QUE ARREGLA EL TEST ---
+        
         error: (err) => {
           console.error(err);
-          alert("Error deleting user"); // El test espera encontrar este texto
+          alert("Error deleting user"); 
         }
-        // --------------------------------------------------------------
       });
     }
   }

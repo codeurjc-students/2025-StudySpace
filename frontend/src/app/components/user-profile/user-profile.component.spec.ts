@@ -8,6 +8,7 @@ import { ReservationService } from '../../services/reservation.service';
 import { Location } from '@angular/common';
 import { of, throwError } from 'rxjs';
 import { UserDTO } from '../../dtos/user.dto';
+import { PaginationComponent } from '../pagination/pagination.component';
 
 describe('UserProfileComponent', () => {
   let component: UserProfileComponent;
@@ -40,7 +41,7 @@ describe('UserProfileComponent', () => {
     );
 
     await TestBed.configureTestingModule({
-      declarations: [UserProfileComponent],
+      declarations: [UserProfileComponent, PaginationComponent],
       imports: [HttpClientTestingModule, RouterTestingModule, FormsModule],
       providers: [
         { provide: LoginService, useValue: loginServiceSpy },

@@ -6,6 +6,7 @@ import { RoomsService } from '../../services/rooms.service';
 import { of, throwError } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { RoomDTO } from '../../dtos/room.dto';
+import { PaginationComponent } from '../pagination/pagination.component';
 
 describe('ManageRoomsComponent', () => {
   let component: ManageRoomsComponent;
@@ -34,7 +35,7 @@ describe('ManageRoomsComponent', () => {
     roomsServiceSpy = jasmine.createSpyObj('RoomsService', ['getRooms', 'deleteRoom']);
 
     await TestBed.configureTestingModule({
-      declarations: [ManageRoomsComponent],
+      declarations: [ManageRoomsComponent, PaginationComponent],
       imports: [
         HttpClientTestingModule, 
         FormsModule,

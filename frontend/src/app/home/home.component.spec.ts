@@ -5,6 +5,7 @@ import { LoginService } from '../login/login.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
+import { PaginationComponent } from '../components/pagination/pagination.component';
 
 describe('HomeComponent', () => {
   let component: HomeComponent;
@@ -35,7 +36,7 @@ describe('HomeComponent', () => {
     };
 
     await TestBed.configureTestingModule({
-      declarations: [ HomeComponent ],
+      declarations: [ HomeComponent,PaginationComponent ],
       imports: [ RouterTestingModule ],
       providers: [
         { provide: RoomsService, useValue: mockRoomsService },
@@ -68,33 +69,5 @@ describe('HomeComponent', () => {
     expect(console.error).toHaveBeenCalled();
   });
 
-  it('should calculate visible pages correctly', () => {
-    const pages = component.getVisiblePages();
-    expect(pages.length).toBe(3);
-    expect(pages).toEqual([0, 1, 2]);
-    
-    component.pageData = undefined;
-    expect(component.getVisiblePages()).toEqual([]);
-  });
-
-  it('should handle sliding window pagination', () => {
-    component.pageData = { totalPages: 50 } as any;
-    
-    //begining
-    component.currentPage = 25;
-    let pages = component.getVisiblePages();
-    expect(pages.length).toBe(10);
-    expect(pages).toContain(25);
-
-    //middle
-    component.currentPage = 0;
-    pages = component.getVisiblePages();
-    expect(pages[0]).toBe(0);
-
-
-    //end
-    component.currentPage = 49;
-    pages = component.getVisiblePages();
-    expect(pages[pages.length - 1]).toBe(49);
-  });
+  
 });

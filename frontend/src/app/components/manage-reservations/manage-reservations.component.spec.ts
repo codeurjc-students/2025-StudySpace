@@ -7,6 +7,7 @@ import { of, throwError } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
 import { RoomDTO } from '../../dtos/room.dto';
+import { PaginationComponent } from '../pagination/pagination.component';
 
 describe('ManageReservationsComponent', () => {
   let component: ManageReservationsComponent;
@@ -28,7 +29,7 @@ describe('ManageReservationsComponent', () => {
     totalElements: 50
   };
 
-  // CORRECCIÓN: Mock completo según tu RoomDTO
+  
   const mockRooms: RoomDTO[] = [{ 
       id: 101, 
       name: 'Lab 1', 
@@ -36,8 +37,8 @@ describe('ManageReservationsComponent', () => {
       capacity: 20, 
       camp: 'MOSTOLES', 
       place: 'B1',
-      coordenades: '0,0', // Propiedad requerida por DTO
-      software: []        // Propiedad requerida por DTO
+      coordenades: '0,0', 
+      software: []        
   }];
 
   beforeEach(async () => {
@@ -45,7 +46,7 @@ describe('ManageReservationsComponent', () => {
     roomsServiceSpy = jasmine.createSpyObj('RoomsService', ['getRooms']);
 
     await TestBed.configureTestingModule({
-      declarations: [ ManageReservationsComponent ],
+      declarations: [ ManageReservationsComponent, PaginationComponent ],
       imports: [ FormsModule, RouterTestingModule ],
       providers: [
         { provide: ReservationService, useValue: reservationServiceSpy },
@@ -74,7 +75,6 @@ describe('ManageReservationsComponent', () => {
   });
 
   it('should start editing a reservation', () => {
-    // Simulamos una reserva con un objeto room anidado
     const resToEdit = { id: 1, reason: 'Old', room: { id: 101, name: 'Lab 1' } };
     component.startEdit(resToEdit);
 

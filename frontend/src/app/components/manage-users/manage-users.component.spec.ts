@@ -6,6 +6,7 @@ import { of, throwError } from 'rxjs';
 import { RouterTestingModule } from '@angular/router/testing';
 import { FormsModule } from '@angular/forms';
 import { UserDTO } from '../../dtos/user.dto';
+import { PaginationComponent } from '../pagination/pagination.component';
 
 describe('ManageUsersComponent', () => {
   let component: ManageUsersComponent;
@@ -39,7 +40,7 @@ describe('ManageUsersComponent', () => {
     };
 
     await TestBed.configureTestingModule({
-      declarations: [ ManageUsersComponent ],
+      declarations: [ ManageUsersComponent,PaginationComponent ],
       imports: [ RouterTestingModule, FormsModule ],
       providers: [
         { provide: UserService, useValue: mockUserService },
