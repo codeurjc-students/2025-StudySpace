@@ -14,7 +14,8 @@
                     <tr>
                         <th>ID</th>
                         <th>Name</th>
-                        <th>Status</th> <th>Capacity</th>
+                        <th>Status</th> 
+                        <th>Capacity</th>
                         <th>Campus</th>
                         <th class="text-end">Actions</th>
                     </tr>
@@ -55,6 +56,12 @@
             </table>
         </div>
     </div>
+
+    <app-pagination 
+        [pageData]="pageData" 
+        [currentPage]="currentPage" 
+        (pageChange)="loadRooms($event)">
+    </app-pagination>
 
     <div class="mt-4">
         <button routerLink="/admin" class="btn btn-secondary">Back to Admin menu</button>

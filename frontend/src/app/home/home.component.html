@@ -47,14 +47,20 @@
         </div>
     </div>
 
+    <app-pagination 
+        [pageData]="pageData" 
+        [currentPage]="currentPage" 
+        (pageChange)="loadPage($event)">
+    </app-pagination>
+    
     <div *ngIf="loginService.isLogged()" class="text-center mt-5 mb-5">
         <button [routerLink]="['/reservations/create']" class="btn btn-success btn-lg shadow px-5">
             📅 Book a room
         </button>
-        <!-- Admin button-->
+        
         <button *ngIf="loginService.isAdmin()" 
                 [routerLink]="['/admin']" 
-                class="btn btn-dark btn-lg shadow px-5">
+                class="btn btn-dark btn-lg shadow px-5 ms-2">
             ⚙️ Admin Dashboard
         </button>
     </div>

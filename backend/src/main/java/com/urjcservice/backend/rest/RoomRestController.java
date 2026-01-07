@@ -10,6 +10,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
 import java.net.URI;
 import java.time.LocalDate;
@@ -65,8 +68,8 @@ public class RoomRestController {
     }
 
     @GetMapping
-    public List<Room> getAllRooms() {
-        return roomService.findAll();
+    public Page<Room> getAllRooms(@PageableDefault(size = 10) Pageable pageable) {//if frontend dont send size, default 10
+        return roomService.findAll(pageable);
     }
 
     @GetMapping("/{id}")

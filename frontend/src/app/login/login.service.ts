@@ -3,6 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap, of } from 'rxjs';
 import { UserDTO } from '../dtos/user.dto'; 
 import { Router } from '@angular/router';
+import { catchError, map } from 'rxjs/operators';
+
 
 const BASE_URL = '/api/auth';
 
@@ -21,16 +23,29 @@ export class LoginService {
 
   //Check if there's an active session by requesting current user data
   private checkAuth() {
-    this.http.get<UserDTO>(`${BASE_URL}/me`).subscribe({
-      next: (user) => {
+    if (!localStorage.getItem('is_logged_in')) {
+        this.currentUserSubject.next(null);
+        return; 
+    }
+
+    this.http.get<UserDTO>(`${BASE_URL}/me`).pipe(
+      catchError(error => {
+        localStorage.removeItem('is_logged_in'); 
+        return of(null); 
+      })
+    ).subscribe(user => {
+      if (user) {
         console.log("Active session found:", user.name);
         this.currentUserSubject.next(user);
-      },
-      error: () => {
-        //401 if no cookie/session
+      } else {
         this.currentUserSubject.next(null);
       }
     });
+  }
+
+  //Check if AuthToken cookie exists
+  private hasAuthToken(): boolean {
+    return document.cookie.split(';').some(c => c.trim().startsWith('AuthToken='));
   }
 
   //LOGIN
@@ -38,6 +53,7 @@ export class LoginService {
     return this.http.post<any>(`${BASE_URL}/login`, { username, password: pass }).pipe(
       tap(() => {
         //ask for current user data after login
+        localStorage.setItem('is_logged_in', 'true');
         this.checkAuth(); 
       })
     );
@@ -89,8 +105,13 @@ export class LoginService {
     return this.currentUserSubject.value?.roles?.includes('ADMIN') || false;
   }
   
-  reloadUser(): Observable<UserDTO> {
-      return this.http.get<UserDTO>(`${BASE_URL}/me`);
+  
+  reloadUser(): Observable<UserDTO | null> {
+      return this.http.get<UserDTO>(`${BASE_URL}/me`).pipe(
+        catchError(error => {
+          return of(null);
+        })
+      );
   }
 
 
@@ -105,6 +126,7 @@ export class LoginService {
 
   
   private finalizeLogout() {
+    localStorage.removeItem('is_logged_in');
     this.currentUserSubject.next(null);
     this.router.navigate(['/']);
   }

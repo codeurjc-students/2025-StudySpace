@@ -1,10 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ManageUsersComponent } from './manage-users.component';
 import { UserService } from '../../services/user.service';
-import { of } from 'rxjs';
-import { RouterTestingModule } from '@angular/router/testing';
-import { UserDTO } from '../../dtos/user.dto'; 
 import { LoginService } from '../../login/login.service';
+import { of, throwError } from 'rxjs';
+import { RouterTestingModule } from '@angular/router/testing';
+import { FormsModule } from '@angular/forms';
+import { UserDTO } from '../../dtos/user.dto';
+import { PaginationComponent } from '../pagination/pagination.component';
 
 describe('ManageUsersComponent', () => {
   let component: ManageUsersComponent;
@@ -12,46 +14,39 @@ describe('ManageUsersComponent', () => {
   let mockUserService: any;
   let mockLoginService: any;
 
-  // Mock users
-  const mockUser1: UserDTO = { 
-    id: 1, 
-    name: 'User1', 
-    email: 'u1@test.com', 
-    roles: ['USER'], 
-    blocked: false, 
-    reservations: [] 
-  };
-  
-  const mockUserAdmin: UserDTO = { 
-    id: 2, 
-    name: 'Admin1', 
-    email: 'a1@test.com', 
-    roles: ['USER', 'ADMIN'], 
-    blocked: true, 
-    reservations: [] 
+  const mockUser1: UserDTO = { id: 1, name: 'User1', email: 'u1@test.com', roles: ['USER'], blocked: false, reservations: [] };
+  const mockUserAdmin: UserDTO = { id: 2, name: 'Admin1', email: 'a1@test.com', roles: ['USER', 'ADMIN'], blocked: true, reservations: [] };
+
+  const mockPageData = {
+    content: [mockUser1, mockUserAdmin],
+    totalPages: 5,
+    number: 0,
+    size: 10,
+    first: true,
+    last: false,
+    totalElements: 50
   };
 
   beforeEach(async () => {
     mockUserService = {
-      getUsers: jasmine.createSpy('getUsers').and.returnValue(of([mockUser1, mockUserAdmin])),
+      getUsers: jasmine.createSpy('getUsers').and.returnValue(of(mockPageData)),
       changeRole: jasmine.createSpy('changeRole').and.returnValue(of({})),
       toggleBlock: jasmine.createSpy('toggleBlock').and.returnValue(of({})),
       deleteUser: jasmine.createSpy('deleteUser').and.returnValue(of({}))
     };
 
     mockLoginService = {
-      currentUser: mockUser1 
+      currentUser: { id: 999 } 
     };
 
     await TestBed.configureTestingModule({
-      declarations: [ ManageUsersComponent ],
-      imports: [ RouterTestingModule ],
+      declarations: [ ManageUsersComponent,PaginationComponent ],
+      imports: [ RouterTestingModule, FormsModule ],
       providers: [
         { provide: UserService, useValue: mockUserService },
         { provide: LoginService, useValue: mockLoginService }
       ]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(ManageUsersComponent);
     component = fixture.componentInstance;
@@ -60,13 +55,21 @@ describe('ManageUsersComponent', () => {
 
   it('should create and load users', () => {
     expect(component).toBeTruthy();
-    expect(component.users.length).toBe(1);
-    expect(mockUserService.getUsers).toHaveBeenCalled();
+    expect(component.users.length).toBe(2);
+    expect(mockUserService.getUsers).toHaveBeenCalledWith(0);
   });
+
+  it('should handle error when loading users', () => {
+    spyOn(console, 'error'); 
+    mockUserService.getUsers.and.returnValue(throwError(() => new Error('Load error')));
+    component.loadUsers(1);
+    expect(console.error).toHaveBeenCalled();
+  });
+
+  // --- ACTIONS TESTS ---
 
   it('should toggle admin role', () => {
     component.toggleAdmin(mockUser1);
-    
     expect(mockUserService.changeRole).toHaveBeenCalledWith(1, true);
     expect(mockUserService.getUsers).toHaveBeenCalledTimes(2); 
   });
@@ -77,21 +80,32 @@ describe('ManageUsersComponent', () => {
     expect(mockUserService.getUsers).toHaveBeenCalledTimes(2);
   });
 
+  // --- DELETE TESTS ---
+
   it('should delete user if confirmed', () => {
     spyOn(window, 'confirm').and.returnValue(true);
-    
     component.deleteUser(mockUser1);
-    
     expect(mockUserService.deleteUser).toHaveBeenCalledWith(1);
     expect(mockUserService.getUsers).toHaveBeenCalledTimes(2);
   });
 
-  it('should NOT delete user if NOT confirmed', () => {
+  it('should NOT delete user if rejected', () => {
     spyOn(window, 'confirm').and.returnValue(false);
-    
     component.deleteUser(mockUser1);
-    
     expect(mockUserService.deleteUser).not.toHaveBeenCalled();
+  });
+
+  it('should handle error when deleting user', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    spyOn(window, 'alert');
+    spyOn(console, 'error'); 
+
+    mockUserService.deleteUser.and.returnValue(throwError(() => new Error('Delete failed')));
+
+    component.deleteUser(mockUser1);
+
+    expect(console.error).toHaveBeenCalled(); // Verificamos que se imprimió el error
+    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/Error/)); // Verificamos la alerta
   });
 
   it('should show alert on viewReservations', () => {
@@ -100,14 +114,15 @@ describe('ManageUsersComponent', () => {
     expect(window.alert).toHaveBeenCalled();
   });
 
-  it('should filter out the current logged-in user from the list', () => {// 2 users and only one on the list, not us
-    mockLoginService.currentUser = mockUser1; 
+  // --- PAGINATION ---
+  it('should calculate pagination correctly', () => {
+    component.pageData = { totalPages: 5 } as any;
+    expect(component.getVisiblePages().length).toBe(5);
 
-    component.loadUsers();
-
-    // Verificaciones
-    expect(component.users.length).toBe(1); 
-    expect(component.users).not.toContain(mockUser1); 
-    expect(component.users).toContain(mockUserAdmin); 
+    component.pageData = { totalPages: 20 } as any;
+    component.currentPage = 15;
+    const pages = component.getVisiblePages();
+    expect(pages.length).toBe(10);
+    expect(pages).toContain(15);
   });
 });

@@ -56,10 +56,18 @@
                             </div>
                         </td>
                     </tr>
+                    <tr *ngIf="users.length === 0">
+                         <td colspan="4" class="text-center py-3 text-muted">No users found on this page.</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
     </div>
+    <app-pagination 
+        [pageData]="pageData" 
+        [currentPage]="currentPage" 
+        (pageChange)="loadUsers($event)">
+    </app-pagination>
     
     <div class="mt-4">
         <button routerLink="/admin" class="btn btn-secondary">Back to Menu</button>

@@ -1,60 +1,125 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ManageRoomsComponent } from './manage-rooms.component';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { RouterTestingModule } from '@angular/router/testing';
 import { RoomsService } from '../../services/rooms.service';
-import { RouterTestingModule } from '@angular/router/testing'; 
-import { of } from 'rxjs';
-import { By } from '@angular/platform-browser';
+import { of, throwError } from 'rxjs';
+import { FormsModule } from '@angular/forms';
+import { RoomDTO } from '../../dtos/room.dto';
+import { PaginationComponent } from '../pagination/pagination.component';
 
 describe('ManageRoomsComponent', () => {
   let component: ManageRoomsComponent;
   let fixture: ComponentFixture<ManageRoomsComponent>;
+  let roomsServiceSpy: jasmine.SpyObj<RoomsService>;
 
-  // Mock for service
-  const mockRoomsService = {
-    getRooms: () => of([
-      { id: 1, name: 'Aula Activa', capacity: 20, camp: 'MOSTOLES', active: true },
-      { id: 2, name: 'Aula Desactivada', capacity: 30, camp: 'ALCORCON', active: false }
-    ]),
-    deleteRoom: (id: number) => of({}) 
+  const mockRoom: RoomDTO = { 
+    id: 1, 
+    name: 'Lab 1', 
+    capacity: 20, 
+    camp: 'Móstoles', 
+    place: 'Edificio 1', 
+    coordenades: '', 
+    active: true, 
+    software: [] 
+  };
+
+  const mockPage = {
+    content: [mockRoom],
+    totalPages: 3,
+    number: 0,
+    size: 10
   };
 
   beforeEach(async () => {
+    roomsServiceSpy = jasmine.createSpyObj('RoomsService', ['getRooms', 'deleteRoom']);
+
     await TestBed.configureTestingModule({
-      declarations: [ ManageRoomsComponent ],
-      imports: [ RouterTestingModule ], 
+      declarations: [ManageRoomsComponent, PaginationComponent],
+      imports: [
+        HttpClientTestingModule, 
+        FormsModule,
+        RouterTestingModule
+      ],
       providers: [
-        { provide: RoomsService, useValue: mockRoomsService }
+        { provide: RoomsService, useValue: roomsServiceSpy }
       ]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(ManageRoomsComponent);
     component = fixture.componentInstance;
+    
+    roomsServiceSpy.getRooms.and.returnValue(of(mockPage as any));
+    
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it('should create and load rooms on init', () => {
     expect(component).toBeTruthy();
-    expect(component.rooms.length).toBe(2);
+    expect(roomsServiceSpy.getRooms).toHaveBeenCalledWith(0);
+    expect(component.rooms.length).toBe(1);
   });
 
-  it('should identify active and inactive rooms correctly', () => {
-    const activeRoom = component.rooms.find(r => r.id === 1);
-    const inactiveRoom = component.rooms.find(r => r.id === 2);
+  it('should handle error when loading rooms', () => {
+    spyOn(console, 'error');
+    roomsServiceSpy.getRooms.and.returnValue(throwError(() => new Error('Error loading')));
+    
+    component.loadRooms(1);
+    
+    expect(console.error).toHaveBeenCalled();
+  });
 
-    expect(activeRoom?.active).toBeTrue();
-    expect(inactiveRoom?.active).toBeFalse();
+  it('should delete room if confirmed', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    spyOn(window, 'alert');
+    roomsServiceSpy.deleteRoom.and.returnValue(of({}));
+
+    spyOn(component, 'loadRooms'); 
+
+    component.rooms = [{ 
+        id: 1, 
+        name: 'To Delete', 
+        capacity: 10, 
+        camp: 'Móstoles', 
+        place: '', 
+        active: true, 
+        coordenades: '', 
+        software: [] 
+    }];
+    
+    component.deleteRoom(1);
+
+    expect(roomsServiceSpy.deleteRoom).toHaveBeenCalledWith(1);
+    expect(component.rooms.length).toBe(0); 
+    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/successfully/i));
+    
+
+    expect(component.loadRooms).toHaveBeenCalledWith(component.currentPage);
+  });
+
+  it('should NOT delete room if cancelled', () => {
+    spyOn(window, 'confirm').and.returnValue(false);
+    component.deleteRoom(1);
+    expect(roomsServiceSpy.deleteRoom).not.toHaveBeenCalled();
+  });
+
+  it('should handle error on delete', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    spyOn(window, 'alert');
+    spyOn(console, 'error');
+    roomsServiceSpy.deleteRoom.and.returnValue(throwError(() => new Error('Delete failed')));
+
+    component.deleteRoom(1);
+
+    expect(console.error).toHaveBeenCalled();
+    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/Error/i));
   });
   
-  //verify CSS
-  it('should apply table-secondary class to inactive rows', () => {
-      const rows = fixture.debugElement.queryAll(By.css('tr'));
-      
-      fixture.detectChanges();
-      
-      // Verify there is bg-danger (Disabled)
-      const disabledBadge = fixture.debugElement.query(By.css('.badge.bg-danger'));
-      expect(disabledBadge).toBeTruthy();
-      expect(disabledBadge.nativeElement.textContent).toContain('Disabled');
+  it('pagination logic', () => {
+    component.pageData = { totalPages: 5 } as any;
+    expect(component.getVisiblePages()).toEqual([0, 1, 2, 3, 4]);
+    
+    component.pageData = undefined;
+    expect(component.getVisiblePages()).toEqual([]);
   });
 });

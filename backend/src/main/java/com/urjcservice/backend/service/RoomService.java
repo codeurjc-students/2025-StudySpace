@@ -6,8 +6,9 @@ import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.repositories.ReservationRepository;
 import com.urjcservice.backend.repositories.RoomRepository;
 import com.urjcservice.backend.repositories.SoftwareRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,8 +36,8 @@ public class RoomService {
         this.reservationRepository = reservationRepository;
     }
 
-    public List<Room> findAll() {
-        return roomRepository.findAll();
+    public Page<Room> findAll(Pageable pageable) {
+        return roomRepository.findAll(pageable);
     }
 
     public Room save(Room room) {
@@ -180,7 +181,7 @@ public class RoomService {
 
 
     public Map<String, Object> getRoomDailyStats(Long roomId, LocalDate date) {
-        List<Reservation> reservations = reservationRepository.findByRoomIdAndDate(roomId, date);
+        List<Reservation> reservations = reservationRepository.findByRoomIdAndDate(roomId, date,Pageable.unpaged()).getContent();//check itttttttttttt
         
         // Map shorted by hours (8:00 to 21:00) -> true/false (occupied/free)
         Map<Integer, Boolean> hourlyStatus = new TreeMap<>();

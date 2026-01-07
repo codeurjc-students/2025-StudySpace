@@ -3,6 +3,7 @@ package com.urjcservice.backend.controller.auth;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -18,7 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType; // Importación para MediaType
+import org.springframework.http.MediaType; 
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -38,8 +39,6 @@ public class AuthControllerTest {
     @MockBean
     private UserService userService;
 
-    @MockBean
-    private UserRepository userRepository;
 
     @Test
     @WithMockUser(username = "carlos@urjc.es")
@@ -64,7 +63,7 @@ public class AuthControllerTest {
     public void testMe_Authenticated() throws Exception {
         User user = new User();
         user.setEmail("test@test.com");
-        when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(user));
+        when(userService.findByEmail("test@test.com")).thenReturn(Optional.of(user));
 
         mockMvc.perform(get("/api/auth/me"))
                 .andExpect(status().isOk())
@@ -73,7 +72,7 @@ public class AuthControllerTest {
 
     @Test
     public void testRegister_Success() throws Exception {
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+        when(userService.existsByEmail(anyString())).thenReturn(false);
         
         String json = "{\"name\":\"Carlos\",\"email\":\"c@c.com\",\"password\":\"123\"}";
         
@@ -85,7 +84,7 @@ public class AuthControllerTest {
 
     @Test
     public void testRegister_Conflict() throws Exception {
-        when(userRepository.findByEmail("c@c.com")).thenReturn(Optional.of(new User()));
+        when(userService.existsByEmail("c@c.com")).thenReturn(true);
         
         String json = "{\"name\":\"Carlos\",\"email\":\"c@c.com\",\"password\":\"123\"}";
         
@@ -127,13 +126,17 @@ public class AuthControllerTest {
     @Test
     @WithMockUser(username = "test@test.com")
     public void testMe_Authenticated_Success() throws Exception {
-        User user = new User();
-        user.setEmail("test@test.com");
-        when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(user));
+        User mockUser = new User();
+        mockUser.setName("Test User");
+        mockUser.setEmail("test@test.com");
 
-        mockMvc.perform(get("/api/auth/me"))
+        // GIVEN
+        given(userService.findByEmail("test@test.com")).willReturn(Optional.of(mockUser));
+
+        mockMvc.perform(get("/api/auth/me")
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value("test@test.com"));
+                .andExpect(jsonPath("$.name").value("Test User"));
     }
 
     @Test
@@ -145,7 +148,7 @@ public class AuthControllerTest {
     @Test
     @WithMockUser(username = "missing@test.com")
     public void testMe_UserNotFound_Returns404() throws Exception {
-        when(userRepository.findByEmail("missing@test.com")).thenReturn(Optional.empty());
+        when(userService.findByEmail("missing@test.com")).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/auth/me"))
                 .andExpect(status().isNotFound());
@@ -155,7 +158,7 @@ public class AuthControllerTest {
 
     @Test
     public void testRegister_Conflict_EmailExists() throws Exception {
-        when(userRepository.findByEmail("c@c.com")).thenReturn(Optional.of(new User()));
+        when(userService.existsByEmail("c@c.com")).thenReturn(true);
         
         String json = "{\"name\":\"Carlos\",\"email\":\"c@c.com\",\"password\":\"123\"}";
         
@@ -166,22 +169,24 @@ public class AuthControllerTest {
     }
 
 
-    @Test
-    @WithMockUser(username = "user@test.com")
+   @Test
+    @WithMockUser(username = "test@test.com")
     public void testUpdateMe_Success() throws Exception {
-        User user = new User();
-        user.setName("Old Name");
-        when(userRepository.findByEmail("user@test.com")).thenReturn(Optional.of(user));
+        User existingUser = new User();
+        existingUser.setName("Old Name");
+        existingUser.setEmail("test@test.com");
 
-        String json = "{\"name\":\"New Name\"}";
+        given(userService.findByEmail("test@test.com")).willReturn(Optional.of(existingUser));
+
+        String updateJson = "{\"name\": \"Updated Name\"}";
 
         mockMvc.perform(put("/api/auth/me")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json))
+                .content(updateJson))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("New Name"));
-        
-        verify(userRepository).save(any(User.class));
+                .andExpect(jsonPath("$.name").value("Updated Name"));
+
+        verify(userService).save(any(User.class));
     }
 
     @Test
@@ -189,7 +194,7 @@ public class AuthControllerTest {
     public void testUpdateMe_EmptyName_NoUpdate() throws Exception {
         User user = new User();
         user.setName("Original Name");
-        when(userRepository.findByEmail("user@test.com")).thenReturn(Optional.of(user));
+        when(userService.findByEmail("user@test.com")).thenReturn(Optional.of(user));
 
         String json = "{\"name\":\"\"}"; 
 
@@ -257,7 +262,7 @@ public class AuthControllerTest {
     public void testUpdateMe_NullName_DoesNotUpdate() throws Exception {
         User user = new User();
         user.setName("Original Name");
-        when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(user));
+        when(userService.findByEmail("test@test.com")).thenReturn(Optional.of(user));
 
         
         String json = "{\"name\": null, \"email\": \"new@email.com\"}";
@@ -268,7 +273,7 @@ public class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Original Name")); 
         
-        verify(userRepository).save(user);
+        verify(userService).save(user);
     }
 
     @Test
@@ -276,7 +281,7 @@ public class AuthControllerTest {
     public void testUpdateMe_EmptyName_DoesNotUpdate() throws Exception {
         User user = new User();
         user.setName("Original Name");
-        when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(user));
+        when(userService.findByEmail("test@test.com")).thenReturn(Optional.of(user));
 
         String json = "{\"name\": \"\", \"email\": \"new@email.com\"}";
 
@@ -287,7 +292,70 @@ public class AuthControllerTest {
                 .andExpect(jsonPath("$.name").value("Original Name")); 
     }
 
+       
+
+
+
+
+
+
+   
     
+    @Test
+    public void testLogin_Failure_WrongPassword() throws Exception {
+        
+        String loginJson = """
+            { "username": "admin@studyspace.com", "password": "WRONG_PASSWORD" }
+        """;
+
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(loginJson))
+                .andExpect(status().isUnauthorized()); // O 401/403
+    }
+
+
+
+
+
+
+
+
+
+
+
+    
+
+    @Test
+    public void testRegister_DuplicateEmail_ShouldFail() throws Exception {
+        String duplicateJson = """
+            {
+                "name": "Dupe",
+                "email": "exists@test.com",
+                "password": "pass"
+            }
+        """;
+
+        // GIVEN
+        given(userService.existsByEmail("exists@test.com")).willReturn(true);
+
+        // WHEN & THEN: 400 Bad Request
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(duplicateJson))
+                .andExpect(status().isConflict()); 
+    }
+
+    
+
+    
+    
+    @Test
+    public void testMe_Unauthenticated() throws Exception {
+        mockMvc.perform(get("/api/auth/me")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
 
 
 }

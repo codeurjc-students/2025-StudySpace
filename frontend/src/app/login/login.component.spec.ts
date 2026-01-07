@@ -3,67 +3,121 @@ import { LoginComponent } from './login.component';
 import { LoginService } from './login.service';
 import { FormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
-import { of } from 'rxjs';
-import { By } from '@angular/platform-browser';
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { of, throwError } from 'rxjs';
+import { NgbModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { Router, ActivatedRoute } from '@angular/router';
 
-
-describe('LoginComponent UI Test', () => {
+describe('LoginComponent', () => {
   let component: LoginComponent;
   let fixture: ComponentFixture<LoginComponent>;
   let mockLoginService: any;
+  let mockModalService: any;
+  let router: Router;
+  let activatedRoute: ActivatedRoute;
 
   beforeEach(async () => {
-    //mock the LoginService
     mockLoginService = {
-      isLogged: () => false, 
-      logIn: jasmine.createSpy('logIn').and.returnValue(of({})) 
+      isLogged: () => false,
+      logIn: jasmine.createSpy('logIn'),
+      logOut: jasmine.createSpy('logOut')
     };
+
+    mockModalService = jasmine.createSpyObj('NgbModal', ['open']);
 
     await TestBed.configureTestingModule({
       declarations: [ LoginComponent ],
       imports: [ 
-        FormsModule,        // for [(ngModel)]
-        RouterTestingModule, // for routerLink
+        FormsModule,
+        RouterTestingModule.withRoutes([]), 
         NgbModule 
       ],
       providers: [
-        { provide: LoginService, useValue: mockLoginService }
+        { provide: LoginService, useValue: mockLoginService },
+        { provide: NgbModal, useValue: mockModalService },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { queryParams: {} } }
+        }
       ]
     })
     .compileComponents();
 
     fixture = TestBed.createComponent(LoginComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges(); // starts the ngOnInit
+    router = TestBed.inject(Router);
+    activatedRoute = TestBed.inject(ActivatedRoute);
+    fixture.detectChanges();
   });
 
-  it('Debe mostrar el formulario de login cuando no está logueado', () => {
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h3')?.textContent).toContain('Please Log In');
+  it('should create', () => {
+    expect(component).toBeTruthy();
   });
 
-  it('Debe llamar a logIn() cuando el usuario pulsa el botón', () => {
-    const usernameInput = fixture.debugElement.query(By.css('input[name="username"]')).nativeElement;
-    const passwordInput = fixture.debugElement.query(By.css('input[name="password"]')).nativeElement;
-    const loginButton = fixture.debugElement.query(By.css('button[type="submit"]')).nativeElement;
 
-    //fill the form like we are the user
-    usernameInput.value = 'admin@test.com';
-    usernameInput.dispatchEvent(new Event('input')); //to call angular change detection
-
-    passwordInput.value = '1234';
-    passwordInput.dispatchEvent(new Event('input'));
-
-    fixture.detectChanges(); 
-
+  it('Login Success: should navigate to HOME if NO returnUrl', () => {
+    const navigateSpy = spyOn(router, 'navigate');
+    mockLoginService.logIn.and.returnValue(of({ success: true }));
     
-    loginButton.click();
+    activatedRoute.snapshot.queryParams = {};
 
-    //verify
-    expect(mockLoginService.logIn).toHaveBeenCalledWith('admin@test.com', '1234');
+    component.logIn('user', 'pass');
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/']);
+  });
+
+  it('Login Success: should navigate to RETURN URL if present', () => {
+    const navigateByUrlSpy = spyOn(router, 'navigateByUrl');
+    mockLoginService.logIn.and.returnValue(of({ success: true }));
+
+    activatedRoute.snapshot.queryParams = { returnUrl: '/admin/users' };
+
+    component.logIn('user', 'pass');
+
+    expect(navigateByUrlSpy).toHaveBeenCalledWith('/admin/users');
+  });
+
+
+  it('Login Error 401 (LOCKED): should show Access Denied alert', () => {
+    spyOn(window, 'alert');
+    spyOn(console, 'error'); // Silenciar log
+    const navigateSpy = spyOn(router, 'navigate');
+
+    const errorResponse = { status: 401, error: { message: 'User account is LOCKED' } };
+    mockLoginService.logIn.and.returnValue(throwError(() => errorResponse));
+
+    component.logIn('lockedUser', 'pass');
+
+    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/ACCESS DENIED/));
+    expect(mockLoginService.logOut).toHaveBeenCalled();
+    expect(navigateSpy).toHaveBeenCalledWith(['/']);
+  });
+
+  it('Login Error 401 (Bad Credentials): should show Login Failed alert', () => {
+    spyOn(window, 'alert');
+    spyOn(console, 'error');
+    const navigateSpy = spyOn(router, 'navigate');
+
+    // 401 
+    const errorResponse = { status: 401, error: { message: 'Bad credentials' } };
+    mockLoginService.logIn.and.returnValue(throwError(() => errorResponse));
+
+    component.logIn('user', 'wrongpass');
+
+    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/Login failed/));
+    expect(mockLoginService.logOut).toHaveBeenCalled();
+    expect(navigateSpy).toHaveBeenCalledWith(['/']);
+  });
+
+  it('Login Error Other (e.g. 500): should open Error Modal', () => {
+    spyOn(console, 'error');
+    
+    //500
+    const errorResponse = { status: 500, message: 'Server error' };
+    mockLoginService.logIn.and.returnValue(throwError(() => errorResponse));
+
+    component.logIn('user', 'pass');
+
+    // Verify
+    expect(mockModalService.open).toHaveBeenCalledWith(component.loginErrorModal);
   });
 });
-
-
-

@@ -4,8 +4,9 @@ import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.entities.Software;
 import com.urjcservice.backend.repositories.RoomRepository;
 import com.urjcservice.backend.repositories.SoftwareRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,8 +25,8 @@ public class SoftwareService {
         this.roomRepository = roomRepository;
     }
 
-    public List<Software> findAll() {
-        return softwareRepository.findAll();
+    public Page<Software> findAll(Pageable pageable) {
+        return softwareRepository.findAll(pageable);
     }
 
     public Software save(Software software) {
@@ -75,4 +76,6 @@ public class SoftwareService {
             return softwareRepository.save(existingSoftware);
         });
     }
+
+    
 }

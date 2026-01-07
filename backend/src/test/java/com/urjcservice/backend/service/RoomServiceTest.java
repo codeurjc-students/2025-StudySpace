@@ -17,6 +17,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Page;
 
 import java.time.LocalDate; 
 import java.time.ZoneId;    
@@ -62,9 +66,9 @@ public class RoomServiceTest {
 
     @Test
     public void testFindAll() {
-        when(roomRepository.findAll()).thenReturn(Arrays.asList(new Room(), new Room()));
-        List<Room> result = roomService.findAll();
-        assertEquals(2, result.size());
+        when(roomRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Arrays.asList(new Room(), new Room())));
+        Page<Room> result = roomService.findAll(PageRequest.of(0, 10));
+        assertEquals(2, result.getContent().size());
     }
 
 
@@ -281,8 +285,9 @@ public class RoomServiceTest {
         r1.setStartDate(Date.from(date.atTime(10, 0).atZone(ZoneId.of("Europe/Madrid")).toInstant()));
         r1.setEndDate(Date.from(date.atTime(12, 0).atZone(ZoneId.of("Europe/Madrid")).toInstant()));
         
-        when(reservationRepository.findByRoomIdAndDate(roomId, date))
-            .thenReturn(Arrays.asList(r1));
+        // Also mock findByRoomIdAndDate used by service
+        when(reservationRepository.findByRoomIdAndDate(eq(roomId), eq(date), any(Pageable.class)))
+            .thenReturn(new PageImpl<>(Arrays.asList(r1)));
 
         // WHEN
         Map<String, Object> stats = roomService.getRoomDailyStats(roomId, date);
@@ -311,9 +316,9 @@ public class RoomServiceTest {
         Long roomId = 1L;
         LocalDate date = LocalDate.now();
         
-        // Mock devolviendo lista vacía
-        when(reservationRepository.findByRoomIdAndDate(roomId, date))
-            .thenReturn(new ArrayList<>());
+        //mock empty list
+        when(reservationRepository.findByRoomIdAndDate(eq(roomId), eq(date), any(Pageable.class)))
+             .thenReturn(new PageImpl<>(Arrays.asList()));
 
         // WHEN
         Map<String, Object> stats = roomService.getRoomDailyStats(roomId, date);
@@ -324,7 +329,7 @@ public class RoomServiceTest {
         
         @SuppressWarnings("unchecked")
         Map<Integer, Boolean> hourlyStatus = (Map<Integer, Boolean>) stats.get("hourlyStatus");
-        // Verificar que ninguna hora está marcada como true
+        //no one is true
         assertFalse(hourlyStatus.values().stream().anyMatch(Boolean::booleanValue));
     }
 
@@ -335,15 +340,13 @@ public class RoomServiceTest {
         LocalDate date = LocalDate.now();
         ZoneId zone = ZoneId.of("Europe/Madrid");
 
-        // Reserva que cubre todo el día
         Reservation r1 = new Reservation();
         r1.setStartDate(Date.from(date.atTime(8, 0).atZone(zone).toInstant()));
         
-        // CAMBIO AQUÍ: Poner 22:00 para que cubra la franja de las 21:00
         r1.setEndDate(Date.from(date.atTime(22, 0).atZone(zone).toInstant())); 
 
-        when(reservationRepository.findByRoomIdAndDate(roomId, date))
-            .thenReturn(Arrays.asList(r1));
+        when(reservationRepository.findByRoomIdAndDate(eq(roomId), eq(date), any(Pageable.class)))
+             .thenReturn(new PageImpl<>(Arrays.asList(r1)));
 
         // WHEN
         Map<String, Object> stats = roomService.getRoomDailyStats(roomId, date);
@@ -355,7 +358,7 @@ public class RoomServiceTest {
     
     @Test
     void testGetRoomDailyStats_ReservationOutsideBounds_ShouldIgnore() {
-        // GIVEN: Una reserva a las 22:00 (fuera del rango 8-21)
+        // GIVEN: out range 22:00
         Long roomId = 1L;
         LocalDate date = LocalDate.now();
         ZoneId zone = ZoneId.of("Europe/Madrid");
@@ -364,13 +367,13 @@ public class RoomServiceTest {
         r1.setStartDate(Date.from(date.atTime(22, 0).atZone(zone).toInstant()));
         r1.setEndDate(Date.from(date.atTime(23, 0).atZone(zone).toInstant()));
 
-        when(reservationRepository.findByRoomIdAndDate(roomId, date))
-            .thenReturn(Arrays.asList(r1));
+        when(reservationRepository.findByRoomIdAndDate(eq(roomId), eq(date), any(Pageable.class)))
+            .thenReturn(new PageImpl<>(Arrays.asList(r1)));
 
         // WHEN
         Map<String, Object> stats = roomService.getRoomDailyStats(roomId, date);
 
-        // THEN: No debe contar como ocupada
+        // THEN
         assertEquals(0.0, stats.get("occupiedPercentage"));
     }
 
@@ -381,9 +384,8 @@ public class RoomServiceTest {
 
     @Test
     void testSaveRoomWithNewSoftware() {
-        // Caso donde el software no tiene ID y debe guardarse
         Room room = new Room();
-        Software newSoft = new Software(); // sin ID
+        Software newSoft = new Software(); // without ID
         room.setSoftware(Arrays.asList(newSoft));
 
         when(softwareRepository.save(any(Software.class))).thenReturn(newSoft);

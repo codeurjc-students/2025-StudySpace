@@ -3,6 +3,8 @@ import { LoginService } from '../../login/login.service';
 import { ReservationService } from '../../services/reservation.service';
 import { UserDTO } from '../../dtos/user.dto';
 import { Location } from '@angular/common';
+import { Page } from '../../dtos/page.model';
+import { PaginationUtil } from '../../utils/pagination.util';
 
 @Component({
   selector: 'app-user-profile',
@@ -12,6 +14,9 @@ import { Location } from '@angular/common';
 export class UserProfileComponent implements OnInit {
 
   user: UserDTO | null = null;
+  reservations: any[] = [];
+  pageData?: Page<any>;     
+  currentPage: number = 0;
   isEditing = false;
   editData = { name: '', email: '' };
   isChangingPassword = false;
@@ -24,30 +29,38 @@ export class UserProfileComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    // Usamos reloadUser que ahora sí existe en LoginService
     this.loginService.reloadUser().subscribe({
-        next: (freshUser: UserDTO) => {
+        next: (freshUser: UserDTO | null) => {
+          if(freshUser){
             this.user = freshUser;
-            // Usamos optional chaining (?.) para evitar errores si viene null
-            this.editData.name = this.user?.name || '';
-            this.editData.email = this.user?.email || '';
-            this.loadReservations();
+            this.editData.name = this.user.name;
+            this.editData.email = this.user.email;
+            this.loadReservations(0);
+          }else{
+            console.warn("No user session found in profile.");
+            this.user = null;
+            this.editData = { name: '', email: '' };
+          }
         },
         error: (err: any) => console.error("Error loading profile", err)
     });
   }
   // AUXILIAR METHOD
-  loadReservations() {
-      this.reservationService.getMyReservations().subscribe({
-          next: (reservations) => {
-              if (this.user) {
-                  this.user.reservations = reservations;
-                  console.log("Load reservations:", reservations);
-              }
-          },
-          error: (err) => console.error("Error loading reservations", err)
-      });
+  loadReservations(page: number) {
+    this.reservationService.getMyReservations(page).subscribe({
+      next: (data) => {
+        this.pageData = data;
+        this.reservations = data.content; 
+        this.currentPage = data.number;
+      },
+      error: (err) => console.error('Error loading reservations', err)
+    });
   }
+
+  getVisiblePages(): number[] {
+    return PaginationUtil.getVisiblePages(this.pageData, this.currentPage);
+  }
+
 
   goBack() {
     this.location.back();
@@ -60,7 +73,6 @@ export class UserProfileComponent implements OnInit {
             
             if (this.user) {
                 this.user.name = updatedUser.name;
-                // Actualizamos también el currentUser del servicio para que la UI global se entere
                 this.loginService.currentUser = this.user;
             }
             this.isEditing = false;
@@ -68,6 +80,8 @@ export class UserProfileComponent implements OnInit {
         error: (err: any) => alert("Error updating profile")
     });
   }
+
+  
 
   toggleEdit() {
     this.isEditing = !this.isEditing;
@@ -96,7 +110,7 @@ export class UserProfileComponent implements OnInit {
       this.reservationService.cancelReservation(id).subscribe({
         next: () => {
           alert("Reservation successfully cancelled.");
-          this.loadReservations(); 
+          this.loadReservations(this.currentPage); 
         },
         error: (err) => {
           console.error(err);

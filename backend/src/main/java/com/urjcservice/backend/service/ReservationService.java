@@ -7,9 +7,11 @@ import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.repositories.ReservationRepository;
 import com.urjcservice.backend.repositories.UserRepository;
 import com.urjcservice.backend.repositories.RoomRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +19,7 @@ import java.util.Optional;
 @Service
 public class ReservationService {
 
+    private static final String USER_NOT_FOUND_MSG = "User not found";
     
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
@@ -30,8 +33,8 @@ public class ReservationService {
         this.roomRepository = roomRepository;
     }
 
-    public List<Reservation> findAll() {
-        return reservationRepository.findAll();
+    public Page<Reservation> findAll(Pageable pageable) {
+        return reservationRepository.findAll(pageable);
     }
 
     public Reservation save(Reservation reservation) {
@@ -61,7 +64,7 @@ public class ReservationService {
     }
 
     
-    public Optional<Reservation> cancelById(Long id) { //maybe not used in future CHECK ITTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+    public Optional<Reservation> cancelById(Long id) { 
         return reservationRepository.findById(id).map(res -> {
             res.setCancelled(true); 
             return reservationRepository.save(res);
@@ -124,7 +127,7 @@ public class ReservationService {
 
     public Reservation createReservation(ReservationRequest request, String userEmail) {
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
 
         Room room = roomRepository.findById(request.getRoomId())
                 .orElseThrow(() -> new RuntimeException("Room not found"));
@@ -132,10 +135,10 @@ public class ReservationService {
         if (!room.isActive()) {
         throw new RuntimeException("Reservations are not possible: The classroom is temporarily unavailable.");
         }
-        List<Reservation> overlaps = reservationRepository.findOverlappingReservations(
-            request.getRoomId(), request.getStartDate(), request.getEndDate());
+        Page<Reservation> overlaps = reservationRepository.findOverlappingReservations(
+            request.getRoomId(), request.getStartDate(), request.getEndDate(),PageRequest.of(0, 1));
 
-        if (!overlaps.isEmpty()) {
+        if (overlaps.hasContent()) {
             throw new RuntimeException("The room is already reserved for this time.");
         }
         Reservation reservation = new Reservation();
@@ -150,12 +153,18 @@ public class ReservationService {
     }
 
 
-    public List<Reservation> getReservationsByUserEmail(String email) {
+    public Page<Reservation> getReservationsByUserEmail(String email, Pageable pageable) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
         
-        //this is on reposity check ittttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt
-        return reservationRepository.findByUser(user);
+        return reservationRepository.findByUser(user, pageable);
+    }
+
+    public Page<Reservation> getReservationsByUserId(Long userId, Pageable pageable) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
+        
+        return reservationRepository.findByUser(user, pageable);
     }
 
 

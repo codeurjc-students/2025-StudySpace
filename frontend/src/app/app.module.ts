@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 // 1. Import HttpClientModule for REST
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 // 2. Import FormsModule to use [(ngModel)] in the login
 import { FormsModule } from '@angular/forms'; 
 import { AppRoutingModule } from './app-routing.module';
@@ -21,6 +21,8 @@ import { RoomFormComponent } from './components/room-form/room-form.component';
 import { ManageSoftwaresComponent } from './components/manage-softwares/manage-softwares.component';
 import { SoftwareFormComponent } from './components/software-form/software-form.component';
 import { ManageReservationsComponent } from './components/manage-reservations/manage-reservations.component';
+import { AuthInterceptor } from './security/auth.interceptor';
+import { PaginationComponent } from './components/pagination/pagination.component';
 
 
 
@@ -40,7 +42,8 @@ import { ManageReservationsComponent } from './components/manage-reservations/ma
     RoomFormComponent,
     ManageSoftwaresComponent,
     SoftwareFormComponent,
-    ManageReservationsComponent
+    ManageReservationsComponent,
+    PaginationComponent
   ],
   imports: [
     BrowserModule,
@@ -53,7 +56,13 @@ import { ManageReservationsComponent } from './components/manage-reservations/ma
     FormsModule,
       NgbModule
   ],
-  providers: [],
+  providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true
+    }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

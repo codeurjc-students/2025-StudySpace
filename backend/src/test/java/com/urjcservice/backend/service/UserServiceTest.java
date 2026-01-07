@@ -1,13 +1,22 @@
 package com.urjcservice.backend.service;
 
+import com.urjcservice.backend.controller.NoSuchElementExceptionCA;
 import com.urjcservice.backend.entities.User;
 import com.urjcservice.backend.repositories.UserRepository;
+import com.urjcservice.backend.controller.NoSuchElementExceptionCA; 
+
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageImpl;
+
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -107,9 +116,9 @@ public class UserServiceTest {
 
     @Test
     public void testFindAll() {
-        when(userRepository.findAll()).thenReturn(Arrays.asList(new User(), new User()));
-        List<User> result = userService.findAll();
-        assertEquals(2, result.size());
+        when(userRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Arrays.asList(new User(), new User())));
+        Page<User> result = userService.findAll(PageRequest.of(0, 10));
+        assertEquals(2, result.getContent().size());
     }
 
     @Test
@@ -160,6 +169,127 @@ public class UserServiceTest {
         assertEquals("New Name", result.get().getName());
         assertEquals("keep@test.com", result.get().getEmail());
     }
+
+
+
+
+
+    @Test
+    public void testGetUsers_Paginated() {
+        // GIVEN
+        Pageable pageable = PageRequest.of(0, 5);
+        List<User> users = Arrays.asList(new User(), new User(), new User());
+        Page<User> page = new PageImpl<>(users);
+
+        when(userRepository.findAll(pageable)).thenReturn(page);
+
+        // WHEN
+        Page<User> result = userService.findAll(pageable);
+
+        // THEN
+        assertEquals(3, result.getContent().size());
+        verify(userRepository).findAll(pageable);
+    }
+
+    @Test
+    public void testChangeRole_UserToAdmin() {
+        // GIVEN
+        User user = new User();
+        user.setId(1L);
+        user.setRoles(new ArrayList<>(List.of("USER")));
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        // WHEN
+        Optional<User> result = userService.changeRole(1L, "ADMIN");
+
+        // THEN
+        assertTrue(result.isPresent());
+        assertTrue(result.get().getRoles().contains("ADMIN"));
+    }
+
+
+    @Test
+    @DisplayName("Test Find By Id - Not Found")
+    void testFindById_NotFound() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        Optional<User> result = userService.findById(99L);
+
+        assertTrue(result.isEmpty(), "It should return Optional.empty() if it doesn't exist");
+    }
+
+    @Test
+    @DisplayName("Test Find By Email - Not Found")
+    void testFindByEmail_NotFound() {
+        when(userRepository.findByEmail("nonexistent@test.com")).thenReturn(Optional.empty());
+
+        Optional<User> result = userService.findByEmail("nonexistent@test.com");
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Test Save User - Simple Save")
+    void testSaveUser_Simple() {
+        // Arrange
+        User inputUser = new User();
+        inputUser.setId(1L);
+        inputUser.setEmail("test@test.com");
+        inputUser.setEncodedPassword("somePassword"); 
+
+
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArguments()[0]);
+        
+        // Act
+        User result = userService.save(inputUser);
+        
+        // Assert
+        assertNotNull(result);
+        verify(userRepository).save(inputUser);
+    }
+
+    @Test
+    @DisplayName("Test Update User - No Roles Update")
+    void testUpdateUser_NoRoles() {
+        // Arrange
+        Long userId = 1L;
+        
+        User updateData = new User(); 
+        updateData.setName("New Name");
+        updateData.setEmail("new@test.com");
+        updateData.setRoles(null); 
+
+        User existingUser = new User();
+        existingUser.setId(userId);
+        existingUser.setName("Old Name");
+        existingUser.setEmail("old@test.com");
+        existingUser.setRoles(new ArrayList<>(List.of("USER")));
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        // Act
+        Optional<User> result = userService.updateUser(userId, updateData);
+
+        // Assert
+        assertTrue(result.isPresent());
+        assertEquals("New Name", result.get().getName());
+        assertEquals(1, result.get().getRoles().size()); 
+        assertEquals("USER", result.get().getRoles().get(0));
+    }
+
+    @Test
+    @DisplayName("Test Toggle Block - User Not Found")
+    void testToggleBlock_NotFound() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+        
+        Optional<User> result = userService.toggleBlock(99L);
+        
+        assertTrue(result.isEmpty());
+    }
+    
 
     
 }

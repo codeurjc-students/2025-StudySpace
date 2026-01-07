@@ -29,10 +29,26 @@
                                     (click)="deleteSoftware(soft.id)">Delete</button>
                         </td>
                     </tr>
+                    <tr *ngIf="softwares.length === 0">
+                        <td colspan="4" class="text-center py-4 text-muted">
+                            No software found. Click "+ Add Software" to create one.
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
     </div>
+
+
+
+    <app-pagination 
+        [pageData]="pageData" 
+        [currentPage]="currentPage" 
+        (pageChange)="loadSoftwares($event)">
+    </app-pagination>
+
+
+
     <div class="mt-4">
         <button routerLink="/admin" class="btn btn-secondary">Back to Menu</button>
     </div>

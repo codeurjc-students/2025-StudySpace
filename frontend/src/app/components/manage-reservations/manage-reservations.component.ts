@@ -3,6 +3,8 @@ import { ActivatedRoute } from '@angular/router';
 import { ReservationService } from '../../services/reservation.service';
 import { RoomsService } from '../../services/rooms.service';
 import { RoomDTO } from '../../dtos/room.dto';
+import { Page } from '../../dtos/page.model';
+import { PaginationUtil } from '../../utils/pagination.util';
 
 @Component({
   selector: 'app-manage-reservations',
@@ -12,6 +14,8 @@ import { RoomDTO } from '../../dtos/room.dto';
 export class ManageReservationsComponent implements OnInit {
 
   reservations: any[] = [];
+  pageData?: Page<any>;
+  currentPage: number = 0;
   userId: number | null = null;
   
   
@@ -29,28 +33,42 @@ export class ManageReservationsComponent implements OnInit {
     const id = this.route.snapshot.paramMap.get('userId');
     if (id) {
       this.userId = +id;
-      this.loadReservations();
+      this.loadReservations(0);
     }
     
     //loadRooms
-    this.roomsService.getRooms().subscribe(data => this.rooms = data);
+    this.roomsService.getRooms(0, 100).subscribe(data => this.rooms = data.content);
   }
 
-  loadReservations() {
+  loadReservations(page: number) {
     if (this.userId) {
-      this.reservationService.getReservationsByUser(this.userId).subscribe({
-        next: (data) => this.reservations = data,
-        error: (e) => console.error(e)
+      this.reservationService.getReservationsByUser(this.userId, page).subscribe({
+        next: (data) => {
+            this.pageData = data;
+            this.reservations = data.content;
+            this.currentPage = data.number;
+        },
+        error: (e) => console.error("Error loading reservations",e)
       });
     }
   }
 
   deleteReservation(id: number) {
     if(confirm("Are you sure you want to delete this reservation?")) {
-      this.reservationService.deleteReservation(id).subscribe(() => this.loadReservations());
+      this.reservationService.deleteReservation(id).subscribe({
+        next:() => {
+          alert("Reservation deleted successfully.");
+          this.loadReservations(this.currentPage)
+        },
+        error: () => alert("Error deleting")
+    });
     }
   }
 
+
+  getVisiblePages(): number[] {
+    return PaginationUtil.getVisiblePages(this.pageData, this.currentPage);
+  }
   
 
 
@@ -74,7 +92,7 @@ export class ManageReservationsComponent implements OnInit {
         next: () => {
           alert("Booking updated successfully");
           this.editingReservation = null;
-          this.loadReservations();
+          this.loadReservations(this.currentPage);
         },
         error: () => alert("Update error")
       });
@@ -93,7 +111,7 @@ export class ManageReservationsComponent implements OnInit {
       this.reservationService.cancelReservation(id).subscribe({
         next: () => {
           alert("Reservation successfully cancelled.");
-          this.loadReservations(); 
+          this.loadReservations(this.currentPage); 
         },
         error: (err) => {
           console.error(err);

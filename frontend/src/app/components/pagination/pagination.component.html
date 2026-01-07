@@ -1,0 +1,28 @@
+<nav aria-label="Page navigation" class="mt-4" *ngIf="pageData && pageData.totalPages > 1">
+    <ul class="pagination justify-content-center">
+        
+        <li class="page-item" [class.disabled]="pageData.first">
+            <button class="page-link" (click)="onPageChange(0)" style="cursor: pointer;">&laquo;&laquo;</button>
+        </li>
+
+        <li class="page-item" [class.disabled]="pageData.first">
+            <button class="page-link" (click)="onPageChange(currentPage - 1)" style="cursor: pointer;">&laquo;</button>
+        </li>
+
+        <li class="page-item" *ngFor="let p of visiblePages" [class.active]="p === currentPage">
+            <button class="page-link" (click)="onPageChange(p)" style="cursor: pointer;">{{ p + 1 }}</button>
+        </li>
+
+        <li class="page-item" [class.disabled]="pageData.last">
+            <button class="page-link" (click)="onPageChange(currentPage + 1)" style="cursor: pointer;">&raquo;</button>
+        </li>
+
+        <li class="page-item" [class.disabled]="pageData.last">
+            <button class="page-link" (click)="onPageChange(pageData.totalPages - 1)" style="cursor: pointer;">&raquo;&raquo;</button>
+        </li>
+
+    </ul>
+    <div class="text-center text-muted mt-2">
+        <small>Showing page {{ currentPage + 1 }} of {{ pageData.totalPages }}</small>
+    </div>
+</nav>

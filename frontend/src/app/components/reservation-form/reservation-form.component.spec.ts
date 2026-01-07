@@ -19,11 +19,11 @@ describe('ReservationFormComponent UI Test', () => {
   let router: Router;
 
   const mockRoomsService = {
-    getRooms: () => of([
+    getRooms: () => of({ content: [
       { id: 1, name: 'Aula Test 1', capacity: 20, camp: 'MOSTOLES', active: true },
       { id: 2, name: 'Aula Test 2', capacity: 30, camp: 'ALCORCON', active: true },
       { id: 3, name: 'Aula Desactivada', capacity: 15, camp: 'VICALVARO', active: false }
-    ])
+    ], totalPages: 1, totalElements: 3, first: true, last: true, number: 0, size: 3 })
   };
 
   beforeEach(async () => {

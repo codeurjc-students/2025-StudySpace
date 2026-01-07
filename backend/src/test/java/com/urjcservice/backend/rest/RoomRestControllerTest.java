@@ -96,7 +96,7 @@ public class RoomRestControllerTest {
         mockMvc.perform(get("/api/rooms")
                 .cookie(authCookie)) //we send the cookie because if not the filter blocks us
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray()); 
+                .andExpect(jsonPath("$.content").isArray()); 
     }
 
     @Test
