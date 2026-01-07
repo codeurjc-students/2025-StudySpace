@@ -80,5 +80,5 @@ jobs:
             -Dsonar.java.binaries=backend/target/classes
             -Dsonar.javascript.lcov.reportPaths=frontend/coverage/frontend/lcov.info
             -Dsonar.coverage.jacoco.xmlReportPaths=backend/target/site/jacoco/jacoco.xml
-            -Dsonar.exclusions=**/dtos/**,**/dto/**,**/entities/**,**/model/**,**/config/**,**/constants/**,**/*.spec.ts,**/main.ts,**/environment.ts,**/*.module.ts,**/security/**,**/config/**,**/NoSuchElementExceptionCA.java, **/pagination/**, **/utils/**
-            -Dsonar.coverage.exclusions=**/dtos/**,**/dto/**,**/entities/**,**/model/**,**/config/**,**/constants/**,**/*.spec.ts,**/main.ts,**/environment.ts,**/*.module.ts,**/security/**,**/config/**,**/NoSuchElementExceptionCA.java,**/pagination/**, **/utils/**
+            -Dsonar.exclusions=**/dtos/**,**/dto/**,**/entities/**,**/model/**,**/config/**,**/constants/**,**/*.spec.ts,**/main.ts,**/environment.ts,**/*.module.ts,**/security/**,**/config/**,**/NoSuchElementExceptionCA.java,**/pagination/**,**/utils/**
+            -Dsonar.coverage.exclusions=**/dtos/**,**/dto/**,**/entities/**,**/model/**,**/config/**,**/constants/**,**/*.spec.ts,**/main.ts,**/environment.ts,**/*.module.ts,**/security/**,**/config/**,**/NoSuchElementExceptionCA.java,**/pagination/**,**/utils/**
