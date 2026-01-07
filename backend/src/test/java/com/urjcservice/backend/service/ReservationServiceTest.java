@@ -28,6 +28,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -242,6 +243,198 @@ public class ReservationServiceTest {
         assertNotNull(result);
         verify(reservationRepository).findAll(pageable);
     }
+
+
+
+
+
+    @Test
+    void testCreateReservation_RoomInactive() {
+        // GIVEN
+        ReservationRequest req = new ReservationRequest();
+        req.setRoomId(1L);
+        req.setStartDate(new Date(System.currentTimeMillis() + 10000));
+        req.setEndDate(new Date(System.currentTimeMillis() + 20000));
+
+        User user = new User();
+        user.setEmail("test@user.com");
+
+        Room room = new Room();
+        room.setId(1L);
+        room.setActive(false); // <--- LA CLAVE: Habitación inactiva
+
+        when(userRepository.findByEmail("test@user.com")).thenReturn(Optional.of(user));
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+
+        // WHEN & THEN
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            reservationService.createReservation(req, "test@user.com");
+        });
+        
+        assertEquals("Reservations are not possible: The classroom is temporarily unavailable.", exception.getMessage());
+        verify(reservationRepository, never()).save(any());
+    }
+
+    @Test
+    void testCreateReservation_Overlapping() {
+        // GIVEN
+        ReservationRequest req = new ReservationRequest();
+        req.setRoomId(1L);
+        Date start = new Date(System.currentTimeMillis() + 10000);
+        Date end = new Date(System.currentTimeMillis() + 20000);
+        req.setStartDate(start);
+        req.setEndDate(end);
+
+        User user = new User();
+        Room room = new Room();
+        room.setId(1L);
+        room.setActive(true);
+
+        Reservation existingRes = new Reservation();
+        Page<Reservation> overlapPage = new PageImpl<>(List.of(existingRes));
+
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+        // We simulate that the repository returns content when searching for overlaps
+        when(reservationRepository.findOverlappingReservations(eq(1L), eq(start), eq(end), any(PageRequest.class)))
+                .thenReturn(overlapPage);
+
+        // WHEN & THEN
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            reservationService.createReservation(req, "test@user.com");
+        });
+
+        assertEquals("The room is already reserved for this time.", exception.getMessage());
+    }
+
+    // --- TESTS DE DELETE ---
+
+    @Test
+    void testDeleteById_Success() {
+        Long id = 1L;
+        Reservation res = new Reservation();
+        when(reservationRepository.findById(id)).thenReturn(Optional.of(res));
+
+        Optional<Reservation> result = reservationService.deleteById(id);
+
+        assertTrue(result.isPresent());
+        verify(reservationRepository).delete(res);
+    }
+
+    @Test
+    void testDeleteById_NotFound() {
+        Long id = 99L;
+        when(reservationRepository.findById(id)).thenReturn(Optional.empty());
+
+        Optional<Reservation> result = reservationService.deleteById(id);
+
+        assertTrue(result.isEmpty());
+        verify(reservationRepository, never()).delete(any());
+    }
+
+    // --- TESTS DE UPDATE (PUT) ---
+
+    @Test
+    void testUpdateReservation_Success() {
+        Long id = 1L;
+        Reservation existing = new Reservation();
+        existing.setReason("Old Reason");
+
+        Reservation updates = new Reservation();
+        updates.setReason("New Reason");
+        updates.setStartDate(new Date());
+        updates.setEndDate(new Date());
+
+        when(reservationRepository.findById(id)).thenReturn(Optional.of(existing));
+        when(reservationRepository.save(any(Reservation.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        Optional<Reservation> result = reservationService.updateReservation(id, updates);
+
+        assertTrue(result.isPresent());
+        assertEquals("New Reason", result.get().getReason());
+    }
+
+    @Test
+    void testUpdateReservation_NotFound() {
+        when(reservationRepository.findById(99L)).thenReturn(Optional.empty());
+        Optional<Reservation> result = reservationService.updateReservation(99L, new Reservation());
+        assertTrue(result.isEmpty());
+    }
+
+    // --- TESTS DE PATCH (Actualización Parcial) ---
+
+    @Test
+    void testPatchReservation_PartialUpdate() {
+        Long id = 1L;
+        Reservation existing = new Reservation();
+        existing.setReason("Old Reason");
+        Date oldDate = new Date(1000);
+        existing.setStartDate(oldDate);
+
+        Reservation patch = new Reservation();
+        patch.setReason("Patched Reason");
+        patch.setStartDate(null); 
+        patch.setEndDate(null);
+
+        when(reservationRepository.findById(id)).thenReturn(Optional.of(existing));
+        when(reservationRepository.save(any(Reservation.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        Optional<Reservation> result = reservationService.patchReservation(id, patch);
+
+        assertTrue(result.isPresent());
+        assertEquals("Patched Reason", result.get().getReason());
+        assertEquals(oldDate, result.get().getStartDate());
+    }
+
+    // --- TEST DE BUSQUEDA POR USER ID (Faltaba) ---
+
+    @Test
+    void testGetReservationsByUserId_Success() {
+        Long userId = 1L;
+        User user = new User();
+        user.setId(userId);
+        Pageable pageable = PageRequest.of(0, 10);
+        
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(reservationRepository.findByUser(user, pageable)).thenReturn(Page.empty());
+
+        Page<Reservation> result = reservationService.getReservationsByUserId(userId, pageable);
+
+        assertNotNull(result);
+        verify(reservationRepository).findByUser(user, pageable);
+    }
+
+    @Test
+    void testGetReservationsByUserId_NotFound() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+        
+        assertThrows(RuntimeException.class, () -> {
+            reservationService.getReservationsByUserId(99L, PageRequest.of(0, 10));
+        });
+    }
+    
+    // --- SECURE CANCELLATION TEST (Not Found ) ---
+    
+    @Test
+    void testCancelByIdSecure_NotFound() {
+        when(reservationRepository.findById(99L)).thenReturn(Optional.empty());
+        
+        Optional<Reservation> result = reservationService.cancelByIdSecure(99L, "any@email.com", true);
+        
+        assertTrue(result.isEmpty());
+    }
+    
+    @Test
+    void testSave() {
+        Reservation res = new Reservation();
+        when(reservationRepository.save(res)).thenReturn(res);
+        
+        Reservation result = reservationService.save(res);
+        
+        assertNotNull(result);
+        verify(reservationRepository).save(res);
+    }
+
 
 } 
 
