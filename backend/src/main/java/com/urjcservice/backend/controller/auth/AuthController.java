@@ -11,6 +11,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Email;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -32,8 +37,22 @@ public class AuthController {
 
     // for JSON data
     public static class RegisterRequest {
+
+        @NotBlank(message = "Name cannot be empty")
         private String name;
+
+        @NotBlank(message = "Email cannot be empty")
+        @Pattern(
+            regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", 
+            message = "Email must be valid domain and contain an extension (e.g., exampleemail@gmail.com)"
+        )
         private String email;
+
+        @NotBlank(message = "Password cannot be empty")
+        @Pattern(
+            regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&.])(?=\\S+$).{8,}$",
+            message = "Password must have at least 8 chars: 1 or more uppercase, lowercase, number and special characters."
+        )
         private String password;
 
         public String getName() { return name; }
@@ -74,12 +93,12 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Object> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<Object> register(@Valid@RequestBody RegisterRequest request) {
         
         // Check if the email already exists
         if (userService.existsByEmail(request.getEmail())) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("Error: The email is already in use.");
+                    .body(new AuthResponse(AuthResponse.Status.FAILURE,"Error: The email is already in use."));
         }
 
         // Create new user account

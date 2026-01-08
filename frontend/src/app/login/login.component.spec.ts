@@ -6,6 +6,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { of, throwError } from 'rxjs';
 import { NgbModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Router, ActivatedRoute } from '@angular/router';
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
@@ -38,7 +39,8 @@ describe('LoginComponent', () => {
           provide: ActivatedRoute,
           useValue: { snapshot: { queryParams: {} } }
         }
-      ]
+      ],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA]
     })
     .compileComponents();
 
@@ -60,7 +62,10 @@ describe('LoginComponent', () => {
     
     activatedRoute.snapshot.queryParams = {};
 
-    component.logIn('user', 'pass');
+    component.loginData.user = 'user';
+    component.loginData.password = 'pass';
+
+    component.logIn();
 
     expect(navigateSpy).toHaveBeenCalledWith(['/']);
   });
@@ -71,7 +76,10 @@ describe('LoginComponent', () => {
 
     activatedRoute.snapshot.queryParams = { returnUrl: '/admin/users' };
 
-    component.logIn('user', 'pass');
+    component.loginData.user = 'user';
+    component.loginData.password = 'pass';
+
+    component.logIn();
 
     expect(navigateByUrlSpy).toHaveBeenCalledWith('/admin/users');
   });
@@ -85,7 +93,10 @@ describe('LoginComponent', () => {
     const errorResponse = { status: 401, error: { message: 'User account is LOCKED' } };
     mockLoginService.logIn.and.returnValue(throwError(() => errorResponse));
 
-    component.logIn('lockedUser', 'pass');
+    component.loginData.user = 'lockedUser';
+    component.loginData.password = 'pass';
+
+    component.logIn();
 
     expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/ACCESS DENIED/));
     expect(mockLoginService.logOut).toHaveBeenCalled();
@@ -101,7 +112,10 @@ describe('LoginComponent', () => {
     const errorResponse = { status: 401, error: { message: 'Bad credentials' } };
     mockLoginService.logIn.and.returnValue(throwError(() => errorResponse));
 
-    component.logIn('user', 'wrongpass');
+    component.loginData.user = 'user';
+    component.loginData.password = 'wrongpass';
+
+    component.logIn();
 
     expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/Login failed/));
     expect(mockLoginService.logOut).toHaveBeenCalled();
@@ -115,7 +129,10 @@ describe('LoginComponent', () => {
     const errorResponse = { status: 500, message: 'Server error' };
     mockLoginService.logIn.and.returnValue(throwError(() => errorResponse));
 
-    component.logIn('user', 'pass');
+    component.loginData.user = 'user';
+    component.loginData.password = 'pass';
+
+    component.logIn();
 
     // Verify
     expect(mockModalService.open).toHaveBeenCalledWith(component.loginErrorModal);

@@ -6,6 +6,7 @@ import com.urjcservice.backend.entities.User;
 import com.urjcservice.backend.service.ReservationService;
 import com.urjcservice.backend.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -59,7 +60,7 @@ public class UserRestControllerTest {
         mockUser.setId(1L);
         mockUser.setName("Test User");
         mockUser.setEmail("test@example.com");
-        mockUser.setEncodedPassword("password");
+        mockUser.setEncodedPassword("Pass123.");
         mockUser.setType(User.UserType.USER_REGISTERED);
     }
 
@@ -111,11 +112,18 @@ public class UserRestControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     public void testCreateUser_Success() throws Exception {
+        String newUserJson = """
+            {
+                "name": "Test User",
+                "email": "test@example.com",
+                "password": "StrongPass1!" 
+            }
+        """;
         given(userService.save(any(User.class))).willReturn(mockUser);
 
         mockMvc.perform(post("/api/users")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(mockUser)))
+                .content(newUserJson))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Test User"));
     }
@@ -227,5 +235,25 @@ public class UserRestControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
+    }
+
+
+    @Test
+    @DisplayName("Create User via Admin API should fail with weak password")
+    @WithMockUser(roles = "ADMIN")
+    void testCreateUser_WeakPassword_ShouldFail() throws Exception {
+        String invalidJson = """
+            {
+                "name": "Admin Created",
+                "email": "valid@email.com",
+                "password": "weak" 
+            }
+        """;
+
+        mockMvc.perform(post("/api/users") 
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(invalidJson))
+                .andExpect(status().isBadRequest()) //400
+                .andExpect(jsonPath("$.message.password").exists());
     }
 }

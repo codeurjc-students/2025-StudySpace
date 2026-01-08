@@ -14,6 +14,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.urjcservice.backend.controller.auth.AuthController;
 import com.urjcservice.backend.entities.User;
+
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -74,7 +76,7 @@ public class AuthControllerTest {
     public void testRegister_Success() throws Exception {
         when(userService.existsByEmail(anyString())).thenReturn(false);
         
-        String json = "{\"name\":\"Carlos\",\"email\":\"c@c.com\",\"password\":\"123\"}";
+        String json = "{\"name\":\"Carlos\",\"email\":\"c@gmail.com\",\"password\":\"StrongPass1!\"}";
         
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -84,9 +86,9 @@ public class AuthControllerTest {
 
     @Test
     public void testRegister_Conflict() throws Exception {
-        when(userService.existsByEmail("c@c.com")).thenReturn(true);
+        when(userService.existsByEmail("c@gmail.com")).thenReturn(true);
         
-        String json = "{\"name\":\"Carlos\",\"email\":\"c@c.com\",\"password\":\"123\"}";
+        String json = "{\"name\":\"Carlos\",\"email\":\"c@gmail.com\",\"password\":\"StrongPass1!\"}";
         
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -158,9 +160,9 @@ public class AuthControllerTest {
 
     @Test
     public void testRegister_Conflict_EmailExists() throws Exception {
-        when(userService.existsByEmail("c@c.com")).thenReturn(true);
+        when(userService.existsByEmail("c@gmail.com")).thenReturn(true);
         
-        String json = "{\"name\":\"Carlos\",\"email\":\"c@c.com\",\"password\":\"123\"}";
+        String json = "{\"name\":\"Carlos\",\"email\":\"c@gmail.com\",\"password\":\"StrongPass1!\"}";
         
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -332,7 +334,7 @@ public class AuthControllerTest {
             {
                 "name": "Dupe",
                 "email": "exists@test.com",
-                "password": "pass"
+                "password": "StrongPass1!"
             }
         """;
 
@@ -357,6 +359,49 @@ public class AuthControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
+
+
+
+    @Test
+    @DisplayName("Register should fail if email is missing domain extension (e.g. .com)")
+    void testRegister_EmailMissingExtension() throws Exception {
+        // GIVEN: with @ and without extension (.)
+        String jsonInvalidEmail = """
+            {
+                "name": "Test User",
+                "email": "usuario@gmail", 
+                "password": "password123."
+            }
+        """;
+
+        // WHEN & THEN
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonInvalidEmail))
+                .andExpect(status().isBadRequest()) //400
+                .andExpect(jsonPath("$.message.email").value("Email must be valid domain and contain an extension (e.g., exampleemail@gmail.com)"));
+    }
+
+
+
+    @Test
+    @DisplayName("Register should fail if password is weak (missing special char or uppercase)")
+    void testRegister_WeakPassword() throws Exception {
+        String weakPasswordJson = """
+            {
+                "name": "Weak Pass User",
+                "email": "valid@email.com",
+                "password": "weakpassword123" 
+            }
+        """;
+
+        // WHEN & THEN
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(weakPasswordJson))
+                .andExpect(status().isBadRequest()) //400
+                .andExpect(jsonPath("$.message.password").exists());
+    }
 
 }
 

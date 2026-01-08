@@ -12,6 +12,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 import java.net.URI;
 import java.util.List;
@@ -27,11 +33,48 @@ public class UserRestController {
    
     private final UserService userService;
     private final ReservationService reservationService;
+    private final PasswordEncoder passwordEncoder;
     
-    public UserRestController(UserService userService, ReservationService reservationService) {
+    public UserRestController(UserService userService, ReservationService reservationService,PasswordEncoder passwordEncoder) {
         this.userService = userService;
         this.reservationService = reservationService;
+        this.passwordEncoder = passwordEncoder;
     }
+    
+
+
+    public static class UserCreationRequest {
+        
+        @NotBlank(message = "Name cannot be empty")
+        private String name;
+
+        @NotBlank(message = "Email cannot be empty")
+        @Pattern(
+            regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", 
+            message = "Email must be valid and contain an extension (e.g., .com, .es)"
+        )
+        private String email;
+
+        @NotBlank(message = "Password cannot be empty")
+        @Pattern(
+            regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&.])(?=\\S+$).{8,}$",
+            message = "Password must have at least 8 chars, 1 uppercase, 1 lowercase, 1 number and 1 special char"
+        )
+        private String password;
+
+        private List<String> roles;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        public String getPassword() { return password; }
+        public void setPassword(String password) { this.password = password; }
+        public List<String> getRoles() { return roles; }
+        public void setRoles(List<String> roles) { this.roles = roles; }
+    }
+
+
 
     @GetMapping
     public Page<User> getAllUsers(@PageableDefault(size = 10) Pageable pageable) {//if frontend dont send size, default 10
@@ -61,7 +104,18 @@ public class UserRestController {
     }
 
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
+    public ResponseEntity<User> createUser(@Valid @RequestBody UserCreationRequest request) {
+        User user = new User();
+        user.setName(request.getName());
+        user.setEmail(request.getEmail());
+        
+
+        user.setEncodedPassword(passwordEncoder.encode(request.getPassword()));
+        if (request.getRoles() != null && !request.getRoles().isEmpty()) {
+            user.setRoles(request.getRoles());
+        } else {
+            user.setRoles(List.of("USER"));//role by default
+        }
         User savedUser = userService.save(user);
 
         URI location = fromCurrentRequest().path("/{id}").buildAndExpand(savedUser.getId()).toUri();

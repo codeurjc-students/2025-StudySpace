@@ -45,20 +45,30 @@
                 <div *ngIf="isChangingPassword" class="card bg-light border-0 animate-fade-in mb-3">
                     <div class="card-body text-start">
                         <div class="mb-2">
-                            <label class="form-label small" for="currentPassword">Current Password</label>
-                            <input type="password" id="currentPassword" [(ngModel)]="passwordData.oldPassword" class="form-control form-control-sm">
+                            <label class="form-label small">Current Password</label>
+                            <app-password-input 
+                                [(ngModel)]="passwordData.oldPassword" 
+                                name="oldPass"
+                                placeholder="Current password">
+                            </app-password-input>
                         </div>
+
                         <div class="mb-3">
-                            <label class="form-label small" for="newPassword">New Password</label>
-                            <input type="password" id="newPassword" [(ngModel)]="passwordData.newPassword" class="form-control form-control-sm">
+                            <label class="form-label small">New Password</label>
+                            <app-password-input 
+                                [(ngModel)]="passwordData.newPassword" 
+                                name="newPass"
+                                placeholder="New password">
+                            </app-password-input>
                         </div>
+
                         <div class="d-grid gap-2">
                             <button class="btn btn-dark btn-sm" (click)="changePassword()">Update</button>
                             <button class="btn btn-link btn-sm text-decoration-none text-muted" (click)="toggleChangePassword()">Cancel</button>
                         </div>
                     </div>
                 </div>
-            </div>
+                </div>
         </div>
 
         <div class="col-md-8 ps-md-5">

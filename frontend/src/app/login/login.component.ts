@@ -11,6 +11,8 @@ import { Router, ActivatedRoute  } from '@angular/router';
 })
 export class LoginComponent {
 @ViewChild('loginErrorModal') loginErrorModal!: TemplateRef<any>;
+  loginData = { user: '', password: '' };
+  //public passwordVisible: boolean = false;
 
   //put the loginService in the constructor, router and modalService too
   constructor(
@@ -20,8 +22,12 @@ export class LoginComponent {
     private readonly route: ActivatedRoute
   ) {}
 
-  logIn(user: string, pass: string) {
-    this.loginService.logIn(user, pass).subscribe({
+  /*togglePasswordVisibility() {
+    this.passwordVisible = !this.passwordVisible;
+  }*/
+
+  logIn() {
+    this.loginService.logIn(this.loginData.user, this.loginData.password).subscribe({
       next: (response: any) => {
         console.log("Login correcto:", response);
         // Optional: Redirect to home or another page after successful login
