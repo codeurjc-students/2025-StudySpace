@@ -2,21 +2,37 @@
     <div class="card p-4 shadow" style="max-width: 400px; width: 100%;">
         <h3 class="mb-4 text-center">Register</h3>
         
-        <form (ngSubmit)="onRegister(nameInput.value, emailInput.value, passInput.value)">
+        <form (ngSubmit)="onRegister()">
             
             <div class="mb-3">
                 <label for="name" class="form-label">Name</label>
-                <input #nameInput type="text" class="form-control" id="name" placeholder="Enter your name" required>
+                <input type="text" 
+                       class="form-control" 
+                       id="name" 
+                       name="name"
+                       [(ngModel)]="registerData.name"
+                       placeholder="Enter your name" 
+                       required>
             </div>
 
             <div class="mb-3">
                 <label for="email" class="form-label">Email</label>
-                <input #emailInput type="email" class="form-control" id="email" placeholder="name@example.com" required>
+                <input type="email" 
+                       class="form-control" 
+                       id="email" 
+                       name="email"
+                       [(ngModel)]="registerData.email"
+                       placeholder="name@example.com" 
+                       required>
             </div>
             
             <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
-                <input #passInput type="password" class="form-control" id="password" placeholder="Create a password" required>
+                <label class="form-label">Password</label>
+                <app-password-input 
+                    [(ngModel)]="registerData.password" 
+                    name="password" 
+                    placeholder="Create a password">
+                </app-password-input>
             </div>
             
             <div class="d-grid gap-2 mt-4">

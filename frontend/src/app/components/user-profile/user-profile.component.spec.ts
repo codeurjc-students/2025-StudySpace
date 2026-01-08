@@ -187,12 +187,24 @@ describe('UserProfileComponent', () => {
     spyOn(window, 'alert');
     const toggleSpy = spyOn(component, 'toggleChangePassword');
 
-    component.passwordData = { oldPassword: 'old', newPassword: 'new' };
+    component.passwordData = { oldPassword: 'old', newPassword: 'StrongPass1!' };
     component.changePassword();
 
-    expect(loginServiceSpy.changePassword).toHaveBeenCalledWith('old', 'new');
+    expect(loginServiceSpy.changePassword).toHaveBeenCalledWith('old', 'StrongPass1!');
     expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/success/i));
     expect(toggleSpy).toHaveBeenCalled(); 
+  });
+
+  it('changePassword: should call service on valid input', () => {
+    spyOn(window, 'alert');
+    component.passwordData = { oldPassword: 'old', newPassword: 'StrongPass1!' };
+    
+    loginServiceSpy.changePassword.and.returnValue(of({}));
+
+    component.changePassword();
+
+    expect(loginServiceSpy.changePassword).toHaveBeenCalledWith('old', 'StrongPass1!');
+    expect(window.alert).toHaveBeenCalledWith('Password updated successfully!');
   });
 
   it('changePassword should handle backend error', () => {
@@ -201,7 +213,32 @@ describe('UserProfileComponent', () => {
     spyOn(window, 'alert');
     spyOn(console, 'error');
 
-    component.passwordData = { oldPassword: 'wrong', newPassword: 'new' };
+    component.passwordData = { oldPassword: 'wrong', newPassword: 'StrongPass1!' };
+    component.changePassword();
+
+    expect(console.error).toHaveBeenCalled();
+    expect(window.alert).toHaveBeenCalledWith('Wrong password');
+  });
+
+  it('changePassword: should NOT call service if new password is weak', () => {
+    spyOn(window, 'alert');
+    
+    component.passwordData = { oldPassword: 'old', newPassword: 'weak' };
+
+    component.changePassword();
+
+    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/Password must contain/));
+    expect(loginServiceSpy.changePassword).not.toHaveBeenCalled();
+  });
+
+  it('changePassword: should show error alert on failure', () => {
+    spyOn(window, 'alert');
+    spyOn(console, 'error');
+    
+    component.passwordData = { oldPassword: 'old', newPassword: 'StrongPass1!' }; // Strong pass necesario para pasar el filtro
+    
+    loginServiceSpy.changePassword.and.returnValue(throwError({ error: { message: 'Wrong password' } }));
+
     component.changePassword();
 
     expect(console.error).toHaveBeenCalled();

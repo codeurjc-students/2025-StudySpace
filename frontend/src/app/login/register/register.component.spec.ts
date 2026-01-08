@@ -48,7 +48,11 @@ describe('RegisterComponent', () => {
     
     mockLoginService.register.and.returnValue(of({}));
 
-    component.onRegister('Test User', 'test@test.com', 'StrongPass1!');
+    component.registerData.name = 'Test User';
+    component.registerData.email = 'test@test.com';
+    component.registerData.password = 'StrongPass1!';
+
+    component.onRegister();
 
     expect(mockLoginService.register).toHaveBeenCalledWith('Test User', 'test@test.com', 'StrongPass1!');
     expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/successfully/));
@@ -63,7 +67,11 @@ describe('RegisterComponent', () => {
     const errorResponse = { status: 409 };
     mockLoginService.register.and.returnValue(throwError(() => errorResponse));
 
-    component.onRegister('User', 'duplicate@test.com', 'StrongPass1!');
+    component.registerData.name = 'User';
+    component.registerData.email = 'duplicate@test.com';
+    component.registerData.password = 'StrongPass1!';
+
+    component.onRegister();
 
     expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/already registered/));
   });
@@ -75,7 +83,11 @@ describe('RegisterComponent', () => {
     const errorResponse = { status: 500 };
     mockLoginService.register.and.returnValue(throwError(() => errorResponse));
 
-    component.onRegister('User', 'error@test.com', 'StrongPass1!');
+    component.registerData.name = 'User';
+    component.registerData.email = 'error@test.com';
+    component.registerData.password = 'StrongPass1!';
+
+    component.onRegister();
 
     expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/Error registering/));
   });
@@ -86,7 +98,11 @@ describe('RegisterComponent', () => {
   it('should NOT call register if email format is invalid', () => {
     spyOn(window, 'alert'); 
     
-    component.onRegister('Test User', 'invalid-email', 'StrongPass1!');
+    component.registerData.name = 'Test User';
+    component.registerData.email = 'invalid-email';
+    component.registerData.password = 'StrongPass1!';
+    
+    component.onRegister();
 
     expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/valid email/));
     expect(mockLoginService.register).not.toHaveBeenCalled();
@@ -94,7 +110,11 @@ describe('RegisterComponent', () => {
 
   it('should NOT call register if fields are empty', () => {
     spyOn(window, 'alert');
-    component.onRegister('', '', '');
+    component.registerData.name = '';
+    component.registerData.email = '';
+    component.registerData.password = '';
+
+    component.onRegister();
     expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/fill in all/));
     expect(mockLoginService.register).not.toHaveBeenCalled();
   });
@@ -105,7 +125,11 @@ describe('RegisterComponent', () => {
     spyOn(window, 'alert'); 
     const weakPass = 'weakpassword123'; 
     
-    component.onRegister('Test User', 'test@test.com', weakPass);
+    component.registerData.name = 'Test User';
+    component.registerData.email = 'test@test.com';
+    component.registerData.password = 'weakpassword123';
+    
+    component.onRegister();
 
     expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/Password must contain/));
     expect(mockLoginService.register).not.toHaveBeenCalled();

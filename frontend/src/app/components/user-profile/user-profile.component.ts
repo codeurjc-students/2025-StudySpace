@@ -22,6 +22,9 @@ export class UserProfileComponent implements OnInit {
   isChangingPassword = false;
   passwordData = { oldPassword: '', newPassword: '' };
 
+  //oldPasswordVisible: boolean = false;
+  //newPasswordVisible: boolean = false;
+
   constructor(
     public readonly loginService: LoginService, 
     private readonly reservationService: ReservationService, 
@@ -135,6 +138,11 @@ export class UserProfileComponent implements OnInit {
       alert("Please fill in both password fields.");
       return;
     }
+    const passwordPattern = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&.])(?=\S+$).{8,}$/;
+    if (!passwordPattern.test(this.passwordData.newPassword)) {
+        alert('Password must contain:\n- At least 8 characters\n- One uppercase letter\n- One lowercase letter\n- One number\n- One special character (@$!%*?&.)');
+        return; 
+    }
     this.loginService.changePassword(this.passwordData.oldPassword, this.passwordData.newPassword).subscribe({
       next: (response) => {
         alert("Password updated successfully!");
@@ -154,8 +162,17 @@ export class UserProfileComponent implements OnInit {
   toggleChangePassword() { //clean data
     this.isChangingPassword = !this.isChangingPassword;
     this.passwordData = { oldPassword: '', newPassword: '' };
+
   }
 
+
+  /*toggleOldPasswordVisibility() {
+    this.oldPasswordVisible = !this.oldPasswordVisible;
+  }
+
+  toggleNewPasswordVisibility() {
+    this.newPasswordVisible = !this.newPasswordVisible;
+  }*/
   
 }
 

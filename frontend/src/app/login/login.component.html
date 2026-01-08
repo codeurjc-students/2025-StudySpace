@@ -2,15 +2,24 @@
     <div class="card p-4 shadow" style="max-width: 400px; width: 100%;">
         <h3 class="mb-4 text-center">Please Log In</h3>
         
-        <form (ngSubmit)="logIn(user.value, password.value)">
+        <form (ngSubmit)="logIn()">
             <div class="mb-3">
                 <label for="username" class="form-label">Email</label>
-                <input #user type="email" class="form-control" id="username" name="username" placeholder="Email Address">
+                <input type="email" 
+                       class="form-control" 
+                       id="username" 
+                       name="username" 
+                       [(ngModel)]="loginData.user"
+                       placeholder="Email Address">
             </div>
             
             <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
-                <input #password type="password" id="password" class="form-control" name="password" placeholder="Enter password">
+                <label class="form-label">Password</label>
+                <app-password-input 
+                    [(ngModel)]="loginData.password" 
+                    name="password" 
+                    placeholder="Enter password">
+                </app-password-input>
             </div>
             
             <div class="d-grid gap-2 mt-4">
