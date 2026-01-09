@@ -28,6 +28,9 @@ public class Room {
     private String place;
     private String coordenades;
 
+    @Column(name = "image_name")
+    private String imageName;
+
     @Column(nullable = false)
     private boolean active = true;
 
@@ -98,6 +101,18 @@ public class Room {
     public void setCoordenades(String coordenades) {
         this.coordenades = coordenades;
     }
+
+
+    public String getImageName() {
+        return imageName;
+    }
+
+    public void setImageName(String imageName) {
+        this.imageName = imageName;
+    }
+
+
+
     public List<Software> getSoftware() {
         return software;
     }

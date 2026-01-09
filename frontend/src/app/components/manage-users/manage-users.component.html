@@ -16,7 +16,10 @@
                     <tr *ngFor="let user of users" [class.table-danger]="user.blocked">
                         <td>
                             <div class="d-flex align-items-center">
-                                <img src="assets/user_placeholder.png" class="rounded-circle me-2" width="30" alt="User Avatar">
+                                <img [src]="user.imageName ? 'https://localhost:8443/api/users/' + user.id + '/image' : 'assets/user_placeholder.png'" 
+                                    class="rounded-circle me-2" 
+                                    width="30" height="30" style="object-fit: cover;"
+                                    (error)="user.imageName = undefined">
                                 <strong>{{ user.name }}</strong>
                                 <span *ngIf="user.roles.includes('ADMIN')" class="badge bg-primary ms-2">ADMIN</span>
                             </div>

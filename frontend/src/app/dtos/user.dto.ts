@@ -7,4 +7,6 @@ export interface UserDTO {
     reservations: any[]; 
 
     blocked: boolean;
+
+    imageName?: string;
 }

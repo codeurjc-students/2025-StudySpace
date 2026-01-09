@@ -13,6 +13,8 @@ export class RoomFormComponent implements OnInit {
 
   isEditMode: boolean = false; 
   roomId: number | null = null;
+  selectedFile: File | null = null;
+  currentImageUrl: string | null = null;
 
   room = {   //defect values
     name: '',
@@ -65,32 +67,58 @@ export class RoomFormComponent implements OnInit {
         if (data.software) {
             this.room.softwareIds = data.software.map(s => s.id);
         }
+        if (data.imageName) {
+            this.currentImageUrl = `https://localhost:8443/api/rooms/${data.id}/image`;
+        }
       },
       error: (err) => console.error('Error loading classroom', err)
     });
   }
 
   save() {
-    console.log("Sending classroom:", this.room);
     if (this.isEditMode && this.roomId) {
       this.roomsService.updateRoom(this.roomId, this.room).subscribe({
         next: (response) => {
-            alert('Classroom edited correctly! ID: ' + response.id);
-            this.router.navigate(['/admin/rooms']);
-          },
-          error: (e) => alert('Update error: ' + e)
-        });
-      }else{
-        this.roomsService.createRoom(this.room).subscribe({
-          next: (response) => {
-            alert('Classroom created correctly! ID: ' + response.id);
-            this.router.navigate(['/admin/rooms']);
-          },
-          error: (err) => {
-            console.error('Error creating classroom:', err);
-            alert('Error creating classroom. Check the console for details.');
+          if (this.selectedFile) {
+              this.uploadImageAndNavigate(this.roomId!);
+          } else {
+              alert('Classroom updated correctly!');
+              this.router.navigate(['/admin/rooms']);
           }
-        });
-      }
+        },
+        error: (e) => alert('Update error: ' + e)
+      });
+    } else {
+      this.roomsService.createRoom(this.room).subscribe({
+        next: (response) => {
+          if (this.selectedFile) {
+              this.uploadImageAndNavigate(response.id);
+          } else {
+              alert('Classroom created correctly!');
+              this.router.navigate(['/admin/rooms']);
+          }
+        },
+        error: (err) => alert('Error creating classroom')
+      });
+    }
+  }
+
+  onFileSelected(event: any) {
+    this.selectedFile = event.target.files[0];
+  }
+
+  
+
+  uploadImageAndNavigate(id: number) {
+     this.roomsService.uploadRoomImage(id, this.selectedFile!).subscribe({
+         next: () => {
+             alert('Room and image saved correctly!');
+             this.router.navigate(['/admin/rooms']);
+         },
+         error: () => {
+             alert('Room saved but image upload failed.');
+             this.router.navigate(['/admin/rooms']);
+         }
+     });
   }
 }

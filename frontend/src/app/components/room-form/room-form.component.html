@@ -31,10 +31,7 @@
                 <input id="place" type="text" name="place" [(ngModel)]="room.place" class="form-control" required>
             </div>
 
-            <div class="mb-3">
-                <label for="coordenades" class="form-label fw-bold">Coordinates</label>
-                <input id="coordenades" type="text" name="coordenades" [(ngModel)]="room.coordenades" class="form-control">
-            </div>
+            
 
             <div class="mb-4">
                 <label for="softwareIds" class="form-label fw-bold">Installed Software</label>
@@ -44,6 +41,30 @@
                     </option>
                 </select>
                 <small class="text-muted">Hold Ctrl (Windows) or Cmd (Mac) to select multiple options.</small>
+            </div>
+
+            <div class="mb-3">
+                <label for="coordenades" class="form-label fw-bold">Coordinates (Optional)</label>
+                <input id="coordenades" type="text" name="coordenades" [(ngModel)]="room.coordenades" class="form-control">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Room Image (Optional)</label>
+
+                <div *ngIf="currentImageUrl" class="mb-2 p-2 border rounded bg-light d-flex align-items-center">
+                    <img [src]="currentImageUrl" alt="Current Image" 
+                         class="img-thumbnail me-3" 
+                         style="height: 100px; width: 150px; object-fit: cover;">
+                    <div>
+                        <span class="badge bg-info text-dark mb-1">Current Image</span>
+                        <p class="small text-muted mb-0">
+                            Upload a new file below only if you want to replace this image.
+                        </p>
+                    </div>
+                </div>
+
+                <input type="file" (change)="onFileSelected($event)" accept="image/*" class="form-control">
+                <small class="text-muted">Leave empty to keep current image (or default).</small>
             </div>
             
             <div class="card bg-light mb-4 border-0">
