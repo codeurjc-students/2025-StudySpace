@@ -3,6 +3,7 @@ package com.urjcservice.backend.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.entities.User;
+import com.urjcservice.backend.service.FileStorageService;
 import com.urjcservice.backend.service.ReservationService;
 import com.urjcservice.backend.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,10 +13,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -34,6 +37,7 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -50,6 +54,9 @@ public class UserRestControllerTest {
 
     @MockBean
     private ReservationService reservationService;
+
+    @MockBean
+    private FileStorageService fileStorageService;
 
     private User mockUser;
 
@@ -256,4 +263,46 @@ public class UserRestControllerTest {
                 .andExpect(status().isBadRequest()) //400
                 .andExpect(jsonPath("$.message.password").exists());
     }
+
+
+
+
+
+    @Test
+    @WithMockUser(roles = "USER")
+    public void testUploadUserImage_Success() throws Exception {
+        // GIVEN
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "profile.png", "image/png", "content".getBytes());
+        
+        // Simulamos que el storage devuelve un nombre de fichero generado
+        given(fileStorageService.store(any())).willReturn("uuid_profile.png");
+        // Simulamos que el usuario existe (usa mocks o base de datos según tu config)
+        given(userService.findById(1L)).willReturn(Optional.of(mockUser));
+
+        // WHEN & THEN
+        mockMvc.perform(multipart("/api/users/1/image") // multipart es para subir ficheros
+                .file(file))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.imageName").value("uuid_profile.png")); // Verifica que el JSON de vuelta tiene el nombre
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    public void testGetUserImage_Success() throws Exception {
+        // GIVEN
+        mockUser.setImageName("my-photo.jpg");
+        given(userService.findById(1L)).willReturn(Optional.of(mockUser));
+        
+        // Simulamos que el fichero existe y tiene contenido
+        given(fileStorageService.loadAsResource("my-photo.jpg"))
+                .willReturn(new ByteArrayResource("fake-image-content".getBytes()));
+
+        // WHEN & THEN
+        mockMvc.perform(get("/api/users/1/image"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.IMAGE_JPEG)) // O lo que detecte tu controlador
+                .andExpect(content().bytes("fake-image-content".getBytes()));
+    }
+
 }

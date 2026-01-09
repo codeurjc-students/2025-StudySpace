@@ -5,6 +5,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { FormsModule } from '@angular/forms';
 import { LoginService } from '../../login/login.service';
 import { ReservationService } from '../../services/reservation.service';
+import { UserService } from '../../services/user.service';
 import { Location } from '@angular/common';
 import { of, throwError } from 'rxjs';
 import { UserDTO } from '../../dtos/user.dto';
@@ -15,6 +16,7 @@ describe('UserProfileComponent', () => {
   let fixture: ComponentFixture<UserProfileComponent>;
   let loginServiceSpy: jasmine.SpyObj<LoginService>;
   let reservationServiceSpy: jasmine.SpyObj<ReservationService>;
+  let userServiceSpy: jasmine.SpyObj<UserService>;
   let location: Location;
 
   let mockUser: UserDTO;
@@ -40,12 +42,15 @@ describe('UserProfileComponent', () => {
       ['getMyReservations', 'cancelReservation', 'deleteReservation']
     );
 
+    userServiceSpy = jasmine.createSpyObj('UserService', ['uploadUserImage']);
+
     await TestBed.configureTestingModule({
       declarations: [UserProfileComponent, PaginationComponent],
       imports: [HttpClientTestingModule, RouterTestingModule, FormsModule],
       providers: [
         { provide: LoginService, useValue: loginServiceSpy },
-        { provide: ReservationService, useValue: reservationServiceSpy }
+        { provide: ReservationService, useValue: reservationServiceSpy },
+        { provide: UserService, useValue: userServiceSpy }
       ]
     }).compileComponents();
     
@@ -280,4 +285,67 @@ describe('UserProfileComponent', () => {
     component.goBack();
     expect(location.back).toHaveBeenCalled();
   });
+
+
+
+
+
+  it('getUserImageUrl should return correct API URL if image exists', () => {
+    const userWithImage: UserDTO = { ...mockUser, id: 99, imageName: 'photo.jpg' };
+    const url = component.getUserImageUrl(userWithImage);
+    expect(url).toBe('https://localhost:8443/api/users/99/image');
+  });
+
+  it('getUserImageUrl should return placeholder if no image', () => {
+    const userNoImage: UserDTO = { ...mockUser, imageName: undefined };
+    const url = component.getUserImageUrl(userNoImage);
+    expect(url).toBe('assets/user_placeholder.png');
+  });
+
+  it('onFileSelected should update selectedFile property', () => {
+    const mockFile = new File([''], 'test.jpg', { type: 'image/jpeg' });
+    const event = { target: { files: [mockFile] } };
+    
+    component.onFileSelected(event);
+    
+    expect(component.selectedFile).toEqual(mockFile);
+  });
+
+  it('saveProfile should call uploadUserImage if a file is selected', () => {
+    //Setup
+    component.isEditing = true;
+    component.editData.name = 'New Name';
+    const fileToUpload = new File(['data'], 'avatar.png');
+    component.selectedFile = fileToUpload;
+    
+    const updatedUser = { ...mockUser, name: 'New Name' };
+    const userWithImage = { ...updatedUser, imageName: 'new_uuid.png' };
+    
+    loginServiceSpy.updateProfile.and.returnValue(of(updatedUser));
+    userServiceSpy.uploadUserImage.and.returnValue(of(userWithImage));
+    spyOn(window, 'alert');
+
+    component.saveProfile();
+
+    expect(loginServiceSpy.updateProfile).toHaveBeenCalled();
+    expect(userServiceSpy.uploadUserImage).toHaveBeenCalledWith(1, fileToUpload);
+    
+    expect(component.user?.imageName).toBe('new_uuid.png');
+    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/image updated/i));
+    expect(component.selectedFile).toBeNull(); 
+  });
+
+  it('saveProfile should NOT call uploadUserImage if NO file is selected', () => {
+    component.selectedFile = null;
+    component.editData.name = 'Just Name';
+    
+    loginServiceSpy.updateProfile.and.returnValue(of({ ...mockUser, name: 'Just Name' }));
+    
+    component.saveProfile();
+
+    expect(loginServiceSpy.updateProfile).toHaveBeenCalled();
+    expect(userServiceSpy.uploadUserImage).not.toHaveBeenCalled();
+  });
+
+
 });
