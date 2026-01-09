@@ -2,6 +2,7 @@ package com.urjcservice.backend.rest;
 
 import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.entities.Software;
+import com.urjcservice.backend.service.FileStorageService;
 import com.urjcservice.backend.service.RoomService;
 import com.urjcservice.backend.service.SoftwareService;
 
@@ -9,10 +10,14 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import java.io.IOException;
 
 import java.net.URI;
 import java.time.LocalDate;
@@ -28,10 +33,12 @@ public class RoomRestController {
     
     private final RoomService roomService;
     private final SoftwareService softwareService;
+    private final FileStorageService fileStorageService;
 
-    public RoomRestController(RoomService roomService, SoftwareService softwareService) {
+    public RoomRestController(RoomService roomService, SoftwareService softwareService, FileStorageService fileStorageService) {
         this.roomService = roomService;
         this.softwareService = softwareService;
+        this.fileStorageService = fileStorageService;
     }
 
     //internal DTO for room requests on frontend
@@ -152,4 +159,48 @@ public class RoomRestController {
         }
         return room;
     }
+
+
+
+
+
+
+
+
+
+
+    @PostMapping("/{id}/image")
+    public ResponseEntity<Room> uploadRoomImage(@PathVariable Long id, 
+                                                @RequestParam("file") MultipartFile file) throws IOException {
+        Optional<Room> roomOp = roomService.findById(id);
+        if (roomOp.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        Room room = roomOp.get();
+        if (room.getImageName() != null) {
+            fileStorageService.delete(room.getImageName());
+        }
+
+        String filename = fileStorageService.store(file);
+        room.setImageName(filename);
+        roomService.save(room);
+
+        return ResponseEntity.ok(room);
+    }
+
+    @GetMapping("/{id}/image")
+    public ResponseEntity<Resource> getRoomImage(@PathVariable Long id) {
+        Optional<Room> roomOp = roomService.findById(id);
+        if (roomOp.isEmpty() || roomOp.get().getImageName() == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Resource file = fileStorageService.loadAsResource(roomOp.get().getImageName());
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG) 
+                .body(file);
+    }
+
+
 }

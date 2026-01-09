@@ -29,7 +29,9 @@ public class User {
     @ElementCollection(fetch = FetchType.EAGER)//for later autentication
     private List<String> roles;
 
-    private Blob picture;
+    @Column(name = "image_name")
+    private String imageName;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Reservation> reservations = new ArrayList<>();
@@ -75,11 +77,12 @@ public class User {
     public void setType(UserType type) {
         this.type = type;
     }
-    public Blob getPicture() {
-        return picture;
+    public String getImageName() {
+        return imageName;
     }
-    public void setPicture(Blob picture) {
-        this.picture = picture;
+
+    public void setImageName(String imageName) {
+        this.imageName = imageName;
     }
 
     @JsonIgnore

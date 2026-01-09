@@ -5,6 +5,7 @@ import { UserDTO } from '../../dtos/user.dto';
 import { Location } from '@angular/common';
 import { Page } from '../../dtos/page.model';
 import { PaginationUtil } from '../../utils/pagination.util';
+import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-user-profile',
@@ -21,13 +22,13 @@ export class UserProfileComponent implements OnInit {
   editData = { name: '', email: '' };
   isChangingPassword = false;
   passwordData = { oldPassword: '', newPassword: '' };
+  selectedFile: File | null = null;
 
-  //oldPasswordVisible: boolean = false;
-  //newPasswordVisible: boolean = false;
 
   constructor(
     public readonly loginService: LoginService, 
-    private readonly reservationService: ReservationService, 
+    private readonly reservationService: ReservationService,
+    private readonly userService: UserService, 
     private readonly location: Location
   ) { }
 
@@ -72,16 +73,38 @@ export class UserProfileComponent implements OnInit {
   saveProfile() {
     this.loginService.updateProfile(this.editData.name, this.editData.email).subscribe({
         next: (updatedUser: UserDTO) => {
-            alert("Profile updated successfully.");
             
-            if (this.user) {
-                this.user.name = updatedUser.name;
-                this.loginService.currentUser = this.user;
+            if (this.selectedFile && this.user) {//new picture
+                this.userService.uploadUserImage(this.user.id, this.selectedFile).subscribe({
+                    next: (userWithImage) => {
+                         alert("Profile and image updated successfully.");
+                         if (this.user) {
+                             this.user = userWithImage; 
+                             this.loginService.currentUser = this.user;
+                         }
+                         this.isEditing = false;
+                         this.selectedFile = null; 
+                    },
+                    error: () => alert("Profile updated, but image upload failed.")
+                });
+            } else {//no new picture
+                alert("Profile updated successfully.");
+                if (this.user) {
+                    this.user.name = updatedUser.name;
+                    this.loginService.currentUser = this.user;
+                }
+                this.isEditing = false;
             }
-            this.isEditing = false;
         },
         error: (err: any) => alert("Error updating profile")
     });
+  }
+
+  getUserImageUrl(user: UserDTO): string {
+    if (user.imageName) {
+      return `https://localhost:8443/api/users/${user.id}/image`;
+    }
+    return 'assets/user_placeholder.png'; // Default
   }
 
   
@@ -165,14 +188,13 @@ export class UserProfileComponent implements OnInit {
 
   }
 
-
-  /*toggleOldPasswordVisibility() {
-    this.oldPasswordVisible = !this.oldPasswordVisible;
+  onFileSelected(event: any) {
+    this.selectedFile = event.target.files[0];
   }
 
-  toggleNewPasswordVisibility() {
-    this.newPasswordVisible = !this.newPasswordVisible;
-  }*/
+  
+  
+  
   
 }
 

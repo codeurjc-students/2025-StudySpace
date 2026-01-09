@@ -9,4 +9,5 @@ export interface RoomDTO {
     coordenades: string;   
     active: boolean;
     software: SoftwareDTO[]; 
+    imageName?: string;
 }

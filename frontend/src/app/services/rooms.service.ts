@@ -4,7 +4,7 @@ import { Observable, map } from 'rxjs';
 import { RoomDTO } from '../dtos/room.dto';
 import { Page } from '../dtos/page.model';
 
-const BASE_URL = '/api/rooms';
+const BASE_URL = 'https://localhost:8443/api/rooms';
 
 @Injectable({
   providedIn: 'root'
@@ -37,4 +37,13 @@ export class RoomsService {
   public getRoomStats(id: number, date: string): Observable<any> {
     return this.http.get<any>(`${BASE_URL}/${id}/stats?date=${date}`);
   }
+
+
+
+  uploadRoomImage(id: number, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post(`${BASE_URL}/${id}/image`, formData);
+  }
+
 }

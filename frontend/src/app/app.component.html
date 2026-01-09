@@ -12,7 +12,11 @@
     <div *ngIf="loginService.isLogged()" ngbDropdown placement="bottom-end" class="d-inline-block ms-3">
     
         <button type="button" class="btn p-0 no-arrow d-flex flex-column align-items-center" id="dropdownProfile" ngbDropdownToggle>
-            <img src="assets/user_placeholder.png" alt="Profile" class="rounded-circle profile-icon-header">
+            <img [src]="getUserImageUrl()" 
+                 alt="Profile" 
+                 class="rounded-circle profile-icon-header"
+                 style="width: 40px; height: 40px; object-fit: cover; border: 2px solid white;"
+                 (error)="loginService.currentUser && (loginService.currentUser.imageName = undefined)">
             
             <span class="text-white small mt-1" style="font-size: 0.8rem; font-weight: 500;">
                 {{ loginService.currentUser?.name }}
@@ -22,7 +26,12 @@
         <div ngbDropdownMenu aria-labelledby="dropdownProfile" class="p-3 shadow dropdown-menu-end" style="min-width: 250px;">
         
         <div class="text-center mb-3">
-             <img src="assets/user_placeholder.png" alt="Profile" class="rounded-circle mb-2 shadow-sm" style="width: 80px; height: 80px; object-fit: cover;">
+             <img [src]="getUserImageUrl()" 
+                  alt="Profile" 
+                  class="rounded-circle mb-2 shadow-sm" 
+                  style="width: 80px; height: 80px; object-fit: cover;"
+                  (error)="loginService.currentUser && (loginService.currentUser.imageName = undefined)">
+             
              <h5 class="mb-1 fw-bold">{{ loginService.currentUser?.name }}</h5>
              
              <a [routerLink]="['/profile']" class="btn btn-sm btn-primary mt-2 w-100">

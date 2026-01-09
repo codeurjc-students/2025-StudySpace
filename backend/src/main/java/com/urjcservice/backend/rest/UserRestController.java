@@ -6,13 +6,19 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.SortDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.urjcservice.backend.entities.Reservation;
+import com.urjcservice.backend.service.FileStorageService;
 import com.urjcservice.backend.service.ReservationService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import java.io.IOException;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -34,11 +40,13 @@ public class UserRestController {
     private final UserService userService;
     private final ReservationService reservationService;
     private final PasswordEncoder passwordEncoder;
+    private final FileStorageService fileStorageService;
     
-    public UserRestController(UserService userService, ReservationService reservationService,PasswordEncoder passwordEncoder) {
+    public UserRestController(UserService userService, ReservationService reservationService,PasswordEncoder passwordEncoder, FileStorageService fileStorageService) {
         this.userService = userService;
         this.reservationService = reservationService;
         this.passwordEncoder = passwordEncoder;
+        this.fileStorageService = fileStorageService;
     }
     
 
@@ -153,4 +161,61 @@ public class UserRestController {
     ) {
         return ResponseEntity.ok(reservationService.getReservationsByUserId(id, pageable));
     }
+
+
+
+
+
+
+
+
+
+
+    @PostMapping("/{id}/image")
+    public ResponseEntity<User> uploadImage(@PathVariable Long id, 
+                                            @RequestParam("file") MultipartFile file) throws IOException {
+        
+        Optional<User> userOp = userService.findById(id);
+        if (userOp.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        User user = userOp.get();
+        
+        //delete the older image if exists
+        if (user.getImageName() != null) {
+            fileStorageService.delete(user.getImageName());
+        }
+        //save 
+        String filename = fileStorageService.store(file);
+        //update
+        user.setImageName(filename);
+        userService.save(user);
+
+        return ResponseEntity.ok(user);
+    }
+
+    @GetMapping("/{id}/image")
+    public ResponseEntity<Resource> getImage(@PathVariable Long id) {
+        Optional<User> userOp = userService.findById(id);
+        if (userOp.isEmpty() || userOp.get().getImageName() == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Resource file = fileStorageService.loadAsResource(userOp.get().getImageName());
+        
+        // try to see what is (jpg, png, etc)
+        String contentType = "image/jpeg"; // Default
+        try {
+            contentType = file.getURL().openConnection().getContentType();
+        } catch (IOException e) {
+            // fallback
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .body(file);
+    }
+
+
 }

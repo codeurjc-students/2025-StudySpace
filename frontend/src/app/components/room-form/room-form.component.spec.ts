@@ -17,7 +17,8 @@ describe('RoomFormComponent', () => {
  const mockRoomsService = {
     createRoom: jasmine.createSpy('createRoom'),
     updateRoom: jasmine.createSpy('updateRoom'),
-    getRoom: jasmine.createSpy('getRoom')
+    getRoom: jasmine.createSpy('getRoom'),
+    uploadRoomImage: jasmine.createSpy('uploadRoomImage')
   };
 
   const mockSoftwareService = {
@@ -27,14 +28,23 @@ describe('RoomFormComponent', () => {
   const mockRouter = { navigate: jasmine.createSpy('navigate') };
 
   beforeEach(async () => {
+
+    mockRoomsService.createRoom.calls.reset();
+    mockRoomsService.updateRoom.calls.reset();
+    mockRoomsService.getRoom.calls.reset();
+    mockRoomsService.uploadRoomImage.calls.reset();
+    mockRouter.navigate.calls.reset();
+
     mockRoomsService.createRoom.and.returnValue(of({ id: 1 }));
     mockRoomsService.updateRoom.and.returnValue(of({ id: 1 }));
+    mockRoomsService.uploadRoomImage.and.returnValue(of({}));
     
     mockRoomsService.getRoom.and.returnValue(of({ 
         id: 1, 
         name: 'Test Room', 
         active: false, 
-        software: [] 
+        software: [] ,
+        imageName: null    //default
     }));
 
     await TestBed.configureTestingModule({
@@ -50,7 +60,6 @@ describe('RoomFormComponent', () => {
         { provide: Router, useValue: mockRouter },
         {
           provide: ActivatedRoute,
-          // Simulamos que siempre hay un ID '1' en la URL
           useValue: { snapshot: { paramMap: { get: () => '1' } } } 
         }
       ]
@@ -125,6 +134,74 @@ describe('RoomFormComponent', () => {
     component.save();
 
     expect(window.alert).toHaveBeenCalled();
+  });
+
+  it('loadRoomData should set currentImageUrl if room has imageName', () => {
+    const roomWithImage = { id: 5, name: 'Room Img', active: true, software: [], imageName: 'pic.jpg' };
+    mockRoomsService.getRoom.and.returnValue(of(roomWithImage));
+
+    component.loadRoomData(5);
+
+    expect(component.currentImageUrl).toBe('https://localhost:8443/api/rooms/5/image');
+  });
+
+  it('onFileSelected should store the file in selectedFile', () => {
+    const mockFile = new File([''], 'room.jpg', { type: 'image/jpeg' });
+    const event = { target: { files: [mockFile] } };
+
+    component.onFileSelected(event);
+
+    expect(component.selectedFile).toEqual(mockFile);
+  });
+
+  it('save (CREATE) should call uploadRoomImage if a file is selected', () => {
+    component.isEditMode = false;
+    component.roomId = null;
+    
+    component.selectedFile = new File([''], 'new.jpg');
+
+    mockRoomsService.createRoom.and.returnValue(of({ id: 55 })); 
+
+    component.save();
+
+    expect(mockRoomsService.createRoom).toHaveBeenCalled();
+    expect(mockRoomsService.uploadRoomImage).toHaveBeenCalledWith(55, component.selectedFile);
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/admin/rooms']);
+  });
+
+  it('save (UPDATE) should call uploadRoomImage if a file is selected', () => {
+    component.isEditMode = true;
+    component.roomId = 10;
+    
+    component.selectedFile = new File([''], 'update.jpg');
+
+    component.save();
+
+    expect(mockRoomsService.updateRoom).toHaveBeenCalled();
+    expect(mockRoomsService.uploadRoomImage).toHaveBeenCalledWith(10, component.selectedFile);
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/admin/rooms']);
+  });
+
+  it('save should navigate immediately if NO file is selected', () => {
+    component.selectedFile = null;
+    component.isEditMode = false;
+
+    component.save();
+
+    expect(mockRoomsService.createRoom).toHaveBeenCalled();
+    expect(mockRoomsService.uploadRoomImage).not.toHaveBeenCalled(); 
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/admin/rooms']);
+  });
+
+  it('uploadImageAndNavigate should alert and navigate even if upload fails', () => {
+    spyOn(window, 'alert');
+    mockRoomsService.uploadRoomImage.and.returnValue(throwError(() => new Error('Upload failed')));
+
+    component.selectedFile = new File([''], 'fail.jpg');
+    component.uploadImageAndNavigate(1);
+
+    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/upload failed/i));
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/admin/rooms']);
   });
 
 });

@@ -125,4 +125,32 @@ describe('ManageUsersComponent', () => {
     expect(pages.length).toBe(10);
     expect(pages).toContain(15);
   });
+
+
+
+
+
+
+  it('should render user image URL in the table', () => {
+    const userWithPic: UserDTO = { id: 5, name: 'User Pic', email: 'p@test.com', roles: [], blocked: false, reservations: [], imageName: 'avatar.png' };
+    
+    component.users = [userWithPic];
+    fixture.detectChanges();
+
+    const img: HTMLImageElement = fixture.nativeElement.querySelector('tbody tr td img');
+    
+    expect(img).toBeTruthy();
+    expect(img.src).toContain('/api/users/5/image');
+  });
+
+  it('should render placeholder when user has no image', () => {
+    const userNoPic: UserDTO = { id: 6, name: 'User NoPic', email: 'np@test.com', roles: [], blocked: false, reservations: [] };
+    
+    component.users = [userNoPic];
+    fixture.detectChanges();
+
+    const img: HTMLImageElement = fixture.nativeElement.querySelector('tbody tr td img');
+    expect(img.src).toContain('assets/user_placeholder.png');
+  });
+
 });

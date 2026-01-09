@@ -11,7 +11,6 @@ describe('RoomDetailComponent', () => {
   let fixture: ComponentFixture<RoomDetailComponent>;
   let mockRoomsService: any;
 
-  // Datos por defecto
   const defaultRoom = { id: 1, name: 'Lab 1', active: true, software: [] };
   const mockStats = {
     hourlyStatus: { "8": false, "9": true },
@@ -89,20 +88,15 @@ describe('RoomDetailComponent', () => {
 
 
   it('should call destroyCharts before creating new ones to avoid memory leaks', () => {
-    // Espiamos el método destroyCharts
     spyOn(component, 'destroyCharts').and.callThrough();
     
-    // Simulamos la carga
     component.roomId = 1;
     component.loadStats();
     
-    // Verificamos
     expect(component.destroyCharts).toHaveBeenCalled();
   });
 
   it('should transform backend stats correctly for the Chart data', () => {
-    // Este test verifica la lógica dentro de createCharts sin pintar el canvas real
-    // Accedemos a la lógica "interna" simulando los datos
     
     const mockComplexStats = {
       hourlyStatus: { "08:00": false, "09:00": true, "10:00": true },
@@ -110,27 +104,19 @@ describe('RoomDetailComponent', () => {
       freePercentage: 34
     };
 
-    // Espiamos la creación del Chart o simplemente verificamos los datos preparados
-    // Como createCharts crea 'new Chart', es difícil interceptar la instancia sin un mock complejo de Chart.js.
-    // Una estrategia efectiva es verificar los efectos secundarios o refactorizar, 
-    // pero aquí validaremos que NO explota y que procesa las claves.
-    
-    // Simulamos que los elementos del DOM existen para que no falle el 'if (this.hourlyCanvas)'
     component.hourlyCanvas = { nativeElement: document.createElement('canvas') } as any;
     component.occupancyCanvas = { nativeElement: document.createElement('canvas') } as any;
 
     spyOn(component, 'createCharts').and.callThrough();
     
-    // Ejecutamos manualmente con datos controlados
     component.createCharts(mockComplexStats);
 
     expect(component.createCharts).toHaveBeenCalledWith(mockComplexStats);
     
-    // Verificamos que se han instanciado (privados, accedemos con 'any')
     expect((component as any).hourlyChart).toBeDefined();
     expect((component as any).occupancyChart).toBeDefined();
     
-    // Verificamos datos del gráfico de ocupación
+
     const chartInstance = (component as any).occupancyChart;
     const data = chartInstance.data.datasets[0].data;
     
@@ -139,12 +125,40 @@ describe('RoomDetailComponent', () => {
   });
 
   it('should not crash if canvas elements are missing', () => {
-    // Caso defensivo: Si el usuario cambia de pestaña muy rápido y el canvas no está
     component.hourlyCanvas = undefined!;
     component.occupancyCanvas = undefined!;
 
     const safeExecution = () => component.createCharts(mockStats);
     
     expect(safeExecution).not.toThrow();
+  });
+
+
+
+
+
+
+  it('should display correct image URL in HTML when room has imageName', () => {
+    const roomWithImage = { id: 10, name: 'Lab Image', active: true, software: [], imageName: 'lab_pic.jpg' };
+    mockRoomsService.getRoom.and.returnValue(of(roomWithImage));
+    
+    component.ngOnInit();
+    fixture.detectChanges();
+
+    const imgElement: HTMLImageElement = fixture.nativeElement.querySelector('.col-md-6 img');
+    
+    expect(imgElement).toBeTruthy();
+    expect(imgElement.src).toContain('/api/rooms/10/image');
+  });
+
+  it('should display default asset when room has no imageName', () => {
+    const roomNoImage = { id: 11, name: 'Lab No Image', active: true, software: [], imageName: null };
+    mockRoomsService.getRoom.and.returnValue(of(roomNoImage));
+    
+    component.ngOnInit();
+    fixture.detectChanges();
+
+    const imgElement: HTMLImageElement = fixture.nativeElement.querySelector('.col-md-6 img');
+    expect(imgElement.src).toContain('assets/default_image.png');
   });
 });
