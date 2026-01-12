@@ -17,7 +17,7 @@ import java.util.Date;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/reservations")
+/*@RequestMapping("/api/reservations")*/
 public class ReservationController {
 
     private final ReservationService reservationService;
@@ -45,7 +45,7 @@ public class ReservationController {
         public void setReason(String reason) { this.reason = reason; }
     }
 
-    @PostMapping("/create")
+    /*@PostMapping("/create")
     public ResponseEntity<Object> createReservation(@RequestBody ReservationRequest request) {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -57,9 +57,9 @@ public class ReservationController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
-    }
+    }*/
 
-    @GetMapping("/my-reservations")
+    /*@GetMapping("/my-reservations")
     public ResponseEntity<Page<Reservation>> getMyReservations(
         @PageableDefault(size = 10) 
         @SortDefault(sort = "startDate", direction = Sort.Direction.DESC)
@@ -70,5 +70,5 @@ public class ReservationController {
         Page<Reservation> reservations = reservationService.getReservationsByUserEmail(email, pageable);
         
         return ResponseEntity.ok(reservations);
-    }
+    }*/
 }

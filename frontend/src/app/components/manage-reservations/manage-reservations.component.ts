@@ -22,6 +22,15 @@ export class ManageReservationsComponent implements OnInit {
   editingReservation: any = null; // actually edited
   rooms: RoomDTO[] = []; 
 
+  editDateStr: string = '';
+  editStartTime: string = '';
+  editEndTime: string = '';
+  
+  availableStartTimes: string[] = [];
+  availableEndTimes: string[] = [];
+  occupiedSlots: any[] = [];
+  minDate: string = '';
+
   constructor(
     private readonly route: ActivatedRoute,
     private readonly reservationService: ReservationService,
@@ -35,7 +44,7 @@ export class ManageReservationsComponent implements OnInit {
       this.userId = +id;
       this.loadReservations(0);
     }
-    
+    this.minDate = new Date().toISOString().split('T')[0];
     //loadRooms
     this.roomsService.getRooms(0, 100).subscribe(data => this.rooms = data.content);
   }
@@ -73,28 +82,50 @@ export class ManageReservationsComponent implements OnInit {
 
 
   startEdit(reservation: any) {
-   //copy for editing without modifying original until saved
     this.editingReservation = { ...reservation }; 
     
-    //take care that roomId has a value and is not and object
     if(this.editingReservation.room) {
         this.editingReservation.roomId = this.editingReservation.room.id;
     }
+
+    const startDateObj = new Date(this.editingReservation.startDate);
+    const endDateObj = new Date(this.editingReservation.endDate);
+
+    //YYYY-MM-DD
+    this.editDateStr = startDateObj.toISOString().split('T')[0];
+    
+    //HH:mm
+    this.editStartTime = this.formatTime(startDateObj);
+    this.editEndTime = this.formatTime(endDateObj);
+
+
+    this.onConfigChange(true); //true no delete selecctions
   }
 
   cancelEdit() {
     this.editingReservation = null;
+    this.occupiedSlots = [];
+  
   }
 
   saveEdit() {
     if (this.editingReservation) {
+      const newStart = new Date(`${this.editDateStr}T${this.editStartTime}:00`);
+      const newEnd = new Date(`${this.editDateStr}T${this.editEndTime}:00`);
+
+      this.editingReservation.startDate = newStart;
+      this.editingReservation.endDate = newEnd;
+
       this.reservationService.updateReservation(this.editingReservation.id, this.editingReservation).subscribe({
         next: () => {
           alert("Booking updated successfully");
           this.editingReservation = null;
           this.loadReservations(this.currentPage);
         },
-        error: () => alert("Update error")
+        error: (err) => {
+            console.error(err);
+            alert("Update error: " + (err.error?.message || "Check times"));
+        }
       });
     }
   }
@@ -121,5 +152,136 @@ export class ManageReservationsComponent implements OnInit {
     }
   }
 
+
+
+  onConfigChange(isInit: boolean = false) {
+    if (!isInit) {
+        this.editStartTime = '';
+        this.editEndTime = '';
+    }
+    this.availableStartTimes = [];
+    this.availableEndTimes = [];
+
+    if (this.editingReservation.roomId && this.editDateStr) {
+      this.reservationService.checkAvailability(this.editingReservation.roomId, this.editDateStr).subscribe({
+        next: (data) => {
+          //the own reservation out the list of ocupied
+          this.occupiedSlots = data.filter(res => res.id !== this.editingReservation.id);
+          
+          this.calculateStartTimes();
+          
+          if (isInit && this.editStartTime) {
+            this.onStartTimeChange(this.editEndTime);
+          }
+        },
+        error: (e) => console.error("Error checking availability", e)
+      });
+    }
+  }
+
+  calculateStartTimes() {
+    const times: string[] = [];
+    const now = new Date();
+    const isToday = this.editDateStr === this.minDate; 
+    const currentHour = now.getHours();
+    const currentMin = now.getMinutes();
+
+    for (let h = 8; h < 21; h++) {
+      for (let m of [0, 30]) {
+        if (h === 21) continue; 
+
+        if (isToday) {
+          if (h < currentHour || (h === currentHour && m <= currentMin)) {
+            continue;
+          }
+        }
+
+        const timeStr = `${this.pad(h)}:${this.pad(m)}`;
+        
+        //colision?
+        if (!this.isTimeOccupied(timeStr)) {
+          times.push(timeStr);
+        }
+      }
+    }
+    this.availableStartTimes = times;
+    
+    //if is not valid durring edition, clear it
+    if (!this.availableStartTimes.includes(this.editStartTime)) {//for future implementations, maybe delete it
+        this.editStartTime = '';
+        this.editEndTime = '';
+        this.availableEndTimes = [];
+    }
+  }
+
+  onStartTimeChange(preselectedEndTime: string | null = null) {
+    if (!preselectedEndTime) {
+      this.editEndTime = '';
+    }
+    this.availableEndTimes = [];
+    
+    if (!this.editStartTime) return;
+
+    const [startH, startM] = this.editStartTime.split(':').map(Number);
+    let h = startH;
+    let m = startM + 30;
+    if (m === 60) { h++; m = 0; }
+
+    while (h < 21 || (h === 21 && m === 0)) {
+      const timeStr = `${this.pad(h)}:${this.pad(m)}`;
+      
+      if (this.isOverlap(this.editStartTime, timeStr)) {
+        break; 
+      }
+      this.availableEndTimes.push(timeStr);
+      
+      m += 30;
+      if (m === 60) { h++; m = 0; }
+    }
+    if (preselectedEndTime) {
+        if (this.availableEndTimes.includes(preselectedEndTime)) {
+            this.editEndTime = preselectedEndTime;
+        } else {
+            this.editEndTime = '';
+        }
+    }
+  }
+
+  pad(n: number): string { return n < 10 ? '0' + n : '' + n; }
+
+  formatTime(date: Date): string {
+    return `${this.pad(date.getHours())}:${this.pad(date.getMinutes())}`;
+  }
+
+  isTimeOccupied(timeStr: string): boolean {
+    const timeMins = this.toMinutes(timeStr);
+    return this.occupiedSlots.some(res => {
+      const start = new Date(res.startDate);
+      const end = new Date(res.endDate);
+      const sMins = start.getHours() * 60 + start.getMinutes();
+      const eMins = end.getHours() * 60 + end.getMinutes();
+      return timeMins >= sMins && timeMins < eMins;
+    });
+  }
+
+
+  isOverlap(startStr: string, endStr: string): boolean {
+    const s = this.toMinutes(startStr);
+    const e = this.toMinutes(endStr);
+    return this.occupiedSlots.some(res => {
+      const start = new Date(res.startDate);
+      const end = new Date(res.endDate);
+      const rS = start.getHours() * 60 + start.getMinutes();
+      const rE = end.getHours() * 60 + end.getMinutes();
+      return e > rS && s < rE;
+    });
+  }
+
+  toMinutes(time: string): number {
+    const [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
+  }
+
+  
 
 }

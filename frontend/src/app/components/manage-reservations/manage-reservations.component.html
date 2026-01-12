@@ -2,34 +2,68 @@
     <h2 class="mb-4 text-dark fw-bold">Manage User Reservations</h2>
 
     <div *ngIf="editingReservation" class="card shadow-lg mb-4 border-warning">
-        <div class="card-header bg-warning text-dark fw-bold">
-            Editing Reservation #{{ editingReservation.id }}
+        <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between align-items-center">
+            <span>Editing Reservation #{{ editingReservation.id }}</span>
+            <button type="button" class="btn-close" aria-label="Close" (click)="cancelEdit()"></button>
         </div>
         <div class="card-body">
             <form (ngSubmit)="saveEdit()">
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label" for="editRoomId">Room</label>
-                        <select [(ngModel)]="editingReservation.roomId" name="roomId" id="editRoomId" class="form-select">
+                        <label class="form-label fw-bold" for="editRoomId">Room</label>
+                        <select [(ngModel)]="editingReservation.roomId" 
+                                (change)="onConfigChange()"
+                                name="roomId" id="editRoomId" class="form-select">
                             <option *ngFor="let r of rooms" [value]="r.id">{{ r.name }}</option>
                         </select>
                     </div>
+
                     <div class="col-md-6 mb-3">
-                        <label class="form-label" for="editReason">Reason</label>
+                        <label class="form-label fw-bold" for="editDate">Date</label>
+                        <input type="date" [(ngModel)]="editDateStr" 
+                               (change)="onConfigChange()"
+                               [min]="minDate"
+                               name="editDate" id="editDate" class="form-control">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold" for="editStartTime">Start Time</label>
+                        <select [(ngModel)]="editStartTime" 
+                                (change)="onStartTimeChange()"
+                                name="editStartTime" id="editStartTime" 
+                                class="form-select"
+                                [disabled]="!editDateStr || availableStartTimes.length === 0">
+                            <option value="" disabled>-- Select Start --</option>
+                            <option *ngFor="let t of availableStartTimes" [value]="t">{{ t }}</option>
+                        </select>
+                        <small *ngIf="editDateStr && availableStartTimes.length === 0" class="text-danger">
+                            No available slots (fully booked).
+                        </small>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold" for="editEndTime">End Time</label>
+                        <select [(ngModel)]="editEndTime" 
+                                name="editEndTime" id="editEndTime" 
+                                class="form-select"
+                                [disabled]="!editStartTime">
+                            <option value="" disabled>-- Select End --</option>
+                            <option *ngFor="let t of availableEndTimes" [value]="t">{{ t }}</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 mb-3">
+                        <label class="form-label fw-bold" for="editReason">Reason</label>
                         <input type="text" [(ngModel)]="editingReservation.reason" name="reason" id="editReason" class="form-control">
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label" for="editStartDate">Start Date</label>
-                        <input type="datetime-local" [(ngModel)]="editingReservation.startDate" name="startDate" id="editStartDate" class="form-control">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label" for="editEndDate">End Date</label>
-                        <input type="datetime-local" [(ngModel)]="editingReservation.endDate" name="endDate" id="editEndDate" class="form-control">
-                    </div>
                 </div>
-                <div class="d-flex justify-content-end gap-2">
+
+                <div class="d-flex justify-content-end gap-2 mt-2">
                     <button type="button" class="btn btn-secondary" (click)="cancelEdit()">Cancel</button>
-                    <button type="submit" class="btn btn-success">Save Changes</button>
+                    <button type="submit" class="btn btn-success" 
+                            [disabled]="!editStartTime || !editEndTime">
+                        Save Changes
+                    </button>
                 </div>
             </form>
         </div>
@@ -54,8 +88,8 @@
                         <td><span class="fw-bold">{{ res.room?.name || 'Unknown' }}</span></td>
                         <td>
                             <div class="small">
-                                <div>Start: {{ res.startDate | date:'short' }}</div>
-                                <div>End: &nbsp;{{ res.endDate | date:'short' }}</div>
+                                <div>Start: {{ res.startDate | date:'medium' }}</div>
+                                <div>End: &nbsp;{{ res.endDate | date:'medium' }}</div>
                             </div>
                         </td>
                         <td>
@@ -66,9 +100,25 @@
                         <td class="text-muted fst-italic">{{ res.reason }}</td>
                         <td class="text-end">
                             <div class="btn-group">
-                                <button class="btn btn-sm btn-outline-primary" (click)="startEdit(res)" title="Edit">✏️</button>
-                                <button *ngIf="isReservationActive(res) && !res.cancelled" class="btn btn-sm btn-outline-warning" (click)="performCancel(res.id)" title="Cancel">🚫</button>
-                                <button class="btn btn-sm btn-outline-danger" (click)="deleteReservation(res.id)" title="Delete Permanently">🗑️</button>
+                                <button *ngIf="isReservationActive(res)" 
+                                        class="btn btn-sm btn-outline-primary" 
+                                        (click)="startEdit(res)" 
+                                        title="Edit">
+                                    ✏️
+                                </button>
+
+                                <button *ngIf="isReservationActive(res) && !res.cancelled" 
+                                        class="btn btn-sm btn-outline-warning" 
+                                        (click)="performCancel(res.id)" 
+                                        title="Cancel">
+                                    🚫
+                                </button>
+                                
+                                <button class="btn btn-sm btn-outline-danger" 
+                                        (click)="deleteReservation(res.id)" 
+                                        title="Delete Permanently">
+                                    🗑️
+                                </button>
                             </div>
                         </td>
                     </tr>
