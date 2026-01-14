@@ -1,6 +1,6 @@
 package com.urjcservice.backend.rest;
 
-import com.urjcservice.backend.controller.ReservationController.ReservationRequest;
+//import com.urjcservice.backend.controller.ReservationController.ReservationRequest;
 import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.service.ReservationService;
 import org.springframework.data.web.PageableDefault;

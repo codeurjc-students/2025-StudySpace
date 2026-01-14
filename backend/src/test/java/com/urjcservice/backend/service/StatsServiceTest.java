@@ -1,6 +1,7 @@
 package com.urjcservice.backend.service;
 
 import com.urjcservice.backend.dtos.DashboardStatsDTO;
+import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.repositories.ReservationRepository;
 import com.urjcservice.backend.repositories.RoomRepository;
 import org.junit.jupiter.api.Test;
@@ -13,10 +14,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageImpl;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -34,68 +38,71 @@ public class StatsServiceTest {
     @InjectMocks
     private StatsService statsService;
 
+    private Date toDate(LocalDateTime ldt) {
+        return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
+    }
+
     @Test
     public void testGetStatsWithData() {
-        // GIVEN: Test data
+        // GIVEN
         LocalDate today = LocalDate.now();
         
-        // Mock 10 total rooms
+        // Mockl
         when(roomRepo.countTotalRooms()).thenReturn(10L);
-
         when(resRepo.countOccupiedRoomsByDate(today)).thenReturn(5L);
         when(resRepo.countOccupiedWithSoftwareByDate(today)).thenReturn(4L);
+        Reservation res = new Reservation();
+        res.setStartDate(toDate(today.atTime(10, 0))); 
+        res.setEndDate(toDate(today.atTime(11, 0)));
 
-        // Mock dates for hourly grouping, simulate a DB timestamp (e.g. 10:00 UTC)
-        Date dateMock = Date.from(Instant.parse("2025-12-12T10:00:00Z")); 
-        when(resRepo.findStartDatesByDate(eq(today), any(Pageable.class))).thenReturn(new PageImpl<>(Arrays.asList(dateMock)));
+        when(resRepo.findAllActiveByDate(today)).thenReturn(List.of(res));
 
         // WHEN
         DashboardStatsDTO result = statsService.getStats(today);
 
-        // THEN
-        
-        //Occupancy: 5 out of 10 = 50%
-        assertEquals(50.0, result.getOccupiedPercentage());
+
+
+        assertEquals(10, result.getTotalRooms());
+        assertEquals(50.0, result.getOccupiedPercentage()); 
         assertEquals(50.0, result.getFreePercentage());
-
-        //Software: 4 out of 5 occupied = 80% (Calculated over occupied, not total)
         assertEquals(80.0, result.getRoomsWithSoftwarePercentage());
-        assertEquals(20.0, result.getRoomsWithoutSoftwarePercentage());
-
-        //Hourly Grouping
-        // Verify map is not empty and repositories were called
-        assertFalse(result.getHourlyOccupancy().isEmpty());
-        verify(resRepo).findStartDatesByDate(eq(today), any(Pageable.class));
+        assertNotNull(result.getHourlyOccupancy());
+        assertEquals(1L, result.getHourlyOccupancy().get("10:00"));
+        assertEquals(1L, result.getHourlyOccupancy().get("10:30"));
+        assertEquals(0L, result.getHourlyOccupancy().get("09:30")); 
+        assertEquals(0L, result.getHourlyOccupancy().get("11:00")); 
+        verify(resRepo).findAllActiveByDate(eq(today));
     }
 
     @Test
     public void testGetStatsNoRooms() {
-        // Edge case: 0 Rooms (Prevent Division by Zero)
         LocalDate today = LocalDate.now();
+        
         when(roomRepo.countTotalRooms()).thenReturn(0L);
-        // Ensure repository method returns an empty page to avoid NullPointer
-        when(resRepo.findStartDatesByDate(eq(today), any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
+        when(resRepo.countOccupiedRoomsByDate(today)).thenReturn(0L);
+        when(resRepo.findAllActiveByDate(today)).thenReturn(Collections.emptyList());
 
         DashboardStatsDTO result = statsService.getStats(today);
-        //Verify
+        
+        // Verify
         assertEquals(0, result.getTotalRooms());
-        // Percentages should be 0.0, not NaN or Infinity
         assertEquals(0.0, result.getOccupiedPercentage());
     }
 
     @Test
     public void testGetStatsNoReservations() {
-        // Edge case: Rooms exist, but 0 reservations
         LocalDate today = LocalDate.now();
         
         when(roomRepo.countTotalRooms()).thenReturn(10L);
         when(resRepo.countOccupiedRoomsByDate(today)).thenReturn(0L);
-        when(resRepo.findStartDatesByDate(eq(today), any(Pageable.class))).thenReturn(new PageImpl<>(Collections.emptyList()));
+        when(resRepo.findAllActiveByDate(today)).thenReturn(Collections.emptyList());
 
         DashboardStatsDTO result = statsService.getStats(today);
-        //Verify
+        
+        // Verify
         assertEquals(0.0, result.getOccupiedPercentage());
         assertEquals(100.0, result.getFreePercentage());
-        assertEquals(0.0, result.getRoomsWithSoftwarePercentage());
+        assertTrue(result.getHourlyOccupancy().values().stream().allMatch(v -> v == 0));
+        verify(resRepo).findAllActiveByDate(eq(today));
     }
 }

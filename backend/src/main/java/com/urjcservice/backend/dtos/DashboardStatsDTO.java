@@ -9,7 +9,7 @@ public class DashboardStatsDTO {
     private double freePercentage;
 
     // Gráfico 2: Afluencia(Mapa Hora -> Cantidad Reservas)
-    private Map<Integer, Long> hourlyOccupancy;
+    private Map<String, Long> hourlyOccupancy;
 
     // Gráfico 3: Software (% con software vs % sin software)
     private double roomsWithSoftwarePercentage;
@@ -23,8 +23,8 @@ public class DashboardStatsDTO {
     public void setOccupiedPercentage(double occupiedPercentage) { this.occupiedPercentage = occupiedPercentage; }
     public double getFreePercentage() { return freePercentage; }
     public void setFreePercentage(double freePercentage) { this.freePercentage = freePercentage; }
-    public Map<Integer, Long> getHourlyOccupancy() { return hourlyOccupancy; }
-    public void setHourlyOccupancy(Map<Integer, Long> hourlyOccupancy) { this.hourlyOccupancy = hourlyOccupancy; }
+    public Map<String, Long> getHourlyOccupancy() { return hourlyOccupancy; }
+    public void setHourlyOccupancy(Map<String, Long> hourlyOccupancy) { this.hourlyOccupancy = hourlyOccupancy; }
     public double getRoomsWithSoftwarePercentage() { return roomsWithSoftwarePercentage; }
     public void setRoomsWithSoftwarePercentage(double roomsWithSoftwarePercentage) { this.roomsWithSoftwarePercentage = roomsWithSoftwarePercentage; }
     public double getRoomsWithoutSoftwarePercentage() { return roomsWithoutSoftwarePercentage; }
