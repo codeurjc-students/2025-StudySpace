@@ -1,6 +1,6 @@
 package com.urjcservice.backend.rest;
 
-import com.urjcservice.backend.controller.ReservationController.ReservationRequest;
+import com.urjcservice.backend.rest.ReservationRestController.ReservationRequest;
 import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.entities.User;
@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDate;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
@@ -128,7 +129,7 @@ public class ReservationRestControllerTest {
                 .willReturn(mockReservation);
 
         // WHEN & THEN
-        mockMvc.perform(post("/api/reservations/create")
+        mockMvc.perform(post("/api/reservations")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated()) // 201
@@ -145,7 +146,7 @@ public class ReservationRestControllerTest {
         String json = "{\"roomId\": 1, \"reason\": \"Bad Dates\"}";
 
         // WHEN & THEN
-        mockMvc.perform(post("/api/reservations/create")
+        mockMvc.perform(post("/api/reservations")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
                 .andExpect(status().isBadRequest()); // 400
@@ -315,6 +316,70 @@ public class ReservationRestControllerTest {
 
         mockMvc.perform(patch("/api/reservations/99/cancel"))
                 .andExpect(status().isNotFound());
+    }
+
+
+
+
+
+
+    @Test
+    @WithMockUser(roles = "USER")
+    public void testCheckAvailability_Success() throws Exception {
+        // GIVEN
+        LocalDate date = LocalDate.of(2026, 1, 31);
+        given(reservationService.getActiveReservationsForRoomAndDate(eq(1L), eq(date)))
+                .willReturn(List.of(mockReservation));
+
+        // WHEN & THEN
+        mockMvc.perform(get("/api/reservations/check-availability")
+                .param("roomId", "1")
+                .param("date", "2026-01-31")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk()) // 200 OK
+                .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    // --- Limit hour test ---
+
+    @Test
+    @WithMockUser(username = "user@test.com", roles = "USER")
+    public void testCreateReservation_DailyLimitExceeded_Returns400() throws Exception {
+        // GIVEN
+        given(reservationService.createReservation(any(ReservationRequest.class), eq("user@test.com")))
+                .willThrow(new IllegalArgumentException("Daily limit exceeded. Used: 180m."));
+
+        ReservationRequest request = new ReservationRequest();
+        request.setRoomId(1L);
+        request.setStartDate(new Date()); 
+        request.setEndDate(new Date());
+
+        // WHEN & THEN
+        mockMvc.perform(post("/api/reservations") 
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest()) // 400 Bad Request
+                .andExpect(content().string("Daily limit exceeded. Used: 180m."));
+    }
+
+    @Test
+    @WithMockUser(username = "user@test.com", roles = "USER")
+    public void testCreateReservation_RoomOccupied_Returns400() throws Exception {
+        // GIVEN overlaping
+        given(reservationService.createReservation(any(ReservationRequest.class), eq("user@test.com")))
+                .willThrow(new RuntimeException("The room is already reserved for this time."));
+
+        ReservationRequest request = new ReservationRequest();
+        request.setRoomId(1L);
+        request.setStartDate(new Date());
+        request.setEndDate(new Date());
+
+        // WHEN & THEN
+        mockMvc.perform(post("/api/reservations") 
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest()) // 400 Bad Request
+                .andExpect(content().string("The room is already reserved for this time."));
     }
 
 }
