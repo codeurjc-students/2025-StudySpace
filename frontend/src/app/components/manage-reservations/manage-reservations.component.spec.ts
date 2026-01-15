@@ -82,6 +82,7 @@ describe('ManageReservationsComponent', () => {
     const resToEdit = { 
       id: 1, 
       reason: 'Old', 
+      roomId: 101,
       room: { id: 101, name: 'Lab 1' },
       startDate: '2026-01-01T10:00:00',
       endDate: '2026-01-01T12:00:00'

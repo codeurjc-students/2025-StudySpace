@@ -5,6 +5,7 @@ import { RoomsService } from '../../services/rooms.service';
 import { RoomDTO } from '../../dtos/room.dto';
 import { Page } from '../../dtos/page.model';
 import { PaginationUtil } from '../../utils/pagination.util';
+import { ReservationLogic } from '../../utils/reservation-logic.util';
 
 @Component({
   selector: 'app-manage-reservations',
@@ -83,6 +84,15 @@ export class ManageReservationsComponent implements OnInit {
 
   startEdit(reservation: any) {
     this.editingReservation = { ...reservation }; 
+    const startDate = new Date(reservation.startDate);
+    const endDate = new Date(reservation.endDate);
+
+    this.editDateStr = startDate.toISOString().split('T')[0];
+    this.editStartTime = ReservationLogic.pad(startDate.getHours()) + ':' + ReservationLogic.pad(startDate.getMinutes());
+    this.editEndTime = ReservationLogic.pad(endDate.getHours()) + ':' + ReservationLogic.pad(endDate.getMinutes());
+
+    this.onConfigChange(true);/*
+    this.editingReservation = { ...reservation }; 
     
     if(this.editingReservation.room) {
         this.editingReservation.roomId = this.editingReservation.room.id;
@@ -99,7 +109,7 @@ export class ManageReservationsComponent implements OnInit {
     this.editEndTime = this.formatTime(endDateObj);
 
 
-    this.onConfigChange(true); //true no delete selecctions
+    this.onConfigChange(true); //true no delete selecctions^*/
   }
 
   cancelEdit() {
@@ -156,6 +166,32 @@ export class ManageReservationsComponent implements OnInit {
 
   onConfigChange(isInit: boolean = false) {
     if (!isInit) {
+        this.availableStartTimes = [];
+        this.availableEndTimes = [];
+        // Solo reseteamos si el usuario cambia algo, no al iniciar edición
+        if (!this.editingReservation.roomId || !this.editDateStr) return;
+    }
+
+    const roomId = this.editingReservation.roomId;
+    const date = this.editDateStr;
+
+    this.reservationService.checkAvailability(roomId, date).subscribe(data => {
+        // FILTRAR: Quitamos nuestra propia reserva de la lista de ocupadas
+        this.occupiedSlots = data.filter((r: any) => r.id !== this.editingReservation.id);
+        
+        // USAMOS UTILIDAD
+        this.availableStartTimes = ReservationLogic.generateStartTimes(this.occupiedSlots);
+
+        // Si no es init, o si la hora actual ya no es válida, reseteamos
+        if (!isInit && !this.availableStartTimes.includes(this.editStartTime)) {
+             this.editStartTime = '';
+             this.editEndTime = '';
+        } else {
+             // Recalcular horas fin disponibles basado en la hora inicio seleccionada
+             this.onStartTimeChange(isInit ? this.editEndTime : null);
+        }
+    });
+    /*if (!isInit) {
         this.editStartTime = '';
         this.editEndTime = '';
     }
@@ -176,7 +212,7 @@ export class ManageReservationsComponent implements OnInit {
         },
         error: (e) => console.error("Error checking availability", e)
       });
-    }
+    }*/
   }
 
   calculateStartTimes() {
@@ -215,7 +251,22 @@ export class ManageReservationsComponent implements OnInit {
   }
 
   onStartTimeChange(preselectedEndTime: string | null = null) {
-    if (!preselectedEndTime) {
+    this.availableEndTimes = [];
+    if (!this.editStartTime) return;
+
+    // USAMOS UTILIDAD
+    this.availableEndTimes = ReservationLogic.generateEndTimes(this.editStartTime, this.occupiedSlots);
+
+    if (preselectedEndTime) {
+        if (this.availableEndTimes.includes(preselectedEndTime)) {
+            this.editEndTime = preselectedEndTime;
+        } else {
+            this.editEndTime = '';
+        }
+    } else {
+        this.editEndTime = '';
+    }
+    /*if (!preselectedEndTime) {
       this.editEndTime = '';
     }
     this.availableEndTimes = [];
@@ -244,7 +295,7 @@ export class ManageReservationsComponent implements OnInit {
         } else {
             this.editEndTime = '';
         }
-    }
+    }*/
   }
 
   pad(n: number): string { return n < 10 ? '0' + n : '' + n; }

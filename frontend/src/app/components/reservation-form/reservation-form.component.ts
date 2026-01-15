@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { ReservationService } from '../../services/reservation.service';
 import { RoomsService } from '../../services/rooms.service';
 import { RoomDTO } from '../../dtos/room.dto';
+import { ReservationLogic } from '../../utils/reservation-logic.util';
 
 @Component({
   selector: 'app-reservation-form',
@@ -67,7 +68,8 @@ export class ReservationFormComponent implements OnInit {
 
   
   calculateStartTimes() {
-    const times: string[] = [];
+    this.startTimes = ReservationLogic.generateStartTimes(this.occupiedSlots);
+    /*const times: string[] = [];
     const now = new Date();
     //if today filter hour slots already passed
     const isToday = this.selectedDate === this.minDate; 
@@ -91,12 +93,15 @@ export class ReservationFormComponent implements OnInit {
         }
       }
     }
-    this.startTimes = times;
+    this.startTimes = times;*/
   }
 
   //calculate end date by the selected start date
   onStartTimeChange() {
     this.selectedEndTime = '';
+    this.endTimes = ReservationLogic.generateEndTimes(this.selectedStartTime, this.occupiedSlots);
+  
+    /*
     this.endTimes = [];
     
     if (!this.selectedStartTime) return;
@@ -127,7 +132,7 @@ export class ReservationFormComponent implements OnInit {
 
         m += 30;
         if (m === 60) { h++; m = 0; }
-    }
+    }*/
   }
 
   onSubmit() {
