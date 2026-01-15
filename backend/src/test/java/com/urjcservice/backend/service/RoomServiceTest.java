@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Page;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate; 
 import java.time.ZoneId;    
@@ -421,6 +422,45 @@ public class RoomServiceTest {
         assertEquals(100, result.get().getCapacity());
         assertEquals("Planta 2", result.get().getPlace());
         assertEquals("40.3,-3.8", result.get().getCoordenades());
+    }
+
+    @Test
+    void testSaveRoom_DuplicateName_ShouldThrowConflict() {
+        // GIVEN
+        Room newRoom = new Room();
+        newRoom.setName("Duplicate Name");
+        
+        when(roomRepository.existsByName("Duplicate Name")).thenReturn(true);
+
+        // WHEN & THEN
+        assertThrows(ResponseStatusException.class, () -> {
+            roomService.save(newRoom);
+        });
+        
+        verify(roomRepository, never()).save(any(Room.class));
+    }
+
+    @Test
+    void testUpdateRoom_DuplicateName_ShouldThrowConflict() {
+        // GIVEN
+        Long roomId = 1L;
+        Room existingRoom = new Room();
+        existingRoom.setId(roomId);
+        existingRoom.setName("Original Name");
+
+        Room updateData = new Room();
+        updateData.setName("Existing Other Name"); 
+
+
+        when(roomRepository.findById(roomId)).thenReturn(Optional.of(existingRoom));
+        when(roomRepository.existsByName("Existing Other Name")).thenReturn(true);
+
+        // WHEN & THEN
+        assertThrows(ResponseStatusException.class, () -> {
+            roomService.updateRoom(roomId, updateData);
+        });
+
+        verify(roomRepository, never()).save(any(Room.class));
     }
 
 

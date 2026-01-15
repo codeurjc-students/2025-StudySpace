@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SoftwareService } from '../../services/software.service';
+import { handleSaveRequest } from '../../utils/form-helpers.util';
 
 @Component({
   selector: 'app-software-form',
@@ -39,14 +40,17 @@ export class SoftwareFormComponent implements OnInit {
   }
 
   save() {
-    if (this.isEditMode && this.softwareId) {
-        this.softwareService.updateSoftware(this.softwareId, this.software).subscribe(() => {
-            this.router.navigate(['/admin/softwares']);
-        });
-    } else {
-        this.softwareService.createSoftware(this.software).subscribe(() => {
-            this.router.navigate(['/admin/softwares']);
-        });
-    }
+      const request$ = (this.isEditMode && this.softwareId)
+          ? this.softwareService.updateSoftware(this.softwareId, this.software)
+          : this.softwareService.createSoftware(this.software);
+
+      handleSaveRequest(
+          request$,
+          () => {
+              this.router.navigate(['/admin/softwares']);
+          },
+          'Software', 
+          'Error: This software version already exists. Please change the name or version.' // 409
+      );
   }
 }

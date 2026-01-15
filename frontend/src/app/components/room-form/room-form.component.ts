@@ -3,6 +3,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { RoomsService } from '../../services/rooms.service';
 import { SoftwareService, SoftwareDTO } from '../../services/software.service';
 import { Page } from '../../dtos/page.model'; 
+import { handleSaveRequest } from '../../utils/form-helpers.util';
 
 @Component({
   selector: 'app-room-form',
@@ -76,31 +77,24 @@ export class RoomFormComponent implements OnInit {
   }
 
   save() {
-    if (this.isEditMode && this.roomId) {
-      this.roomsService.updateRoom(this.roomId, this.room).subscribe({
-        next: (response) => {
-          if (this.selectedFile) {
-              this.uploadImageAndNavigate(this.roomId!);
-          } else {
-              alert('Classroom updated correctly!');
-              this.router.navigate(['/admin/rooms']);
-          }
-        },
-        error: (e) => alert('Update error: ' + e)
-      });
-    } else {
-      this.roomsService.createRoom(this.room).subscribe({
-        next: (response) => {
-          if (this.selectedFile) {
-              this.uploadImageAndNavigate(response.id);
-          } else {
-              alert('Classroom created correctly!');
-              this.router.navigate(['/admin/rooms']);
-          }
-        },
-        error: (err) => alert('Error creating classroom')
-      });
-    }
+      const request$ = (this.isEditMode && this.roomId)
+          ? this.roomsService.updateRoom(this.roomId, this.room)
+          : this.roomsService.createRoom(this.room);
+
+      handleSaveRequest(
+          request$,
+          (response) => {
+              if (this.selectedFile) {
+                  this.uploadImageAndNavigate(response.id);
+              } else {
+                  const action = this.isEditMode ? 'updated' : 'created';
+                  alert(`Classroom ${action} correctly!`);
+                  this.router.navigate(['/admin/rooms']);
+              }
+          },
+          'Classroom', 
+          'Error: A classroom with that name already exists. Please choose another.' // 409
+      );
   }
 
   onFileSelected(event: any) {

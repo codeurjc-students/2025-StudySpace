@@ -7,6 +7,8 @@ import com.urjcservice.backend.repositories.SoftwareRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +32,10 @@ public class SoftwareService {
     }
 
     public Software save(Software software) {
+        if (softwareRepository.findByNameAndVersion(software.getName(), software.getVersion()).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, 
+                "Software with this name and version already exists.");
+        }
         return softwareRepository.save(software);
     }
 
@@ -55,6 +61,16 @@ public class SoftwareService {
 
     public Optional<Software> updateSoftware(Long id, Software updatedSoftware) {
         return softwareRepository.findById(id).map(existingSoftware -> {
+            Optional<Software> duplicate = softwareRepository.findByNameAndVersion(
+                updatedSoftware.getName(), 
+                updatedSoftware.getVersion()
+            );
+
+            if (duplicate.isPresent() && !duplicate.get().getId().equals(id)) {
+                 throw new ResponseStatusException(HttpStatus.CONFLICT, 
+                    "Ya existe otro software con este nombre y versión.");
+            }
+
             existingSoftware.setName(updatedSoftware.getName());
             existingSoftware.setVersion(updatedSoftware.getVersion());
             existingSoftware.setDescription(updatedSoftware.getDescription());

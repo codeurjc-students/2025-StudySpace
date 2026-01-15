@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -196,6 +197,87 @@ public class SoftwareServiceTest {
         when(softwareRepository.findById(99L)).thenReturn(Optional.empty());
         Optional<Software> result = softwareService.patchSoftware(99L, new Software());
         assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Test Save Software: Duplicate Name+Version throws Conflict")
+    public void testSaveSoftware_Duplicate_ShouldThrow() {
+        // GIVEN
+        Software newSoft = new Software();
+        newSoft.setName("Java");
+        newSoft.setVersion(17.0f);
+
+        Software existingDuplicate = new Software();
+        existingDuplicate.setId(5L);
+        when(softwareRepository.findByNameAndVersion("Java", 17.0f))
+                .thenReturn(Optional.of(existingDuplicate));
+
+        // WHEN & THEN
+        assertThrows(ResponseStatusException.class, () -> {
+            softwareService.save(newSoft);
+        });
+
+        verify(softwareRepository, never()).save(any(Software.class));
+    }
+
+    @Test
+    @DisplayName("Test Update Software: Conflict with another existing software")
+    public void testUpdateSoftware_DuplicateWithOther_ShouldThrow() {
+        // GIVEN
+        Long myId = 1L;
+        Software mySoft = new Software();
+        mySoft.setId(myId);
+        mySoft.setName("Python");
+        mySoft.setVersion(3.8f);
+
+        Software updateRequest = new Software();
+        updateRequest.setName("Python");
+        updateRequest.setVersion(3.9f);
+
+        Software otherSoft = new Software();
+        otherSoft.setId(2L); 
+        otherSoft.setName("Python");
+        otherSoft.setVersion(3.9f);
+
+        when(softwareRepository.findById(myId)).thenReturn(Optional.of(mySoft));
+        when(softwareRepository.findByNameAndVersion("Python", 3.9f))
+                .thenReturn(Optional.of(otherSoft));
+
+        // WHEN & THEN
+        assertThrows(ResponseStatusException.class, () -> {
+            softwareService.updateSoftware(myId, updateRequest);
+        });
+        
+        verify(softwareRepository, never()).save(any(Software.class));
+    }
+
+    @Test
+    @DisplayName("Test Update Software: No conflict if it is the same ID")
+    public void testUpdateSoftware_SameId_ShouldSuccess() {
+        // GIVEN
+        Long myId = 1L;
+        Software mySoft = new Software();
+        mySoft.setId(myId);
+        mySoft.setName("Java");
+        mySoft.setVersion(17.0f);
+
+        when(softwareRepository.findById(myId)).thenReturn(Optional.of(mySoft));
+        when(softwareRepository.findByNameAndVersion("Java", 17.0f))
+                .thenReturn(Optional.of(mySoft)); 
+        
+        when(softwareRepository.save(any(Software.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        // WHEN
+        Software updateRequest = new Software();
+        updateRequest.setName("Java");
+        updateRequest.setVersion(17.0f);
+        updateRequest.setDescription("New Description");
+
+        Optional<Software> result = softwareService.updateSoftware(myId, updateRequest);
+
+        // THEN
+        assertTrue(result.isPresent());
+        assertEquals("New Description", result.get().getDescription());
     }
 
 
