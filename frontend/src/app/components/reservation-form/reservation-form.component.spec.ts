@@ -16,38 +16,56 @@ describe('ReservationFormComponent UI Test', () => {
   let component: ReservationFormComponent;
   let fixture: ComponentFixture<ReservationFormComponent>;
   let reservationServiceSpy: jasmine.SpyObj<ReservationService>;
+  let roomsServiceSpy: jasmine.SpyObj<RoomsService>;
   let router: Router;
 
   const mockRoomsResponse = { 
     content: [
-      { id: 1, name: 'Aula Test 1', capacity: 20, camp: 'MOSTOLES', active: true },
-      { id: 2, name: 'Aula Test 2', capacity: 30, camp: 'ALCORCON', active: true },
-      { id: 3, name: 'Aula Desactivada', capacity: 15, camp: 'VICALVARO', active: false }
+      { 
+        id: 1, name: 'Aula Test 1', capacity: 20, camp: 'MOSTOLES', active: true,
+        place: 'Bloque 1', coordenades: '0,0', software: [] 
+      },
+      { 
+        id: 2, name: 'Aula Test 2', capacity: 30, camp: 'ALCORCON', active: true,
+        place: 'Bloque 2', coordenades: '0,0', software: [] 
+      },
+      { id: 3, name: 'Aula Desactivada', capacity: 15, camp: 'VICALVARO', active: false,
+        place: 'Bloque 3', coordenades: '0,0', software: []
+      }
     ], 
-    totalPages: 1, totalElements: 3, first: true, last: true, number: 0, size: 3 
+    totalPages: 1, 
+    totalElements: 2, 
+    number: 0, 
+    size: 2,
+    first: true,
+    last: true,
+    numberOfElements: 2,
+    empty: false,
+    sort: []
   };
 
   beforeEach(async () => {
     const resSpy = jasmine.createSpyObj('ReservationService', ['createReservation', 'checkAvailability']);
-
-    const roomsServiceMock = {
-      getRooms: () => of(mockRoomsResponse)
-    };
+    const roomsSpy = jasmine.createSpyObj('RoomsService', ['getRooms']);
 
     await TestBed.configureTestingModule({
       declarations: [ReservationFormComponent],
       imports: [HttpClientTestingModule, RouterTestingModule, FormsModule],
       providers: [
         { provide: ReservationService, useValue: resSpy },
-        { provide: RoomsService, useValue: roomsServiceMock }
+        { provide: RoomsService, useValue: roomsSpy }
       ]
     }).compileComponents();
 
+    roomsServiceSpy = TestBed.inject(RoomsService) as jasmine.SpyObj<RoomsService>;
     reservationServiceSpy = TestBed.inject(ReservationService) as jasmine.SpyObj<ReservationService>;
     router = TestBed.inject(Router);
+    
     fixture = TestBed.createComponent(ReservationFormComponent);
     component = fixture.componentInstance;
+
     reservationServiceSpy.checkAvailability.and.returnValue(of([]));
+    roomsServiceSpy.getRooms.and.returnValue(of(mockRoomsResponse));
     
     fixture.detectChanges();
   });
@@ -203,7 +221,70 @@ describe('ReservationFormComponent UI Test', () => {
   });
 
 
+  it('ngOnInit: should handle error when loading rooms', () => {
+    spyOn(console, 'error'); 
+    roomsServiceSpy.getRooms.and.returnValue(throwError(() => new Error('API Error')));
+    component.rooms = [];
+    component.ngOnInit();
+    
+    expect(console.error).toHaveBeenCalled();
+    expect(component.rooms).toEqual([]); 
+  });
 
+  it('onSubmit: should call service and navigate on success', () => {
+    reservationServiceSpy.createReservation.and.returnValue(of({}));
+    const navigateSpy = spyOn(router, 'navigate');
+    spyOn(window, 'alert');
+
+    component.roomId = 1;
+    component.selectedDate = '2026-05-20';
+    component.selectedStartTime = '10:00';
+    component.selectedEndTime = '12:00';
+    
+    component.onSubmit();
+
+    expect(reservationServiceSpy.createReservation).toHaveBeenCalled();
+    expect(navigateSpy).toHaveBeenCalledWith(['/']);
+  });
+  it('calculateStartTimes: should generate correct times via Utility', () => {
+    component.selectedDate = '2026-01-01';
+    component.occupiedSlots = [];
+    component.calculateStartTimes();
+    expect(component.startTimes).toContain('08:00');
+  });
+  
+  it('onStartTimeChange: should limit duration via Utility', () => {
+    component.selectedStartTime = '09:00';
+    component.occupiedSlots = []; 
+    component.onStartTimeChange();
+    const endTimes = component.endTimes;
+    expect(endTimes[endTimes.length - 1]).toBe('12:00'); 
+  });
+
+
+  it('ngOnInit: should NOT select a roomId if room list is empty', () => {
+    component.roomId = null; 
+    component.rooms = [];
+
+    roomsServiceSpy.getRooms.and.returnValue(of({ content: [], totalElements: 0, sort: [] } as any));
+    
+    component.ngOnInit();
+    
+    expect(component.rooms.length).toBe(0);
+    expect(component.roomId).toBeNull();
+  });
+
+  it('onConfigChange: should handle error from checkAvailability', () => {
+    spyOn(console, 'error');
+    reservationServiceSpy.checkAvailability.and.returnValue(throwError(() => new Error('Network fail')));
+    
+    component.roomId = 1;
+    component.selectedDate = '2026-01-01';
+    
+    component.onConfigChange();
+    
+    expect(console.error).toHaveBeenCalledWith('Error checking availability', jasmine.any(Error));
+  });
 
 
 });

@@ -69,70 +69,12 @@ export class ReservationFormComponent implements OnInit {
   
   calculateStartTimes() {
     this.startTimes = ReservationLogic.generateStartTimes(this.occupiedSlots);
-    /*const times: string[] = [];
-    const now = new Date();
-    //if today filter hour slots already passed
-    const isToday = this.selectedDate === this.minDate; 
-    const currentHour = now.getHours();
-    const currentMin = now.getMinutes();
-
-    for (let h = 8; h < 21; h++) {
-      for (let m of [0, 30]) {
-        if (h === 21) continue; 
-
-        if (isToday) {
-          if (h < currentHour || (h === currentHour && m <= currentMin)) {
-            continue;
-          }
-        }
-
-        const timeStr = `${this.pad(h)}:${this.pad(m)}`;
-        
-        if (!this.isTimeOccupied(timeStr)) {
-          times.push(timeStr);
-        }
-      }
-    }
-    this.startTimes = times;*/
   }
 
   //calculate end date by the selected start date
   onStartTimeChange() {
     this.selectedEndTime = '';
     this.endTimes = ReservationLogic.generateEndTimes(this.selectedStartTime, this.occupiedSlots);
-  
-    /*
-    this.endTimes = [];
-    
-    if (!this.selectedStartTime) return;
-
-    const [startH, startM] = this.selectedStartTime.split(':').map(Number);
-    const startTotalMins = startH * 60 + startM;
-
-    let h = startH;
-    let m = startM + 30;
-    if (m === 60) { h++; m = 0; }
-
-    while (h < 21 || (h === 21 && m === 0)) {
-        const currentTotalMins = h * 60 + m;
-        const duration = currentTotalMins - startTotalMins;
-
-        
-        if (duration > 180) {//more than 3 hours that day
-            break;
-        }
-
-        const timeStr = `${this.pad(h)}:${this.pad(m)}`;
-        
-        if (this.isOverlap(this.selectedStartTime, timeStr)) {//already a reservation
-            break; 
-        }
-
-        this.endTimes.push(timeStr);
-
-        m += 30;
-        if (m === 60) { h++; m = 0; }
-    }*/
   }
 
   onSubmit() {
@@ -155,43 +97,5 @@ export class ReservationFormComponent implements OnInit {
   }
 
 
-  pad(n: number): string {
-    return n < 10 ? '0' + n : '' + n;
-  }
 
-  //see if it coincides with any existing reservation
-  isTimeOccupied(timeStr: string): boolean {
-    const timeMins = this.toMinutes(timeStr);
-
-    return this.occupiedSlots.some(res => {
-      const resStart = new Date(res.startDate);
-      const resEnd = new Date(res.endDate);
-      
-      const startMins = resStart.getHours() * 60 + resStart.getMinutes();
-      const endMins = resEnd.getHours() * 60 + resEnd.getMinutes();
-
-      //time == end, it is free
-      return timeMins >= startMins && timeMins < endMins;
-    });
-  }
-
-  //if it overlaps with any existing reservation
-  isOverlap(startStr: string, endStr: string): boolean {
-    const s = this.toMinutes(startStr);
-    const e = this.toMinutes(endStr);
-
-    return this.occupiedSlots.some(res => {
-      const resStart = new Date(res.startDate);
-      const resEnd = new Date(res.endDate);
-      const rS = resStart.getHours() * 60 + resStart.getMinutes();
-      const rE = resEnd.getHours() * 60 + resEnd.getMinutes();
-
-      return e > rS && s < rE;
-    });
-  }
-
-  toMinutes(time: string): number {
-    const [h, m] = time.split(':').map(Number);
-    return h * 60 + m;
-  }
 }

@@ -215,4 +215,49 @@ describe('ManageReservationsComponent', () => {
   });
 
 
+  it('loadReservations: should handle error gracefully', () => {
+    spyOn(console, 'error'); 
+    reservationServiceSpy.getReservationsByUser.and.returnValue(throwError(() => new Error('Load failed')));
+    
+    component.loadReservations(0);
+    
+    expect(console.error).toHaveBeenCalledWith('Error loading reservations', jasmine.any(Error));
+  });
+
+
+  it('deleteReservation: should handle error from service', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    spyOn(window, 'alert');
+    reservationServiceSpy.deleteReservation.and.returnValue(throwError(() => new Error('Delete failed')));
+
+    component.deleteReservation(123);
+
+    expect(window.alert).toHaveBeenCalledWith('Error deleting');
+  });
+
+  it('performCancel: should handle error from service', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    spyOn(window, 'alert');
+    reservationServiceSpy.cancelReservation.and.returnValue(throwError(() => new Error('Cancel failed')));
+
+    component.performCancel(1);
+
+    expect(window.alert).toHaveBeenCalledWith('Cancellation error:');
+  });
+
+
+  it('onConfigChange: should reset times if current selection becomes invalid', () => {
+    component.editingReservation = { id: 1, roomId: 101 };
+    component.editDateStr = '2026-01-01';
+    component.editStartTime = '10:00';
+
+    const occupied = [{ startDate: '2026-01-01T10:00:00', endDate: '2026-01-01T11:00:00' }];
+    reservationServiceSpy.checkAvailability.and.returnValue(of(occupied));
+
+    component.onConfigChange(false);
+
+    expect(component.editStartTime).toBe('');
+    expect(component.editEndTime).toBe('');
+  });
+
 });
