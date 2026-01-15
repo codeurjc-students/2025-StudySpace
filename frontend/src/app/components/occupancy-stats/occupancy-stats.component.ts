@@ -124,30 +124,88 @@ export class OccupancyStatsComponent implements OnInit, AfterViewInit {
   }
 
   createHourlyChart(hourlyMap: any) {
-    const hoursLabels = Array.from({length: 14}, (_, i) => i + 8); 
-    const dataValues = hoursLabels.map(h => hourlyMap[h] || 0);
+      if (this.hourlyChartInstance) {
+      this.hourlyChartInstance.destroy();
+    }
+
+    const labels: string[] = [];
+    const dataValues: number[] = [];
+    
+    for (let i = 8; i < 21; i += 0.5) {
+      const hour = Math.floor(i);
+      const minutes = (i % 1 === 0) ? '00' : '30';
+      const timeLabel = `${this.pad(hour)}:${minutes}`;
+      
+      labels.push(timeLabel);
+
+
+      const val = hourlyMap[i] || hourlyMap[timeLabel] || 0;
+      dataValues.push(val);
+    }
+
+
+    const ctx = this.hourlyCanvas.nativeElement.getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(102, 16, 242, 0.8)'); 
+    gradient.addColorStop(1, 'rgba(102, 16, 242, 0.1)'); 
 
     this.hourlyChartInstance = new Chart(this.hourlyCanvas.nativeElement, {
-      type: 'bar',
+      type: 'bar', 
       data: {
-        labels: hoursLabels.map(h => h + ':00'),
+        labels: labels,
         datasets: [{
-          label: 'Bookings Count',
+          label: 'Active Reservations',
           data: dataValues,
-          backgroundColor: '#6610f2', 
-          borderRadius: 4
+          backgroundColor: gradient,
+          borderColor: '#6610f2',
+          borderWidth: 1,
+          borderRadius: 5, 
+          barPercentage: 0.7, 
+          categoryPercentage: 0.9
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }, 
+          tooltip: {
+            callbacks: {
+              label: (context) => ` ${context.parsed.y} Reservations`
+            },
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            padding: 10,
+            cornerRadius: 8,
+          }
+        },
         scales: {
-          y: { 
-            beginAtZero: true, 
-            ticks: { stepSize: 1 } 
-          } 
+          y: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1, 
+              font: { family: "'Segoe UI', sans-serif", size: 11 }
+            },
+            grid: {
+              color: '#f0f0f0' 
+            },
+            title: { display: true, text: 'Occupancy Count', font: {size: 12, weight: 'bold'} }
+          },
+          x: {
+            grid: { display: false }, 
+            ticks: {
+              autoSkip: false, 
+              maxRotation: 45, 
+              minRotation: 45,
+              font: { size: 10 }
+            }
+          }
         }
       }
     });
+  }
+
+
+  private pad(n: number): string {
+    return n < 10 ? '0' + n : '' + n;
   }
 }

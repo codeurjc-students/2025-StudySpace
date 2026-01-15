@@ -1,21 +1,28 @@
 package com.urjcservice.backend.rest;
 
+//import com.urjcservice.backend.controller.ReservationController.ReservationRequest;
 import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.service.ReservationService;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.SortDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.Sort;
 
 import java.net.URI;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.security.Principal;
+import java.time.LocalDate;
 
 //import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.web.servlet.support.ServletUriComponentsBuilder.fromCurrentRequest;
@@ -31,6 +38,23 @@ public class ReservationRestController {
         this.reservationService = reservationService;
     }
 
+    public static class ReservationRequest {
+        private Long roomId;
+
+        private Date startDate;
+        private Date endDate;
+        private String reason;
+        
+        public Long getRoomId() { return roomId; }
+        public void setRoomId(Long roomId) { this.roomId = roomId; }
+        public Date getStartDate() { return startDate; }
+        public void setStartDate(Date startDate) { this.startDate = startDate; }
+        public Date getEndDate() { return endDate; }
+        public void setEndDate(Date endDate) { this.endDate = endDate; }
+        public String getReason() { return reason; }
+        public void setReason(String reason) { this.reason = reason; }
+    }
+
     @GetMapping
     public Page<Reservation> getAllReservations(@PageableDefault(size = 10) Pageable pageable) {//if frontend dont send size, default 10
         return reservationService.findAll(pageable);
@@ -43,14 +67,35 @@ public class ReservationRestController {
               .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
     }
 
-    @PostMapping
+    /*@PostMapping
     public ResponseEntity<Reservation> createReservation(@RequestBody Reservation reservation) {
         Reservation savedReservation = reservationService.save(reservation);
 
         URI location = fromCurrentRequest().path("/{id}").buildAndExpand(savedReservation.getId()).toUri();
 
         return ResponseEntity.created(location).body(savedReservation);
-    }
+    }*/
+
+    @PostMapping
+    public ResponseEntity<Object> createReservation(@RequestBody ReservationRequest request) {
+        try {
+            // 1. Obtener SIEMPRE la identidad del Token de seguridad
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String currentUserEmail = auth.getName();
+
+            // 2. Llamar al servicio pasando solo el email del token
+            // (Ignoramos cualquier userId que venga en el body)
+            Reservation newReservation = reservationService.createReservation(request, currentUserEmail);
+            
+            URI location = fromCurrentRequest().path("/{id}").buildAndExpand(newReservation.getId()).toUri();
+            return ResponseEntity.created(location).body(newReservation);
+
+        } catch (IllegalArgumentException e) {
+             return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (RuntimeException e) {
+             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }    
 
     @PutMapping("/{id}")
     public ResponseEntity<Reservation> updateReservation(@PathVariable Long id, @RequestBody Reservation updatedReservation) {
@@ -91,4 +136,35 @@ public class ReservationRestController {
         return deleted.map(ResponseEntity::ok)
                       .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/check-availability")
+    public ResponseEntity<List<Reservation>> checkAvailability(
+            @RequestParam Long roomId, 
+            @RequestParam String date) { 
+        
+        try {
+            LocalDate localDate = LocalDate.parse(date);
+            List<Reservation> reservations = reservationService.getActiveReservationsForRoomAndDate(roomId, localDate);
+            return ResponseEntity.ok(reservations);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    @GetMapping("/my-reservations")
+    public ResponseEntity<Page<Reservation>> getMyReservations(
+        @PageableDefault(size = 10) 
+        @SortDefault(sort = "startDate", direction = Sort.Direction.DESC)
+        Pageable pageable) {
+        
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+
+        Page<Reservation> reservations = reservationService.getReservationsByUserEmail(email, pageable);
+        
+        return ResponseEntity.ok(reservations);
+    }
+
+
+
+
 }

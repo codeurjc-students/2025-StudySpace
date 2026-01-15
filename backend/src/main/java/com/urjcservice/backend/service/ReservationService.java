@@ -1,6 +1,6 @@
 package com.urjcservice.backend.service;
 
-import com.urjcservice.backend.controller.ReservationController.ReservationRequest;
+//import com.urjcservice.backend.controller.ReservationController.ReservationRequest;
 import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.entities.User;
 import com.urjcservice.backend.entities.Room;
@@ -13,8 +13,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import com.urjcservice.backend.rest.ReservationRestController.ReservationRequest;
 
 @Service
 public class ReservationService {
@@ -87,6 +94,19 @@ public class ReservationService {
     
     public Optional<Reservation> updateReservation(Long id, Reservation updatedReservation) {
         return reservationRepository.findById(id).map(existingReservation -> {
+            Date newStart = updatedReservation.getStartDate() != null ? updatedReservation.getStartDate() : existingReservation.getStartDate();
+            Date newEnd = updatedReservation.getEndDate() != null ? updatedReservation.getEndDate() : existingReservation.getEndDate();
+            LocalDateTime startLDT = newStart.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+            LocalDateTime endLDT = newEnd.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+            long newDuration = java.time.Duration.between(startLDT, endLDT).toMinutes();
+
+            if (newDuration > 180) {
+                throw new IllegalArgumentException("A single reservation cannot exceed 3 hours.");
+            }
+            validateUserDailyQuota(existingReservation.getUser(), startLDT.toLocalDate(), newDuration, id);
+            
+            validateReservationRules(newStart, newEnd);
+
             updateReservationUser(existingReservation, updatedReservation.getUserId());
             updateReservationRoom(existingReservation, updatedReservation.getRoomId());
             updateReservationDetails(existingReservation, updatedReservation);
@@ -135,12 +155,39 @@ public class ReservationService {
         if (!room.isActive()) {
         throw new RuntimeException("Reservations are not possible: The classroom is temporarily unavailable.");
         }
+        
+        validateReservationRules(request.getStartDate(), request.getEndDate()); 
+
+
+        LocalDateTime start = request.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+        LocalDateTime end = request.getEndDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+        long newDuration = java.time.Duration.between(start, end).toMinutes();
+
+        if (newDuration > 180) {
+            throw new IllegalArgumentException("A single reservation cannot exceed 3 hours.");
+        }
+
+
         Page<Reservation> overlaps = reservationRepository.findOverlappingReservations(
             request.getRoomId(), request.getStartDate(), request.getEndDate(),PageRequest.of(0, 1));
 
         if (overlaps.hasContent()) {
             throw new RuntimeException("The room is already reserved for this time.");
         }
+
+
+
+
+
+        
+        //all day hours reserved
+        validateUserDailyQuota(user, start.toLocalDate(), newDuration, null);
+
+
+
+        
+
+
         Reservation reservation = new Reservation();
         reservation.setStartDate(request.getStartDate());
         reservation.setEndDate(request.getEndDate());
@@ -168,6 +215,65 @@ public class ReservationService {
     }
 
 
+    public List<Reservation> getActiveReservationsForRoomAndDate(Long roomId, LocalDate date) {
+        return reservationRepository.findActiveReservationsByRoomAndDate(roomId, date);
+    }
+
+    private void validateReservationRules(Date startDate, Date endDate) {
+        if (startDate == null || endDate == null) {
+            throw new IllegalArgumentException("Dates cannot be null");
+        }
+
+        LocalDateTime start = startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+        LocalDateTime end = endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+
+        if (start.isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Cannot create reservations in the past.");
+        }
+
+        if (!end.isAfter(start)) {
+            throw new IllegalArgumentException("End date must be after start date.");
+        }
+
+        //validate (08:00 - 21:00)
+        LocalTime openTime = LocalTime.of(8, 0);
+        LocalTime closeTime = LocalTime.of(21, 0);
+
+        if (start.toLocalTime().isBefore(openTime) || 
+            end.toLocalTime().isAfter(closeTime) || 
+            (end.toLocalTime().equals(LocalTime.MIDNIGHT))) { 
+             throw new IllegalArgumentException("Reservations must be between 08:00 and 21:00.");
+        }
+
+        if (start.getMinute() % 30 != 0 || end.getMinute() % 30 != 0) {
+            throw new IllegalArgumentException("Reservations must start and end in 30-minute intervals (e.g., 10:00, 10:30).");
+        }
+        
+        long minutes = java.time.Duration.between(start, end).toMinutes();
+        if (minutes < 30) {
+             throw new IllegalArgumentException("Minimum reservation duration is 30 minutes.");
+        }
+    }
+
+
+
+    private void validateUserDailyQuota(User user, LocalDate date, long newDurationMinutes, Long excludeReservationId) {
+        List<Reservation> existingReservations = reservationRepository.findActiveByUserIdAndDate(user.getId(), date);
+
+        long usedMinutes = existingReservations.stream()
+                .filter(r -> !r.getId().equals(excludeReservationId)) 
+                .mapToLong(r -> {
+                    LocalDateTime start = r.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+                    LocalDateTime end = r.getEndDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+                    return java.time.Duration.between(start, end).toMinutes();
+                })
+                .sum();
+
+        //limit (3 hours = 180 minutes)
+        if (usedMinutes + newDurationMinutes > 180) {
+            throw new IllegalArgumentException("Daily limit exceeded. You can only book up to 3 hours per day. Already used: " + usedMinutes + "minutes.");
+        }
+    }
 
 
 

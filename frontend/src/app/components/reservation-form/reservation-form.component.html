@@ -7,8 +7,9 @@
         <form (ngSubmit)="onSubmit()">
 
             <div class="mb-3">
-                <label for="roomSelect" class="form-label">Select the Room</label>
-                <select id="roomSelect" name="roomId" [(ngModel)]="roomId" class="form-select" required>
+                <label for="roomSelect" class="form-label fw-bold">1. Select Room</label>
+                <select id="roomSelect" name="roomId" [(ngModel)]="roomId" 
+                        (change)="onConfigChange()" class="form-select" required>
                     <option [ngValue]="null" disabled>-- Choose a room --</option>
                     <option *ngFor="let room of rooms" [value]="room.id">
                         {{ room.name }} (Capacity: {{ room.capacity }})
@@ -17,26 +18,51 @@
             </div>
 
             <div class="mb-3">
-                <label for="startDate" class="form-label">Start Date and Time</label>
-                <input type="datetime-local" id="startDate" name="startDate" 
-                       [(ngModel)]="startDate" class="form-control" required>
+                <label for="dateSelect" class="form-label fw-bold">2. Select Date</label>
+                <input type="date" id="dateSelect" name="selectedDate" 
+                       [(ngModel)]="selectedDate" (change)="onConfigChange()"
+                       [min]="minDate" class="form-control" required>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="startTime" class="form-label fw-bold">3. Start Time</label>
+                    <select id="startTime" name="startTime" 
+                            [(ngModel)]="selectedStartTime" (change)="onStartTimeChange()"
+                            class="form-select" 
+                            [disabled]="!selectedDate || startTimes.length === 0" required>
+                        <option value="" disabled>-- Select Start --</option>
+                        <option *ngFor="let t of startTimes" [value]="t">{{ t }}</option>
+                    </select>
+                    <div *ngIf="selectedDate && startTimes.length === 0" class="text-danger small mt-1">
+                        No available slots for this day.
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="endTime" class="form-label fw-bold">4. End Time</label>
+                    <select id="endTime" name="endTime" 
+                            [(ngModel)]="selectedEndTime" 
+                            class="form-select" 
+                            [disabled]="!selectedStartTime" required>
+                        <option value="" disabled>-- Select End --</option>
+                        <option *ngFor="let t of endTimes" [value]="t">{{ t }}</option>
+                    </select>
+                </div>
             </div>
 
             <div class="mb-3">
-                <label for="endDate" class="form-label">End Date and Time</label>
-                <input type="datetime-local" id="endDate" name="endDate" 
-                       [(ngModel)]="endDate" class="form-control" required>
-            </div>
-
-            <div class="mb-3">
-                <label for="reason" class="form-label">Reason for reservation</label>
+                <label for="reason" class="form-label fw-bold">Reason</label>
                 <textarea id="reason" name="reason" [(ngModel)]="reason" 
-                          class="form-control" rows="3" placeholder="Ej: Clase de refuerzo..."></textarea>
+                          class="form-control" rows="3" placeholder="Class purpose..."></textarea>
             </div>
 
             <div class="d-flex justify-content-between mt-4">
                 <button type="button" class="btn btn-secondary" routerLink="/">Cancel</button>
-                <button type="submit" class="btn btn-success" [disabled]="!roomId">Confirm Reservation</button>
+                <button type="submit" class="btn btn-success" 
+                        [disabled]="!roomId || !selectedStartTime || !selectedEndTime">
+                    Confirm Reservation
+                </button>
             </div>
 
         </form>

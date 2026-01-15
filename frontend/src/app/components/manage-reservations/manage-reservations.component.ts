@@ -5,6 +5,7 @@ import { RoomsService } from '../../services/rooms.service';
 import { RoomDTO } from '../../dtos/room.dto';
 import { Page } from '../../dtos/page.model';
 import { PaginationUtil } from '../../utils/pagination.util';
+import { ReservationLogic } from '../../utils/reservation-logic.util';
 
 @Component({
   selector: 'app-manage-reservations',
@@ -22,6 +23,15 @@ export class ManageReservationsComponent implements OnInit {
   editingReservation: any = null; // actually edited
   rooms: RoomDTO[] = []; 
 
+  editDateStr: string = '';
+  editStartTime: string = '';
+  editEndTime: string = '';
+  
+  availableStartTimes: string[] = [];
+  availableEndTimes: string[] = [];
+  occupiedSlots: any[] = [];
+  minDate: string = '';
+
   constructor(
     private readonly route: ActivatedRoute,
     private readonly reservationService: ReservationService,
@@ -35,7 +45,7 @@ export class ManageReservationsComponent implements OnInit {
       this.userId = +id;
       this.loadReservations(0);
     }
-    
+    this.minDate = new Date().toISOString().split('T')[0];
     //loadRooms
     this.roomsService.getRooms(0, 100).subscribe(data => this.rooms = data.content);
   }
@@ -73,28 +83,41 @@ export class ManageReservationsComponent implements OnInit {
 
 
   startEdit(reservation: any) {
-   //copy for editing without modifying original until saved
     this.editingReservation = { ...reservation }; 
-    
-    //take care that roomId has a value and is not and object
-    if(this.editingReservation.room) {
-        this.editingReservation.roomId = this.editingReservation.room.id;
-    }
+    const startDate = new Date(reservation.startDate);
+    const endDate = new Date(reservation.endDate);
+
+    this.editDateStr = startDate.toISOString().split('T')[0];
+    this.editStartTime = ReservationLogic.pad(startDate.getHours()) + ':' + ReservationLogic.pad(startDate.getMinutes());
+    this.editEndTime = ReservationLogic.pad(endDate.getHours()) + ':' + ReservationLogic.pad(endDate.getMinutes());
+
+    this.onConfigChange(true);
   }
 
   cancelEdit() {
     this.editingReservation = null;
+    this.occupiedSlots = [];
+  
   }
 
   saveEdit() {
     if (this.editingReservation) {
+      const newStart = new Date(`${this.editDateStr}T${this.editStartTime}:00`);
+      const newEnd = new Date(`${this.editDateStr}T${this.editEndTime}:00`);
+
+      this.editingReservation.startDate = newStart;
+      this.editingReservation.endDate = newEnd;
+
       this.reservationService.updateReservation(this.editingReservation.id, this.editingReservation).subscribe({
         next: () => {
           alert("Booking updated successfully");
           this.editingReservation = null;
           this.loadReservations(this.currentPage);
         },
-        error: () => alert("Update error")
+        error: (err) => {
+            console.error(err);
+            alert("Update error: " + (err.error?.message || "Check times"));
+        }
       });
     }
   }
@@ -121,5 +144,51 @@ export class ManageReservationsComponent implements OnInit {
     }
   }
 
+
+
+  onConfigChange(isInit: boolean = false) {
+    if (!isInit) {
+        this.availableStartTimes = [];
+        this.availableEndTimes = [];
+        if (!this.editingReservation.roomId || !this.editDateStr) return;
+    }
+
+    const roomId = this.editingReservation.roomId;
+    const date = this.editDateStr;
+
+    this.reservationService.checkAvailability(roomId, date).subscribe(data => {
+        this.occupiedSlots = data.filter((r: any) => r.id !== this.editingReservation.id);
+        
+        this.availableStartTimes = ReservationLogic.generateStartTimes(this.occupiedSlots);
+
+        if (!isInit && !this.availableStartTimes.includes(this.editStartTime)) {
+             this.editStartTime = '';
+             this.editEndTime = '';
+        } else {
+             this.onStartTimeChange(isInit ? this.editEndTime : null);
+        }
+    });
+  }
+
+
+  onStartTimeChange(preselectedEndTime: string | null = null) {
+    this.availableEndTimes = [];
+    if (!this.editStartTime) return;
+
+    this.availableEndTimes = ReservationLogic.generateEndTimes(this.editStartTime, this.occupiedSlots);
+
+    if (preselectedEndTime) {
+        if (this.availableEndTimes.includes(preselectedEndTime)) {
+            this.editEndTime = preselectedEndTime;
+        } else {
+            this.editEndTime = '';
+        }
+    } else {
+        this.editEndTime = '';
+    }
+  }
+
+
+  
 
 }

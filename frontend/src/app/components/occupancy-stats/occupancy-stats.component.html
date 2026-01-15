@@ -1,7 +1,7 @@
 <div class="container mt-5">
     
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">Statistics Panel</h2>
+        <h2 class="mb-0 text-dark fw-bold">Statistics Panel</h2>
         <div class="d-flex align-items-center bg-white p-2 rounded shadow-sm border">
             <label for="statsDate" class="me-2 fw-bold text-muted small text-uppercase">Date:</label>
             <input 
@@ -16,7 +16,7 @@
 
     <div class="row g-4 mb-4">
         <div class="col-md-12">
-            <div class="card bg-primary text-white shadow-sm">
+            <div class="card bg-primary text-white shadow-sm border-0" style="background: linear-gradient(45deg, #0d6efd, #0a58ca);">
                 <div class="card-body text-center py-4">
                     <h3 class="fw-bold mb-1">Overview for {{ selectedDate | date:'fullDate' }}</h3>
                     <p class="mb-0 opacity-75">Metrics based on reservations for the selected day</p>
@@ -31,7 +31,7 @@
                 <div class="card-header bg-white fw-bold border-bottom-0 pt-3">
                     <i class="bi bi-pie-chart-fill me-2 text-success"></i> Occupancy Rate (Global)
                 </div>
-                <div class="card-body" style="height: 300px;">
+                <div class="card-body d-flex justify-content-center align-items-center" style="height: 300px;">
                     <canvas #occupancyCanvas></canvas>
                 </div>
             </div>
@@ -42,7 +42,7 @@
                 <div class="card-header bg-white fw-bold border-bottom-0 pt-3">
                     <i class="bi bi-disc-fill me-2 text-warning"></i> Software Usage (In Reserved Rooms)
                 </div>
-                <div class="card-body" style="height: 300px;">
+                <div class="card-body d-flex justify-content-center align-items-center" style="height: 300px;">
                     <canvas #softwareCanvas></canvas>
                 </div>
             </div>
@@ -52,19 +52,26 @@
     <div class="row mb-5">
         <div class="col-12">
             <div class="card shadow-sm border-0">
-                <div class="card-header bg-white fw-bold border-bottom-0 pt-3">
-                    <i class="bi bi-bar-chart-line-fill me-2 text-purple"></i> Hourly Traffic
+                <div class="card-header bg-white fw-bold border-bottom-0 pt-3 d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="bi bi-bar-chart-line-fill me-2" style="color: #6610f2;"></i> 
+                        Hourly Traffic Distribution
+                    </span>
+                    <span class="badge bg-light text-dark fw-normal border">30-min Intervals</span>
                 </div>
-                <div class="card-body">
-                    <canvas #hourlyCanvas style="max-height: 350px;"></canvas>
+                <div class="card-body p-4">
+                    <div style="height: 400px; position: relative; width: 100%;">
+                        <canvas #hourlyCanvas></canvas>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="mt-4 mb-5">
-        <button routerLink="/admin" class="btn btn-outline-secondary">
-            &larr; Back to Admin menu
+    <div class="d-flex justify-content-start mb-5">
+        <button class="btn btn-outline-secondary" routerLink="/admin/dashboard">
+            <i class="bi bi-arrow-left me-2"></i> Back to Dashboard
         </button>
     </div>
+
 </div>
