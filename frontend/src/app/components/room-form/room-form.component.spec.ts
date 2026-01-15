@@ -174,7 +174,7 @@ describe('RoomFormComponent', () => {
     component.roomId = 10;
     
     component.selectedFile = new File([''], 'update.jpg');
-
+    mockRoomsService.updateRoom.and.returnValue(of({ id: 10 }));
     component.save();
 
     expect(mockRoomsService.updateRoom).toHaveBeenCalled();
