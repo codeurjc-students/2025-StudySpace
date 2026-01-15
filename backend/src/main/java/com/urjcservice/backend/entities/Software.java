@@ -6,13 +6,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "softwares")
+@Table(name = "softwares",
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"name", "version"})
+    }
+)
 public class Software {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private String name; //Primary key
+    private Long id; //Primary key
+    private String name; 
     private Float version;
     private String description;
 

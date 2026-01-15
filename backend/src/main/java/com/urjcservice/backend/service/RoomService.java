@@ -9,6 +9,8 @@ import com.urjcservice.backend.repositories.SoftwareRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +44,9 @@ public class RoomService {
 
     public Room save(Room room) {
         // resolve or create softwares
+        if (roomRepository.existsByName(room.getName())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "The room name already exists.");
+        }
         List<Software> linked = new ArrayList<>();
         if (room.getSoftware() != null) {
             for (Software s : room.getSoftware()) {
@@ -80,6 +85,10 @@ public class RoomService {
     
     public Optional<Room> updateRoom(Long id, Room updatedRoom) {
         return roomRepository.findById(id).map(existingRoom -> {
+            if (!existingRoom.getName().equals(updatedRoom.getName()) && 
+                roomRepository.existsByName(updatedRoom.getName())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "The room name already exists.");
+            }
             //true if was active and now is disable
             boolean isBeingDisabled = existingRoom.isActive() && !updatedRoom.isActive();
 

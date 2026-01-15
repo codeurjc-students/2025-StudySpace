@@ -86,7 +86,13 @@ export class RoomFormComponent implements OnInit {
               this.router.navigate(['/admin/rooms']);
           }
         },
-        error: (e) => alert('Update error: ' + e)
+        error: (e) =>{
+          if (e.status === 409) {
+            alert('Error: A classroom with that name already exists. Please choose another.');
+          } else {
+            alert('Update error: ' + (e.error?.message || 'Unknown error'));
+          }
+        }
       });
     } else {
       this.roomsService.createRoom(this.room).subscribe({
@@ -98,7 +104,13 @@ export class RoomFormComponent implements OnInit {
               this.router.navigate(['/admin/rooms']);
           }
         },
-        error: (err) => alert('Error creating classroom')
+        error: (err) => {
+          if (err.status === 409) {
+            alert('Error: A classroom with that name already exists. Please choose another.');
+          } else {
+            alert('Update error: ' + (err.error?.message || 'Unknown error'));
+          }
+        }
       });
     }
   }

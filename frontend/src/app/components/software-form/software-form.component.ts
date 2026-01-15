@@ -40,12 +40,30 @@ export class SoftwareFormComponent implements OnInit {
 
   save() {
     if (this.isEditMode && this.softwareId) {
-        this.softwareService.updateSoftware(this.softwareId, this.software).subscribe(() => {
-            this.router.navigate(['/admin/softwares']);
+        this.softwareService.updateSoftware(this.softwareId, this.software).subscribe({
+            next: () => {
+                this.router.navigate(['/admin/softwares']);
+            },
+            error: (err) => {
+                if (err.status === 409) {
+                    alert('Error: This software version already exists. Please change the name or version.');
+                } else {
+                    alert('Update error: ' + (err.error?.message || 'Unknown error'));
+                }
+            }
         });
     } else {
-        this.softwareService.createSoftware(this.software).subscribe(() => {
-            this.router.navigate(['/admin/softwares']);
+        this.softwareService.createSoftware(this.software).subscribe({
+            next: () => {
+                this.router.navigate(['/admin/softwares']);
+            },
+            error: (err) => {
+                if (err.status === 409) {
+                     alert('Error: This software version already exists. Please change the name or version.');
+                } else {
+                    alert('Update error: ' + (err.error?.message || 'Unknown error'));
+                }
+            }
         });
     }
   }
