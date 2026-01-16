@@ -32,7 +32,22 @@ public class E2EDataInitializer {
                 user.setRoles(List.of("USER"));
                 user.setBlocked(false);
                 userRepository.save(user);
-                System.out.println("--- USUARIO E2E CREADO: test@test.com / password123 ---");
+                System.out.println("--- USER E2E CREATED: test@test.com / password123 ---");
+            }
+            if (userRepository.findByEmail("admin@studyspace.com").isEmpty()) {
+                User admin = new User();
+                admin.setName("Admin E2E");
+                admin.setEmail("admin@studyspace.com");
+                admin.setEncodedPassword(passwordEncoder.encode("password")); 
+                admin.setRoles(List.of("USER", "ADMIN"));
+                admin.setBlocked(false);
+                userRepository.save(admin);
+                System.out.println("--- E2E ADMIN CREATED: admin@studyspace.com / password ---");
+            } else {
+                User existingAdmin = userRepository.findByEmail("admin@studyspace.com").get();
+                existingAdmin.setEncodedPassword(passwordEncoder.encode("password"));
+                userRepository.save(existingAdmin);
+                System.out.println("--- ADMIN E2E UPDATED with known password ---");
             }
         };
     }
