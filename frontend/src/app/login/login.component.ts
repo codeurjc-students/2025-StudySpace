@@ -22,14 +22,12 @@ export class LoginComponent {
     private readonly route: ActivatedRoute
   ) {}
 
-  /*togglePasswordVisibility() {
-    this.passwordVisible = !this.passwordVisible;
-  }*/
+  
 
   logIn() {
     this.loginService.logIn(this.loginData.user, this.loginData.password).subscribe({
       next: (response: any) => {
-        console.log("Login correcto:", response);
+        console.log("Correct login:", response);
         // Optional: Redirect to home or another page after successful login
         // this.router.navigate(['/home']);
         const returnUrl = this.route.snapshot.queryParams['returnUrl'];
@@ -53,13 +51,12 @@ export class LoginComponent {
             
             if (errorMsg.toLowerCase().includes("locked")) {
                  alert("⛔ ACCESS DENIED\n\n Your account has been LOCKED by an administrator.\n Contact support.");
+                 this.loginService.logOut(); 
+                 this.router.navigate(['/']);
             } else {
-                 alert("Login failed. Please check your email and password.");
+              this.modalService.open(this.loginErrorModal);   
             }
             
-            
-            this.loginService.logOut(); 
-            this.router.navigate(['/']);
         } else {
              this.modalService.open(this.loginErrorModal);
         }

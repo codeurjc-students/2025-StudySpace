@@ -117,9 +117,7 @@ describe('LoginComponent', () => {
 
     component.logIn();
 
-    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/Login failed/));
-    expect(mockLoginService.logOut).toHaveBeenCalled();
-    expect(navigateSpy).toHaveBeenCalledWith(['/']);
+    expect(mockModalService.open).toHaveBeenCalledWith(component.loginErrorModal);
   });
 
   it('Login Error Other (e.g. 500): should open Error Modal', () => {
