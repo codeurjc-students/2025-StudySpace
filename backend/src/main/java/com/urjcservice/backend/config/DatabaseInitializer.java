@@ -149,11 +149,11 @@ public class DatabaseInitializer implements CommandLineRunner {
             student1.setType(User.UserType.USER_REGISTERED);
 
             User student3 = new User();
-            student1.setName("Francisco Blanco");
-            student1.setEmail("fran@gmail.com");
-            student1.setEncodedPassword(passwordEncoder.encode("1234aA.."));
-            student1.setRoles(Arrays.asList("USER"));
-            student1.setType(User.UserType.USER_REGISTERED);
+            student3.setName("Francisco Blanco");
+            student3.setEmail("fran@gmail.com");
+            student3.setEncodedPassword(passwordEncoder.encode("1234aA.."));
+            student3.setRoles(Arrays.asList("USER"));
+            student3.setType(User.UserType.USER_REGISTERED);
 
             User student2 = new User();
             student2.setName("Carlos Profesor");
@@ -185,7 +185,14 @@ public class DatabaseInitializer implements CommandLineRunner {
             res2.setUser(student2);
             res2.setRoom(aulaDiseno);
 
-            reservationRepository.saveAll(Arrays.asList(res1, res2));
+            Reservation res3 = new Reservation();
+            res3.setStartDate(new Date(now + (3 * oneDay)));
+            res3.setEndDate(new Date(now + (3 * oneDay) + (5 * oneHour))); 
+            res3.setReason("Clase de Programación Avanzada");
+            res3.setUser(student3);
+            res3.setRoom(aulaDiseno);
+
+            reservationRepository.saveAll(Arrays.asList(res1, res2,res3));
 
             logger.info("--------------------------------------");
             logger.info(" Database initialized with test data:");
