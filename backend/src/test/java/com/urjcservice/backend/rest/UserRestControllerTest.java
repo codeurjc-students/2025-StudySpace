@@ -21,6 +21,8 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import jakarta.servlet.http.Cookie;
+
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,6 +40,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -275,16 +278,19 @@ public class UserRestControllerTest {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "profile.png", "image/png", "content".getBytes());
         
-        // Simulamos que el storage devuelve un nombre de fichero generado
+        String jwtToken = "token-falso-para-el-test";
         given(fileStorageService.store(any())).willReturn("uuid_profile.png");
-        // Simulamos que el usuario existe (usa mocks o base de datos según tu config)
+
         given(userService.findById(1L)).willReturn(Optional.of(mockUser));
 
         // WHEN & THEN
-        mockMvc.perform(multipart("/api/users/1/image") // multipart es para subir ficheros
-                .file(file))
+        mockMvc.perform(multipart("/api/users/1/image")
+                .file(file)
+                .with(csrf())
+                .cookie(new Cookie("accessToken", jwtToken)) 
+                .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.imageName").value("uuid_profile.png")); // Verifica que el JSON de vuelta tiene el nombre
+                .andExpect(jsonPath("$.imageName").value("uuid_profile.png"));
     }
 
     @Test

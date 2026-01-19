@@ -6,7 +6,8 @@ describe('UserService', () => {
   let service: UserService;
   let httpMock: HttpTestingController;
 
-  const BASE_URL = 'https://localhost:8443/api/users';
+  //const BASE_URL = 'https://localhost:8443/api/users';
+  const BASE_URL = '/api/users';
 
   beforeEach(() => {
     TestBed.configureTestingModule({

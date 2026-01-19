@@ -1,6 +1,5 @@
 package com.urjcservice.backend.rest;
 
-//import com.urjcservice.backend.controller.ReservationController.ReservationRequest;
 import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.service.ReservationService;
 import org.springframework.data.web.PageableDefault;
@@ -24,7 +23,6 @@ import java.util.Optional;
 import java.security.Principal;
 import java.time.LocalDate;
 
-//import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.web.servlet.support.ServletUriComponentsBuilder.fromCurrentRequest;
 
 @RestController
@@ -60,6 +58,20 @@ public class ReservationRestController {
         return reservationService.findAll(pageable);
     }
 
+    @GetMapping("/my-reservations")
+    public ResponseEntity<Page<Reservation>> getMyReservations(
+        @PageableDefault(size = 10) 
+        @SortDefault(sort = "startDate", direction = Sort.Direction.DESC)
+        Pageable pageable) {
+        
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+
+        Page<Reservation> reservations = reservationService.getReservationsByUserEmail(email, pageable);
+        
+        return ResponseEntity.ok(reservations);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Reservation> getReservationById(@PathVariable Long id) {
         Optional<Reservation> reservation = reservationService.findById(id);
@@ -67,24 +79,13 @@ public class ReservationRestController {
               .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
     }
 
-    /*@PostMapping
-    public ResponseEntity<Reservation> createReservation(@RequestBody Reservation reservation) {
-        Reservation savedReservation = reservationService.save(reservation);
-
-        URI location = fromCurrentRequest().path("/{id}").buildAndExpand(savedReservation.getId()).toUri();
-
-        return ResponseEntity.created(location).body(savedReservation);
-    }*/
 
     @PostMapping
     public ResponseEntity<Object> createReservation(@RequestBody ReservationRequest request) {
         try {
-            // 1. Obtener SIEMPRE la identidad del Token de seguridad
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String currentUserEmail = auth.getName();
 
-            // 2. Llamar al servicio pasando solo el email del token
-            // (Ignoramos cualquier userId que venga en el body)
             Reservation newReservation = reservationService.createReservation(request, currentUserEmail);
             
             URI location = fromCurrentRequest().path("/{id}").buildAndExpand(newReservation.getId()).toUri();
@@ -150,19 +151,7 @@ public class ReservationRestController {
             return ResponseEntity.badRequest().build();
         }
     }
-    @GetMapping("/my-reservations")
-    public ResponseEntity<Page<Reservation>> getMyReservations(
-        @PageableDefault(size = 10) 
-        @SortDefault(sort = "startDate", direction = Sort.Direction.DESC)
-        Pageable pageable) {
-        
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String email = auth.getName();
-
-        Page<Reservation> reservations = reservationService.getReservationsByUserEmail(email, pageable);
-        
-        return ResponseEntity.ok(reservations);
-    }
+    
 
 
 

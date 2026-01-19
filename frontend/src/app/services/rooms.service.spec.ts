@@ -5,7 +5,8 @@ import { RoomsService } from './rooms.service';
 describe('RoomsService', () => {
   let service: RoomsService;
   let httpMock: HttpTestingController;
-  const BASE_URL = 'https://localhost:8443/api/rooms';
+  //const BASE_URL = 'https://localhost:8443/api/rooms';
+  const BASE_URL = '/api/rooms';
 
   beforeEach(() => {
     TestBed.configureTestingModule({

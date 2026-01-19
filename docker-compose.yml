@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # Data Base MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: study_space_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: toor
+      MYSQL_DATABASE: study_space_db
+      TZ: Europe/Madrid
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Backend (Spring Boot)
+  backend:  
+    build: ./backend
+    container_name: study_space_backend
+    restart: always
+    ports:
+      - "8443:8443"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/study_space_db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: toor
+
+      SERVER_PORT: 8443
+      SERVER_SSL_ENABLED: "true"
+      SERVER_SSL_KEY_STORE: "file:/app/keystore.jks"
+      SERVER_SSL_KEY_STORE_PASSWORD: "password"
+      SERVER_SSL_KEY_STORE_TYPE: "JKS"
+
+
+      TZ: Europe/Madrid
+      JAVA_TOOL_OPTIONS: "-Duser.timezone=Europe/Madrid"
+
+    volumes:
+      # CORRECCIÓN: Apuntamos a la carpeta 'uploads' DENTRO de 'backend'
+      - ./backend/uploads:/app/uploads 
+
+  # 3. Frontend (Angular) 
+  frontend:
+    build: ./frontend
+    container_name: study_space_frontend
+    restart: always
+    ports:
+      - "443:443"  # Puerto HTTPS (Principal)
+      - "80:80"    # Puerto HTTP (Solo para redirección)
+    volumes:
+      - ./frontend/certs:/etc/nginx/certs
+      - ./backend/uploads:/usr/share/nginx/html/uploads
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
+
+
+  #docker-compose up -d --build
+  #for restart:      docker-compose down -v
+
+  #debug      docker logs study_space_backend
