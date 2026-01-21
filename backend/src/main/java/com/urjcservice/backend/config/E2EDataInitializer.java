@@ -24,21 +24,31 @@ public class E2EDataInitializer {
     @Bean
     public CommandLineRunner initData() {
         return args -> {
-            if (userRepository.findByEmail("test@test.com").isEmpty()) {
+            if (userRepository.findByEmail("fran@gmail.com").isEmpty()) {
                 User user = new User();
                 user.setName("Test User");
-                user.setEmail("test@test.com");
-                user.setEncodedPassword(passwordEncoder.encode("password123"));
+                user.setEmail("fran@gmail.com");
+                user.setEncodedPassword(passwordEncoder.encode("1234aA.."));
                 user.setRoles(List.of("USER"));
                 user.setBlocked(false);
                 userRepository.save(user);
-                System.out.println("--- USER E2E CREATED: test@test.com / password123 ---");
+                System.out.println("--- USER E2E CREATED: fran@gmail.com / 1234aA.. ---");
+            }
+            if (userRepository.findByEmail("carlos@urjc.es").isEmpty()) {
+                User user = new User();
+                user.setName("Test User");
+                user.setEmail("carlos@urjc.es");
+                user.setEncodedPassword(passwordEncoder.encode("1234aA.."));
+                user.setRoles(List.of("USER"));
+                user.setBlocked(false);
+                userRepository.save(user);
+                System.out.println("--- USER E2E CREATED: carlos@urjc.es / 1234aA.. ---");
             }
             if (userRepository.findByEmail("admin@studyspace.com").isEmpty()) {
                 User admin = new User();
                 admin.setName("Admin E2E");
                 admin.setEmail("admin@studyspace.com");
-                admin.setEncodedPassword(passwordEncoder.encode("password")); 
+                admin.setEncodedPassword(passwordEncoder.encode("Admin12.")); 
                 admin.setRoles(List.of("USER", "ADMIN"));
                 admin.setBlocked(false);
                 userRepository.save(admin);
