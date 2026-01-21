@@ -106,8 +106,8 @@ jobs:
         
         echo "Esperando al Frontend..."
         timeout 120 bash -c 'until curl --insecure -s https://localhost:4200 > /dev/null; do sleep 5; done'
-        
-        npx playwright test
+        BASE_URL=https://localhost:4200 npx playwright test
+      # npx playwright test
 
     # safe report
     - uses: actions/upload-artifact@v4
