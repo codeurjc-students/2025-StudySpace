@@ -26,7 +26,7 @@ public class E2EDataInitializer {
         return args -> {
             if (userRepository.findByEmail("fran@gmail.com").isEmpty()) {
                 User user = new User();
-                user.setName("Test User");
+                user.setName("Francisco Blanco");
                 user.setEmail("fran@gmail.com");
                 user.setEncodedPassword(passwordEncoder.encode("1234aA.."));
                 user.setRoles(List.of("USER"));
@@ -36,7 +36,7 @@ public class E2EDataInitializer {
             }
             if (userRepository.findByEmail("carlos@urjc.es").isEmpty()) {
                 User user = new User();
-                user.setName("Test User");
+                user.setName("Carlos Profesor");
                 user.setEmail("carlos@urjc.es");
                 user.setEncodedPassword(passwordEncoder.encode("1234aA.."));
                 user.setRoles(List.of("USER"));
