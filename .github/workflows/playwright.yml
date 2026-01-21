@@ -98,14 +98,15 @@ jobs:
     # frontend and test
     - name: Run Playwright Tests
       working-directory: ./frontend
+      env:
+
+        BASE_URL: https://localhost:4200
       run: |
-        # Arrancar Angular en background con SSL
         nohup npx ng serve --ssl --port 4200 &
         
         echo "Esperando al Frontend..."
         timeout 120 bash -c 'until curl --insecure -s https://localhost:4200 > /dev/null; do sleep 5; done'
         
-        # Ejecutar los tests
         npx playwright test
 
     # safe report
