@@ -15,8 +15,8 @@ test.describe('Flujo de Estadísticas y Reservas', () => {
     // ==========================================
     await test.step('Usuario crea una reserva', async () => {
       await page.goto('/login');
-      await page.getByPlaceholder('Email Address').fill('test@test.com');
-      await page.locator('input[placeholder="Enter password"]').fill('password123');
+      await page.getByPlaceholder('Email Address').fill('carlos@urjc.es');
+      await page.locator('input[placeholder="Enter password"]').fill('1234aA..');
       await page.getByRole('main').getByRole('button', { name: 'Log In' }).click();
       await expect(page).toHaveURL('/');
 
@@ -69,7 +69,7 @@ test.describe('Flujo de Estadísticas y Reservas', () => {
     // ==========================================
     await test.step('Admin verifica las estadísticas', async () => {
       await page.getByPlaceholder('Email Address').fill('admin@studyspace.com');
-      await page.locator('input[placeholder="Enter password"]').fill('password');
+      await page.locator('input[placeholder="Enter password"]').fill('Admin12.');
       await page.getByRole('main').getByRole('button', { name: 'Log In' }).click();
       await expect(page).toHaveURL('/');
 
