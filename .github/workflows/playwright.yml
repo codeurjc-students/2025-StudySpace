@@ -53,14 +53,22 @@ jobs:
       working-directory: ./backend
       run: |
         mvn clean package -DskipTests
-        nohup mvn spring-boot:run "-Dspring-boot.run.profiles=e2e" \
-          "-Dserver.ssl.key-store=file:keystore.p12" \
-          "-Dserver.ssl.key-store-password=password" \
-          "-Dserver.ssl.key-store-type=PKCS12" \
-          "-Dserver.ssl.key-alias=tomcat" \
-          "-Dspring.datasource.url=jdbc:mysql://localhost:3307/study_space_e2e_db" \
-          "-Dspring.datasource.username=root" \
-          "-Dspring.datasource.password=toor" &
+        
+        KEYSTORE_PATH=$(pwd)/keystore.p12
+        
+        JAR_FILE=$(find target -name "*.jar" -type f | grep -v "original" | head -n 1)
+        
+        echo "Arrancando JAR: $JAR_FILE con Keystore: $KEYSTORE_PATH"
+        
+        nohup java -jar "$JAR_FILE" \
+          --spring.profiles.active=e2e \
+          --server.ssl.key-store="file:$KEYSTORE_PATH" \
+          --server.ssl.key-store-password=password \
+          --server.ssl.key-store-type=PKCS12 \
+          --server.ssl.key-alias=tomcat \
+          --spring.datasource.url=jdbc:mysql://localhost:3307/study_space_e2e_db \
+          --spring.datasource.username=root \
+          --spring.datasource.password=toor &
     # 'nohup' and '&' allow it continous rining
 
     # node for frontend
