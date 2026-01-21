@@ -55,7 +55,7 @@ public class E2EDataInitializer {
                 System.out.println("--- E2E ADMIN CREATED: admin@studyspace.com / password ---");
             } else {
                 User existingAdmin = userRepository.findByEmail("admin@studyspace.com").get();
-                existingAdmin.setEncodedPassword(passwordEncoder.encode("password"));
+                existingAdmin.setEncodedPassword(passwordEncoder.encode("Admin12."));
                 userRepository.save(existingAdmin);
                 System.out.println("--- ADMIN E2E UPDATED with known password ---");
             }
