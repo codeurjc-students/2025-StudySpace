@@ -35,14 +35,33 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: 'maven'
+    #temporal keystore
+    - name: Generate Keystore for E2E
+      working-directory: ./backend
+      run: |
+        keytool -genkeypair -alias tomcat \
+          -keyalg RSA -keysize 2048 \
+          -storetype PKCS12 \
+          -keystore keystore.p12 \
+          -validity 3650 \
+          -storepass password \
+          -keypass password \
+          -dname "CN=localhost, OU=Test, O=Test, L=Test, S=Test, C=ES"
 
-    # start backend
+
     - name: Start Spring Boot Backend (E2E Profile)
       working-directory: ./backend
       run: |
         mvn clean package -DskipTests
-        nohup mvn spring-boot:run "-Dspring-boot.run.profiles=e2e" &
-      # 'nohup' and '&' allow it continous rining
+        nohup mvn spring-boot:run "-Dspring-boot.run.profiles=e2e" \
+          "-Dserver.ssl.key-store=file:keystore.p12" \
+          "-Dserver.ssl.key-store-password=password" \
+          "-Dserver.ssl.key-store-type=PKCS12" \
+          "-Dserver.ssl.key-alias=tomcat" \
+          "-Dspring.datasource.url=jdbc:mysql://localhost:3307/study_space_e2e_db" \
+          "-Dspring.datasource.username=root" \
+          "-Dspring.datasource.password=toor" &
+    # 'nohup' and '&' allow it continous rining
 
     # node for frontend
     - name: Set up Node.js
