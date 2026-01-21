@@ -32,6 +32,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -238,11 +239,14 @@ public class RoomRestControllerTest {
         given(fileStorageService.store(any())).willReturn("generated_uuid.jpg");
         
         //updated room
-        given(roomService.save(any(Room.class))).willReturn(mockRoom);
-
+        given(roomService.updateRoom(eq(1L), any(Room.class))).willReturn(Optional.of(mockRoom));
         mockMvc.perform(multipart("/api/rooms/1/image")
+            .file(file)
+            .with(csrf())) // Asegúrate de tener csrf si usas seguridad web
+            .andExpect(status().isOk());
+        /*mockMvc.perform(multipart("/api/rooms/1/image")
                 .file(file))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk());*/
     }
 
     @Test

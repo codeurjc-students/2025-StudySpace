@@ -44,6 +44,7 @@ public class RoomService {
 
     public Room save(Room room) {
         // resolve or create softwares
+        
         if (roomRepository.existsByName(room.getName())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "The room name already exists.");
         }
@@ -94,6 +95,7 @@ public class RoomService {
 
             updateRoomBasicInfo(existingRoom, updatedRoom);
             updateRoomSoftware(existingRoom, updatedRoom.getSoftware());
+            updateImageData(existingRoom, updatedRoom);
             
             //if is disable future reservations are deleted
             if (isBeingDisabled) {
@@ -114,6 +116,13 @@ public class RoomService {
         existing.setPlace(updated.getPlace());
         existing.setCoordenades(updated.getCoordenades());
         existing.setActive(updated.isActive());
+        if (existing.getImageName() != null) existing.setImageName(existing.getImageName());
+    }
+
+    private void updateImageData(Room existing, Room data) {
+        if (data.getImageName() != null) {
+            existing.setImageName(data.getImageName());
+        }
     }
 
     private void updateRoomSoftware(Room existing, List<Software> newSoftwareList) {

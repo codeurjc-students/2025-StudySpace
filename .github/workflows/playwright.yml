@@ -35,14 +35,41 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: 'maven'
+    #temporal keystore
+    - name: Generate Keystore for E2E
+      working-directory: ./backend
+      run: |
+        keytool -genkeypair -alias tomcat \
+          -keyalg RSA -keysize 2048 \
+          -storetype PKCS12 \
+          -keystore keystore.p12 \
+          -validity 3650 \
+          -storepass password \
+          -keypass password \
+          -dname "CN=localhost, OU=Test, O=Test, L=Test, S=Test, C=ES"
 
-    # start backend
+
     - name: Start Spring Boot Backend (E2E Profile)
       working-directory: ./backend
       run: |
         mvn clean package -DskipTests
-        nohup mvn spring-boot:run "-Dspring-boot.run.profiles=e2e" &
-      # 'nohup' and '&' allow it continous rining
+        
+        KEYSTORE_PATH=$(pwd)/keystore.p12
+        
+        JAR_FILE=$(find target -name "*.jar" -type f | grep -v "original" | head -n 1)
+        
+        echo "Arrancando JAR: $JAR_FILE con Keystore: $KEYSTORE_PATH"
+        
+        nohup java -jar "$JAR_FILE" \
+          --spring.profiles.active=e2e \
+          --server.ssl.key-store="file:$KEYSTORE_PATH" \
+          --server.ssl.key-store-password=password \
+          --server.ssl.key-store-type=PKCS12 \
+          --server.ssl.key-alias=tomcat \
+          --spring.datasource.url=jdbc:mysql://localhost:3307/study_space_e2e_db \
+          --spring.datasource.username=root \
+          --spring.datasource.password=toor &
+    # 'nohup' and '&' allow it continous rining
 
     # node for frontend
     - name: Set up Node.js
@@ -71,15 +98,16 @@ jobs:
     # frontend and test
     - name: Run Playwright Tests
       working-directory: ./frontend
+      env:
+
+        BASE_URL: https://localhost:4200
       run: |
-        # Arrancar Angular en background con SSL
         nohup npx ng serve --ssl --port 4200 &
         
         echo "Esperando al Frontend..."
         timeout 120 bash -c 'until curl --insecure -s https://localhost:4200 > /dev/null; do sleep 5; done'
-        
-        # Ejecutar los tests
-        npx playwright test
+        BASE_URL=https://localhost:4200 npx playwright test
+      # npx playwright test
 
     # safe report
     - uses: actions/upload-artifact@v4

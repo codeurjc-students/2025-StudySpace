@@ -5,7 +5,8 @@ import { UserDTO } from '../dtos/user.dto';
 import { Page } from '../dtos/page.model';
 
 
-const BASE_URL = 'https://localhost:8443/api/users';
+//const BASE_URL = 'https://localhost:8443/api/users';
+const BASE_URL = '/api/users';
 
 
 @Injectable({ providedIn: 'root' })

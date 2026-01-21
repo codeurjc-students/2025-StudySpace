@@ -4,7 +4,8 @@ import { Observable } from 'rxjs';
 import { Page } from '../dtos/page.model';
 
 
-const BASE_URL = 'https://localhost:8443/api/reservations';
+//const BASE_URL = 'https://localhost:8443/api/reservations';
+const BASE_URL = '/api/reservations';
 
 
 @Injectable({

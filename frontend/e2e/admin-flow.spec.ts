@@ -5,7 +5,7 @@ test.describe('Gestión de Administrador', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/login');
     await page.getByPlaceholder('Email Address').fill('admin@studyspace.com');
-    await page.locator('input[placeholder="Enter password"]').fill('password');
+    await page.locator('input[placeholder="Enter password"]').fill('Admin12.');
     await page.getByRole('main').getByRole('button', { name: 'Log In' }).click();
     
     await expect(page).toHaveURL('/');
@@ -73,7 +73,7 @@ test.describe('Gestión de Administrador', () => {
     await page.getByRole('button', { name: 'Save' }).click();
 
     // ==========================================
-    // VALIDACIÓN FINAL 
+    // FINAL VALIDATION
     // ==========================================
     await expect(page).toHaveURL('/admin/rooms');
     

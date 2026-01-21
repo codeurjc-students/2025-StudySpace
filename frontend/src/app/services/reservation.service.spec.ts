@@ -6,7 +6,8 @@ describe('ReservationService', () => {
   let service: ReservationService;
   let httpMock: HttpTestingController;
   
-  const BASE_URL = 'https://localhost:8443/api/reservations';
+  //const BASE_URL = 'https://localhost:8443/api/reservations';
+  const BASE_URL = '/api/reservations';
 
   beforeEach(() => {
     TestBed.configureTestingModule({

@@ -184,9 +184,11 @@ public class RoomRestController {
 
         String filename = fileStorageService.store(file);
         room.setImageName(filename);
-        roomService.save(room);
+        //roomService.save(room);
 
-        return ResponseEntity.ok(room);
+        return roomService.updateRoom(id, room)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/{id}/image")

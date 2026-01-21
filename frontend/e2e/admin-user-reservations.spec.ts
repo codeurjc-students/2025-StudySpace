@@ -17,8 +17,8 @@ test.describe('Gestión de Reservas de Usuarios por Admin', () => {
     // ==========================================
     await test.step('Usuario crea una reserva', async () => {
       await page.goto('/login');
-      await page.getByPlaceholder('Email Address').fill('test@test.com');
-      await page.locator('input[placeholder="Enter password"]').fill('password123');
+      await page.getByPlaceholder('Email Address').fill('fran@gmail.com');
+      await page.locator('input[placeholder="Enter password"]').fill('1234aA..');
       await page.getByRole('main').getByRole('button', { name: 'Log In' }).click();
       await expect(page).toHaveURL('/');
 
@@ -69,14 +69,14 @@ test.describe('Gestión de Reservas de Usuarios por Admin', () => {
     // ==========================================
     await test.step('Admin busca al usuario y ve sus reservas', async () => {
       await page.getByPlaceholder('Email Address').fill('admin@studyspace.com');
-      await page.locator('input[placeholder="Enter password"]').fill('password');
+      await page.locator('input[placeholder="Enter password"]').fill('Admin12.');
       await page.getByRole('main').getByRole('button', { name: 'Log In' }).click();
       
       await page.getByRole('button', { name: 'Admin Dashboard' }).click();
       await page.getByRole('button', { name: 'Manage Users' }).click();
       
       //search the user
-      const userRow = page.getByRole('row').filter({ hasText: 'test@test.com' });
+      const userRow = page.getByRole('row').filter({ hasText: 'fran@gmail.com' });
       await expect(userRow).toBeVisible();
       
       await userRow.getByTitle('See Reservations').click();
