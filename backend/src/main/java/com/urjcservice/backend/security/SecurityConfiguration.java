@@ -77,6 +77,9 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.DELETE, "/api/softwares/**").hasRole("ADMIN")
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
+                        //for password reset
+                        .requestMatchers("/api/auth/forgot-password").permitAll()
+                        .requestMatchers("/api/auth/reset-password").permitAll()
                         // allows pre-flight requests (for CORS)
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // PRIVATE PAGES

@@ -1,10 +1,12 @@
 package com.urjcservice.backend.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
@@ -25,7 +27,9 @@ public class User {
     private UserType type; //admin, user not-registered and registered
     private boolean blocked = false;//in order to block users
 
-    
+    private String resetPasswordToken;//to recover password
+    private LocalDateTime resetPasswordTokenExpiry;
+
     @ElementCollection(fetch = FetchType.EAGER)//for later autentication
     private List<String> roles;
 
@@ -118,5 +122,22 @@ public class User {
     }
     public void setBlocked(boolean blocked) {
         this.blocked = blocked;
+    }
+
+
+    public String getResetPasswordToken() {
+        return resetPasswordToken;
+    }
+
+    public void setResetPasswordToken(String resetPasswordToken) {
+        this.resetPasswordToken = resetPasswordToken;
+    }
+
+    public LocalDateTime getResetPasswordTokenExpiry() {
+        return resetPasswordTokenExpiry;
+    }
+
+    public void setResetPasswordTokenExpiry(LocalDateTime resetPasswordTokenExpiry) {
+        this.resetPasswordTokenExpiry = resetPasswordTokenExpiry;
     }
 }

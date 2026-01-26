@@ -131,6 +131,18 @@ export class LoginService {
     this.router.navigate(['/']);
   }
 
+
+
+  
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post(`${BASE_URL}/forgot-password`, { email });
+  }
+
+
+  resetPassword(token: string, newPassword: string): Observable<any> {
+    return this.http.post(`${BASE_URL}/reset-password`, { token, newPassword });
+  }
+
  
   
 }

@@ -85,7 +85,6 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        // CAMBIO: Usamos userService en lugar de userRepository
         Optional<User> userOpt = userService.findByEmail(auth.getName());
         
         return userOpt.map(ResponseEntity::ok)

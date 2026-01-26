@@ -9,6 +9,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: toor
       MYSQL_DATABASE: study_space_db
+      
       TZ: Europe/Madrid
     ports:
       - "3306:3306"
@@ -33,6 +34,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/study_space_db
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: toor
+      MAIL_PASSWORD: "kwkantkojczxobql"
 
       SERVER_PORT: 8443
       SERVER_SSL_ENABLED: "true"

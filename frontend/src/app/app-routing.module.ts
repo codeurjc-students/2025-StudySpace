@@ -16,6 +16,8 @@ import { RoomFormComponent } from './components/room-form/room-form.component';
 import { ManageSoftwaresComponent } from './components/manage-softwares/manage-softwares.component';
 import { SoftwareFormComponent } from './components/software-form/software-form.component';
 import { ManageReservationsComponent } from './components/manage-reservations/manage-reservations.component';
+import { ResetPasswordComponent } from './login/reset-password/reset-password.component';
+import { ForgotPasswordComponent } from './login/forgot-password/forgot-password.component';
 
 
 const routes: Routes = [
@@ -24,6 +26,8 @@ const routes: Routes = [
   { path: 'register', component: RegisterComponent },
   { path: 'rooms/:id', component: RoomDetailComponent },
   { path: 'profile', component: UserProfileComponent },
+  { path: 'forgot-password', component: ForgotPasswordComponent },
+  { path: 'reset-password', component: ResetPasswordComponent },
   { 
     path: 'profile', 
     component: UserProfileComponent, 

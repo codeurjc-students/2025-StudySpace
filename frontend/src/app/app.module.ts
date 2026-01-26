@@ -24,7 +24,8 @@ import { ManageReservationsComponent } from './components/manage-reservations/ma
 import { AuthInterceptor } from './security/auth.interceptor';
 import { PaginationComponent } from './components/pagination/pagination.component';
 import { PasswordInputComponent } from './components/password-input/password-input.component';
-
+import { ForgotPasswordComponent } from './login/forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './login/reset-password/reset-password.component';
 
 
 @NgModule({
@@ -45,7 +46,9 @@ import { PasswordInputComponent } from './components/password-input/password-inp
     SoftwareFormComponent,
     ManageReservationsComponent,
     PaginationComponent,
-    PasswordInputComponent
+    PasswordInputComponent,
+    ForgotPasswordComponent,    // <--- Necesario para que Angular reconozca este componente
+    ResetPasswordComponent
   ],
   imports: [
     BrowserModule,
