@@ -24,4 +24,16 @@ public class EmailService {
                         "\n\nThis link will expire in 15 minutes.");
         mailSender.send(message);
     }
+
+    public void sendReservationReminder(String to, String userName, String roomName, String startTime) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(to);
+        message.setSubject("Reminder: Your reservation starts in 15 minutes");
+        message.setText("Dear " + userName + ",\n\n" +
+                        "We remind you that your reservation in the room " + roomName + 
+                        " Is about to begin (Start time: " + startTime + ").\n\n" +
+                        "Have a good study session!");
+        mailSender.send(message);
+    }
 }

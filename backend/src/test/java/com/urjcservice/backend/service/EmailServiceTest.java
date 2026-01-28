@@ -50,4 +50,35 @@ public class EmailServiceTest {
         assertEquals("Password reset", sentMessage.getSubject());
         assertTrue(sentMessage.getText().contains(resetUrl));
     }
+
+
+    @Test
+    @DisplayName("Should send reservation reminder email with correct content")
+    void testSendReservationReminder() {
+        // Arrange
+        String to = "student@urjc.es";
+        String userName = "Alex";
+        String roomName = "Lab 1";
+        String startTime = "10:30";
+
+        // Act
+        emailService.sendReservationReminder(to, userName, roomName, startTime);
+
+        // Assert
+        ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mailSender).send(messageCaptor.capture());
+
+        SimpleMailMessage sentMessage = messageCaptor.getValue();
+
+        assertEquals("test@urjc.es", sentMessage.getFrom());
+        assertEquals(to, sentMessage.getTo()[0]);
+        assertEquals("Reminder: Your reservation starts in 15 minutes", sentMessage.getSubject());
+        
+        //verify
+        String body = sentMessage.getText();
+        assertTrue(body.contains("Alex"));
+        assertTrue(body.contains("Lab 1"));
+        assertTrue(body.contains("10:30"));
+    }
+
 }

@@ -75,6 +75,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
         @Param("date") LocalDate date
     );
 
+    @Query("SELECT r FROM Reservation r WHERE r.startDate BETWEEN :now AND :limitTime AND r.reminderSent = false AND r.cancelled = false")
+    List<Reservation> findPendingReminders(@Param("now") Date now, @Param("limitTime") Date limitTime);
+
 
 
 
