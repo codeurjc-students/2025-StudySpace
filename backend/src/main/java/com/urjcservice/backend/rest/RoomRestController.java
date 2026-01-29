@@ -109,14 +109,15 @@ public class RoomRestController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteRoom(@PathVariable Long id) {
-        Optional<Room> deleted = roomService.deleteById(id);
+    public ResponseEntity<Void> deleteRoom(@PathVariable Long id, 
+                                           @RequestParam(required = false) String reason) {
+        String finalReason = (reason != null && !reason.isBlank()) 
+                             ? reason 
+                             : "Permanent closure of the room by administration.";
+
+        roomService.deleteRoom(id, finalReason);
         
-        if (deleted.isPresent()) {
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.noContent().build();
     }
 
 

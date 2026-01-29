@@ -50,10 +50,10 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                                                     Pageable pageable);
 
 
-    @Modifying
+    /*@Modifying
     @Transactional
     @Query("UPDATE Reservation r SET r.cancelled = true WHERE r.room.id = :roomId AND r.endDate > :date")
-    void cancelByRoomIdAndEndDateAfter(@Param("roomId") Long roomId, @Param("date") Date date);
+    void cancelByRoomIdAndEndDateAfter(@Param("roomId") Long roomId, @Param("date") Date date);*/
 
 
 
@@ -91,4 +91,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     List<Reservation> findAllActiveByDate(@Param("date") LocalDate date);
 
 
+
+
+
+    @Query("SELECT r FROM Reservation r WHERE r.room.id = :roomId AND r.endDate > :date AND r.cancelled = false")
+    List<Reservation> findActiveReservationsByRoomIdAndEndDateAfter(@Param("roomId") Long roomId, @Param("date") Date date);
 }

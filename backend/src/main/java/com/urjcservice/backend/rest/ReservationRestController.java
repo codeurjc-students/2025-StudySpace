@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.security.Principal;
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 import static org.springframework.web.servlet.support.ServletUriComponentsBuilder.fromCurrentRequest;
 
@@ -51,6 +52,18 @@ public class ReservationRestController {
         public void setEndDate(Date endDate) { this.endDate = endDate; }
         public String getReason() { return reason; }
         public void setReason(String reason) { this.reason = reason; }
+    }
+
+    public static class AdminReservationUpdateRequest {
+        public Long roomId;
+        public LocalDate date;
+        public LocalTime startTime;
+        public LocalTime endTime;
+        public String adminReason; 
+    }
+
+    public static class AdminCancellationRequest {
+        public String reason;
     }
 
     @GetMapping
@@ -150,6 +163,40 @@ public class ReservationRestController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
+    }
+
+
+    @PutMapping("/admin/{id}")
+    public ResponseEntity<Reservation> updateReservationAsAdmin(@PathVariable Long id, 
+                                                                @RequestBody AdminReservationUpdateRequest request) {
+        
+        String reason = (request.adminReason != null && !request.adminReason.isBlank()) 
+                        ? request.adminReason 
+                        : null;//null if empty
+
+        return reservationService.adminUpdateReservation(
+                id, 
+                request.roomId, 
+                request.date, 
+                request.startTime, 
+                request.endTime, 
+                reason
+        )
+        .map(ResponseEntity::ok)
+        .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PatchMapping("/admin/{id}/cancel")
+    public ResponseEntity<Reservation> cancelReservationAsAdmin(@PathVariable Long id, 
+                                                                @RequestBody AdminCancellationRequest request) {
+        
+        String reason = (request.reason != null && !request.reason.isBlank()) 
+                        ? request.reason 
+                        : "Administrative cancellation without specified reason.";
+
+        return reservationService.adminCancelReservation(id, reason)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
     
 

@@ -1,6 +1,9 @@
 package com.urjcservice.backend.service;
 
-//import com.urjcservice.backend.controller.ReservationController.ReservationRequest;
+import com.urjcservice.backend.service.EmailService;
+
+
+
 import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.entities.User;
 import com.urjcservice.backend.entities.Room;
@@ -12,6 +15,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import java.time.LocalDate;
@@ -31,13 +37,17 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
     private final RoomRepository roomRepository;
+    private final EmailService emailService;
+    private static final Logger log = LoggerFactory.getLogger(ReservationService.class);
     
     public ReservationService(ReservationRepository reservationRepository,
                               UserRepository userRepository,
-                              RoomRepository roomRepository) {
+                              RoomRepository roomRepository,
+                            EmailService emailService) {
         this.reservationRepository = reservationRepository;
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
+        this.emailService = emailService;
     }
 
     public Page<Reservation> findAll(Pageable pageable) {
@@ -137,6 +147,105 @@ public class ReservationService {
         if (updated.getReason() != null) {
             existing.setReason(updated.getReason());
         }
+    }
+
+
+    public Optional<Reservation> adminUpdateReservation(Long id, Long newRoomId, LocalDate newDate, 
+                                                        LocalTime newStart, LocalTime newEnd, String adminReason) {
+        
+        log.info("--- ADMIN UPDATE: Iniciando modificación para Reserva ID: {} ---", id);
+
+        return reservationRepository.findById(id).map(reservation -> {
+            Room newRoom = roomRepository.findById(newRoomId)
+                .orElseThrow(() -> new RuntimeException("Room not found with ID: " + newRoomId));
+
+            LocalDateTime startDateTime = LocalDateTime.of(newDate, newStart);
+            LocalDateTime endDateTime = LocalDateTime.of(newDate, newEnd);
+            
+            Date finalStartDate = java.sql.Timestamp.valueOf(startDateTime);
+            Date finalEndDate = java.sql.Timestamp.valueOf(endDateTime);
+
+            reservation.setRoom(newRoom);
+            reservation.setStartDate(finalStartDate);
+            reservation.setEndDate(finalEndDate);
+            reservation.setAdminModificationReason(adminReason); 
+
+            Reservation savedReservation = reservationRepository.saveAndFlush(reservation);
+            log.info("Reservation successfully saved in database.");
+
+            //send email
+            User user = savedReservation.getUser();
+            if (user != null) {
+                String email = user.getEmail();
+                String userName = user.getName();
+                String roomName = newRoom.getName(); 
+
+                log.info("Preparing email for: {}", email);
+
+                try {
+                    emailService.sendReservationModificationEmail(
+                        email, 
+                        userName, 
+                        roomName, 
+                        newDate.toString(), 
+                        newStart.toString(), 
+                        newEnd.toString(),
+                        adminReason
+                    );
+                    log.info("Email sent successfully.");
+                } catch (Exception e) {
+                    log.error("Email failed to send (but reservation was saved): ", e);
+                }
+            } else {
+                log.warn("The reservation has no associated user. No email is sent.");
+            }
+
+            return savedReservation;
+        });
+    }
+
+    public Optional<Reservation> adminCancelReservation(Long id, String reason) {
+        
+        log.info("--- ADMIN CANCEL: Initiating cancellation for Reservation ID: {} ---", id);
+
+        return reservationRepository.findById(id).map(reservation -> {
+            reservation.setCancelled(true);
+            reservation.setAdminModificationReason(reason); 
+            
+            Reservation savedReservation = reservationRepository.saveAndFlush(reservation);
+            log.info("Reservation ID {} ​​cancelled in BD.", id);
+
+            //send email
+            User user = savedReservation.getUser();
+            if (user != null) {
+                String email = user.getEmail();
+                String userName = user.getName();
+                String roomName = (savedReservation.getRoom() != null) ? savedReservation.getRoom().getName() : "Sin Sala";
+                
+                String dateStr = savedReservation.getStartDate().toString().split(" ")[0]; 
+                String timeStr = savedReservation.getStartDate().toString().split(" ")[1].substring(0, 5); // HH:mm
+                String endStr = savedReservation.getEndDate().toString().split(" ")[1].substring(0, 5);
+
+                log.info("Preparing cancellation email for: {}", email);
+
+                try {
+                    emailService.sendReservationCancellationEmail(
+                        email, 
+                        userName, 
+                        roomName, 
+                        dateStr, 
+                        timeStr, 
+                        endStr,
+                        reason
+                    );
+                    log.info("Cancellation email sent.");
+                } catch (Exception e) {
+                    log.error("The cancellation email failed to send: ", e);
+                }
+            }
+
+            return savedReservation;
+        });
     }
 
    

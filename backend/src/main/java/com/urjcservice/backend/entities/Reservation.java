@@ -23,6 +23,10 @@ public class Reservation {
     private Room room;  //one room can have many bookings
 
     private String reason;
+
+    @Column(name = "admin_modification_reason")
+    private String adminModificationReason;
+
     private boolean cancelled = false;
 
     @Column(name = "reminder_sent")
@@ -116,6 +120,14 @@ public class Reservation {
 
     public void setReminderSent(boolean reminderSent) {
         this.reminderSent = reminderSent;
+    }
+
+    public String getAdminModificationReason() {
+        return adminModificationReason;
+    }
+
+    public void setAdminModificationReason(String adminModificationReason) {
+        this.adminModificationReason = adminModificationReason;
     }
 
 }

@@ -36,4 +36,42 @@ public class EmailService {
                         "Have a good study session!");
         mailSender.send(message);
     }
+
+    public void sendReservationModificationEmail(String to, String userName, String newRoomName, 
+                                                 String newDate, String newStartTime,String newEndTime, String reason) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(to);
+        message.setSubject("Notice: Your reservation has been modified by an administrator");
+        message.setText("Dear " + userName + ",\n\n" +
+                        "We inform you that an administrator has modified your reservation.\n\n" +
+                        "REASON: " + reason + "\n\n" +
+                        "--- NEW DETAILS ---\n" +
+                        "Room: " + newRoomName + "\n" +
+                        "Date: " + newDate + "\n" +
+                        "Start hour: " + newStartTime + "\n" +
+                        "End hour: " + newEndTime + "\n\n" +
+                        "If you have any questions, please contact us: studyspacetfg@gmail.com");
+        
+        mailSender.send(message);
+    }
+
+    public void sendReservationCancellationEmail(String to, String userName, String roomName, 
+                                                 String date, String startTime,String endTime, String reason) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(to);
+        message.setSubject("Notice: Your reservation has been CANCELLED by an administrator");
+        message.setText("Dear " + userName + ",\n\n" +
+                        "We regret to inform you that an administrator has cancelled your reservation.\n\n" +
+                        "REASON FOR CANCELLATION: " + reason + "\n\n" +
+                        "--- DETAILS OF THE CANCELLED RESERVATION ---\n" +
+                        "Room: " + roomName + "\n" +
+                        "Date: " + date + "\n" +
+                        "Start hour: " + startTime + "\n" +
+                        "End hour: " + endTime + "\n\n" +
+                        "We apologize for any inconvenience this may cause");
+        
+        mailSender.send(message);
+    }
 }

@@ -6,6 +6,7 @@ import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.repositories.ReservationRepository;
 import com.urjcservice.backend.repositories.RoomRepository;
 import com.urjcservice.backend.repositories.SoftwareRepository;
+import com.urjcservice.backend.service.EmailService;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,13 +30,19 @@ public class RoomService {
     private final RoomRepository roomRepository;
     private final SoftwareRepository softwareRepository;
     private final ReservationRepository reservationRepository;
+    private final EmailService emailService;
+    private final FileStorageService fileStorageService;
     
     public RoomService(RoomRepository roomRepository,
                        SoftwareRepository softwareRepository,
-                        ReservationRepository reservationRepository) {
+                        ReservationRepository reservationRepository,
+                    EmailService emailService,
+                FileStorageService fileStorageService) {
         this.roomRepository = roomRepository;
         this.softwareRepository = softwareRepository;
         this.reservationRepository = reservationRepository;
+        this.emailService = emailService;
+        this.fileStorageService = fileStorageService;
     }
 
     public Page<Room> findAll(Pageable pageable) {
@@ -90,18 +97,35 @@ public class RoomService {
                 roomRepository.existsByName(updatedRoom.getName())) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "The room name already exists.");
             }
-            //true if was active and now is disable
-            boolean isBeingDisabled = existingRoom.isActive() && !updatedRoom.isActive();
+            //if is disable future reservations are cancelled
+            //true if was active and now is disabled
+            if (existingRoom.isActive() && !updatedRoom.isActive()) {
+                List<Reservation> affectedReservations = reservationRepository
+                    .findActiveReservationsByRoomIdAndEndDateAfter(id, new Date());
+                
+                String reason = "The room has been temporarily disabled, you would need to book it again when it will be enabled again.\n Sorry for the inconvenience.";
+
+                
+                for (Reservation res : affectedReservations) { 
+                    res.setAdminModificationReason(reason);
+                    res.setCancelled(true);
+                    //send email
+                    
+                    notifyUserCancellation(res, reason);
+
+                    reservationRepository.save(res);
+                }
+
+            }
+
+            
+            
 
             updateRoomBasicInfo(existingRoom, updatedRoom);
             updateRoomSoftware(existingRoom, updatedRoom.getSoftware());
             updateImageData(existingRoom, updatedRoom);
             
-            //if is disable future reservations are deleted
-            if (isBeingDisabled) {
-                //from now to the future all reservations deleted
-                reservationRepository.cancelByRoomIdAndEndDateAfter(id, new Date());    //Now cancel not delete
-            }   //deleteByRoom_IdAndEndDateAfter and also fix the problem
+            
 
 
             return roomRepository.save(existingRoom);
@@ -237,6 +261,55 @@ public class RoomService {
         result.put("freePercentage", Math.round(freePct * 100.0) / 100.0);
         
         return result;
+    }
+
+
+
+
+
+    public void deleteRoom(Long id, String reason) {
+        Optional<Room> roomOp = roomRepository.findById(id);
+
+        if (roomOp.isPresent()) {
+            Room room = roomOp.get();
+
+            List<Reservation> affectedReservations = reservationRepository
+                .findActiveReservationsByRoomIdAndEndDateAfter(id, new Date());
+
+            for (Reservation res : affectedReservations) {
+                notifyUserCancellation(res, reason);
+            }
+            reservationRepository.deleteByRoomIdAndEndDateAfter(id, new Date());
+            
+            //if image, delte first image
+            if (room.getImageName() != null && !room.getImageName().isEmpty()) {
+                fileStorageService.delete(room.getImageName());
+            }
+            roomRepository.deleteById(id);
+        }
+    }
+    //auxiliar method to send cancelation emails to users with the reason you want
+    private void notifyUserCancellation(Reservation res, String reason) {
+        if (res.getUser() != null) {
+            try {
+                String dateStr = res.getStartDate().toString().split(" ")[0];
+                String startStr = res.getStartDate().toString().split(" ")[1].substring(0, 5);
+                String endStr = res.getEndDate().toString().split(" ")[1].substring(0, 5);
+                String roomName = (res.getRoom() != null) ? res.getRoom().getName() : "Unknown room";
+
+                emailService.sendReservationCancellationEmail(
+                    res.getUser().getEmail(),
+                    res.getUser().getName(),
+                    roomName,
+                    dateStr,
+                    startStr,
+                    endStr, 
+                    reason
+                );
+            } catch (Exception e) {
+                System.err.println("Error sending email to user " + res.getUser().getEmail());
+            }
+        }
     }
 
 
