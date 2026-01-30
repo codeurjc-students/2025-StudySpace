@@ -19,7 +19,7 @@ import org.springframework.data.domain.PageRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -222,9 +222,12 @@ public class ReservationService {
                 String userName = user.getName();
                 String roomName = (savedReservation.getRoom() != null) ? savedReservation.getRoom().getName() : "Sin Sala";
                 
-                String dateStr = savedReservation.getStartDate().toString().split(" ")[0]; 
-                String timeStr = savedReservation.getStartDate().toString().split(" ")[1].substring(0, 5); // HH:mm
-                String endStr = savedReservation.getEndDate().toString().split(" ")[1].substring(0, 5);
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
+
+                String dateStr = dateFormat.format(savedReservation.getStartDate());
+                String startStr = timeFormat.format(savedReservation.getStartDate());
+                String endStr = timeFormat.format(savedReservation.getEndDate());
 
                 log.info("Preparing cancellation email for: {}", email);
 
@@ -234,7 +237,7 @@ public class ReservationService {
                         userName, 
                         roomName, 
                         dateStr, 
-                        timeStr, 
+                        startStr, 
                         endStr,
                         reason
                     );

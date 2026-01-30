@@ -81,4 +81,59 @@ public class EmailServiceTest {
         assertTrue(body.contains("10:30"));
     }
 
+
+
+
+    @Test
+    @DisplayName("Should send modification email with end time and reason")
+    void testSendReservationModificationEmail() {
+        // Arrange
+        String to = "student@test.com";
+        String userName = "Alex";
+        String roomName = "Lab 3";
+        String date = "2026-03-15";
+        String startTime = "10:00";
+        String endTime = "12:00"; 
+        String reason = "Maintenance works";
+
+        // Act
+        emailService.sendReservationModificationEmail(to, userName, roomName, date, startTime, endTime, reason);
+
+        // Assert
+        ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mailSender).send(messageCaptor.capture());
+
+        SimpleMailMessage sentMessage = messageCaptor.getValue();
+        String body = sentMessage.getText();
+
+        assertEquals(to, sentMessage.getTo()[0]);
+        assertTrue(sentMessage.getSubject().contains("modified")); 
+        assertTrue(body.contains(reason));
+        assertTrue(body.contains(endTime)); 
+        assertTrue(body.contains(roomName));
+    }
+
+    @Test
+    @DisplayName("Should send cancellation email with reason and details")
+    void testSendReservationCancellationEmail() {
+        // Arrange
+        String to = "student@test.com";
+        String reason = "Classroom closure";
+        
+        // Act
+        emailService.sendReservationCancellationEmail(
+            to, "Alex", "Lab 1", "2026-03-20", "09:00", "11:00", reason
+        );
+
+        // Assert
+        ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mailSender).send(messageCaptor.capture());
+
+        SimpleMailMessage msg = messageCaptor.getValue();
+        
+        assertTrue(msg.getSubject().contains("CANCELLED"));
+        assertTrue(msg.getText().contains(reason));
+        assertTrue(msg.getText().contains("11:00")); 
+    }
+
 }

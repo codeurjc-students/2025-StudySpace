@@ -22,6 +22,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.TreeMap;
+import java.text.SimpleDateFormat;
 
 @Service
 public class RoomService {
@@ -292,9 +293,13 @@ public class RoomService {
     private void notifyUserCancellation(Reservation res, String reason) {
         if (res.getUser() != null) {
             try {
-                String dateStr = res.getStartDate().toString().split(" ")[0];
-                String startStr = res.getStartDate().toString().split(" ")[1].substring(0, 5);
-                String endStr = res.getEndDate().toString().split(" ")[1].substring(0, 5);
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
+
+                String dateStr = dateFormat.format(res.getStartDate());
+                String startStr = timeFormat.format(res.getStartDate());
+                String endStr = timeFormat.format(res.getEndDate());
+                
                 String roomName = (res.getRoom() != null) ? res.getRoom().getName() : "Unknown room";
 
                 emailService.sendReservationCancellationEmail(
