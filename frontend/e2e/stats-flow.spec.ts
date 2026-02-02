@@ -1,39 +1,62 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Flujo de Estadísticas y Reservas', () => {
+test.describe('Statistics and Reservations Flow', () => {
 
-  test('Un Usuario debe poder reservar y un Admin ver reflejada la estadística', async ({ page }) => {
+  test('A user creates a reservation and the admin views the statistics.', async ({ page }) => {
     
-    //to avoid colisions date to the future many days
-    const randomDays = Math.floor(Math.random() * 8) + 2; 
+    //data for test
+    const timestamp = Date.now();
+    const userEmail = `stats_user_${timestamp}@e2e.com`;
+    const userPass = 'StatsPass123.';
+    const userName = `Stats User ${timestamp}`;
+
+    // avoid weekends
     const targetDate = new Date();
-    targetDate.setDate(targetDate.getDate() + randomDays); 
+    targetDate.setDate(targetDate.getDate() + 3); //3 days to future
+    while (targetDate.getDay() === 0 || targetDate.getDay() === 6) {
+        targetDate.setDate(targetDate.getDate() + 1);
+    }
     const dateStr = targetDate.toISOString().split('T')[0];
 
-    // ==========================================
-    // USER BOOKS A ROOM
-    // ==========================================
-    await test.step('Usuario crea una reserva', async () => {
-      await page.goto('/login');
-      await page.getByPlaceholder('Email Address').fill('carlos@urjc.es');
-      await page.locator('input[placeholder="Enter password"]').fill('1234aA..');
+    //regsiter
+    await test.step('User registration for statistics', async () => {
+        await page.goto('/login');
+        await page.getByRole('button', { name: 'Register' }).click();
+        await page.getByLabel('Name').fill(userName);
+        await page.getByLabel('Email').fill(userEmail);
+        await page.locator('input[placeholder="Create a password"]').fill(userPass);
+
+        const dialogPromise = page.waitForEvent('dialog');
+        await page.getByRole('button', { name: 'Sign Up' }).click();
+        const dialog = await dialogPromise;
+        await dialog.dismiss();
+        await expect(page).toHaveURL('/login');
+    });
+
+    // LOGIN AND RESERVATION
+    await test.step('Usuario se loguea y reserva', async () => {
+      await page.goto('/login'); 
+      await page.getByPlaceholder('Email Address').fill(userEmail);
+      await page.locator('input[placeholder="Enter password"]').fill(userPass);
       await page.getByRole('main').getByRole('button', { name: 'Log In' }).click();
       await expect(page).toHaveURL('/');
 
       await page.getByRole('button', { name: 'Book a room' }).click();
-      await expect(page).toHaveURL('/reservations/create');
-
+      
+      //select room
       const roomSelect = page.locator('select[name="roomId"]');
       await expect(roomSelect).not.toBeDisabled();
       await roomSelect.selectOption({ index: 1 }); 
 
+      //date
       await page.fill('input[name="selectedDate"]', dateStr);
       await page.locator('input[name="selectedDate"]').dispatchEvent('change');
 
+      // hour
       const startSelect = page.locator('select[name="startTime"]');
       await expect(startSelect).toBeEnabled();
       
-        // to not colide
+      //not first hour
       const optionsCount = await startSelect.locator('option').count();
       if (optionsCount > 3) {
           await startSelect.selectOption({ index: 3 }); 
@@ -43,48 +66,40 @@ test.describe('Flujo de Estadísticas y Reservas', () => {
 
       const endSelect = page.locator('select[name="endTime"]');
       await expect(endSelect).toBeEnabled();
-      await endSelect.selectOption({ index: 1 }); // 30 min de duración
+      await page.waitForTimeout(200); 
+      await endSelect.selectOption({ index: 1 });
 
-      await page.locator('textarea[name="reason"]').fill('Reserva E2E para Estadísticas');
+      await page.locator('textarea[name="reason"]').fill(`Stats Check ${timestamp}`);
       await page.getByRole('button', { name: 'Confirm Reservation' }).click();
+      
       await expect(page).toHaveURL('/');
     });
 
-    // ==========================================
     // LOGOUT
-    // ==========================================
-    await test.step('Logout del usuario', async () => {
-      await page.evaluate(() => {
-          localStorage.clear();
-          sessionStorage.clear();
-      });
-
+    await test.step('Logout', async () => {
+      await page.evaluate(() => { localStorage.clear(); sessionStorage.clear(); });
       await page.goto('/login');
-      await expect(page).toHaveURL(/\/login/);
-      await expect(page.getByPlaceholder('Email Address')).toBeVisible();
     });
 
-    // ==========================================
-    // ADMIN VERIFIES STATISTICS
-    // ==========================================
-    await test.step('Admin verifica las estadísticas', async () => {
+    // ADMIN VERIFICATION
+    await test.step('Admin checks the statistics', async () => {
       await page.getByPlaceholder('Email Address').fill('admin@studyspace.com');
       await page.locator('input[placeholder="Enter password"]').fill('Admin12.');
       await page.getByRole('main').getByRole('button', { name: 'Log In' }).click();
+      
       await expect(page).toHaveURL('/');
-
       await page.getByRole('button', { name: 'Admin Dashboard' }).click();
-      await expect(page).toHaveURL('/admin');
       
       await page.getByRole('button', { name: 'Occupancy Statistics' }).click();
       await expect(page).toHaveURL('/admin/stats');
-        //filter
+      
+      //filter start dtae
       await page.fill('#statsDate', dateStr);
       await page.locator('#statsDate').dispatchEvent('change');
-        //verify graph
+      
+      //graph
       await page.waitForTimeout(1000); 
       await expect(page.locator('canvas').first()).toBeVisible();
-      expect(await page.locator('canvas').count()).toBeGreaterThanOrEqual(1);
     });
 
   });

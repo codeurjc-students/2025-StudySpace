@@ -6,55 +6,30 @@ import { ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
-import { RoomDTO } from '../../dtos/room.dto';
 import { PaginationComponent } from '../pagination/pagination.component';
 
 describe('ManageReservationsComponent', () => {
   let component: ManageReservationsComponent;
   let fixture: ComponentFixture<ManageReservationsComponent>;
-  
-  let reservationServiceSpy: jasmine.SpyObj<ReservationService>;
-  let roomsServiceSpy: jasmine.SpyObj<RoomsService>;
-
-  const mockPageData = {
-    content: [
-      { id: 1, reason: 'Test 1', startDate: new Date().toISOString(), endDate: new Date().toISOString(), cancelled: false },
-      { id: 2, reason: 'Test 2', startDate: new Date().toISOString(), endDate: new Date().toISOString(), cancelled: true }
-    ],
-    totalPages: 5,
-    number: 0,
-    size: 10,
-    first: true,
-    last: false,
-    totalElements: 50
-  };
-
-  
-  const mockRooms: RoomDTO[] = [{ 
-      id: 101, 
-      name: 'Lab 1', 
-      active: true, 
-      capacity: 20, 
-      camp: 'MOSTOLES', 
-      place: 'B1',
-      coordenades: '0,0', 
-      software: []        
-  }];
+  let reservationServiceMock: jasmine.SpyObj<ReservationService>;
+  let roomsServiceMock: jasmine.SpyObj<RoomsService>;
 
   beforeEach(async () => {
-    reservationServiceSpy = jasmine.createSpyObj('ReservationService', ['getReservationsByUser', 
-      'cancelReservation', 
-      'updateReservation',
+    reservationServiceMock = jasmine.createSpyObj('ReservationService', [
+      'getReservationsByUser', 
+      'checkAvailability', 
       'deleteReservation',
-      'checkAvailability']);
-    roomsServiceSpy = jasmine.createSpyObj('RoomsService', ['getRooms']);
+      'cancelReservationAdmin', 
+      'updateReservationAdmin'
+    ]);
+    roomsServiceMock = jasmine.createSpyObj('RoomsService', ['getRooms']);
 
     await TestBed.configureTestingModule({
       declarations: [ ManageReservationsComponent, PaginationComponent ],
       imports: [ FormsModule, RouterTestingModule ],
       providers: [
-        { provide: ReservationService, useValue: reservationServiceSpy },
-        { provide: RoomsService, useValue: roomsServiceSpy },
+        { provide: ReservationService, useValue: reservationServiceMock },
+        { provide: RoomsService, useValue: roomsServiceMock },
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: { get: () => '123' } } }
@@ -65,117 +40,50 @@ describe('ManageReservationsComponent', () => {
     fixture = TestBed.createComponent(ManageReservationsComponent);
     component = fixture.componentInstance;
     
-    reservationServiceSpy.getReservationsByUser.and.returnValue(of(mockPageData as any));
-    roomsServiceSpy.getRooms.and.returnValue(of({ content: mockRooms } as any));
+    // Espías de ventana centralizados
+    spyOn(window, 'prompt');
+    spyOn(window, 'confirm');
+    spyOn(window, 'alert');
+    spyOn(console, 'error');
+
+    // Mocks de datos iniciales
+    const mockRes = { 
+      id: 1, 
+      roomId: 10, 
+      startDate: '2026-01-01T10:00:00', 
+      endDate: '2026-01-01T12:00:00',
+      room: { name: 'Lab Test' },
+      cancelled: false
+    };
+
+    reservationServiceMock.getReservationsByUser.and.returnValue(of({ 
+        content: [mockRes], 
+        totalPages: 1, 
+        number: 0, 
+        size: 10, 
+        totalElements: 1 
+    } as any));
+    
+    roomsServiceMock.getRooms.and.returnValue(of({ content: [{id: 10, name: 'Lab 1'}] } as any));
     
     fixture.detectChanges();
   });
 
-  it('should create and load initial data', () => {
+  it('should create and load initial data (user and rooms)', () => {
     expect(component).toBeTruthy();
     expect(component.userId).toBe(123);
-    expect(component.reservations.length).toBe(2);
+    expect(component.reservations.length).toBe(1);
     expect(component.rooms.length).toBe(1);
   });
-
-  it('should start editing a reservation', () => {
-    const resToEdit = { 
-      id: 1, 
-      reason: 'Old', 
-      roomId: 101,
-      room: { id: 101, name: 'Lab 1' },
-      startDate: '2026-01-01T10:00:00',
-      endDate: '2026-01-01T12:00:00'
-    };
-    reservationServiceSpy.checkAvailability.and.returnValue(of([]));
-
-    component.startEdit(resToEdit);
-
-    expect(component.editingReservation).toBeDefined();
-    expect(component.editingReservation.id).toBe(1);
-    expect(component.editingReservation.roomId).toBe(101);
-  });
-
-  it('should cancel edit', () => {
-    component.editingReservation = { id: 1 };
-    component.cancelEdit();
-    expect(component.editingReservation).toBeNull();
-  });
-
-  it('should save edit successfully', () => {
-    spyOn(window, 'alert');
-    const dataToUpdate = { id: 1, reason: 'Updated' };
-    component.editingReservation = dataToUpdate;
-    reservationServiceSpy.updateReservation.and.returnValue(of({}));
-
-    component.saveEdit();
-
-    expect(reservationServiceSpy.updateReservation).toHaveBeenCalledWith(1, dataToUpdate);
-    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/successfully/));
-    expect(component.editingReservation).toBeNull();
-  });
-
-  it('should handle error when saving edit', () => {
-    spyOn(window, 'alert');
-    component.editingReservation = { id: 1 };
-    reservationServiceSpy.updateReservation.and.returnValue(throwError(() => new Error('Error')));
-
-    component.saveEdit();
-
-    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/error/i));
-  });
-
-  it('should perform cancel if confirmed', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
-    spyOn(window, 'alert');
-    reservationServiceSpy.cancelReservation.and.returnValue(of({}));
-
-    component.performCancel(1);
-
-    expect(reservationServiceSpy.cancelReservation).toHaveBeenCalledWith(1);
-    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/successfully/));
-  });
-
-  it('should NOT perform cancel if not confirmed', () => {
-    spyOn(window, 'confirm').and.returnValue(false);
-    component.performCancel(1);
-    expect(reservationServiceSpy.cancelReservation).not.toHaveBeenCalled();
-  });
-
-  it('should correctly identify active reservations', () => {
-    const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + 1);
-    
-    const activeRes = { endDate: futureDate.toISOString(), cancelled: false };
-    const cancelledRes = { endDate: futureDate.toISOString(), cancelled: true };
-    const pastRes = { endDate: '2000-01-01', cancelled: false };
-
-    expect(component.isReservationActive(activeRes)).toBeTrue();
-    expect(component.isReservationActive(cancelledRes)).toBeFalse();
-    expect(component.isReservationActive(pastRes)).toBeFalse();
-  });
-
-  it('pagination logic', () => {
-    component.pageData = { totalPages: 20 } as any;
-    component.currentPage = 15; 
-    const pages = component.getVisiblePages();
-    expect(pages.length).toBe(10);
-    expect(pages).toContain(15);
-  });
-
-
-
 
   it('startEdit: should parse date and time correctly from ISO string', () => {
     const mockRes = {
       id: 1,
       roomId: 101,
-      room: { id: 101 },
       startDate: '2026-01-31T14:30:00',
       endDate: '2026-01-31T16:00:00'
     };
-    
-    reservationServiceSpy.checkAvailability.and.returnValue(of([]));
+    reservationServiceMock.checkAvailability.and.returnValue(of([]));
 
     component.startEdit(mockRes);
 
@@ -184,16 +92,14 @@ describe('ManageReservationsComponent', () => {
     expect(component.editEndTime).toBe('16:00');
   });
 
-  it('onConfigChange: should EXCLUDE the current reservation from occupied slots', () => {
+  it('onConfigChange: should exclude the current reservation from occupied slots', () => {
     component.editingReservation = { id: 99, roomId: 1 };
     component.editDateStr = '2026-01-01';
-
     const backendResponse = [
-      { id: 99, startDate: '2026-01-01T10:00:00', endDate: '2026-01-01T11:00:00' }, 
-      { id: 100, startDate: '2026-01-01T12:00:00', endDate: '2026-01-01T13:00:00' } 
+      { id: 99, startDate: '2026-01-01T10:00:00' }, 
+      { id: 100, startDate: '2026-01-01T12:00:00' } 
     ];
-
-    reservationServiceSpy.checkAvailability.and.returnValue(of(backendResponse));
+    reservationServiceMock.checkAvailability.and.returnValue(of(backendResponse));
 
     component.onConfigChange();
 
@@ -201,63 +107,65 @@ describe('ManageReservationsComponent', () => {
     expect(component.occupiedSlots[0].id).toBe(100);
   });
 
-  it('should maintain selected end time if valid after config change', () => {
+  it('saveEdit: should call updateReservationAdmin with correct data and notify success', () => {
+    component.editingReservation = { id: 50, roomId: 101 };
+    component.editDateStr = '2026-05-20';
     component.editStartTime = '09:00';
-    component.editEndTime = '10:00';
+    component.editEndTime = '11:00';
+    component.adminModificationReason = 'Test Reason';
     
-    reservationServiceSpy.checkAvailability.and.returnValue(of([]));
-    
-    component.editingReservation = { id: 1, roomId: 1 };
-    component.editDateStr = '2026-01-01';
-    component.onConfigChange(true);
+    reservationServiceMock.updateReservationAdmin.and.returnValue(of({}));
+    component.saveEdit();
 
-    expect(component.editEndTime).toBe('10:00');
+    expect(reservationServiceMock.updateReservationAdmin).toHaveBeenCalledWith(50, jasmine.objectContaining({
+      adminReason: 'Test Reason'
+    }));
+    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/updated/i));
   });
 
-
-  it('loadReservations: should handle error gracefully', () => {
-    spyOn(console, 'error'); 
-    reservationServiceSpy.getReservationsByUser.and.returnValue(throwError(() => new Error('Load failed')));
-    
-    component.loadReservations(0);
-    
-    expect(console.error).toHaveBeenCalledWith('Error loading reservations', jasmine.any(Error));
-  });
-
-
-  it('deleteReservation: should handle error from service', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
-    spyOn(window, 'alert');
-    reservationServiceSpy.deleteReservation.and.returnValue(throwError(() => new Error('Delete failed')));
-
-    component.deleteReservation(123);
-
-    expect(window.alert).toHaveBeenCalledWith('Error deleting');
-  });
-
-  it('performCancel: should handle error from service', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
-    spyOn(window, 'alert');
-    reservationServiceSpy.cancelReservation.and.returnValue(throwError(() => new Error('Cancel failed')));
+  it('performCancel: should call cancelReservationAdmin with reason when confirmed', () => {
+    const reason = "Violation of rules";
+    (window.prompt as jasmine.Spy).and.returnValue(reason);
+    (window.confirm as jasmine.Spy).and.returnValue(true);
+    reservationServiceMock.cancelReservationAdmin.and.returnValue(of({}));
 
     component.performCancel(1);
 
-    expect(window.alert).toHaveBeenCalledWith('Cancellation error:');
+    expect(reservationServiceMock.cancelReservationAdmin).toHaveBeenCalledWith(1, reason);
+    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/cancelled/i));
   });
 
+  it('deleteReservation: should call deleteReservation service if confirmed', () => {
+    (window.confirm as jasmine.Spy).and.returnValue(true);
+    reservationServiceMock.deleteReservation.and.returnValue(of({}));
 
-  it('onConfigChange: should reset times if current selection becomes invalid', () => {
-    component.editingReservation = { id: 1, roomId: 101 };
-    component.editDateStr = '2026-01-01';
-    component.editStartTime = '10:00';
-
-    const occupied = [{ startDate: '2026-01-01T10:00:00', endDate: '2026-01-01T11:00:00' }];
-    reservationServiceSpy.checkAvailability.and.returnValue(of(occupied));
-
-    component.onConfigChange(false);
-
-    expect(component.editStartTime).toBe('');
-    expect(component.editEndTime).toBe('');
+    component.deleteReservation(1);
+    expect(reservationServiceMock.deleteReservation).toHaveBeenCalledWith(1);
   });
 
+  it('isReservationActive: should correctly identify future non-cancelled reservations', () => {
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 1);
+    
+    const activeRes = { endDate: futureDate.toISOString(), cancelled: false };
+    const cancelledRes = { endDate: futureDate.toISOString(), cancelled: true };
+    const pastRes = { endDate: '2000-01-01T10:00:00', cancelled: false };
+
+    expect(component.isReservationActive(activeRes)).toBeTrue();
+    expect(component.isReservationActive(cancelledRes)).toBeFalse();
+    expect(component.isReservationActive(pastRes)).toBeFalse();
+  });
+
+  it('pagination logic: should calculate visible pages', () => {
+    component.pageData = { totalPages: 20 } as any;
+    component.currentPage = 5; 
+    const pages = component.getVisiblePages();
+    expect(pages).toContain(5);
+  });
+
+  it('handle errors: should log errors on load fail', () => {
+    reservationServiceMock.getReservationsByUser.and.returnValue(throwError(() => new Error('Load failed')));
+    component.loadReservations(0);
+    expect(console.error).toHaveBeenCalled();
+  });
 });

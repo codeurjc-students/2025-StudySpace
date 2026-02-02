@@ -53,8 +53,20 @@
                     </div>
 
                     <div class="col-12 mb-3">
-                        <label class="form-label fw-bold" for="editReason">Reason</label>
+                        <label class="form-label fw-bold" for="editReason">Reason of the user</label>
                         <input type="text" [(ngModel)]="editingReservation.reason" name="reason" id="editReason" class="form-control">
+                    </div>
+
+                    <div class="col-12 mt-3">
+                        <label class="form-label text-danger fw-bold">Modification Reason</label>
+                        <textarea 
+                            class="form-control" 
+                            rows="2" 
+                            [(ngModel)]="adminModificationReason" 
+                            name="adminReason"
+                            placeholder="Reason for moving this reservation..." 
+                            required>
+                        </textarea>
                     </div>
                 </div>
 
