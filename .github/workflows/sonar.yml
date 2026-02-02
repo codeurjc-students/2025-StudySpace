@@ -3,16 +3,8 @@ name: SonarCloud Full Analysis
 on:
   push:
     branches: [ "main" ]
-    paths-ignore:
-      - 'docs/**'
-      - 'images/**'
-      - 'README.md'
   pull_request:
     types: [opened, synchronize, reopened]
-    paths-ignore:
-      - 'docs/**'
-      - 'images/**'
-      - 'README.md'
 
 jobs:
   sonar:

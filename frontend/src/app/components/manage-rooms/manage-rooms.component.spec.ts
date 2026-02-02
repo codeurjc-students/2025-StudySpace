@@ -49,11 +49,6 @@ describe('ManageRoomsComponent', () => {
     fixture = TestBed.createComponent(ManageRoomsComponent);
     component = fixture.componentInstance;
     
-    // Espías globales para evitar errores de duplicidad
-    spyOn(window, 'alert');
-    spyOn(window, 'prompt');
-    spyOn(console, 'error');
-    
     roomsServiceSpy.getRooms.and.returnValue(of(mockPage as any));
     
     fixture.detectChanges();
@@ -66,40 +61,61 @@ describe('ManageRoomsComponent', () => {
   });
 
   it('should handle error when loading rooms', () => {
+    spyOn(console, 'error');
     roomsServiceSpy.getRooms.and.returnValue(throwError(() => new Error('Error loading')));
+    
     component.loadRooms(1);
+    
     expect(console.error).toHaveBeenCalled();
   });
 
-  it('should delete room if reason is provided via prompt', () => {
-    const reason = 'Reason for deletion';
-    (window.prompt as jasmine.Spy).and.returnValue(reason);
+  it('should delete room if confirmed', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    spyOn(window, 'alert');
     roomsServiceSpy.deleteRoom.and.returnValue(of({}));
-    const loadSpy = spyOn(component, 'loadRooms');
 
+    spyOn(component, 'loadRooms'); 
+
+    component.rooms = [{ 
+        id: 1, 
+        name: 'To Delete', 
+        capacity: 10, 
+        camp: 'Móstoles', 
+        place: '', 
+        active: true, 
+        coordenades: '', 
+        software: [] 
+    }];
+    
     component.deleteRoom(1);
 
-    expect(roomsServiceSpy.deleteRoom).toHaveBeenCalledWith(1, reason);
+    expect(roomsServiceSpy.deleteRoom).toHaveBeenCalledWith(1);
+    expect(component.rooms.length).toBe(0); 
     expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/successfully/i));
-    expect(loadSpy).toHaveBeenCalled();
+    
+
+    expect(component.loadRooms).toHaveBeenCalledWith(component.currentPage);
   });
 
-  it('should NOT delete room if prompt is cancelled (null)', () => {
-    (window.prompt as jasmine.Spy).and.returnValue(null);
+  it('should NOT delete room if cancelled', () => {
+    spyOn(window, 'confirm').and.returnValue(false);
     component.deleteRoom(1);
     expect(roomsServiceSpy.deleteRoom).not.toHaveBeenCalled();
   });
 
   it('should handle error on delete', () => {
-    (window.prompt as jasmine.Spy).and.returnValue('Reason');
+    spyOn(window, 'confirm').and.returnValue(true);
+    spyOn(window, 'alert');
+    spyOn(console, 'error');
     roomsServiceSpy.deleteRoom.and.returnValue(throwError(() => new Error('Delete failed')));
 
     component.deleteRoom(1);
 
     expect(console.error).toHaveBeenCalled();
+    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/Error/i));
   });
   
-  it('pagination logic should return correct visible pages', () => {
+  it('pagination logic', () => {
     component.pageData = { totalPages: 5 } as any;
     expect(component.getVisiblePages()).toEqual([0, 1, 2, 3, 4]);
     

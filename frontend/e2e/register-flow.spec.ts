@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Registration Flow and User Profile', () => {
+test.describe('Flujo de Registro y Perfil de Usuario', () => {
 
-  test('A new user should be able to register, log in, and view their profile.', async ({ page }) => {
+  test('Un usuario nuevo debe poder registrarse, iniciar sesión y ver su perfil', async ({ page }) => {
     
     const timestamp = Date.now();
     const newUser = {
@@ -14,7 +14,7 @@ test.describe('Registration Flow and User Profile', () => {
     // ==========================================
     // REGISTER
     // ==========================================
-    await test.step('New user registration', async () => {
+    await test.step('Registro de nuevo usuario', async () => {
       await page.goto('/login');
       await page.getByRole('button', { name: 'Register' }).click();
       
@@ -33,7 +33,7 @@ test.describe('Registration Flow and User Profile', () => {
     // ==========================================
     //LOGIN
     // ==========================================
-    await test.step('Log in with the new user', async () => {
+    await test.step('Login con el nuevo usuario', async () => {
       await page.getByPlaceholder('Email Address').fill(newUser.email);
       await page.locator('input[placeholder="Enter password"]').fill(newUser.password);
       await page.getByRole('main').getByRole('button', { name: 'Log In' }).click();
@@ -45,7 +45,7 @@ test.describe('Registration Flow and User Profile', () => {
     // ==========================================
     // VERIFY PROFILE 
     // ==========================================
-    await test.step('Access your profile and verify your information', async () => {
+    await test.step('Acceder al perfil y verificar datos', async () => {
       await page.locator('#dropdownProfile').click();
       
       await page.getByRole('link', { name: 'View My Profile' }).click();

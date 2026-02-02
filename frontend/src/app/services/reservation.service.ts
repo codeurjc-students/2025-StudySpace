@@ -49,15 +49,4 @@ export class ReservationService {
     return this.http.get<any[]>(`${BASE_URL}/check-availability?roomId=${roomId}&date=${date}`);
   }
 
-
-  updateReservationAdmin(id: number, data: any): Observable<any> {
-    return this.http.put(`${BASE_URL}/admin/${id}`, data);
-  }
-
-
-  cancelReservationAdmin(id: number, reason: string): Observable<any> {
-    return this.http.patch(`${BASE_URL}/admin/${id}/cancel`, { reason });
-  }
-
-  
 }

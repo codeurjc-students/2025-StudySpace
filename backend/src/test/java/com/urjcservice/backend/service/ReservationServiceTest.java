@@ -7,10 +7,6 @@ import com.urjcservice.backend.entities.User;
 import com.urjcservice.backend.repositories.ReservationRepository;
 import com.urjcservice.backend.repositories.RoomRepository;
 import com.urjcservice.backend.repositories.UserRepository;
-import com.urjcservice.backend.service.EmailService;      
-import com.urjcservice.backend.service.FileStorageService;
-
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -19,13 +15,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -45,10 +39,6 @@ public class ReservationServiceTest {
     @Mock private ReservationRepository reservationRepository;
     @Mock private UserRepository userRepository;
     @Mock private RoomRepository roomRepository;
-    @Mock private EmailService emailService;
-    
-    @MockBean
-    private FileStorageService fileStorageService;
 
     @InjectMocks
     private ReservationService reservationService;
@@ -770,116 +760,6 @@ public class ReservationServiceTest {
         verify(roomRepository).findById(3L);
         assertEquals(newUser, result.get().getUser());
         assertEquals(newRoom, result.get().getRoom());
-    }
-
-
-
-
-
-
-    @Test
-    @DisplayName("Admin Cancel - Should mark as cancelled, save reason and send email")
-    void testAdminCancelReservation_Success() {
-        // Arrange
-        Long reservationId = 1L;
-        String reason = "Maintenance required";
-        
-        User user = new User();
-        user.setEmail("student@test.com");
-        user.setName("Student Name");
-
-        Room room = new Room();
-        room.setName("Lab 1");
-
-        Reservation reservation = new Reservation();
-        reservation.setId(reservationId);
-        reservation.setUser(user);
-        reservation.setRoom(room);
-
-        Date now = new Date();
-        Date oneHourLater = new Date(now.getTime() + 3600000);
-        
-        reservation.setStartDate(now);
-        reservation.setEndDate(oneHourLater);
-
-        reservation.setCancelled(false);
-
-        when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
-        when(reservationRepository.saveAndFlush(any(Reservation.class))).thenReturn(reservation);
-
-        // Act
-        Optional<Reservation> result = reservationService.adminCancelReservation(reservationId, reason);
-
-        // Assert
-        assertTrue(result.isPresent());
-        Reservation savedRes = result.get();
-        
-        assertTrue(savedRes.isCancelled());
-        assertEquals(reason, savedRes.getAdminModificationReason());
-
-        verify(reservationRepository).saveAndFlush(reservation);
-
-        verify(emailService, times(1)).sendReservationCancellationEmail(
-            eq("student@test.com"),
-            eq("Student Name"),
-            eq("Lab 1"),
-            anyString(), 
-            anyString(), 
-            anyString(), 
-            eq(reason)
-        );
-    }
-
-    @Test
-    @DisplayName("Admin Update - Should update fields and send notification email")
-    void testAdminUpdateReservation_Success() {
-        // Arrange
-        Long reservationId = 1L;
-        Long newRoomId = 2L;
-        LocalDate newDate = LocalDate.of(2026, 5, 20);
-        LocalTime newStart = LocalTime.of(10, 0);
-        LocalTime newEnd = LocalTime.of(12, 0);
-        String adminReason = "Moved by admin";
-
-        Reservation existing = new Reservation();
-        existing.setId(reservationId);
-        User user = new User(); 
-        user.setEmail("user@test.com"); 
-        user.setName("User");
-        existing.setUser(user);
-        
-        Room oldRoom = new Room(); 
-        oldRoom.setName("Old Room");
-        existing.setRoom(oldRoom);
-
-        when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(existing));
-        
-        Room newRoom = new Room();
-        newRoom.setId(newRoomId);
-        newRoom.setName("New Room");
-        when(roomRepository.findById(newRoomId)).thenReturn(Optional.of(newRoom));
-
-        when(reservationRepository.saveAndFlush(any(Reservation.class))).thenAnswer(i -> i.getArguments()[0]);
-
-        // Act
-        Optional<Reservation> result = reservationService.adminUpdateReservation(
-                reservationId, newRoomId, newDate, newStart, newEnd, adminReason
-        );
-
-        //Verify
-        assertTrue(result.isPresent());
-        assertEquals(adminReason, result.get().getAdminModificationReason());
-        assertEquals(newRoomId, result.get().getRoom().getId()); 
-        
-        verify(emailService, times(1)).sendReservationModificationEmail(
-            eq("user@test.com"),
-            eq("User"),
-            eq("New Room"), 
-            anyString(), 
-            anyString(),
-            anyString(),
-            eq(adminReason)
-        );
     }
 
 } 

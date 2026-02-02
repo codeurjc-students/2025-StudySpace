@@ -3,7 +3,6 @@ package com.urjcservice.backend.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.entities.User;
-import com.urjcservice.backend.service.EmailService;
 import com.urjcservice.backend.service.FileStorageService;
 import com.urjcservice.backend.service.ReservationService;
 import com.urjcservice.backend.service.UserService;
@@ -61,9 +60,6 @@ public class UserRestControllerTest {
 
     @MockBean
     private FileStorageService fileStorageService;
-
-    @MockBean
-    private EmailService emailService;
 
     private User mockUser;
 

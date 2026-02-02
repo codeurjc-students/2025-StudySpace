@@ -3,7 +3,6 @@ package com.urjcservice.backend.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.entities.Software;
-import com.urjcservice.backend.service.EmailService;
 import com.urjcservice.backend.service.FileStorageService;
 import com.urjcservice.backend.service.RoomService;
 import com.urjcservice.backend.service.SoftwareService;
@@ -29,10 +28,8 @@ import java.util.*;
 
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -56,9 +53,6 @@ public class RoomRestControllerTest {
 
     @MockBean
     private FileStorageService fileStorageService;
-
-    @MockBean 
-    private EmailService emailService;
 
 
     private Room mockRoom;
@@ -205,14 +199,10 @@ public class RoomRestControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     public void testDeleteRoom_NotFound() throws Exception {
-        // GIVEN
-        doNothing().when(roomService).deleteRoom(eq(999L), anyString());
+        given(roomService.deleteById(999L)).willReturn(Optional.empty());
 
-        // WHEN & THEN
-        mockMvc.perform(delete("/api/rooms/999")
-                .param("reason", "test reason")
-                .with(csrf()))
-                .andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/rooms/999"))
+                .andExpect(status().isNotFound());
     }
 
     // --- 6. STATS (getRoomDailyStats) ---

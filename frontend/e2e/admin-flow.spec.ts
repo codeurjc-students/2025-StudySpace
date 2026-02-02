@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Administrator Management', () => {
+test.describe('Gestión de Administrador', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/login');
@@ -12,98 +12,80 @@ test.describe('Administrator Management', () => {
     await expect(page.locator('#dropdownProfile')).toBeVisible();
   });
 
-  test('The administrator should be able to create software and then a classroom that contains it.', async ({ page }) => {
-    const timestamp = Date.now();
-    const softwareName = 'Soft ' + timestamp; 
-    const roomName = 'Aula ' + timestamp;
-
-    // --- search function for pagination ---
-    const findRowInTable = async (searchText: string) => {
-        const row = page.locator('tr').filter({ hasText: searchText });
-        
-        //on actual page?
-        if (await row.isVisible()) return true;
-
-        //locator the pagitanion
-        const pageIndicator = page.locator('small', { hasText: /Showing page/ });
-        
-        //no pagination adn not found
-        if (!await pageIndicator.isVisible()) return false;
-
-        //to search trought pages
-        while (true) {
-            const nextBtn = page.getByRole('button', { name: '»', exact: true });
-
-            //no more next button --> stop
-            if (!await nextBtn.isVisible() || await nextBtn.isDisabled()) {
-                return false;
-            }
-
-            //actual text
-            const currentText = await pageIndicator.textContent();
-
-            //next
-            await nextBtn.click({ force: true });
-
-            // wait till text change
-            await expect(pageIndicator).not.toHaveText(currentText!, { timeout: 10000 });
-
-            if (await row.isVisible()) return true;
-        }
-    };
+  test('Admin debe poder crear un Software y luego un Aula que lo contenga', async ({ page }) => {
+    const softwareName = 'Software E2E ' + Date.now();
+    const roomName = 'Aula E2E ' + Date.now();
 
     // ==========================================
     // CREATE SOFTWARE
     // ==========================================
+    console.log(`Creado software: ${softwareName}`);
     await page.getByRole('button', { name: 'Admin Dashboard' }).click();
     await page.getByRole('button', { name: 'Manage Software' }).click();
     await page.getByRole('button', { name: 'Add Software' }).click();
 
     await page.getByLabel('Name').fill(softwareName);
     await page.getByLabel('Version').fill('1.0');
-    await page.getByLabel('Description').fill('Auto Test');
+    await page.getByLabel('Description').fill('Test automático');
+
     await page.getByRole('button', { name: 'Save' }).click();
 
     await expect(page).toHaveURL('/admin/softwares');
 
-    // VErify software
-    const softwareFound = await findRowInTable(softwareName);
-    expect(softwareFound, `El software ${softwareName} no se encontró`).toBeTruthy();
-    await expect(page.locator('tr').filter({ hasText: softwareName })).toBeVisible();
+    const lastPageBtn = page.getByRole('button', { name: '»»' });
+    if (await lastPageBtn.isVisible() && await lastPageBtn.isEnabled()) {
+        await lastPageBtn.click();
+        await page.waitForTimeout(500); 
+    }
+
+    const newSoftwareText = page.locator('table').getByText(softwareName);
+    await newSoftwareText.scrollIntoViewIfNeeded();
+    await expect(newSoftwareText).toBeVisible();
 
 
     // ==========================================
     // CREATE ROOM
     // ==========================================
+    console.log(`Creado aula: ${roomName}`);
+    
     await page.getByRole('button', { name: 'Back to Admin menu' }).click();
+    await expect(page).toHaveURL('/admin');
+
     await page.getByRole('button', { name: 'Manage rooms' }).click();
+    await expect(page).toHaveURL('/admin/rooms');
+    
     await page.getByRole('button', { name: 'Create New Room' }).click();
 
     await page.getByLabel('Name').fill(roomName);
     await page.getByLabel('Capacity').fill('25');
-    await page.getByLabel('Campus').selectOption({ value: 'MOSTOLES' }); 
-    await page.getByLabel('Location').fill('Edificio Test');
+    await page.getByLabel('Campus').selectOption('MOSTOLES'); 
+    await page.getByLabel('Location').fill('Edificio Tecnológico, Planta 1');
 
     const selectSoftware = page.getByLabel('Installed Software');
-    const targetOption = selectSoftware.locator('option').filter({ hasText: softwareName });
-    await expect(targetOption).toHaveCount(1);
-    const optionText = await targetOption.textContent();
-    if (optionText) {
-        await selectSoftware.selectOption({ label: optionText.trim() }); 
+    await selectSoftware.scrollIntoViewIfNeeded();
+    const optionElement = selectSoftware.locator('option').filter({ hasText: softwareName });
+    const fullOptionLabel = await optionElement.textContent();
+
+    if (fullOptionLabel) {
+        await selectSoftware.selectOption({ label: fullOptionLabel.trim() });
     }
 
     await page.getByRole('button', { name: 'Save' }).click();
 
     // ==========================================
-    // FINAL VALIDATION (ROOM)
+    // FINAL VALIDATION
     // ==========================================
     await expect(page).toHaveURL('/admin/rooms');
     
-    //pagination search
-    const roomFound = await findRowInTable(roomName);
-    expect(roomFound, `El aula ${roomName} no se encontró`).toBeTruthy();
+    //last page room is where the new one is
+    const lastPageRoomsBtn = page.getByRole('button', { name: '»»' });
+    if (await lastPageRoomsBtn.isVisible() && await lastPageRoomsBtn.isEnabled()) {
+        await lastPageRoomsBtn.click();
+        await page.waitForTimeout(500);
+    }
     
-    await expect(page.locator('tr').filter({ hasText: roomName })).toBeVisible();
+    await page.getByText(roomName).scrollIntoViewIfNeeded();
+    await expect(page.getByText(roomName)).toBeVisible();
   });
 
 });

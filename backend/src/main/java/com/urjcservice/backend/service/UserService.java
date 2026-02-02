@@ -17,12 +17,10 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     
     private final UserRepository userRepository;
-    private final FileStorageService fileStorageService;
     
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,FileStorageService fileStorageService) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.fileStorageService = fileStorageService;
     }
 
     public Page<User> findAll(Pageable pageable) {
@@ -39,15 +37,7 @@ public class UserService {
 
     public Optional<User> deleteById(Long id) {
         Optional<User> existing = userRepository.findById(id);
-        
-        existing.ifPresent(user -> {
-            //if picture, first delete picture
-            if (user.getImageName() != null && !user.getImageName().isEmpty()) {
-                fileStorageService.delete(user.getImageName());
-            }
-            userRepository.delete(user);
-        });
-        
+        existing.ifPresent(userRepository::delete);
         return existing;
     }
 
