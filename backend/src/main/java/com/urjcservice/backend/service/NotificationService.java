@@ -19,14 +19,17 @@ public class NotificationService {
 
     @Autowired
     private EmailService emailService;
+    
+    private static final long ONE_MINUTE_IN_MILLIS = 60000L;
 
     @Scheduled(fixedRate = 60000) //60000 ms= 1 minute
     @Transactional
     public void sendReservationReminders() {
         Date now = new Date();
         // start on the next 15/20 min (5 of margin)
-        long fifteenMinutesInMillis = 15 * 60 * 1000;
-        long twentyMinutesInMillis = 20 * 60 * 1000;
+        
+        long fifteenMinutesInMillis = 15 * ONE_MINUTE_IN_MILLIS;
+        long twentyMinutesInMillis = 20 * ONE_MINUTE_IN_MILLIS;
         
         Date limitStart = new Date(now.getTime() + fifteenMinutesInMillis);
         Date limitEnd = new Date(now.getTime() + twentyMinutesInMillis);

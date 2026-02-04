@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.Date;
 
 @Component
-@Profile("!e2e")
+//@Profile("!e2e")
 public class DatabaseInitializer implements CommandLineRunner {
 
 
