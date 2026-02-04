@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.Date;
 
 @Component
-@Profile("!e2e")
+//@Profile("!e2e")
 public class DatabaseInitializer implements CommandLineRunner {
 
 
@@ -191,7 +191,7 @@ public class DatabaseInitializer implements CommandLineRunner {
             res3.setStartDate(new Date(now + (3 * oneDay)));
             res3.setEndDate(new Date(now + (3 * oneDay) + (5 * oneHour))); 
             res3.setReason("Clase de Programación Avanzada");
-            res3.setUser(student3);
+            res3.setUser(student2);
             res3.setRoom(aulaDiseno);
 
             reservationRepository.saveAll(Arrays.asList(res1, res2,res3));

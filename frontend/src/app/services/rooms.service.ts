@@ -31,9 +31,9 @@ export class RoomsService {
     return this.http.put(`${BASE_URL}/${id}`, roomData);
   }
 
-  public deleteRoom(id: number): Observable<any> {
+  /*public deleteRoom(id: number): Observable<any> {
     return this.http.delete(`${BASE_URL}/${id}`);
-  }
+  }*/
 
   public getRoomStats(id: number, date: string): Observable<any> {
     return this.http.get<any>(`${BASE_URL}/${id}/stats?date=${date}`);
@@ -46,5 +46,12 @@ export class RoomsService {
     formData.append('file', file);
     return this.http.post(`${BASE_URL}/${id}/image`, formData);
   }
+
+
+
+  public deleteRoom(id: number, reason: string): Observable<any> {
+    return this.http.delete(`${BASE_URL}/${id}?reason=${encodeURIComponent(reason)}`);
+  }
+
 
 }

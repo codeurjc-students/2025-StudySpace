@@ -1,12 +1,15 @@
 package com.urjcservice.backend.rest;
 
 import com.urjcservice.backend.rest.ReservationRestController.ReservationRequest;
+import com.urjcservice.backend.service.EmailService;      
+import com.urjcservice.backend.service.FileStorageService;
 import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.entities.User;
 import com.urjcservice.backend.service.ReservationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -25,11 +28,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -45,6 +51,12 @@ public class ReservationRestControllerTest {
     private ObjectMapper objectMapper;
 
     private Reservation mockReservation;
+
+    @MockBean 
+    private EmailService emailService;
+    
+    @MockBean
+    private FileStorageService fileStorageService;
 
     @BeforeEach
     void setUp() {
@@ -380,6 +392,103 @@ public class ReservationRestControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest()) // 400 Bad Request
                 .andExpect(content().string("The room is already reserved for this time."));
+    }
+
+
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("PATCH /admin/{id}/cancel - Should call service and return 200")
+    public void testCancelReservationAsAdmin_Success() throws Exception {
+        // GIVEN
+        Long reservationId = 1L;
+        String reason = "Violation of rules";
+        
+        Reservation mockRes = new Reservation();
+        mockRes.setId(reservationId);
+        mockRes.setCancelled(true);
+        mockRes.setAdminModificationReason(reason);
+
+        // Mockeamos la llamada al servicio
+        given(reservationService.adminCancelReservation(eq(reservationId), eq(reason)))
+                .willReturn(Optional.of(mockRes));
+
+        // Objeto JSON para el body
+        String jsonBody = "{\"reason\": \"" + reason + "\"}";
+
+        // WHEN & THEN
+        mockMvc.perform(patch("/api/reservations/admin/{id}/cancel", reservationId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonBody)
+                .with(csrf())) // Importante si tienes seguridad habilitada
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cancelled").value(true))
+                .andExpect(jsonPath("$.adminModificationReason").value(reason));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("PATCH /admin/{id}/cancel - Should use default reason if empty")
+    public void testCancelReservationAsAdmin_EmptyReason_DefaultApplied() throws Exception {
+        // GIVEN
+        Long reservationId = 1L;
+        String defaultReason = "Administrative cancellation without specified reason.";
+        
+        Reservation mockRes = new Reservation();
+        mockRes.setAdminModificationReason(defaultReason);
+
+        given(reservationService.adminCancelReservation(eq(reservationId), anyString()))
+                .willReturn(Optional.of(mockRes));
+
+        String jsonBody = "{}"; 
+
+        // WHEN
+        mockMvc.perform(patch("/api/reservations/admin/{id}/cancel", reservationId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonBody)
+                .with(csrf()))
+                .andExpect(status().isOk());
+        
+        verify(reservationService).adminCancelReservation(eq(reservationId), eq(defaultReason));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("PUT /admin/{id} - Should update reservation details")
+    public void testUpdateReservationAsAdmin_Success() throws Exception {
+        // GIVEN
+        Long reservationId = 10L;
+        
+        String jsonBody = """
+            {
+                "roomId": 5,
+                "date": "2026-12-25",
+                "startTime": "10:00",
+                "endTime": "12:00",
+                "adminReason": "Room maintenance"
+            }
+        """;
+
+        Reservation updatedRes = new Reservation();
+        updatedRes.setId(reservationId);
+        updatedRes.setAdminModificationReason("Room maintenance");
+
+        given(reservationService.adminUpdateReservation(
+                eq(reservationId), 
+                eq(5L), 
+                any(LocalDate.class), 
+                any(LocalTime.class), 
+                any(LocalTime.class), 
+                eq("Room maintenance")
+        )).willReturn(Optional.of(updatedRes));
+
+        // WHEN & THEN
+        mockMvc.perform(put("/api/reservations/admin/{id}", reservationId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonBody)
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.adminModificationReason").value("Room maintenance"));
     }
 
 }

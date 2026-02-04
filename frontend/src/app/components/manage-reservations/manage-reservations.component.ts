@@ -31,6 +31,7 @@ export class ManageReservationsComponent implements OnInit {
   availableEndTimes: string[] = [];
   occupiedSlots: any[] = [];
   minDate: string = '';
+  adminModificationReason: string = '';
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -84,12 +85,15 @@ export class ManageReservationsComponent implements OnInit {
 
   startEdit(reservation: any) {
     this.editingReservation = { ...reservation }; 
+    
     const startDate = new Date(reservation.startDate);
     const endDate = new Date(reservation.endDate);
 
     this.editDateStr = startDate.toISOString().split('T')[0];
     this.editStartTime = ReservationLogic.pad(startDate.getHours()) + ':' + ReservationLogic.pad(startDate.getMinutes());
     this.editEndTime = ReservationLogic.pad(endDate.getHours()) + ':' + ReservationLogic.pad(endDate.getMinutes());
+    this.adminModificationReason = '';
+
 
     this.onConfigChange(true);
   }
@@ -108,15 +112,23 @@ export class ManageReservationsComponent implements OnInit {
       this.editingReservation.startDate = newStart;
       this.editingReservation.endDate = newEnd;
 
-      this.reservationService.updateReservation(this.editingReservation.id, this.editingReservation).subscribe({
-        next: () => {
-          alert("Booking updated successfully");
-          this.editingReservation = null;
+      const reservationData = {
+        roomId: this.editingReservation.roomId,
+        date: this.editDateStr,
+        startTime: this.editStartTime,
+        endTime: this.editEndTime,
+        adminReason: this.adminModificationReason
+      };
+
+      this.reservationService.updateReservationAdmin(this.editingReservation.id, reservationData).subscribe({
+        next: (updated) => {
+          alert('Reservation updated and user notified via email!');
+          this.cancelEdit();
           this.loadReservations(this.currentPage);
         },
         error: (err) => {
-            console.error(err);
-            alert("Update error: " + (err.error?.message || "Check times"));
+          console.error(err);
+          alert('Error updating reservation.');
         }
       });
     }
@@ -130,10 +142,14 @@ export class ManageReservationsComponent implements OnInit {
   }
 
   performCancel(id: number) {
+
+    const reason = prompt("Please enter the reason for cancellation (We will notify the user via email notification):");
+    if (reason === null) return;
+
     if (confirm("Are you sure you want to cancel this reservation?")) {
-      this.reservationService.cancelReservation(id).subscribe({
+      this.reservationService.cancelReservationAdmin(id,reason).subscribe({
         next: () => {
-          alert("Reservation successfully cancelled.");
+          alert("Reservation successfully cancelled and user notified via email.");
           this.loadReservations(this.currentPage); 
         },
         error: (err) => {

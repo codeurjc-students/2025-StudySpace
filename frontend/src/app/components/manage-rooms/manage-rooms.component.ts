@@ -36,10 +36,10 @@ export class ManageRoomsComponent implements OnInit {
   }
   
   deleteRoom(id: number) {
-    const confirmDelete = confirm("⚠️⚠️ Are you sure you want to delete this classroom permanently?⚠️⚠️\n\n This action cannot be undone.");
     
-    if (confirmDelete) {
-      this.roomsService.deleteRoom(id).subscribe({
+    const reason = prompt("⚠️⚠️ You are going to delete this room and cancel ALL its future bookings permanently.⚠️⚠️\n Be sure after making this action because this action cannot be undone.\n\n Please write the reason to notify affected users by email:");
+    if (reason === null) return;
+      this.roomsService.deleteRoom(id,reason).subscribe({
         next: () => {
           this.rooms = this.rooms.filter(room => room.id !== id);
           alert("Classroom successfully removed.✅");
@@ -47,9 +47,9 @@ export class ManageRoomsComponent implements OnInit {
         },
         error: (err) => {
           console.error("Error deleting:", err);
-          alert("❌ Error deleting the classroom. It may have associated reservations. ❌");
+          //alert("❌ Error deleting the classroom. It may have associated reservations. ❌");
         }
       });
-    }
+    
   }
 }

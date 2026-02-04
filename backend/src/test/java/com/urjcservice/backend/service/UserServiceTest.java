@@ -25,6 +25,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +35,9 @@ public class UserServiceTest {
 
     @Mock 
     private PasswordEncoder passwordEncoder;
+
+    @Mock 
+    private FileStorageService fileStorageService;
 
     @InjectMocks
     private UserService userService;
@@ -290,6 +294,53 @@ public class UserServiceTest {
         assertTrue(result.isEmpty());
     }
     
+
+
+
+
+    @Test
+    @DisplayName("Delete User - Should delete image file if exists")
+    void testDeleteUser_WithImage_ShouldDeleteFile() {
+        // Arrange
+        Long userId = 1L;
+        User user = new User();
+        user.setId(userId);
+        user.setImageName("profile_pic_uuid.jpg"); // Usuario con foto
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        // Act
+        userService.deleteById(userId);
+
+        // Assert
+        // 1. Verificamos que se llamó al servicio de ficheros con el nombre correcto
+        verify(fileStorageService, times(1)).delete("profile_pic_uuid.jpg");
+        
+        // 2. Verificamos que se borró el usuario de la BD
+        verify(userRepository, times(1)).delete(user);
+    }
+
+    @Test
+    @DisplayName("Delete User - Should NOT call file delete if no image")
+    void testDeleteUser_NoImage_ShouldNotDeleteFile() {
+        // Arrange
+        Long userId = 2L;
+        User user = new User();
+        user.setId(userId);
+        user.setImageName(null); // Sin foto
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        // Act
+        userService.deleteById(userId);
+
+        // Assert
+        verify(fileStorageService, never()).delete(anyString()); // No debe llamarse
+        verify(userRepository, times(1)).delete(user);
+    }
+
+
+
 
     
 }

@@ -3,7 +3,11 @@ name: CD Docker Publish
 
 on:
   push:
-    branches: [ "main" ]       
+    branches: [ "main" ]
+    paths-ignore:
+      - 'docs/**'
+      - 'images/**'
+      - 'README.md'       
   release:
     types: [published]         
   workflow_dispatch:           
