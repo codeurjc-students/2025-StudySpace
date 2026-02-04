@@ -20,35 +20,32 @@ test.describe('Administrator Management', () => {
     // --- search function for pagination ---
     const findRowInTable = async (searchText: string) => {
         const row = page.locator('tr').filter({ hasText: searchText });
-        
-        //on actual page?
-        if (await row.isVisible()) return true;
-
-        //locator the pagitanion
         const pageIndicator = page.locator('small', { hasText: /Showing page/ });
-        
-        //no pagination adn not found
-        if (!await pageIndicator.isVisible()) return false;
 
-        //to search trought pages
         while (true) {
-            const nextBtn = page.getByRole('button', { name: '»', exact: true });
-
-            //no more next button --> stop
-            if (!await nextBtn.isVisible() || await nextBtn.isDisabled()) {
-                return false;
+            //actual page
+            try {
+                await expect(row).toBeVisible({ timeout: 2000 });//2 seconds
+                return true; //found
+            } catch (e) {
+                // not this page, maybe next
             }
 
-            //actual text
+            //next button
+            const nextBtn = page.getByRole('button', { name: '»', exact: true });
+
+            //button exists
+            const isParentDisabled = await page.locator('li.page-item.disabled').filter({ has: nextBtn }).count() > 0;
+            
+            if (!await nextBtn.isVisible() || isParentDisabled) {
+                return false; //no more pages not found
+            }
+
+            //next page
             const currentText = await pageIndicator.textContent();
-
-            //next
             await nextBtn.click({ force: true });
-
-            // wait till text change
+            //wait for it
             await expect(pageIndicator).not.toHaveText(currentText!, { timeout: 10000 });
-
-            if (await row.isVisible()) return true;
         }
     };
 
