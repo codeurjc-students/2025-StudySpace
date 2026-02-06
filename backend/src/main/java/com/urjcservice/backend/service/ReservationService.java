@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -345,6 +346,11 @@ public class ReservationService {
 
         if (!end.isAfter(start)) {
             throw new IllegalArgumentException("End date must be after start date.");
+        }
+        
+        DayOfWeek day = start.getDayOfWeek();
+        if (day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY) {
+             throw new IllegalArgumentException("Reservations are not allowed on weekends.");
         }
 
         //validate (08:00 - 21:00)

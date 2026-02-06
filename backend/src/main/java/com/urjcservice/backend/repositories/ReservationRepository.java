@@ -96,4 +96,18 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     @Query("SELECT r FROM Reservation r WHERE r.room.id = :roomId AND r.endDate > :date AND r.cancelled = false")
     List<Reservation> findActiveReservationsByRoomIdAndEndDateAfter(@Param("roomId") Long roomId, @Param("date") Date date);
+
+
+
+
+    @Query("SELECT r FROM Reservation r " +
+       "WHERE r.room.id = :roomId " +
+       "AND r.cancelled = false " +
+       "AND r.startDate < :endDate " +
+       "AND r.endDate > :startDate")
+    List<Reservation> findActiveReservationsByRoomIdAndDateRange(
+        @Param("roomId") Long roomId, 
+        @Param("startDate") Date startDate, 
+        @Param("endDate") Date endDate
+    );
 }

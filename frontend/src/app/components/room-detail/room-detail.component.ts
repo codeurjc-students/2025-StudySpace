@@ -4,6 +4,12 @@ import { RoomsService } from '../../services/rooms.service';
 import { RoomDTO } from '../../dtos/room.dto';
 import { Chart, registerables } from 'chart.js';
 
+import { CalendarOptions, EventInput } from '@fullcalendar/core';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import bootstrap5Plugin from '@fullcalendar/bootstrap5';
+
 Chart.register(...registerables);
 
 @Component({
@@ -22,6 +28,43 @@ export class RoomDetailComponent implements OnInit {
   
   private hourlyChart: Chart | undefined;
   private occupancyChart: Chart | undefined;
+
+  calendarOptions: CalendarOptions = {
+    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, bootstrap5Plugin],
+    themeSystem: 'bootstrap5',
+    initialView: 'dayGridMonth',
+    
+    //calendar menu
+    buttonText: {
+      prev: '❮',   
+      next: '❯',   
+      today: 'Today',
+      month: 'MONTH',
+      week: 'WEEK'
+    },
+    // --------------------------------
+
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek'
+    },
+    
+    hiddenDays: [0, 6], 
+    slotDuration: '00:30:00',
+    slotLabelInterval: '01:00',
+    slotMinTime: '08:00:00',
+    slotMaxTime: '21:00:00',
+    allDaySlot: false,
+    height: 'auto',
+    locale: 'es',
+    dayMaxEvents: true,
+    displayEventTime: true,
+    
+    datesSet: (arg) => this.handleDatesSet(arg),
+    dateClick: (arg) => this.handleDateClick(arg),
+    events: []
+  };
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -48,13 +91,92 @@ export class RoomDetailComponent implements OnInit {
     });
   }
 
+  
+
+
+
+
+
+  handleDatesSet(arg: any) {
+    // visible dates
+    this.loadCalendarData(arg.startStr, arg.endStr);
+  }
+
+  // when click on calendar
+  handleDateClick(arg: any) {
+    this.selectedDate = arg.dateStr; // new date
+    this.loadStats(); // load charts
+    
+    // soft scroll to stats
+    document.querySelector('#stats-section')?.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  //load data from backend
+  loadCalendarData(start: string, end: string) {
+    if (!this.roomId) return;
+
+    this.roomsService.getRoomCalendar(this.roomId, start, end).subscribe({
+      next: (data) => {
+        const processedEvents: any[] = [];
+
+        // reservations/events
+        if (data.events) {
+          data.events.forEach((evt) => {
+            processedEvents.push({
+              id: evt.id.toString(),
+              title: evt.title || 'Reservado',
+              start: evt.start,
+              end: evt.end,
+              color: '#0d6efd', 
+              textColor: 'white',
+              display: 'block'
+            });
+          });
+        }
+
+        // 2. Semáforo (Colores Pastel) - AQUI ESTÁ LA CLAVE
+        if (data.dailyOccupancy) {
+          data.dailyOccupancy.forEach((day) => {
+            
+            let pastelColor = '#ffffff'; // Blanco por defecto
+
+            // RED
+            if (day.status === 'High' || day.color === '#dc3545') {
+                pastelColor = '#fadbd8'; // soft red
+            } 
+            // YELLOW
+            else if (day.status === 'Medium' || day.color === '#ffc107') {
+                pastelColor = '#fff3cd'; // soft yellow
+            } 
+            // GREEN
+            else if (day.status === 'Low' || day.color === '#198754') {
+                pastelColor = '#d1e7dd'; // soft green
+            }
+
+            processedEvents.push({
+              start: day.date,
+              display: 'background',
+              backgroundColor: pastelColor, 
+              allDay: true 
+            });
+          });
+        }
+
+        //update calendar
+        this.calendarOptions = { ...this.calendarOptions, events: processedEvents };
+      },
+      error: (err) => console.error('Error cargando calendario:', err)
+    });
+  }
+
+  // --- STATS ---
+
   onDateChange() {
     this.loadStats();
   }
 
   loadStats() {
     if (!this.roomId) return;
-
     this.roomsService.getRoomStats(this.roomId, this.selectedDate).subscribe({
       next: (stats) => {
         this.destroyCharts();
@@ -70,11 +192,8 @@ export class RoomDetailComponent implements OnInit {
   }
 
   createCharts(stats: any) {
-    // 1. Gráfico Horario (Barras)
     const hours = Object.keys(stats.hourlyStatus).map(h => h + ':00');
-    // transform 1 occupied to 0 free
     const dataValues = Object.values(stats.hourlyStatus).map((isOccupied) => isOccupied ? 1 : 0);
-    //red occupied green free
     const bgColors = Object.values(stats.hourlyStatus).map((isOccupied) => isOccupied ? '#dc3545' : '#198754');
 
     if (this.hourlyCanvas) {
@@ -83,7 +202,7 @@ export class RoomDetailComponent implements OnInit {
         data: {
           labels: hours,
           datasets: [{
-            label: 'Occupancy (1=Busy, 0=Free)',
+            label: 'Estado (1=Ocupado, 0=Libre)',
             data: dataValues,
             backgroundColor: bgColors,
             borderRadius: 4
@@ -95,11 +214,8 @@ export class RoomDetailComponent implements OnInit {
           scales: {
             y: { 
               beginAtZero: true, 
-              max: 1, //max 1 reservation per room
-              ticks: { 
-                stepSize: 1,
-                callback: (val) => (val === 1 ? 'Occupied' : 'Free') 
-              } 
+              max: 1, 
+              ticks: { stepSize: 1, callback: (val) => (val === 1 ? 'Ocupado' : 'Libre') } 
             }
           },
           plugins: { legend: { display: false } }
@@ -107,7 +223,7 @@ export class RoomDetailComponent implements OnInit {
       });
     }
 
-    //global ocupancy
+    //global occupation
     if (this.occupancyCanvas) {
       const occupied = stats.occupiedPercentage;
       const free = stats.freePercentage;
@@ -115,7 +231,7 @@ export class RoomDetailComponent implements OnInit {
       this.occupancyChart = new Chart(this.occupancyCanvas.nativeElement, {
         type: 'doughnut',
         data: {
-          labels: ['Occupied (%)', 'Free (%)'],
+          labels: ['Ocupado (%)', 'Libre (%)'],
           datasets: [{
             data: [occupied, free],
             backgroundColor: ['#dc3545', '#198754'],

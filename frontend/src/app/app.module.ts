@@ -26,6 +26,7 @@ import { PaginationComponent } from './components/pagination/pagination.componen
 import { PasswordInputComponent } from './components/password-input/password-input.component';
 import { ForgotPasswordComponent } from './login/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './login/reset-password/reset-password.component';
+import { FullCalendarModule } from '@fullcalendar/angular';
 
 
 @NgModule({
@@ -59,7 +60,8 @@ import { ResetPasswordComponent } from './login/reset-password/reset-password.co
 
     // 4. Add FormsModule to imports array
     FormsModule,
-      NgbModule
+    NgbModule,
+    FullCalendarModule
   ],
   providers: [
     {

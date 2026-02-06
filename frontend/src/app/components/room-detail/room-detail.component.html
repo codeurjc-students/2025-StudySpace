@@ -54,6 +54,29 @@
         </div>
     </div>
 
+
+
+
+    <div class="card shadow mb-5 border-0">
+        <div class="card-header bg-white pt-3 border-bottom-0">
+            <h3 class="text-primary mb-0"><i class="fa fa-calendar me-2"></i>Availability Calendar</h3>
+            <p class="text-muted small mb-0">
+                Click on a day to view detailed hourly stats below. 
+                <span class="badge bg-success ms-2">Low Occupancy</span>
+                <span class="badge bg-warning text-dark ms-1">Medium</span>
+                <span class="badge bg-danger ms-1">High</span>
+            </p>
+        </div>
+        <div class="card-body p-4">
+            <full-calendar [options]="calendarOptions"></full-calendar>
+        </div>
+    </div>
+
+    <div id="stats-section" class="card shadow border-0">
+
+
+
+
     <div class="card shadow border-0">
         <div class="card-header bg-white pt-3 border-bottom-0 d-flex justify-content-between align-items-center flex-wrap">
             <h3 class="text-primary mb-0"><i class="fa fa-bar-chart me-2"></i>Availability & Occupancy</h3>
