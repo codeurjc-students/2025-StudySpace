@@ -45,16 +45,21 @@ test.describe('User Authentication (Dynamic Data)', () => {
   });
 
   test('It should display an error with incorrect credentials.', async ({ page }) => {
-    await page.goto('/login');
+      await page.goto('/login');
+      await expect(page.getByRole('heading', { name: 'Please Log In' })).toBeVisible();
+ 
+      await page.getByPlaceholder('Email Address').fill('no_existe@test.com');
+      await page.locator('input[placeholder="Enter password"]').fill('wrongpass');
+      
+      await page.getByRole('main').getByRole('button', { name: 'Log In', exact: true }).click();
+      
+      const errorDialog = page.getByRole('dialog');
+      await expect(errorDialog).toBeVisible({ timeout: 10000 });
+      
+      await expect(errorDialog.getByText(/Incorrect username or password/)).toBeVisible();
+      
+      await errorDialog.getByRole('button', { name: 'Close' }).first().click();
 
-    await page.getByPlaceholder('Email Address').fill('no_existe@test.com');
-    await page.locator('input[placeholder="Enter password"]').fill('wrongpass');
-    
-    await page.getByRole('main').getByRole('button', { name: 'Log In', exact: true }).click();
-    
-    // Verify 
-    await expect(page.getByText('Incorrect username or password')).toBeVisible();
-    await expect(page).toHaveURL('/login');
-  });
-
+      await expect(page).toHaveURL('/login');
+    });
 });

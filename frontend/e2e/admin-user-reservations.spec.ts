@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Gestión de Reservas de Usuarios por Admin', () => {
+test.describe('User Reservation Management by Admin', () => {
 
   test.setTimeout(60000);
 
-  test('Admin debe poder ver las reservas de un usuario específico', async ({ page }) => {
+  test('Admin should be able to see a specific users bookings', async ({ page }) => {
     
     const timestamp = Date.now();
     const uniqueReason = 'Reunión E2E ' + timestamp;
@@ -42,7 +42,7 @@ test.describe('Gestión de Reservas de Usuarios por Admin', () => {
     // ==========================================
     // LOGIN & RESERVATION (USER)
     // ==========================================
-    await test.step('Usuario crea una reserva', async () => {
+    await test.step('User creates a reservation', async () => {
       await page.goto('/login');
       
       await page.getByPlaceholder('Email Address').fill(uniqueUserEmail);
@@ -88,7 +88,7 @@ test.describe('Gestión de Reservas de Usuarios por Admin', () => {
     // ==========================================
     // 3. LOGOUT
     // ==========================================
-    await test.step('Logout del usuario', async () => {
+    await test.step('User logout', async () => {
       await page.evaluate(() => {
           localStorage.clear();
           sessionStorage.clear();
@@ -100,7 +100,7 @@ test.describe('Gestión de Reservas de Usuarios por Admin', () => {
     // ==========================================
     // ADMIN QUERY
     // ==========================================
-    await test.step('Admin busca al usuario y ve sus reservas', async () => {
+    await test.step('Admin searches for the user and views their bookings', async () => {
       await page.getByPlaceholder('Email Address').fill('admin@studyspace.com');
       await page.locator('input[placeholder="Enter password"]').fill('Admin12.');
       await page.getByRole('main').getByRole('button', { name: 'Log In' }).click();
@@ -113,36 +113,39 @@ test.describe('Gestión de Reservas de Usuarios por Admin', () => {
           const row = page.getByRole('row').filter({ hasText: email });
           const pageIndicator = page.locator('small', { hasText: /Showing page/ });
 
+          // wait till at least 1 row on the table is visible
+          await expect(page.locator('tbody tr').first()).toBeVisible({ timeout: 10000 });
+
           while (true) {
-              //try the actual page
               try {
-                  await expect(row).toBeVisible({ timeout: 2000 });
-                  return true; //finded
+                  await expect(row).toBeVisible({ timeout: 5000 });
+                  return true; //if found
               } catch (e) {
-                  //not this page, we try again
+                  //maybe next page
               }
 
-              // next button
               const nextBtn = page.getByRole('button', { name: '»', exact: true });
 
+              //is there is still the button
               const isNextDisabled = await nextBtn.isDisabled() || 
                                      await page.locator('li.page-item.disabled button', { hasText: '»' }).count() > 0;
 
+              //if no button end reached
               if (!await nextBtn.isVisible() || isNextDisabled) {
-                  return false; //no more pages
+                  return false; 
               }
 
-              //next page
               const currentText = await pageIndicator.textContent();
+              
               await nextBtn.click({ force: true });
 
-              //wait till the number of page change
+              // wait till page changes
               await expect(pageIndicator).not.toHaveText(currentText!, { timeout: 5000 });
           }
       };
 
       const found = await findUserRobustly(uniqueUserEmail);
-      expect(found, `El usuario ${uniqueUserEmail} no apareció en ninguna página de la tabla`).toBeTruthy();
+      expect(found, `The user ${uniqueUserEmail} did not appear on any page of the table`).toBeTruthy();
 
       const userRow = page.getByRole('row').filter({ hasText: uniqueUserEmail });
       await userRow.getByTitle('See Reservations').click();

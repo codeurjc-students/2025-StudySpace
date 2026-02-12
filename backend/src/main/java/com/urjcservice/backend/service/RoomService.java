@@ -343,7 +343,7 @@ public class RoomService {
         for (Reservation r : reservations) {
             events.add(new com.urjcservice.backend.dtos.RoomCalendarDTO.CalendarEvent(
                 r.getId(),
-                "Ocupado", // Título visible
+                "Occupied", 
                 isoFormat.format(r.getStartDate()),
                 isoFormat.format(r.getEndDate())
             ));

@@ -233,7 +233,7 @@ public class RoomRestController {
         }
 
         //FullCalendar sends "2026-02-01T00:00:00+01:00".
-        // cur first 10 chars to "2026-02-01".
+        // cur first 10 chars to "2026-0.2-01".
         LocalDate startDate = LocalDate.parse(start.substring(0, 10));
         LocalDate endDate = LocalDate.parse(end.substring(0, 10));
 

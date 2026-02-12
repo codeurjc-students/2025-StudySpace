@@ -124,7 +124,7 @@ export class RoomDetailComponent implements OnInit {
           data.events.forEach((evt) => {
             processedEvents.push({
               id: evt.id.toString(),
-              title: evt.title || 'Reservado',
+              title: evt.title || 'Reserved',
               start: evt.start,
               end: evt.end,
               color: '#0d6efd', 
@@ -134,11 +134,11 @@ export class RoomDetailComponent implements OnInit {
           });
         }
 
-        // 2. Semáforo (Colores Pastel) - AQUI ESTÁ LA CLAVE
+        //HEATMAP
         if (data.dailyOccupancy) {
           data.dailyOccupancy.forEach((day) => {
             
-            let pastelColor = '#ffffff'; // Blanco por defecto
+            let pastelColor = '#ffffff';
 
             // RED
             if (day.status === 'High' || day.color === '#dc3545') {
@@ -165,7 +165,7 @@ export class RoomDetailComponent implements OnInit {
         //update calendar
         this.calendarOptions = { ...this.calendarOptions, events: processedEvents };
       },
-      error: (err) => console.error('Error cargando calendario:', err)
+      error: (err) => console.error('Error loading calendar:', err)
     });
   }
 
@@ -202,7 +202,7 @@ export class RoomDetailComponent implements OnInit {
         data: {
           labels: hours,
           datasets: [{
-            label: 'Estado (1=Ocupado, 0=Libre)',
+            label: 'State (1=Occupied, 0=Free)',
             data: dataValues,
             backgroundColor: bgColors,
             borderRadius: 4
@@ -215,7 +215,7 @@ export class RoomDetailComponent implements OnInit {
             y: { 
               beginAtZero: true, 
               max: 1, 
-              ticks: { stepSize: 1, callback: (val) => (val === 1 ? 'Ocupado' : 'Libre') } 
+              ticks: { stepSize: 1, callback: (val) => (val === 1 ? 'Occupied' : 'Free') } 
             }
           },
           plugins: { legend: { display: false } }
@@ -231,7 +231,7 @@ export class RoomDetailComponent implements OnInit {
       this.occupancyChart = new Chart(this.occupancyCanvas.nativeElement, {
         type: 'doughnut',
         data: {
-          labels: ['Ocupado (%)', 'Libre (%)'],
+          labels: ['Occupied (%)', 'Free (%)'],
           datasets: [{
             data: [occupied, free],
             backgroundColor: ['#dc3545', '#198754'],

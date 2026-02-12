@@ -271,7 +271,7 @@ public class ReservationService {
         
         validateReservationRules(request.getStartDate(), request.getEndDate()); 
 
-
+        
         LocalDateTime start = request.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
         LocalDateTime end = request.getEndDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
         long newDuration = java.time.Duration.between(start, end).toMinutes();

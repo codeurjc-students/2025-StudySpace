@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { RouterTestingModule } from '@angular/router/testing';
 import { FormsModule } from '@angular/forms';
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
 describe('RoomDetailComponent', () => {
   let component: RoomDetailComponent;
@@ -18,16 +19,31 @@ describe('RoomDetailComponent', () => {
     freePercentage: 50
   };
 
+
+  const mockCalendarData = {
+    events: [
+      { id: 100, title: 'Reservado', start: '2026-02-10T10:00:00', end: '2026-02-10T12:00:00' }
+    ],
+    dailyOccupancy: [
+      { date: '2026-02-10', color: '#dc3545', status: 'High' },   
+      { date: '2026-02-11', color: '#ffc107', status: 'Medium' }, 
+      { date: '2026-02-12', color: '#198754', status: 'Low' }     
+    ]
+  };
+
+
   beforeEach(async () => {
     mockRoomsService = {
 
       getRoom: jasmine.createSpy('getRoom').and.returnValue(of(defaultRoom)),
-      getRoomStats: jasmine.createSpy('getRoomStats').and.returnValue(of(mockStats))
+      getRoomStats: jasmine.createSpy('getRoomStats').and.returnValue(of(mockStats)),
+      getRoomCalendar: jasmine.createSpy('getRoomCalendar').and.returnValue(of(mockCalendarData))
     };
 
     await TestBed.configureTestingModule({
       declarations: [ RoomDetailComponent ],
       imports: [ RouterTestingModule, FormsModule ],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
       providers: [
         { provide: RoomsService, useValue: mockRoomsService },
         {
@@ -161,4 +177,71 @@ describe('RoomDetailComponent', () => {
     const imgElement: HTMLImageElement = fixture.nativeElement.querySelector('.col-md-6 img');
     expect(imgElement.src).toContain('assets/default_image.png');
   });
+
+  it('should call getRoomCalendar when loadCalendarData is executed', () => {
+    component.roomId = 1;
+    component.loadCalendarData('2026-02-01', '2026-02-28');
+
+    expect(mockRoomsService.getRoomCalendar).toHaveBeenCalledWith(1, '2026-02-01', '2026-02-28');
+  });
+
+  it('should map calendar data correctly to FullCalendar events (dynamic dates and pastel colors)', () => {
+    component.roomId = 1;
+
+    //dinamic date
+    const today = new Date();
+    const year = today.getFullYear();
+    // format
+    const month = String(today.getMonth() + 1).padStart(2, '0'); 
+    
+    const startRange = `${year}-${month}-01`;
+    const endRange = `${year}-${month}-28`;
+    
+    
+    const dayRes = `${year}-${month}-05`;
+    const dayHigh = `${year}-${month}-10`;
+    const dayMedium = `${year}-${month}-11`;
+    const dayLow = `${year}-${month}-12`;
+
+    //override mock
+    const dynamicMockData = {
+      events: [
+        { id: 999, title: 'Reserva Test', start: `${dayRes}T10:00:00`, end: `${dayRes}T12:00:00` }
+      ],
+      dailyOccupancy: [
+        { date: dayHigh, color: '#dc3545', status: 'High' },    
+        { date: dayMedium, color: '#ffc107', status: 'Medium' }, 
+        { date: dayLow, color: '#198754', status: 'Low' }       
+      ]
+    };
+
+    mockRoomsService.getRoomCalendar.and.returnValue(of(dynamicMockData));
+
+    component.loadCalendarData(startRange, endRange);
+
+    //verify
+    const events: any[] = component.calendarOptions.events as any[];
+
+    expect(events).toBeTruthy();
+    expect(events.length).toBe(4); // 4 events: 1 reservation + 3 daily occupancy
+
+    const reservationEvent = events.find(e => e.display === 'block');
+    expect(reservationEvent).withContext('The reservation event must exist').toBeTruthy();
+    expect(reservationEvent.start).toContain(dayRes);
+    expect(reservationEvent.color).toBe('#0d6efd');   
+
+    const highOccupancy = events.find(e => e.start === dayHigh && e.display === 'background');
+    expect(highOccupancy).withContext('There must be a high occupancy day').toBeTruthy();
+    expect(highOccupancy.backgroundColor).toBe('#fadbd8'); 
+
+    const mediumOccupancy = events.find(e => e.start === dayMedium && e.display === 'background');
+    expect(mediumOccupancy).withContext('There must be a day of average occupancy.').toBeTruthy();
+    expect(mediumOccupancy.backgroundColor).toBe('#fff3cd');
+
+    const lowOccupancy = events.find(e => e.start === dayLow && e.display === 'background');
+    expect(lowOccupancy).withContext('There must be a low occupancy day').toBeTruthy();
+    expect(lowOccupancy.backgroundColor).toBe('#d1e7dd'); 
+  });
+
+
 });

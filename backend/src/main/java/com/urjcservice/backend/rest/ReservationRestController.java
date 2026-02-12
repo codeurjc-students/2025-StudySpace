@@ -46,6 +46,7 @@ public class ReservationRestController {
         
         public Long getRoomId() { return roomId; }
         public void setRoomId(Long roomId) { this.roomId = roomId; }
+        
         public Date getStartDate() { return startDate; }
         public void setStartDate(Date startDate) { this.startDate = startDate; }
         public Date getEndDate() { return endDate; }

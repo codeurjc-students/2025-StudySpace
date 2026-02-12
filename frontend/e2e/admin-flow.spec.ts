@@ -4,11 +4,19 @@ test.describe('Administrator Management', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/login');
-    await page.getByPlaceholder('Email Address').fill('admin@studyspace.com');
-    await page.locator('input[placeholder="Enter password"]').fill('Admin12.');
-    await page.getByRole('main').getByRole('button', { name: 'Log In' }).click();
     
-    await expect(page).toHaveURL('/');
+    // wait till login form is ready
+    const emailInput = page.getByPlaceholder('Email Address');
+    await expect(emailInput).toBeEditable();
+    
+    await emailInput.fill('admin@studyspace.com');
+    await page.locator('input[placeholder="Enter password"]').fill('Admin12.');
+    
+    await Promise.all([
+      page.waitForURL('/', { timeout: 15000 }), 
+      page.getByRole('main').getByRole('button', { name: 'Log In' }).click()
+    ]);
+    
     await expect(page.locator('#dropdownProfile')).toBeVisible();
   });
 

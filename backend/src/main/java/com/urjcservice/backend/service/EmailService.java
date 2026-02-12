@@ -74,4 +74,13 @@ public class EmailService {
         
         mailSender.send(message);
     }
+
+    public void sendReservationConfirmationEmail(String to, String userName, String roomName, 
+                                                 String date, String startTime, String endTime) {
+        
+                        //complete later                            
+        System.out.println("Mock sending email to: " + to);
+    }
+
+
 }
