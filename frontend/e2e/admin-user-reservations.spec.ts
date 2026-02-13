@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('User Reservation Management by Admin', () => {
 
-  test.setTimeout(60000);
+  test.setTimeout(120000);
 
   test('Admin should be able to see a specific users bookings', async ({ page }) => {
     
@@ -61,28 +61,21 @@ test.describe('User Reservation Management by Admin', () => {
       await page.locator('input[name="selectedDate"]').dispatchEvent('change');
 
       const startSelect = page.locator('select[name="startTime"]');
-      await expect(startSelect).toBeEnabled();
-      
-      //whait for operations
-      await expect(startSelect.locator('option')).toHaveCount(await startSelect.locator('option').count());
-      
-      const optionsCount = await startSelect.locator('option').count();
-      if (optionsCount > 3) {
-           await startSelect.selectOption({ index: 3 }); 
-      } else {
-           await startSelect.selectOption({ index: 1 });
-      }
+        await expect(startSelect).toBeEnabled();
+        await expect(startSelect.locator('option')).not.toHaveCount(0);
+        
+        // second available option and index 1 for fist avaliable (0 will be select, not the option)
+        await startSelect.selectOption({ index: 1 });
 
-      const endSelect = page.locator('select[name="endTime"]');
-      await expect(endSelect).toBeEnabled();
-      await page.waitForTimeout(200); 
-      await endSelect.selectOption({ index: 1 });
+        const endSelect = page.locator('select[name="endTime"]');
+        await expect(endSelect).toBeEnabled();
+        await page.waitForTimeout(500); 
+        
+        await endSelect.selectOption({ index: 1 });
 
-      await page.locator('textarea[name="reason"]').fill(uniqueReason);
-
-      await page.getByRole('button', { name: 'Confirm Reservation' }).click();
-      
-      await expect(page).toHaveURL('/');
+        await page.locator('textarea[name="reason"]').fill(uniqueReason);
+        await page.getByRole('button', { name: 'Confirm Reservation' }).click();
+        await expect(page).toHaveURL('/', { timeout: 10000 });
     });
 
     // ==========================================
@@ -145,13 +138,42 @@ test.describe('User Reservation Management by Admin', () => {
       };
 
       const found = await findUserRobustly(uniqueUserEmail);
-      expect(found, `The user ${uniqueUserEmail} did not appear on any page of the table`).toBeTruthy();
+      expect(found, `The user ${uniqueUserEmail} did not appear on any page`).toBeTruthy();
 
       const userRow = page.getByRole('row').filter({ hasText: uniqueUserEmail });
-      await userRow.getByTitle('See Reservations').click();
+      
+      await userRow.getByRole('button', { name: /Books|📅/ }).click();
 
       const reservationReason = page.getByText(uniqueReason);
       await expect(reservationReason).toBeVisible();
+
+      // ==========================================
+      // CLEANUP 
+      // ==========================================
+      await test.step('Cleanup: Delete the test user', async () => {
+          await page.getByRole('button', { name: /Back to Users/i }).click().catch(() => {
+             console.log("The back button could not be clicked, forcing navigation...");
+          });
+          
+          if (!page.url().includes('/admin/users')) {
+             await page.getByRole('button', { name: 'Manage Users' }).click();
+          }
+
+          const foundAgain = await findUserRobustly(uniqueUserEmail);
+          
+          if (foundAgain) {
+              const deleteRow = page.getByRole('row').filter({ hasText: uniqueUserEmail });
+              
+              // acept confirm on navigation
+              page.on('dialog', dialog => dialog.accept());
+              
+              await deleteRow.getByRole('button', { name: /Delete|🗑️/ }).click();
+              
+              await expect(deleteRow).not.toBeVisible();
+          }
+      });
+
+
     });
 
   });

@@ -78,8 +78,20 @@ public class EmailService {
     public void sendReservationConfirmationEmail(String to, String userName, String roomName, 
                                                  String date, String startTime, String endTime) {
         
-                        //complete later                            
-        System.out.println("Mock sending email to: " + to);
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(to);
+        message.setSubject("Booking " + roomName + " - Confirmation");
+        message.setText("Dear " + userName + ",\n\n" +
+                        "Your reservation has been confirmed successfully.\n\n" +
+                        "--- RESERVATION DETAILS ---\n" +
+                        "Room: " + roomName + "\n" +
+                        "Date: " + date + "\n" +
+                        "Start hour: " + startTime + "\n" +
+                        "End hour: " + endTime + "\n\n" +
+                        "Thank you for using Study Space. Have a great study session!");
+        
+        mailSender.send(message);
     }
 
 

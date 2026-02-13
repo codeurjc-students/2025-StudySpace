@@ -309,7 +309,27 @@ public class ReservationService {
         reservation.setRoom(room);
         reservation.setCancelled(false);
 
-        return reservationRepository.save(reservation);
+        //first save reservation
+        Reservation savedReservation = reservationRepository.save(reservation);
+
+        // try confirmation email
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
+
+            emailService.sendReservationConfirmationEmail(
+                user.getEmail(),
+                user.getName(),
+                room.getName(),
+                dateFormat.format(savedReservation.getStartDate()),
+                timeFormat.format(savedReservation.getStartDate()),
+                timeFormat.format(savedReservation.getEndDate())
+            );
+        } catch (Exception e) {
+            System.err.println("Error sending confirmation email: " + e.getMessage());
+        }
+
+        return savedReservation;
     }
 
 

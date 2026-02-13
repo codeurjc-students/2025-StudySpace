@@ -73,7 +73,7 @@ test.describe('Administrator Management', () => {
 
     // VErify software
     const softwareFound = await findRowInTable(softwareName);
-    expect(softwareFound, `El software ${softwareName} no se encontró`).toBeTruthy();
+    expect(softwareFound, `The software ${softwareName} was not found`).toBeTruthy();
     await expect(page.locator('tr').filter({ hasText: softwareName })).toBeVisible();
 
 
@@ -109,6 +109,34 @@ test.describe('Administrator Management', () => {
     expect(roomFound, `El aula ${roomName} no se encontró`).toBeTruthy();
     
     await expect(page.locator('tr').filter({ hasText: roomName })).toBeVisible();
+
+    // ==========================================
+    // CLEANUP 
+    // ==========================================
+    await test.step('Cleanup: Delete the room and the software created', async () => {
+        
+        const roomRow = page.locator('tr').filter({ hasText: roomName });
+        await expect(roomRow).toBeVisible();
+
+        page.on('dialog', dialog => dialog.accept());
+        await roomRow.getByRole('button', { name: /🗑️|Delete/ }).click();
+        
+        // Wait for the room to truly disappear
+        await expect(page.locator('tr').filter({ hasText: roomName })).not.toBeVisible();
+
+        //deleete software
+        await page.getByRole('button', { name: 'Back to Admin menu' }).click(); 
+        
+        await page.getByRole('button', { name: 'Manage Software' }).click();
+        await expect(page).toHaveURL('/admin/softwares');
+
+        const softRow = page.locator('tr').filter({ hasText: softwareName });
+        
+        if (await softRow.isVisible()) {
+            await softRow.getByRole('button', { name: /🗑️|Delete/ }).click();
+            await expect(softRow).not.toBeVisible();
+        }
+    });
   });
 
 });
