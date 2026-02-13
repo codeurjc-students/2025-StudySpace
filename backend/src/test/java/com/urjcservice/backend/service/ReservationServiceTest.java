@@ -902,35 +902,56 @@ public class ReservationServiceTest {
         request.setEndDate(endDate);
         request.setReason("Study group");
 
-        User mockUser = new User(); mockUser.setId(1L); mockUser.setEmail(userEmail); mockUser.setName("Test User");
-        Room mockRoom = new Room(); mockRoom.setId(roomId); mockRoom.setName("Lab 1");
+        User mockUser = new User(); 
+        mockUser.setId(1L); 
+        mockUser.setEmail(userEmail); 
+        mockUser.setName("Test User");
+        
+        Room mockRoom = new Room(); 
+        mockRoom.setId(roomId); 
+        mockRoom.setName("Lab 1");
+        mockRoom.setActive(true);
+        mockRoom.setPlace("Aulario II"); 
+        mockRoom.setCoordenades("40.0,-3.0");
 
         lenient().when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(mockUser));
         lenient().when(roomRepository.findById(roomId)).thenReturn(Optional.of(mockRoom));
         
+
+        lenient().when(reservationRepository.findUserOverlappingReservations(anyLong(), any(), any()))
+                .thenReturn(Collections.emptyList()); //free user
+
         lenient().when(reservationRepository.findOverlappingReservations(eq(roomId), any(Date.class), any(Date.class), any()))
-                .thenReturn(new PageImpl<>(Collections.emptyList()));
+                .thenReturn(new PageImpl<>(Collections.emptyList())); //free room
         
         lenient().when(reservationRepository.findActiveByUserIdAndDate(anyLong(), any()))
                 .thenReturn(Collections.emptyList());
 
-        lenient().when(reservationRepository.save(any(Reservation.class))).thenAnswer(i -> i.getArguments()[0]);
+        lenient().when(reservationRepository.save(any(Reservation.class))).thenAnswer(i -> {
+            Reservation r = i.getArgument(0);
+            r.setId(100L); 
+            if (r.getStartDate() == null) r.setStartDate(startDate);
+            if (r.getEndDate() == null) r.setEndDate(endDate);
+            return r;
+        });
 
+        // Act
         Reservation result = reservationService.createReservation(request, userEmail);
 
+        // Assert
         assertNotNull(result);
         assertEquals(mockUser, result.getUser());
-        
         assertEquals(mockRoom, result.getRoom());
         
         
         verify(emailService, times(1)).sendReservationConfirmationEmail(
             eq(userEmail),        
             eq("Test User"),      
-            eq("Lab 1"),          
-            anyString(),          // date (format String)
-            anyString(),          // start time (format String)
-            anyString()           // end time (format String)
+            eq("Lab 1"),
+            eq("Aulario II"),     // Place
+            eq("40.0,-3.0"),      // Coordenades
+            any(Date.class),      // Start
+            any(Date.class)       // End
         );
     }
 

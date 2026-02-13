@@ -268,7 +268,22 @@ public class ReservationService {
         if (!room.isActive()) {
         throw new RuntimeException("Reservations are not possible: The classroom is temporarily unavailable.");
         }
+
+
+
+
+        List<Reservation> userConflicts = reservationRepository.findUserOverlappingReservations(
+                user.getId(), 
+                request.getStartDate(), 
+                request.getEndDate()
+        );
+
+        if (!userConflicts.isEmpty()) {
+            throw new IllegalArgumentException("You already have an active reservation for this time slot. You cannot be in two classrooms at the same time.");
+        }
         
+
+
         validateReservationRules(request.getStartDate(), request.getEndDate()); 
 
         
@@ -314,16 +329,15 @@ public class ReservationService {
 
         // try confirmation email
         try {
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
 
             emailService.sendReservationConfirmationEmail(
                 user.getEmail(),
                 user.getName(),
                 room.getName(),
-                dateFormat.format(savedReservation.getStartDate()),
-                timeFormat.format(savedReservation.getStartDate()),
-                timeFormat.format(savedReservation.getEndDate())
+                room.getPlace(),       
+                room.getCoordenades(), 
+                savedReservation.getStartDate(), 
+                savedReservation.getEndDate()
             );
         } catch (Exception e) {
             System.err.println("Error sending confirmation email: " + e.getMessage());

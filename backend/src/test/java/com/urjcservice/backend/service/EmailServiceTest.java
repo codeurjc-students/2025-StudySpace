@@ -11,6 +11,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.util.ReflectionTestUtils;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.Session;
+import jakarta.mail.Message;
+import java.util.Date;
+import static org.mockito.Mockito.when;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -138,35 +143,31 @@ public class EmailServiceTest {
 
 
     @Test
-    @DisplayName("Should send reservation confirmation email with correct details")
-    void testSendReservationConfirmationEmail() {
+    @DisplayName("Should send reservation confirmation email with ICS attachment")
+    void testSendReservationConfirmationEmail() throws Exception {
         // Arrange
         String to = "user@test.com";
         String userName = "John Doe";
         String roomName = "Lab A";
-        String date = "2026-05-20";
-        String start = "10:00";
-        String end = "12:00";
+        String place = "Building 1";      
+        String coords = "40.5,-3.5";      
+        Date start = new Date();
+        Date end = new Date(System.currentTimeMillis() + 3600000); 
+
+        MimeMessage mimeMessage = new MimeMessage((Session) null);
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
 
         // Act
-        emailService.sendReservationConfirmationEmail(to, userName, roomName, date, start, end);
+        emailService.sendReservationConfirmationEmail(to, userName, roomName, place, coords, start, end);
 
         // Assert
-        ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        ArgumentCaptor<MimeMessage> messageCaptor = ArgumentCaptor.forClass(MimeMessage.class);
         verify(mailSender).send(messageCaptor.capture());
 
-        SimpleMailMessage sentMessage = messageCaptor.getValue();
-        
-        assertEquals(to, sentMessage.getTo()[0]);
-        
-        assertTrue(sentMessage.getSubject().contains("Confirmation"));
-        
-        String body = sentMessage.getText();
-        assertTrue(body.contains(userName));
-        assertTrue(body.contains(roomName));
-        assertTrue(body.contains(date));
-        assertTrue(body.contains(start));
-        assertTrue(body.contains(end));
+        MimeMessage sentMessage = messageCaptor.getValue();
+        assertEquals(to, sentMessage.getRecipients(Message.RecipientType.TO)[0].toString());
+        assertEquals("Booking confirmation - " + roomName, sentMessage.getSubject());
     }
+    
 
 }

@@ -110,4 +110,20 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
         @Param("startDate") Date startDate, 
         @Param("endDate") Date endDate
     );
+
+
+
+
+
+    @Query("SELECT r FROM Reservation r WHERE r.user.id = :userId " +
+           "AND r.cancelled = false " +
+           "AND r.startDate < :end AND r.endDate > :start")
+    List<Reservation> findUserOverlappingReservations(//active reservations that colide with new ones
+        @Param("userId") Long userId, 
+        @Param("start") Date start, 
+        @Param("end") Date end
+    );
+
+
+
 }
