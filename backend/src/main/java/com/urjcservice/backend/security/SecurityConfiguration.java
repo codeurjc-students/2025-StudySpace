@@ -80,6 +80,7 @@ public class SecurityConfiguration {
                         //for password reset
                         .requestMatchers("/api/auth/forgot-password").permitAll()
                         .requestMatchers("/api/auth/reset-password").permitAll()
+                        .requestMatchers("/api/reservations/verify").permitAll()
                         // allows pre-flight requests (for CORS)
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // PRIVATE PAGES

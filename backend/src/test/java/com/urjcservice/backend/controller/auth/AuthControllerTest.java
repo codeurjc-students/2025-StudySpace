@@ -1,5 +1,7 @@
 package com.urjcservice.backend.controller.auth;
 
+import jakarta.servlet.http.Cookie;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -259,10 +261,10 @@ public class AuthControllerTest {
         mockMvc.perform(post("/api/auth/change-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody)
-                .with(csrf())) 
+                .with(csrf()) 
+                .cookie(new Cookie("dummy-cookie", "ignore-me"))) 
                 .andExpect(status().isUnauthorized());
     }
-
 
 
 
