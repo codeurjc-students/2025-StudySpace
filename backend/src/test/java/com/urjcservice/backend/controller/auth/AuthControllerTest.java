@@ -11,9 +11,9 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-
-import com.urjcservice.backend.controller.auth.AuthController;
-import com.urjcservice.backend.entities.User;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,6 +27,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.urjcservice.backend.repositories.UserRepository;
 import com.urjcservice.backend.service.UserService;
+import com.urjcservice.backend.controller.auth.AuthController;
+import com.urjcservice.backend.entities.User;
 
 import java.util.Optional;
 
@@ -245,10 +247,19 @@ public class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("Change Password - Unauthenticated (Should return 401)")
     public void testChangePassword_Unauthenticated_Returns401() throws Exception {
+        String requestBody = """
+            {
+                "oldPassword": "oldPass",
+                "newPassword": "newPass"
+            }
+        """;
+
         mockMvc.perform(post("/api/auth/change-password")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"))
+                .content(requestBody)
+                .with(csrf())) 
                 .andExpect(status().isUnauthorized());
     }
 
