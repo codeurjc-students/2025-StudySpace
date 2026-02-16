@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 
 import java.util.List;
+import java.util.Optional;
 import java.time.LocalDate;
 import java.util.Date;
 
@@ -125,5 +126,13 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     );
 
 
+
+
+    Optional<Reservation> findByVerificationToken(String verificationToken);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Reservation r WHERE r.verified = false AND r.tokenExpirationDate < :now")
+    void deleteExpiredReservations(@Param("now") Date now);
 
 }

@@ -15,6 +15,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.transaction.annotation.Transactional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -324,26 +326,82 @@ public class ReservationService {
         reservation.setRoom(room);
         reservation.setCancelled(false);
 
+        reservation.setVerified(false); 
+        reservation.setVerificationToken(java.util.UUID.randomUUID().toString()); 
+
+        Date now = new Date();
+        Date expiration = new Date(now.getTime() + 3600000); 
+        reservation.setTokenExpirationDate(expiration);
+
         //first save reservation
         Reservation savedReservation = reservationRepository.save(reservation);
 
         // try confirmation email
         try {
+            emailService.sendVerificationEmail(
+                user.getEmail(),
+                user.getName(),
+                savedReservation.getVerificationToken() 
+            );
+        } catch (Exception e) {
+            System.err.println("Error sending verification email: " + e.getMessage());
+        }
 
+        return savedReservation;
+    }
+
+
+    public void verifyReservation(String token) {
+        Reservation reservation = reservationRepository.findByVerificationToken(token) 
+                .orElseThrow(() -> new RuntimeException("Invalid verification token."));
+
+        //is verified?
+        if (reservation.isVerified()) {
+            throw new RuntimeException("Reservation is already verified.");
+        }
+
+        //token expired?
+        if (reservation.getTokenExpirationDate() != null && 
+            reservation.getTokenExpirationDate().before(new Date())) {
+            
+            //if expired delete the reservation
+            reservationRepository.delete(reservation);
+            
+            throw new RuntimeException("Verification link has expired. The reservation has been cancelled. Please book again.");
+        }
+
+        reservation.setVerified(true);
+        reservation.setVerificationToken(null); //delete token
+        reservation.setTokenExpirationDate(null); //delete token date
+        
+        Reservation savedReservation = reservationRepository.save(reservation);
+
+        //send email with calendar event
+        try {
+            User user = savedReservation.getUser();
+            Room room = savedReservation.getRoom();
+            
             emailService.sendReservationConfirmationEmail(
                 user.getEmail(),
                 user.getName(),
                 room.getName(),
-                room.getPlace(),       
-                room.getCoordenades(), 
+                room.getPlace(),        
+                room.getCoordenades(),  
                 savedReservation.getStartDate(), 
-                savedReservation.getEndDate()
+                savedReservation.getEndDate()    
             );
         } catch (Exception e) {
             System.err.println("Error sending confirmation email: " + e.getMessage());
         }
+    }
 
-        return savedReservation;
+
+    @Scheduled(fixedRate = 60000) //every minute we search for new reservations that are not verified and have expired token
+    @Transactional
+    public void deleteExpiredUnverifiedReservations() {
+        Date now = new Date();
+        
+        reservationRepository.deleteExpiredReservations(now);
     }
 
 

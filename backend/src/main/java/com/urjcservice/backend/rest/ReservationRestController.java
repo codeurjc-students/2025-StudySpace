@@ -199,6 +199,19 @@ public class ReservationRestController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+
+
+
+    @GetMapping("/verify")
+    public ResponseEntity<String> verifyReservation(@RequestParam("token") String token) {
+        try {
+            reservationService.verifyReservation(token);
+            return ResponseEntity.ok("Reservation confirmed successfully! Check your email for the calendar event.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
     
 
 

@@ -89,7 +89,7 @@ public class EmailService {
     
 
     public void sendReservationConfirmationEmail(String to, String userName, String roomName, 
-                                                 String place, String coordinates, // <--- NUEVOS PARÁMETROS
+                                                 String place, String coordinates, 
                                                  Date startRaw, Date endRaw) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -103,7 +103,6 @@ public class EmailService {
             String startStr = printFormat.format(startRaw);
             String endStr = printFormat.format(endRaw);
 
-            // Texto del correo
             String locationText = (coordinates != null && !coordinates.isEmpty()) ? "See map (Coordinates)" : (place != null ? place : "Campus");
 
             String body = "Dear " + userName + ",\n\n" +
@@ -116,7 +115,6 @@ public class EmailService {
             
             helper.setText(body);
 
-            // Generamos el ICS con la nueva lógica
             String icsContent = generateIcsContent(roomName, place, coordinates, startRaw, endRaw);
             
             helper.addAttachment("reserva.ics", new ByteArrayResource(icsContent.getBytes(StandardCharsets.UTF_8)));
@@ -128,8 +126,28 @@ public class EmailService {
         }
     }
 
+
+
+    public void sendVerificationEmail(String to, String userName, String token) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(to);
+        message.setSubject("Action Required: Confirm your StudySpace Reservation");
+        //local npm start/ng serve
+        //String verificationLink = "https://localhost:4200/verify-reservation?token=" + token;
+        //docker
+        String verificationLink = "https://localhost/verify-reservation?token=" + token;
+
+        message.setText("Dear " + userName + ",\n\n" +
+                        "You have requested a reservation on StudySpace.\n" +
+                        "Please click the link below to confirm your booking and receive the calendar event:\n\n" +
+                        verificationLink + "\n\n" +
+                        "If you did not request this, please ignore this email.");
+        
+        mailSender.send(message);
+    }
+
     private String generateIcsContent(String roomName, String place, String coordinates, Date start, Date end) {
-        // 1. Fechas en UTC estricto
         SimpleDateFormat icsFormat = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
         icsFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         
@@ -138,27 +156,23 @@ public class EmailService {
         String nowIcs = icsFormat.format(new Date());
         String uid = UUID.randomUUID().toString();
 
-        // 2. Preparación de textos
         String summary = escapeIcs("Reservation: " + roomName);
         String description = escapeIcs("Confirmed reservation at " + roomName + " via StudySpace.");
         
-        // 3. Ubicación y GEO
+        //ubication
         String locationVal = "";
         String geoVal = null;
 
         if (coordinates != null && !coordinates.isEmpty()) {
-            // LIMPIEZA CRÍTICA: Quitamos espacios para cumplir el estándar GEO (lat;long)
-            // Ejemplo entrada: "40.3, -3.8" -> Limpio: "40.3,-3.8" -> Replace: "40.3;-3.8"
             String cleanCoords = coordinates.replaceAll("\\s+", ""); 
             geoVal = cleanCoords.replace(",", ";");
             
-            // En LOCATION dejamos las coordenadas visuales
+            //visual coordenades
             locationVal = escapeIcs(coordinates);
         } else if (place != null && !place.isEmpty()) {
             locationVal = escapeIcs(place);
         }
 
-        // 4. Construcción del archivo
         StringBuilder sb = new StringBuilder();
         sb.append("BEGIN:VCALENDAR\r\n");
         sb.append("VERSION:2.0\r\n");
@@ -179,7 +193,6 @@ public class EmailService {
             sb.append("LOCATION:").append(locationVal).append("\r\n");
         }
         
-        // Solo añadimos GEO si hemos logrado limpiarlo correctamente
         if (geoVal != null) {
             sb.append("GEO:").append(geoVal).append("\r\n");
         }
@@ -192,13 +205,7 @@ public class EmailService {
         return sb.toString();
     }
 
-    /**
-     * Función auxiliar para escapar caracteres prohibidos en iCalendar.
-     * ,  -> \,
-     * ;  -> \;
-     * \  -> \\
-     * \n -> \n
-     */
+    //to avoid incorrect caracters in the ICS breaking the format
     private String escapeIcs(String input) {
         if (input == null) return "";
         return input.replace("\\", "\\\\")

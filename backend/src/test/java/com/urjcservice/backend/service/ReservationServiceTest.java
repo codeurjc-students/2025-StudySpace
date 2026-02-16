@@ -38,7 +38,9 @@ import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
@@ -888,51 +890,36 @@ public class ReservationServiceTest {
 
 
     @Test
-    @DisplayName("Create Reservation - Success")
+    @DisplayName("Create Reservation - Should save unverified and send Verification Email")
     void testCreateReservation_Success() {
+        // Arrange
         Long roomId = 2L;
         String userEmail = "test@urjc.es";
-
         Date startDate = getNextBusinessDate(1, 10);
-        Date endDate = new Date(startDate.getTime() + 3600000); // +1 hora
+        Date endDate = new Date(startDate.getTime() + 3600000); // +1h
 
         ReservationRequest request = new ReservationRequest();
         request.setRoomId(roomId);
         request.setStartDate(startDate);
         request.setEndDate(endDate);
-        request.setReason("Study group");
+        request.setReason("Study");
 
-        User mockUser = new User(); 
-        mockUser.setId(1L); 
-        mockUser.setEmail(userEmail); 
-        mockUser.setName("Test User");
+        User mockUser = new User(); mockUser.setId(1L); mockUser.setEmail(userEmail); mockUser.setName("User");
+        Room mockRoom = new Room(); mockRoom.setId(roomId); mockRoom.setName("Lab 1"); mockRoom.setActive(true);
+
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(mockUser));
+        when(roomRepository.findById(roomId)).thenReturn(Optional.of(mockRoom));
         
-        Room mockRoom = new Room(); 
-        mockRoom.setId(roomId); 
-        mockRoom.setName("Lab 1");
-        mockRoom.setActive(true);
-        mockRoom.setPlace("Aulario II"); 
-        mockRoom.setCoordenades("40.0,-3.0");
+        // Mocks
+        lenient().when(reservationRepository.findUserOverlappingReservations(any(), any(), any())).thenReturn(Collections.emptyList());
+        lenient().when(reservationRepository.findOverlappingReservations(any(), any(), any(), any())).thenReturn(new PageImpl<>(Collections.emptyList()));
+        lenient().when(reservationRepository.findActiveByUserIdAndDate(any(), any())).thenReturn(Collections.emptyList());
 
-        lenient().when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(mockUser));
-        lenient().when(roomRepository.findById(roomId)).thenReturn(Optional.of(mockRoom));
-        
-
-        lenient().when(reservationRepository.findUserOverlappingReservations(anyLong(), any(), any()))
-                .thenReturn(Collections.emptyList()); //free user
-
-        lenient().when(reservationRepository.findOverlappingReservations(eq(roomId), any(Date.class), any(Date.class), any()))
-                .thenReturn(new PageImpl<>(Collections.emptyList())); //free room
-        
-        lenient().when(reservationRepository.findActiveByUserIdAndDate(anyLong(), any()))
-                .thenReturn(Collections.emptyList());
-
-        lenient().when(reservationRepository.save(any(Reservation.class))).thenAnswer(i -> {
+        //save token mock
+        when(reservationRepository.save(any(Reservation.class))).thenAnswer(i -> {
             Reservation r = i.getArgument(0);
-            r.setId(100L); 
-            if (r.getStartDate() == null) r.setStartDate(startDate);
-            if (r.getEndDate() == null) r.setEndDate(endDate);
-            return r;
+            r.setId(100L);
+            return r; 
         });
 
         // Act
@@ -940,20 +927,126 @@ public class ReservationServiceTest {
 
         // Assert
         assertNotNull(result);
-        assertEquals(mockUser, result.getUser());
-        assertEquals(mockRoom, result.getRoom());
+        assertFalse(result.isVerified(), "The reservation must be born unverified");
+        assertNotNull(result.getVerificationToken(), "You must have a generated token");
+        assertNotNull(result.getTokenExpirationDate(), "It must have an expiration date.");
+
+        //verification email, no confirmation yet
+        verify(emailService, times(1)).sendVerificationEmail(
+            eq(userEmail),
+            eq("User"),
+            anyString() //  token
+        );
         
+        verify(emailService, never()).sendReservationConfirmationEmail(any(), any(), any(), any(), any(), any(), any());
+    }
+
+
+
+   @Test
+    @DisplayName("Create Reservation - Fail: Room not found")
+    void testCreateReservation_NoRoom_ShouldFail() {
+        // Arrange
+        ReservationRequest request = new ReservationRequest();
+        request.setRoomId(999L); // ID not real
+        request.setStartDate(getNextBusinessDate(1, 10));
+        request.setEndDate(getNextBusinessDate(1, 12));
+
+        //user exists
+        User mockUser = new User(); 
+        mockUser.setId(1L);
+        lenient().when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(mockUser));
         
-        verify(emailService, times(1)).sendReservationConfirmationEmail(
-            eq(userEmail),        
-            eq("Test User"),      
-            eq("Lab 1"),
-            eq("Aulario II"),     // Place
-            eq("40.0,-3.0"),      // Coordenades
-            any(Date.class),      // Start
-            any(Date.class)       // End
+        //dosent exists
+        lenient().when(roomRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        //we expect IllegalArgumentException 
+        assertThrows(RuntimeException.class, () -> 
+            reservationService.createReservation(request, "user@test.com")
         );
     }
+
+    @Test
+    @DisplayName("Verify Reservation - Success: Should verify and send ICS")
+    void testVerifyReservation_Success() {
+        // Arrange
+        String token = "valid-uuid-token";
+        
+        User user = new User(); user.setEmail("u@test.com"); user.setName("User");
+        Room room = new Room(); room.setName("Lab 1"); room.setPlace("Campus"); room.setCoordenades("40,-3");
+        
+        Reservation pendingRes = new Reservation();
+        pendingRes.setId(100L);
+        pendingRes.setVerified(false);
+        pendingRes.setVerificationToken(token);
+        pendingRes.setTokenExpirationDate(new Date(System.currentTimeMillis() + 3600000)); // last just 1 hour
+        pendingRes.setUser(user);
+        pendingRes.setRoom(room);
+        pendingRes.setStartDate(new Date());
+        pendingRes.setEndDate(new Date());
+
+        when(reservationRepository.findByVerificationToken(token)).thenReturn(Optional.of(pendingRes));
+        when(reservationRepository.save(any(Reservation.class))).thenAnswer(i -> i.getArgument(0));
+
+        // Act
+        reservationService.verifyReservation(token);
+
+        // Assert
+        assertTrue(pendingRes.isVerified());
+        assertNull(pendingRes.getVerificationToken()); // Token errased
+        
+        //confirmation email with ICS
+        verify(emailService).sendReservationConfirmationEmail(
+            eq("u@test.com"),
+            eq("User"),
+            eq("Lab 1"),
+            eq("Campus"),
+            eq("40,-3"),
+            any(),
+            any()
+        );
+    }
+
+
+    @Test
+    @DisplayName("Verify Reservation - Expired: Should delete reservation and throw exception")
+    void testVerifyReservation_Expired() {
+        // Arrange
+        String token = "expired-token";
+        Reservation expiredRes = new Reservation();
+        expiredRes.setVerified(false);
+        //- 1 hour expired
+        expiredRes.setTokenExpirationDate(new Date(System.currentTimeMillis() - 3600000)); 
+
+        when(reservationRepository.findByVerificationToken(token)).thenReturn(Optional.of(expiredRes));
+
+        // Act & Assert
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> 
+            reservationService.verifyReservation(token)
+        );
+
+        assertTrue(ex.getMessage().contains("expired"));
+        
+        //reservation deleted
+        verify(reservationRepository, times(1)).delete(expiredRes);
+        //do not send email
+        verify(emailService, never()).sendReservationConfirmationEmail(any(), any(), any(), any(), any(), any(), any());
+    }
+
+
+    @Test
+    @DisplayName("Cron Job - Should call deleteExpiredReservations")
+    void testDeleteExpiredUnverifiedReservations() {
+        // Act
+        reservationService.deleteExpiredUnverifiedReservations();
+
+        // Assert
+        verify(reservationRepository, times(1)).deleteExpiredReservations(any(Date.class));
+    }
+
+
+
 
     @Test
     @DisplayName("Create Reservation - Fail: Weekend")

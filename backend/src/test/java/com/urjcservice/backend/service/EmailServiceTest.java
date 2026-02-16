@@ -168,6 +168,33 @@ public class EmailServiceTest {
         assertEquals(to, sentMessage.getRecipients(Message.RecipientType.TO)[0].toString());
         assertEquals("Booking confirmation - " + roomName, sentMessage.getSubject());
     }
+
+
+    @Test
+    @DisplayName("Should send verification email with link")
+    void testSendVerificationEmail() {
+        // Arrange
+        String to = "user@test.com";
+        String userName = "Alice";
+        String token = "abcdef-123456";
+
+        // Act
+        emailService.sendVerificationEmail(to, userName, token);
+
+        // Assert
+        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mailSender).send(captor.capture());
+
+        SimpleMailMessage sentMsg = captor.getValue();
+        assertEquals(to, sentMsg.getTo()[0]);
+        assertTrue(sentMsg.getSubject().contains("Action Required"));
+        
+        String body = sentMsg.getText();
+        // Verify token
+        assertTrue(body.contains(token), "The email body must contain the token");
+        // Verify route 
+        assertTrue(body.contains("verify-reservation"), "The body must contain the path verify-reservation");
+    }
     
 
 }
