@@ -26,6 +26,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType; 
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.urjcservice.backend.repositories.UserRepository;
@@ -39,6 +40,7 @@ import java.util.Optional;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class AuthControllerTest {
 
     @Autowired
@@ -263,14 +265,14 @@ public class AuthControllerTest {
             }
         """;
 
-        when(jwtTokenProvider.validateToken(any(), anyBoolean()))
+        when(jwtTokenProvider.validateToken(any(), eq(true)))
             .thenThrow(new IllegalArgumentException("No access token cookie found in request"));
 
         mockMvc.perform(post("/api/auth/change-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody)
                 .with(csrf())) 
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized()); 
     }
 
 
