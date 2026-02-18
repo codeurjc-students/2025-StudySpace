@@ -3,6 +3,7 @@ package com.urjcservice.backend.controller.auth;
 import jakarta.servlet.http.Cookie;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -31,6 +32,7 @@ import com.urjcservice.backend.repositories.UserRepository;
 import com.urjcservice.backend.service.UserService;
 import com.urjcservice.backend.controller.auth.AuthController;
 import com.urjcservice.backend.entities.User;
+import com.urjcservice.backend.security.jwt.JwtTokenProvider;
 
 import java.util.Optional;
 
@@ -44,6 +46,9 @@ public class AuthControllerTest {
 
     @MockBean
     private UserService userService;
+
+    @MockBean
+    private JwtTokenProvider jwtTokenProvider;
 
 
     @Test
@@ -258,11 +263,13 @@ public class AuthControllerTest {
             }
         """;
 
+        when(jwtTokenProvider.validateToken(any(), anyBoolean()))
+            .thenThrow(new IllegalArgumentException("No access token cookie found in request"));
+
         mockMvc.perform(post("/api/auth/change-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody)
-                .with(csrf()) 
-                .cookie(new Cookie("dummy-cookie", "ignore-me"))) 
+                .with(csrf())) 
                 .andExpect(status().isUnauthorized());
     }
 
