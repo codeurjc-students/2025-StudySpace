@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Statistics and Reservations Flow', () => {
 
-  test('A user creates a reservation and the admin views the statistics.', async ({ page }) => {
+  test('A user creates a reservation and the admin views the statistics.', async ({ page,request }) => {
     
     //data for test
     const timestamp = Date.now();
@@ -49,30 +49,55 @@ test.describe('Statistics and Reservations Flow', () => {
       await roomSelect.selectOption({ index: 1 }); 
 
       //date
-      await page.fill('input[name="selectedDate"]', dateStr);
-      await page.locator('input[name="selectedDate"]').dispatchEvent('change');
-
-      // hour
-      const startSelect = page.locator('select[name="startTime"]');
-      await expect(startSelect).toBeEnabled();
+      const dateInput = page.getByLabel('2. Select Date');
+      await dateInput.click();
+      await dateInput.fill(dateStr);
+      await dateInput.press('Enter');
+      await dateInput.blur();
       
-      //not first hour
-      const optionsCount = await startSelect.locator('option').count();
-      if (optionsCount > 3) {
-          await startSelect.selectOption({ index: 3 }); 
-      } else {
-          await startSelect.selectOption({ index: 1 });
-      }
+      await page.waitForTimeout(2000); 
+
+      // hours
+      const startSelect = page.locator('select[name="startTime"]');
+      await expect(startSelect).toBeEnabled({ timeout: 10000 });
+      await startSelect.selectOption({ index: 1 });
 
       const endSelect = page.locator('select[name="endTime"]');
       await expect(endSelect).toBeEnabled();
-      await page.waitForTimeout(200); 
       await endSelect.selectOption({ index: 1 });
 
       await page.locator('textarea[name="reason"]').fill(`Stats Check ${timestamp}`);
-      await page.getByRole('button', { name: 'Confirm Reservation' }).click();
       
-      await expect(page).toHaveURL('/');
+      // Confirmar
+      await page.getByRole('button', { name: 'Confirm Reservation' }).click();
+
+
+
+
+
+
+      await page.waitForTimeout(2000);
+
+      try {
+        const response = await request.get('http://127.0.0.1:8025/api/v2/messages');
+        const emailData = await response.json();
+        
+        const message = emailData.items.find((msg: any) => 
+            msg.Content.Headers.To && msg.Content.Headers.To[0].includes(userEmail)
+        );
+        expect(message, 'MailHog: Email not found').toBeDefined();
+
+        const match = message.Content.Body.match(/https:\/\/localhost:4200\/verify-reservation\?token=([a-zA-Z0-9-]+)/);
+        if (match) {
+            await page.goto(match[0]);
+            await expect(page.getByText(/confirmed successfully|Reservation Confirmed/i)).toBeVisible();
+        }
+      } catch (error) {
+        console.error("Error connecting to MailHog");
+        throw error;
+      }
+      
+      await page.goto('/');
     });
 
     // LOGOUT

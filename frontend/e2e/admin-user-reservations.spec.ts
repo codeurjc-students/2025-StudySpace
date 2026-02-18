@@ -4,7 +4,7 @@ test.describe('User Reservation Management by Admin', () => {
 
   test.setTimeout(120000);
 
-  test('Admin should be able to see a specific users bookings', async ({ page }) => {
+  test('Admin should be able to see a specific users bookings', async ({ page,request }) => {
     
     const timestamp = Date.now();
     const uniqueReason = 'Reunión E2E ' + timestamp;
@@ -50,32 +50,73 @@ test.describe('User Reservation Management by Admin', () => {
       await page.getByRole('main').getByRole('button', { name: 'Log In' }).click();
       await expect(page).toHaveURL('/');
 
-      //create reservation
-      await page.getByRole('button', { name: 'Book a room' }).click();
+      await page.getByRole('button', { name: /Book a room/i }).click();
       
-      const roomSelect = page.locator('select[name="roomId"]');
-      await expect(roomSelect).not.toBeDisabled();
-      await roomSelect.selectOption({ index: 1 });
+      //room
+      await page.locator('select[name="roomId"]').selectOption({ index: 1 });
+      const dateInput = page.getByLabel('2. Select Date');
+      await dateInput.click();
+      await dateInput.fill(dateStr);
+      await dateInput.press('Enter'); 
+      await dateInput.blur();         
+      
 
-      await page.fill('input[name="selectedDate"]', dateStr);
-      await page.locator('input[name="selectedDate"]').dispatchEvent('change');
+      await page.waitForTimeout(2000);
 
       const startSelect = page.locator('select[name="startTime"]');
-        await expect(startSelect).toBeEnabled();
-        await expect(startSelect.locator('option')).not.toHaveCount(0);
-        
-        // second available option and index 1 for fist avaliable (0 will be select, not the option)
-        await startSelect.selectOption({ index: 1 });
+      await expect(startSelect).toBeEnabled({ timeout: 10000 }); 
+      await startSelect.selectOption({ index: 1 });
 
-        const endSelect = page.locator('select[name="endTime"]');
-        await expect(endSelect).toBeEnabled();
-        await page.waitForTimeout(500); 
-        
-        await endSelect.selectOption({ index: 1 });
+      await page.locator('select[name="endTime"]').selectOption({ index: 1 });
+      await page.locator('textarea[name="reason"]').fill(uniqueReason);
+      
+      await page.getByRole('button', { name: 'Confirm Reservation' }).click();
+      
+      // ---------------------------------------------------------
+      // tries for MAILHOG
+      // -------------------------------------------------------
+        //wait for email
+      let message = null;
+      for (let i = 0; i < 15; i++) {
+          try {
+            // 127.0.0.1 for local connection
+            const response = await request.get('http://127.0.0.1:8025/api/v2/messages');
+            if (response.ok()) {
+                const emailData = await response.json();
+                
+                //search for email
+                const found = emailData.items.find((msg: any) => 
+                    msg.Content.Headers.To && msg.Content.Headers.To[0].includes(uniqueUserEmail)
+                );
+                
+                if (found) {
+                    message = found;
+                    console.log("Email found during attempt " + (i+1));
+                    break; //end loop
+                }
+            }
+          } catch (e) {
+              console.log("Waiting to connect to MailHog...");
+          }
+          await page.waitForTimeout(1000);
+      }
+      expect(message, 'The verification email was not found in MailHog after 15 seconds').toBeTruthy();
 
-        await page.locator('textarea[name="reason"]').fill(uniqueReason);
-        await page.getByRole('button', { name: 'Confirm Reservation' }).click();
-        await expect(page).toHaveURL('/', { timeout: 10000 });
+      const body = message.Content.Body;
+        const match = body.match(/https:\/\/[\w.:]+\/verify-reservation\?token=([a-zA-Z0-9-]+)/);
+      
+      if (match) {
+          const link = match[0];
+          console.log("Link found:", link); // Debug
+          
+          await page.goto(link);
+          await expect(page.getByText(/confirmed successfully|Reservation Confirmed/i)).toBeVisible();
+      } else {
+          throw new Error("The link does not match the regular expression. Check the console.log file in the email body.");
+      }
+      
+      await page.goto('/');
+        
     });
 
     // ==========================================

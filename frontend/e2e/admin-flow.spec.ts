@@ -27,6 +27,7 @@ test.describe('Administrator Management', () => {
 
     // --- search function for pagination ---
     const findRowInTable = async (searchText: string) => {
+        await expect(page.locator('tbody tr').first()).toBeVisible({ timeout: 10000 });
         const row = page.locator('tr').filter({ hasText: searchText });
         const pageIndicator = page.locator('small', { hasText: /Showing page/ });
 
