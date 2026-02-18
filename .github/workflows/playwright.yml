@@ -14,6 +14,11 @@ on:
       - 'images/**'
       - 'README.md'
 
+#timezone of madrid for all services (backend, mysql, mailhog)
+env:
+  TZ: Europe/Madrid
+
+
 jobs:
   e2e-test:
     timeout-minutes: 60

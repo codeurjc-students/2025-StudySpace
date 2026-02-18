@@ -16,7 +16,10 @@ test.describe('Statistics and Reservations Flow', () => {
     while (targetDate.getDay() === 0 || targetDate.getDay() === 6) {
         targetDate.setDate(targetDate.getDate() + 1);
     }
-    const dateStr = targetDate.toISOString().split('T')[0];
+    const year = targetDate.getFullYear();
+    const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+    const day = String(targetDate.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
 
     //regsiter
     await test.step('User registration for statistics', async () => {
@@ -76,25 +79,34 @@ test.describe('Statistics and Reservations Flow', () => {
 
 
 
-      await page.waitForTimeout(2000);
+      let message = null;
+      for (let i = 0; i < 15; i++) {
+          try {
+              const response = await request.get('http://127.0.0.1:8025/api/v2/messages');
+              if (response.ok()) {
+                  const emailData = await response.json();
+                  const found = emailData.items.find((msg: any) => 
+                      msg.Content.Headers.To && msg.Content.Headers.To[0].includes(userEmail)
+                  );
+                  if (found) {
+                      message = found;
+                      break; 
+                  }
+              }
+          } catch (e) { }
+          await page.waitForTimeout(1000); 
+      }
+      
+      expect(message, 'The verification email was not found in MailHog').toBeTruthy();
 
-      try {
-        const response = await request.get('http://127.0.0.1:8025/api/v2/messages');
-        const emailData = await response.json();
-        
-        const message = emailData.items.find((msg: any) => 
-            msg.Content.Headers.To && msg.Content.Headers.To[0].includes(userEmail)
-        );
-        expect(message, 'MailHog: Email not found').toBeDefined();
-
-        const match = message.Content.Body.match(/https:\/\/localhost:4200\/verify-reservation\?token=([a-zA-Z0-9-]+)/);
-        if (match) {
-            await page.goto(match[0]);
-            await expect(page.getByText(/confirmed successfully|Reservation Confirmed/i)).toBeVisible();
-        }
-      } catch (error) {
-        console.error("Error connecting to MailHog");
-        throw error;
+      const cleanBody = message.Content.Body.replace(/=\r?\n/g, '');
+      const match = cleanBody.match(/https:\/\/[\w.:]+\/verify-reservation\?token=([a-zA-Z0-9-]+)/);
+      
+      if (match) {
+          await page.goto(match[0]);
+          await expect(page.getByText(/confirmed successfully|Reservation Confirmed/i)).toBeVisible();
+      } else {
+          throw new Error(`HTTPS link not found in the email body. Text received: ${cleanBody}`);
       }
       
       await page.goto('/');

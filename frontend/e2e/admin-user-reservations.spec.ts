@@ -17,13 +17,16 @@ test.describe('User Reservation Management by Admin', () => {
     while (targetDate.getDay() === 0 || targetDate.getDay() === 6) {
         targetDate.setDate(targetDate.getDate() + 1);
     }
-    const dateStr = targetDate.toISOString().split('T')[0];
+    const year = targetDate.getFullYear();
+    const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+    const day = String(targetDate.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
     // ------------------------------------------------
 
     // ==========================================
     // NEW USER REGISTRATION
     // ==========================================
-    await test.step('Registrar usuario nuevo', async () => {
+    await test.step('Register new user', async () => {
       await page.goto('/login');
       await page.getByRole('button', { name: 'Register' }).click();
       
@@ -79,40 +82,31 @@ test.describe('User Reservation Management by Admin', () => {
       let message = null;
       for (let i = 0; i < 15; i++) {
           try {
-            // 127.0.0.1 for local connection
-            const response = await request.get('http://127.0.0.1:8025/api/v2/messages');
-            if (response.ok()) {
-                const emailData = await response.json();
-                
-                //search for email
-                const found = emailData.items.find((msg: any) => 
-                    msg.Content.Headers.To && msg.Content.Headers.To[0].includes(uniqueUserEmail)
-                );
-                
-                if (found) {
-                    message = found;
-                    console.log("Email found during attempt " + (i+1));
-                    break; //end loop
-                }
-            }
-          } catch (e) {
-              console.log("Waiting to connect to MailHog...");
-          }
-          await page.waitForTimeout(1000);
+              const response = await request.get('http://127.0.0.1:8025/api/v2/messages');
+              if (response.ok()) {
+                  const emailData = await response.json();
+                  const found = emailData.items.find((msg: any) => 
+                      msg.Content.Headers.To && msg.Content.Headers.To[0].includes(uniqueUserEmail)
+                  );
+                  if (found) {
+                      message = found;
+                      break; 
+                  }
+              }
+          } catch (e) { }
+          await page.waitForTimeout(1000); 
       }
-      expect(message, 'The verification email was not found in MailHog after 15 seconds').toBeTruthy();
+      
+      expect(message, 'The verification email was not found in MailHog').toBeTruthy();
 
-      const body = message.Content.Body;
-        const match = body.match(/https:\/\/[\w.:]+\/verify-reservation\?token=([a-zA-Z0-9-]+)/);
+      const cleanBody = message.Content.Body.replace(/=\r?\n/g, '');
+      const match = cleanBody.match(/https:\/\/[\w.:]+\/verify-reservation\?token=([a-zA-Z0-9-]+)/);
       
       if (match) {
-          const link = match[0];
-          console.log("Link found:", link); // Debug
-          
-          await page.goto(link);
+          await page.goto(match[0]);
           await expect(page.getByText(/confirmed successfully|Reservation Confirmed/i)).toBeVisible();
       } else {
-          throw new Error("The link does not match the regular expression. Check the console.log file in the email body.");
+          throw new Error(`HTTPS link not found in the email body. Text received: ${cleanBody}`);
       }
       
       await page.goto('/');
