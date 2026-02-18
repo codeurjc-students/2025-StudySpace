@@ -1,9 +1,13 @@
 package com.urjcservice.backend.controller.auth;
 
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.Cookie;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -20,6 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,13 +39,14 @@ import com.urjcservice.backend.service.UserService;
 import com.urjcservice.backend.controller.auth.AuthController;
 import com.urjcservice.backend.entities.User;
 import com.urjcservice.backend.security.jwt.JwtTokenProvider;
+import com.urjcservice.backend.security.jwt.JwtRequestFilter;
 
 import java.util.Optional;
 
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+//@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class AuthControllerTest {
 
     @Autowired
@@ -50,8 +56,18 @@ public class AuthControllerTest {
     private UserService userService;
 
     @MockBean
-    private JwtTokenProvider jwtTokenProvider;
+    private JwtRequestFilter jwtRequestFilter;
 
+    @BeforeEach
+    void setUp() throws Exception {
+        doAnswer(invocation -> {
+            ServletRequest request = invocation.getArgument(0);
+            ServletResponse response = invocation.getArgument(1);
+            FilterChain chain = invocation.getArgument(2);
+            chain.doFilter(request, response);
+            return null;
+        }).when(jwtRequestFilter).doFilter(any(), any(), any());
+    }
 
     @Test
     @WithMockUser(username = "carlos@urjc.es")
@@ -264,15 +280,12 @@ public class AuthControllerTest {
                 "newPassword": "newPass"
             }
         """;
-
-        when(jwtTokenProvider.validateToken(any(), eq(true)))
-            .thenThrow(new IllegalArgumentException("No access token cookie found in request"));
-
+        
         mockMvc.perform(post("/api/auth/change-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody)
                 .with(csrf())) 
-                .andExpect(status().isUnauthorized()); 
+                .andExpect(status().isUnauthorized());
     }
 
 
