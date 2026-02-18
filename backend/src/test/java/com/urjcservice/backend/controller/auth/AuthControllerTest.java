@@ -29,7 +29,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType; 
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
@@ -46,7 +47,7 @@ import java.util.Optional;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-//@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class AuthControllerTest {
 
     @Autowired
@@ -56,9 +57,9 @@ public class AuthControllerTest {
     private UserService userService;
 
     @MockBean
-    private JwtRequestFilter jwtRequestFilter;
+    private JwtTokenProvider jwtTokenProvider;
 
-    @BeforeEach
+    /*@BeforeEach
     void setUp() throws Exception {
         doAnswer(invocation -> {
             ServletRequest request = invocation.getArgument(0);
@@ -67,7 +68,7 @@ public class AuthControllerTest {
             chain.doFilter(request, response);
             return null;
         }).when(jwtRequestFilter).doFilter(any(), any(), any());
-    }
+    }*/
 
     @Test
     @WithMockUser(username = "carlos@urjc.es")
@@ -273,6 +274,7 @@ public class AuthControllerTest {
 
     @Test
     @DisplayName("Change Password - Unauthenticated (Should return 401)")
+    @WithAnonymousUser 
     public void testChangePassword_Unauthenticated_Returns401() throws Exception {
         String requestBody = """
             {
@@ -280,7 +282,10 @@ public class AuthControllerTest {
                 "newPassword": "newPass"
             }
         """;
-        
+
+        when(jwtTokenProvider.validateToken(any(), eq(true)))
+            .thenThrow(new IllegalArgumentException("No access token cookie found in request"));
+
         mockMvc.perform(post("/api/auth/change-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody)
