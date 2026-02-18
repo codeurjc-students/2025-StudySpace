@@ -95,6 +95,12 @@ jobs:
       working-directory: ./frontend
       run: npx playwright install --with-deps
 
+    - name: Wait for MailHog to start
+      run: |
+        echo "Waiting for MailHog on port 8025..."
+        timeout 60 bash -c 'until curl -s http://127.0.0.1:8025/api/v2/messages > /dev/null; do sleep 2; done'
+        echo "MailHog is operational!"
+        
     # Wait till backend 
     - name: Wait for Backend to start
       run: |
