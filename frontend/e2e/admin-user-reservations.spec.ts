@@ -55,33 +55,34 @@ test.describe('User Reservation Management by Admin', () => {
 
       await page.getByRole('button', { name: /Book a room/i }).click();
       
-      //room
-      await page.locator('select[name="roomId"]').selectOption({ index: 1 });
-      await page.locator('select[name="roomId"]').selectOption({ index: 1 });
+      // 1. Seleccionar Sala
+      const roomSelect = page.locator('select[name="roomId"]');
+      await expect(roomSelect).toBeEnabled();
+      await roomSelect.selectOption({ index: 1 });
+      await page.waitForTimeout(1000); 
       
-      //force angular events
-      /*const dateInput = page.getByLabel('2. Select Date');
-      await dateInput.click();
-      await dateInput.fill(dateStr);
-      await dateInput.dispatchEvent('input');
-      await dateInput.dispatchEvent('change');
-      await dateInput.press('Enter'); 
-      await dateInput.blur(); */        
-      
-      await page.waitForTimeout(2000);
 
-      const dateInput = page.locator('input[type="date"]').first(); 
+      const dateInput = page.getByLabel('2. Select Date');
+      await dateInput.focus();
       await dateInput.fill(dateStr);
-      await dateInput.dispatchEvent('change');
-      await dateInput.blur(); 
+      await page.keyboard.press('Tab'); 
+
+      await page.waitForTimeout(3000); 
+
 
       const startSelect = page.locator('select[name="startTime"]');
-      await expect(startSelect).toBeEnabled({ timeout: 20000 });
+      await expect(startSelect).toBeEnabled({ timeout: 15000 }); 
+
+      await expect(startSelect.locator('option').nth(1)).toBeAttached({ timeout: 10000 });
       await startSelect.selectOption({ index: 1 });
 
+      await page.waitForTimeout(500);
+
       const endSelect = page.locator('select[name="endTime"]');
-      await expect(endSelect).toBeEnabled({ timeout: 10000 });
+      await expect(endSelect).toBeEnabled({ timeout: 15000 });
+      await expect(endSelect.locator('option').nth(1)).toBeAttached({ timeout: 10000 });
       await endSelect.selectOption({ index: 1 });
+
       await page.locator('textarea[name="reason"]').fill(uniqueReason);
       
       await page.getByRole('button', { name: 'Confirm Reservation' }).click();

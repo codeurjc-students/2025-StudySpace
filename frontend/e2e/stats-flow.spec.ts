@@ -44,42 +44,39 @@ test.describe('Statistics and Reservations Flow', () => {
       await page.getByRole('main').getByRole('button', { name: 'Log In' }).click();
       await expect(page).toHaveURL('/');
 
-      await page.getByRole('button', { name: 'Book a room' }).click();
-      
-      //select room
-      const roomSelect = page.locator('select[name="roomId"]');
-      await expect(roomSelect).not.toBeDisabled();
-      await roomSelect.selectOption({ index: 1 }); 
+      await page.getByRole('button', { name: /Book a room/i }).click();
+        
 
-      //force angular
-      /*const dateInput = page.getByLabel('2. Select Date');
-      await dateInput.click();
-      await dateInput.fill(dateStr);
-      await dateInput.dispatchEvent('input');
-      await dateInput.dispatchEvent('change');
-      await dateInput.press('Enter');
-      await dateInput.blur();*/
-      
-      await page.waitForTimeout(2000); 
+        const roomSelect = page.locator('select[name="roomId"]');
+        await expect(roomSelect).not.toBeDisabled();
+        await roomSelect.selectOption({ index: 1 }); 
+        await page.waitForTimeout(1000); 
+        
 
-      const dateInput = page.locator('input[type="date"]').first(); 
-      await dateInput.fill(dateStr);
-      await dateInput.dispatchEvent('change');
-      await dateInput.blur(); 
+        const dateInput = page.getByLabel('2. Select Date');
+        await dateInput.focus();
+        await dateInput.fill(dateStr);
+        await page.keyboard.press('Tab'); 
+        
+        await page.waitForTimeout(3000); 
 
 
-      const startSelect = page.locator('select[name="startTime"]');
-      await expect(startSelect).toBeEnabled({ timeout: 20000 });
-      await startSelect.selectOption({ index: 1 });
+        const startSelect = page.locator('select[name="startTime"]');
+        await expect(startSelect).toBeEnabled({ timeout: 15000 }); 
+        await expect(startSelect.locator('option').nth(1)).toBeAttached({ timeout: 10000 });
+        await startSelect.selectOption({ index: 1 });
 
-      const endSelect = page.locator('select[name="endTime"]');
-      await expect(endSelect).toBeEnabled({ timeout: 10000 });
-      await endSelect.selectOption({ index: 1 });
+        await page.waitForTimeout(500);
 
-      await page.locator('textarea[name="reason"]').fill(`Stats Check ${timestamp}`);
-      
-      // Confirmar
-      await page.getByRole('button', { name: 'Confirm Reservation' }).click();
+
+        const endSelect = page.locator('select[name="endTime"]');
+        await expect(endSelect).toBeEnabled({ timeout: 15000 });
+        await expect(endSelect.locator('option').nth(1)).toBeAttached({ timeout: 10000 });
+        await endSelect.selectOption({ index: 1 });
+
+        await page.locator('textarea[name="reason"]').fill(`Stats Check ${timestamp}`);   
+
+        await page.getByRole('button', { name: 'Confirm Reservation' }).click();
 
 
 
