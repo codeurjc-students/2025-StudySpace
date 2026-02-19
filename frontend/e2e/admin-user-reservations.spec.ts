@@ -55,20 +55,22 @@ test.describe('User Reservation Management by Admin', () => {
 
       await page.getByRole('button', { name: /Book a room/i }).click();
       
+      page.on('response', res => {
+          if (!res.ok() && res.url().includes('api/')) {
+              console.error(`[BACKEND ERROR] ${res.status()}: ${res.url()}`);
+          }
+      });
+
       const roomSelect = page.locator('select[name="roomId"]');
       await expect(roomSelect).toBeEnabled();
       await roomSelect.selectOption({ index: 1 });
       await page.waitForTimeout(1000); 
 
 
-      
       const dateInput = page.getByLabel('2. Select Date');
-      await dateInput.evaluate((el: HTMLInputElement, dateValue) => {
-          el.value = dateValue;
-          el.dispatchEvent(new Event('input', { bubbles: true })); 
-          el.dispatchEvent(new Event('change', { bubbles: true })); 
-          el.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
-      }, dateStr);
+      await dateInput.click();
+      await dateInput.fill(dateStr);
+      await dateInput.press('Tab'); 
 
       await page.waitForTimeout(3000); 
 

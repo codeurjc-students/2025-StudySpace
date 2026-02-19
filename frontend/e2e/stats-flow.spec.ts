@@ -12,7 +12,7 @@ test.describe('Statistics and Reservations Flow', () => {
 
     // avoid weekends
     const targetDate = new Date();
-    targetDate.setDate(targetDate.getDate() + 5); 
+    targetDate.setDate(targetDate.getDate() + 10);
     while (targetDate.getDay() === 0 || targetDate.getDay() === 6) {
         targetDate.setDate(targetDate.getDate() + 1);
     }
@@ -46,39 +46,39 @@ test.describe('Statistics and Reservations Flow', () => {
 
       await page.getByRole('button', { name: /Book a room/i }).click();
         
+      page.on('response', res => {
+          if (!res.ok() && res.url().includes('api/')) {
+              console.error(`[BACKEND ERROR] ${res.status()}: ${res.url()}`);
+          }
+      });
 
-
-        const roomSelect = page.locator('select[name="roomId"]');
+      const roomSelect = page.locator('select[name="roomId"]');
       await expect(roomSelect).not.toBeDisabled();
-      await roomSelect.selectOption({ index: 2 }); 
+      await roomSelect.selectOption({ index: 1 }); 
       await page.waitForTimeout(1000); 
 
       const dateInput = page.getByLabel('2. Select Date');
-      await dateInput.evaluate((el: HTMLInputElement, dateValue) => {
-          el.value = dateValue;
-          el.dispatchEvent(new Event('input', { bubbles: true }));
-          el.dispatchEvent(new Event('change', { bubbles: true }));
-          el.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
-      }, dateStr);
+      await dateInput.click();
+      await dateInput.fill(dateStr);
+      await dateInput.press('Tab');
       
       await page.waitForTimeout(3000);
 
+      const startSelect = page.locator('select[name="startTime"]');
+      await expect(startSelect).toBeEnabled({ timeout: 15000 }); 
+      await expect(startSelect.locator('option').nth(1)).toBeAttached({ timeout: 10000 });
+      await startSelect.selectOption({ index: 1 });
 
-        const startSelect = page.locator('select[name="startTime"]');
-        await expect(startSelect).toBeEnabled({ timeout: 15000 }); 
-        await expect(startSelect.locator('option').nth(1)).toBeAttached({ timeout: 10000 });
-        await startSelect.selectOption({ index: 1 });
+      await page.waitForTimeout(500);
 
-        await page.waitForTimeout(500);
+      const endSelect = page.locator('select[name="endTime"]');
+      await expect(endSelect).toBeEnabled({ timeout: 15000 });
+      await expect(endSelect.locator('option').nth(1)).toBeAttached({ timeout: 10000 });
+      await endSelect.selectOption({ index: 1 });
 
-        const endSelect = page.locator('select[name="endTime"]');
-        await expect(endSelect).toBeEnabled({ timeout: 15000 });
-        await expect(endSelect.locator('option').nth(1)).toBeAttached({ timeout: 10000 });
-        await endSelect.selectOption({ index: 1 });
+      await page.locator('textarea[name="reason"]').fill(`Stats Check ${timestamp}`);   
 
-        await page.locator('textarea[name="reason"]').fill(`Stats Check ${timestamp}`);   
-
-        await page.getByRole('button', { name: 'Confirm Reservation' }).click();
+      await page.getByRole('button', { name: 'Confirm Reservation' }).click();
 
 
 
