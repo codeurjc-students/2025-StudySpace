@@ -101,10 +101,13 @@ test.describe('Statistics and Reservations Flow', () => {
       expect(message, 'The verification email was not found in MailHog').toBeTruthy();
 
       const cleanBody = message.Content.Body.replace(/=\r?\n/g, '');
-      const match = cleanBody.match(/https:\/\/[\w.:]+\/verify-reservation\?token=([a-zA-Z0-9-]+)/);
+      const match = cleanBody.match(/https?:\/\/[\\w.:]+\/verify-reservation\?token=([a-zA-Z0-9-]+)/);
       
       if (match) {
-          await page.goto(match[0]);
+          const token = match[1]; 
+          
+          await page.goto(`/verify-reservation?token=${token}`);
+          
           await expect(page.getByText(/confirmed successfully|Reservation Confirmed/i)).toBeVisible();
       } else {
           throw new Error(`HTTPS link not found in the email body. Text received: ${cleanBody}`);
