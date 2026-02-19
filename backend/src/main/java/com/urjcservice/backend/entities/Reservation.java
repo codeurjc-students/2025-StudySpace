@@ -32,6 +32,14 @@ public class Reservation {
     @Column(name = "reminder_sent")
     private boolean reminderSent = false;
 
+    //for email of confirmation of reservation
+    @Column(nullable = false)
+    private boolean verified = false; 
+    @Column(name = "verification_token")
+    private String verificationToken;
+    @Column(name = "token_expiration_date")
+    private Date tokenExpirationDate;
+
     public Reservation() {
     }
 
@@ -128,6 +136,20 @@ public class Reservation {
 
     public void setAdminModificationReason(String adminModificationReason) {
         this.adminModificationReason = adminModificationReason;
+    }
+
+    public boolean isVerified() { return verified; }
+    public void setVerified(boolean verified) { this.verified = verified; }
+
+    public String getVerificationToken() { return verificationToken; }
+    public void setVerificationToken(String verificationToken) { this.verificationToken = verificationToken; }
+
+    public Date getTokenExpirationDate() {
+        return tokenExpirationDate;
+    }
+
+    public void setTokenExpirationDate(Date tokenExpirationDate) {
+        this.tokenExpirationDate = tokenExpirationDate;
     }
 
 }

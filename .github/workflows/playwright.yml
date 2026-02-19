@@ -14,13 +14,19 @@ on:
       - 'images/**'
       - 'README.md'
 
+#timezone of madrid for all services (backend, mysql, mailhog)
+env:
+  TZ: Europe/Madrid
+
+
 jobs:
   e2e-test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     
-    # the data base for the test
+    #data-base + mailhog services
     services:
+      #Mysql
       mysql-e2e:
         image: mysql:8.0
         env:
@@ -33,6 +39,13 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
+      
+      # --- MailHog ( SMTP server for test) ---
+      mailhog:
+        image: mailhog/mailhog
+        ports:
+          - 1025:1025 # SMTP (backend send)
+          - 8025:8025 # API Web port(for emails)
 
     steps:
     - uses: actions/checkout@v4
@@ -43,43 +56,44 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: 'maven'
-    #temporal keystore
+
+    # Temporal keystore for https
     - name: Generate Keystore for E2E
-      working-directory: ./backend
       run: |
-        keytool -genkeypair -alias tomcat \
-          -keyalg RSA -keysize 2048 \
-          -storetype PKCS12 \
-          -keystore keystore.p12 \
-          -validity 3650 \
-          -storepass password \
-          -keypass password \
-          -dname "CN=localhost, OU=Test, O=Test, L=Test, S=Test, C=ES"
+        keytool -genkeypair -alias studyspace -keyalg RSA -keysize 2048 \
+          -storetype PKCS12 -keystore backend/src/main/resources/keystore.p12 \
+          -validity 3650 -storepass password -keypass password \
+          -dname "CN=localhost, OU=StudySpace, O=URJC, L=Madrid, S=Madrid, C=ES"
 
-
-    - name: Start Spring Boot Backend (E2E Profile)
+    #backend
+    - name: Start Backend
       working-directory: ./backend
-      run: |
-        mvn clean package -DskipTests
+      env:
+        # DB Mysql(mysql-e2e on port 3307)
+        SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3307/study_space_e2e_db
+        SPRING_DATASOURCE_USERNAME: root
+        SPRING_DATASOURCE_PASSWORD: toor
         
-        KEYSTORE_PATH=$(pwd)/keystore.p12
-        
-        JAR_FILE=$(find target -name "*.jar" -type f | grep -v "original" | head -n 1)
-        
-        echo "Arrancando JAR: $JAR_FILE con Keystore: $KEYSTORE_PATH"
-        
-        nohup java -jar "$JAR_FILE" \
-          --spring.profiles.active=e2e \
-          --server.ssl.key-store="file:$KEYSTORE_PATH" \
-          --server.ssl.key-store-password=password \
-          --server.ssl.key-store-type=PKCS12 \
-          --server.ssl.key-alias=tomcat \
-          --spring.datasource.url=jdbc:mysql://localhost:3307/study_space_e2e_db \
-          --spring.datasource.username=root \
-          --spring.datasource.password=toor &
-    # 'nohup' and '&' allow it continous rining
+        # Email ( mailhog on port 1025)
+        SPRING_MAIL_HOST: localhost
+        SPRING_MAIL_PORT: 1025
+        SPRING_MAIL_USERNAME: test
+        SPRING_MAIL_PASSWORD: test
+        SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: false
+        SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: false
 
-    # node for frontend
+        #SSL (https)
+        SERVER_PORT: 8443
+        SERVER_SSL_ENABLED: true
+        SERVER_SSL_KEY_STORE: classpath:keystore.p12
+        SERVER_SSL_KEY_STORE_PASSWORD: password
+        SERVER_SSL_KEY_STORE_TYPE: PKCS12
+        SERVER_SSL_KEY_ALIAS: studyspace
+      run: |
+        nohup mvn spring-boot:run -Dspring-boot.run.profiles=test > backend.log 2>&1 &
+      #nohup mvn spring-boot:run -Dspring-boot.run.profiles=test &
+
+    # Node for frontend 
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
@@ -95,32 +109,33 @@ jobs:
       working-directory: ./frontend
       run: npx playwright install --with-deps
 
-    #wait till backend
+    - name: Wait for MailHog to start
+      run: |
+        echo "Waiting for MailHog on port 8025..."
+        timeout 60 bash -c 'until curl -s http://127.0.0.1:8025/api/v2/messages > /dev/null; do sleep 2; done'
+        echo "MailHog is operational!"
+
+    # Wait till backend 
     - name: Wait for Backend to start
       run: |
-        echo "Esperando al Backend en puerto 8443..."
-        # Usamos curl -k (insecure) porque tu certificado es autofirmado
+        echo "Waiting for the backend on port 8443..."
         timeout 120 bash -c 'until curl --insecure -s https://localhost:8443/actuator/health > /dev/null; do sleep 5; done'
-        echo "¡Backend operativo!"
+        echo "Backend operational!"
 
-    # frontend and test
+    # Frontend and test 
     - name: Run Playwright Tests
       working-directory: ./frontend
       env:
-
         BASE_URL: https://localhost:4200
       run: |
-        nohup npx ng serve --ssl --port 4200 &
+        nohup npx ng serve --ssl --port 4200 --proxy-config proxy.conf.json &
         
-        echo "Esperando al Frontend..."
+        echo "Waiting for the Frontend..."
         timeout 120 bash -c 'until curl --insecure -s https://localhost:4200 > /dev/null; do sleep 5; done'
-        BASE_URL=https://localhost:4200 npx playwright test
-      # npx playwright test
+        
+        npx playwright test
 
-    # safe report
-    - uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: playwright-report
-        path: frontend/playwright-report/
-        retention-days: 30
+    - name: Print Backend Logs on Failure
+      if: failure()
+      working-directory: ./backend
+      run: cat backend.log

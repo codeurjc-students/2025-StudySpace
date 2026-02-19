@@ -11,6 +11,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.util.ReflectionTestUtils;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.Session;
+import jakarta.mail.Message;
+import java.util.Date;
+import static org.mockito.Mockito.when;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -135,5 +140,61 @@ public class EmailServiceTest {
         assertTrue(msg.getText().contains(reason));
         assertTrue(msg.getText().contains("11:00")); 
     }
+
+
+    @Test
+    @DisplayName("Should send reservation confirmation email with ICS attachment")
+    void testSendReservationConfirmationEmail() throws Exception {
+        // Arrange
+        String to = "user@test.com";
+        String userName = "John Doe";
+        String roomName = "Lab A";
+        String place = "Building 1";      
+        String coords = "40.5,-3.5";      
+        Date start = new Date();
+        Date end = new Date(System.currentTimeMillis() + 3600000); 
+
+        MimeMessage mimeMessage = new MimeMessage((Session) null);
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+
+        // Act
+        emailService.sendReservationConfirmationEmail(to, userName, roomName, place, coords, start, end);
+
+        // Assert
+        ArgumentCaptor<MimeMessage> messageCaptor = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(mailSender).send(messageCaptor.capture());
+
+        MimeMessage sentMessage = messageCaptor.getValue();
+        assertEquals(to, sentMessage.getRecipients(Message.RecipientType.TO)[0].toString());
+        assertEquals("Booking confirmation - " + roomName, sentMessage.getSubject());
+    }
+
+
+    @Test
+    @DisplayName("Should send verification email with link")
+    void testSendVerificationEmail() {
+        // Arrange
+        String to = "user@test.com";
+        String userName = "Alice";
+        String token = "abcdef-123456";
+
+        // Act
+        emailService.sendVerificationEmail(to, userName, token);
+
+        // Assert
+        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mailSender).send(captor.capture());
+
+        SimpleMailMessage sentMsg = captor.getValue();
+        assertEquals(to, sentMsg.getTo()[0]);
+        assertTrue(sentMsg.getSubject().contains("Action Required"));
+        
+        String body = sentMsg.getText();
+        // Verify token
+        assertTrue(body.contains(token), "The email body must contain the token");
+        // Verify route 
+        assertTrue(body.contains("verify-reservation"), "The body must contain the path verify-reservation");
+    }
+    
 
 }

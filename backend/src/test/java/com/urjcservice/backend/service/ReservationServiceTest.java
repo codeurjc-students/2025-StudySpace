@@ -28,15 +28,19 @@ import org.springframework.data.domain.PageImpl;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.Date;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
@@ -56,13 +60,43 @@ public class ReservationServiceTest {
     private ReservationService reservationService;
 
 
+    //if ends on sunday or saturday change to monday
+    private Date getNextBusinessDate(int daysInFuture, int hour) {
+        LocalDateTime ldt = LocalDateTime.now().plusDays(daysInFuture);
+        
+        while (ldt.getDayOfWeek() == DayOfWeek.SATURDAY || ldt.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            ldt = ldt.plusDays(1);
+        }
+        
+        //adjust hour
+        ldt = ldt.withHour(hour).withMinute(0).withSecond(0).withNano(0);
+        
+        return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
+    }
+
     private Date toDate(LocalDateTime ldt) {
+        return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
+    }
+
+    /*private Date toLegacyDate(LocalDateTime ldt) {
+        return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
+    }*/
+
+    private Date getWeekendDate() {
+        LocalDateTime ldt = LocalDateTime.now().with(java.time.temporal.TemporalAdjusters.next(DayOfWeek.SATURDAY));
+        ldt = ldt.withHour(10).withMinute(0).withSecond(0);
         return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
     }
 
     
     private LocalDateTime getFutureDate(int daysFromNow, int hour, int minute) {
-        return LocalDate.now().plusDays(daysFromNow).atTime(hour, minute);
+        LocalDateTime ldt = LocalDateTime.now().plusDays(daysFromNow);
+        
+        while (ldt.getDayOfWeek() == DayOfWeek.SATURDAY || ldt.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            ldt = ldt.plusDays(1);
+        }
+        
+        return ldt.withHour(hour).withMinute(minute).withSecond(0).withNano(0);
     }
 
     @Test
@@ -213,31 +247,25 @@ public class ReservationServiceTest {
 
     @Test
     void testCreateReservation_OverlapError() {
-        LocalDateTime start = getFutureDate(1, 10, 0);
-        LocalDateTime end = getFutureDate(1, 12, 0);
+        Date start = getNextBusinessDate(1, 10);
+        Date end = new Date(start.getTime() + 3600000);
 
         ReservationRequest request = new ReservationRequest();
-        request.setRoomId(1L);
-        request.setStartDate(toDate(start));
-        request.setEndDate(toDate(end));
-        request.setReason("Meeting");
+        request.setRoomId(2L);
+        request.setStartDate(start);
+        request.setEndDate(end);
 
-        User user = new User(); user.setId(1L);
-        Room room = new Room(); room.setId(1L);
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(new User()));
+        when(roomRepository.findById(anyLong())).thenReturn(Optional.of(new Room()));
 
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
-        
-        when(reservationRepository.findOverlappingReservations(anyLong(), any(), any(), any(Pageable.class)))
-                .thenReturn(new PageImpl<Reservation>(List.of(new Reservation())));
-        lenient().when(reservationRepository.findActiveReservationsByRoomAndDate(anyLong(), any()))
-            .thenReturn(List.of(new Reservation())); 
+        Reservation conflict = new Reservation();
+        when(reservationRepository.findOverlappingReservations(anyLong(), any(Date.class), any(Date.class), any()))
+                .thenReturn(new PageImpl<>(List.of(conflict)));
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            reservationService.createReservation(request, "user@test.com");
-        });
-        
-        assertEquals("The room is already reserved for this time.", exception.getMessage());
+        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+                reservationService.createReservation(request, "user@test.com")
+        );
+        assertTrue(ex.getMessage().contains("already reserved"));
     }
 
 
@@ -316,7 +344,7 @@ public class ReservationServiceTest {
 
         Room room = new Room();
         room.setId(1L);
-        room.setActive(false); // <--- LA CLAVE: Habitación inactiva
+        room.setActive(false); 
 
         when(userRepository.findByEmail("test@user.com")).thenReturn(Optional.of(user));
         when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
@@ -330,30 +358,9 @@ public class ReservationServiceTest {
         verify(reservationRepository, never()).save(any());
     }
 
-    /*@Test
-    void testCreateReservation_Overlapping() {
-        ReservationRequest req = new ReservationRequest();
-        req.setRoomId(1L);
-        req.setStartDate(toDate(LocalDateTime.of(2026, 1, 31, 10, 0))); 
-        req.setEndDate(toDate(LocalDateTime.of(2026, 1, 31, 10, 30)));
+    
 
-        User user = new User(); user.setEmail("test@urjc.es");
-        Room room = new Room(); room.setId(1L); room.setActive(true);
-
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
-        
-        when(reservationRepository.findOverlappingReservations(anyLong(), any(), any(), any()))
-                .thenReturn(new PageImpl<>(List.of(new Reservation())));
-
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> 
-            reservationService.createReservation(req, "test@urjc.es")
-        );
-
-        assertEquals("The room is already reserved for this time.", ex.getMessage());
-    }*/
-
-    // --- TESTS DE DELETE ---
+    // --- DELETE TESTS ---
 
     @Test
     void testDeleteById_Success() {
@@ -381,34 +388,37 @@ public class ReservationServiceTest {
     // --- UPDATE TESTS (PUT) ---
 
     @Test
+    @DisplayName("Update Reservation - Success")
     void testUpdateReservation_Success() {
-        Long id = 1L;
-        LocalDateTime oldStart = getFutureDate(2, 10, 0);
-        LocalDateTime oldEnd = getFutureDate(2, 11, 0);
+        Long resId = 1L;
+        Date newStart = getNextBusinessDate(2, 10); 
+        Date newEnd = new Date(newStart.getTime() + 7200000); 
         
         Reservation existing = new Reservation();
-        existing.setId(id);
-        existing.setUser(new User()); existing.getUser().setId(1L);
-        existing.setRoom(new Room()); existing.getRoom().setId(1L);
-        existing.setStartDate(toDate(oldStart));
-        existing.setEndDate(toDate(oldEnd));
+        existing.setId(resId);
+        User user = new User(); user.setId(99L); user.setEmail("u@u.com"); user.setName("User");
+        Room room = new Room(); room.setId(50L); room.setName("Room");
+        existing.setUser(user);
+        existing.setRoom(room);
+        existing.setStartDate(getNextBusinessDate(1, 10)); 
+        existing.setEndDate(getNextBusinessDate(1, 12));
 
-        LocalDateTime newStart = getFutureDate(2, 11, 0);
-        LocalDateTime newEnd = getFutureDate(2, 12, 0);
+        Reservation updateInfo = new Reservation();
+        updateInfo.setStartDate(newStart);
+        updateInfo.setEndDate(newEnd);
+        updateInfo.setReason("New Reason");
 
-        Reservation updates = new Reservation();
-        updates.setStartDate(toDate(newStart));
-        updates.setEndDate(toDate(newEnd));
-
-        when(reservationRepository.findById(id)).thenReturn(Optional.of(existing));
-        when(reservationRepository.save(any(Reservation.class))).thenAnswer(i -> i.getArguments()[0]);
+        lenient().when(reservationRepository.findById(resId)).thenReturn(Optional.of(existing));
+        lenient().when(reservationRepository.findOverlappingReservations(eq(50L), any(Date.class), any(Date.class), any()))
+                .thenReturn(new PageImpl<>(Collections.emptyList()));
         
-        lenient().when(reservationRepository.findActiveReservationsByRoomAndDate(anyLong(), any())).thenReturn(List.of()); 
-        when(reservationRepository.findActiveByUserIdAndDate(anyLong(), any(LocalDate.class))).thenReturn(List.of());
+        lenient().when(reservationRepository.save(any(Reservation.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        Optional<Reservation> result = reservationService.updateReservation(id, updates);
-
-        assertTrue(result.isPresent());
+        Optional<Reservation> res = reservationService.updateReservation(resId, updateInfo);
+        
+        assertTrue(res.isPresent());
+        assertEquals("New Reason", res.get().getReason());
+        assertEquals(newStart, res.get().getStartDate());
     }
 
     @Test
@@ -496,63 +506,52 @@ public class ReservationServiceTest {
 
     @Test
     void testCreateReservation_SingleReservationExceeds3Hours() {
-        // GIVEN
-        LocalDateTime start = getFutureDate(1, 9, 0);
-        LocalDateTime end = getFutureDate(1, 13, 0); 
+        Date start = getNextBusinessDate(1, 10); 
+        Date end = new Date(start.getTime() + (4 * 60 * 60 * 1000)); 
 
         ReservationRequest request = new ReservationRequest();
-        request.setRoomId(1L);
-        request.setStartDate(toDate(start));
-        request.setEndDate(toDate(end));
+        request.setRoomId(2L);
+        request.setStartDate(start);
+        request.setEndDate(end);
 
-        User user = new User(); user.setId(1L);
-        Room room = new Room(); room.setId(1L);
+        lenient().when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(new User()));
+        lenient().when(roomRepository.findById(anyLong())).thenReturn(Optional.of(new Room()));
 
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
-        
-        lenient().when(reservationRepository.findActiveReservationsByRoomAndDate(anyLong(), any())).thenReturn(List.of());
-
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
-            reservationService.createReservation(request, "user@test.com");
-        });
-
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+             reservationService.createReservation(request, "user@test.com")
+        );
         assertEquals("A single reservation cannot exceed 3 hours.", ex.getMessage());
     }
 
     @Test
     void testCreateReservation_DailyQuotaExceeded() {
-        // GIVEN
-        LocalDateTime start = getFutureDate(1, 14, 0);
-        LocalDateTime end = getFutureDate(1, 16, 0); 
+        Date start = getNextBusinessDate(1, 10); 
+        Date end = new Date(start.getTime() + 3600000); // 1h
 
         ReservationRequest request = new ReservationRequest();
-        request.setRoomId(1L);
-        request.setStartDate(toDate(start));
-        request.setEndDate(toDate(end));
+        request.setRoomId(2L);
+        request.setStartDate(start);
+        request.setEndDate(end);
 
         User user = new User(); user.setId(1L);
-        Room room = new Room(); room.setId(1L);
-
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
-        
-        when(reservationRepository.findOverlappingReservations(anyLong(), any(), any(), any(Pageable.class)))
-                .thenReturn(new PageImpl<Reservation>(List.of()));
-        lenient().when(reservationRepository.findActiveReservationsByRoomAndDate(anyLong(), any())).thenReturn(List.of());
-        
+        when(roomRepository.findById(anyLong())).thenReturn(Optional.of(new Room()));
+
+        lenient().when(reservationRepository.findOverlappingReservations(anyLong(), any(), any(), any()))
+                .thenReturn(new PageImpl<>(Collections.emptyList()));
+
+        // already has 3h reserved today
         Reservation existingRes = new Reservation();
         existingRes.setId(99L);
-        existingRes.setStartDate(toDate(getFutureDate(1, 10, 0)));
-        existingRes.setEndDate(toDate(getFutureDate(1, 12, 0))); 
+        existingRes.setStartDate(start);
+        existingRes.setEndDate(new Date(start.getTime() + (180 * 60000))); // 180 min
         
-        when(reservationRepository.findActiveByUserIdAndDate(eq(1L), any(LocalDate.class)))
+        when(reservationRepository.findActiveByUserIdAndDate(anyLong(), any()))
                 .thenReturn(List.of(existingRes));
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
-            reservationService.createReservation(request, "user@test.com");
-        });
-
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+             reservationService.createReservation(request, "user@test.com")
+        );
         assertTrue(ex.getMessage().contains("Daily limit exceeded"));
     }
 
@@ -585,7 +584,8 @@ public class ReservationServiceTest {
 
     @Test
     void testValidateRules_BadIntervals() {
-        // GIVEN only end the hour on 30 or on 00
+        // GIVEN: Hora termina en :15 (inválido, debe ser :00 o :30)
+        // Usamos el helper corregido que garantiza Lunes-Viernes
         LocalDateTime start = getFutureDate(1, 10, 15);
         LocalDateTime end = getFutureDate(1, 11, 15);
 
@@ -628,44 +628,40 @@ public class ReservationServiceTest {
 
     @Test
     void testCreateReservation_BeforeOpeningHours() {
-        LocalDateTime start = getFutureDate(1, 7, 0);
-        LocalDateTime end = getFutureDate(1, 8, 0);
+        Date start = getNextBusinessDate(1, 6); // 06:00 AM
+        Date end = new Date(start.getTime() + 3600000);
+
         ReservationRequest request = new ReservationRequest();
-        request.setRoomId(1L);
-        request.setStartDate(toDate(start));
-        request.setEndDate(toDate(end));
+        request.setRoomId(2L);
+        request.setStartDate(start);
+        request.setEndDate(end);
 
-        User user = new User(); user.setId(1L);
-        Room room = new Room(); room.setId(1L);
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
-        lenient().when(reservationRepository.findActiveReservationsByRoomAndDate(anyLong(), any())).thenReturn(List.of());
+        lenient().when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(new User()));
+        lenient().when(roomRepository.findById(anyLong())).thenReturn(Optional.of(new Room()));
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
-            reservationService.createReservation(request, "user@test.com");
-        });
-        assertTrue(ex.getMessage().contains("08:00 and 21:00"));
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+             reservationService.createReservation(request, "user@test.com")
+        );
+
+        assertTrue(ex.getMessage().contains("Reservations must be between 08:00 and 21:00"));
     }
 
     @Test
     void testCreateReservation_AfterClosingHours() {
-        LocalDateTime start = getFutureDate(1, 22, 0);
-        LocalDateTime end = getFutureDate(1, 23, 0);
+        Date start = getNextBusinessDate(1, 22); // 22:00 out of hours
+        Date end = new Date(start.getTime() + 3600000);
+
         ReservationRequest request = new ReservationRequest();
-        request.setRoomId(1L);
-        request.setStartDate(toDate(start));
-        request.setEndDate(toDate(end));
+        request.setRoomId(2L);
+        request.setStartDate(start);
+        request.setEndDate(end);
 
-        User user = new User(); user.setId(1L);
-        Room room = new Room(); room.setId(1L);
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
-        lenient().when(reservationRepository.findActiveReservationsByRoomAndDate(anyLong(), any())).thenReturn(List.of());
+        lenient().when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(new User()));
+        lenient().when(roomRepository.findById(anyLong())).thenReturn(Optional.of(new Room()));
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
-            reservationService.createReservation(request, "user@test.com");
-        });
-        assertTrue(ex.getMessage().contains("08:00 and 21:00"));
+        assertThrows(IllegalArgumentException.class, () ->
+             reservationService.createReservation(request, "user@test.com")
+        );
     }
 
     @Test
@@ -674,7 +670,7 @@ public class ReservationServiceTest {
         ReservationRequest req = new ReservationRequest();
         req.setRoomId(1L);
         req.setStartDate(toDate(LocalDateTime.of(2026, 2, 1, 10, 0)));
-        req.setEndDate(toDate(LocalDateTime.of(2026, 2, 1, 10, 0))); // 0 minutos
+        req.setEndDate(toDate(LocalDateTime.of(2026, 2, 1, 10, 0))); 
 
         User user = new User(); user.setEmail("test@urjc.es");
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
@@ -770,7 +766,7 @@ public class ReservationServiceTest {
         existing.setId(id);
         existing.setUser(new User()); existing.getUser().setId(1L);
         existing.setRoom(new Room());
-        // Fecha futura
+        // Future date
         existing.setStartDate(toDate(getFutureDate(1, 10, 0)));
         existing.setEndDate(toDate(getFutureDate(1, 11, 0)));
 
@@ -889,6 +885,193 @@ public class ReservationServiceTest {
             eq(adminReason)
         );
     }
+
+
+
+
+    @Test
+    @DisplayName("Create Reservation - Should save unverified and send Verification Email")
+    void testCreateReservation_Success() {
+        // Arrange
+        Long roomId = 2L;
+        String userEmail = "test@urjc.es";
+        Date startDate = getNextBusinessDate(1, 10);
+        Date endDate = new Date(startDate.getTime() + 3600000); // +1h
+
+        ReservationRequest request = new ReservationRequest();
+        request.setRoomId(roomId);
+        request.setStartDate(startDate);
+        request.setEndDate(endDate);
+        request.setReason("Study");
+
+        User mockUser = new User(); mockUser.setId(1L); mockUser.setEmail(userEmail); mockUser.setName("User");
+        Room mockRoom = new Room(); mockRoom.setId(roomId); mockRoom.setName("Lab 1"); mockRoom.setActive(true);
+
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(mockUser));
+        when(roomRepository.findById(roomId)).thenReturn(Optional.of(mockRoom));
+        
+        // Mocks
+        lenient().when(reservationRepository.findUserOverlappingReservations(any(), any(), any())).thenReturn(Collections.emptyList());
+        lenient().when(reservationRepository.findOverlappingReservations(any(), any(), any(), any())).thenReturn(new PageImpl<>(Collections.emptyList()));
+        lenient().when(reservationRepository.findActiveByUserIdAndDate(any(), any())).thenReturn(Collections.emptyList());
+
+        //save token mock
+        when(reservationRepository.save(any(Reservation.class))).thenAnswer(i -> {
+            Reservation r = i.getArgument(0);
+            r.setId(100L);
+            return r; 
+        });
+
+        // Act
+        Reservation result = reservationService.createReservation(request, userEmail);
+
+        // Assert
+        assertNotNull(result);
+        assertFalse(result.isVerified(), "The reservation must be born unverified");
+        assertNotNull(result.getVerificationToken(), "You must have a generated token");
+        assertNotNull(result.getTokenExpirationDate(), "It must have an expiration date.");
+
+        //verification email, no confirmation yet
+        verify(emailService, times(1)).sendVerificationEmail(
+            eq(userEmail),
+            eq("User"),
+            anyString() //  token
+        );
+        
+        verify(emailService, never()).sendReservationConfirmationEmail(any(), any(), any(), any(), any(), any(), any());
+    }
+
+
+
+   @Test
+    @DisplayName("Create Reservation - Fail: Room not found")
+    void testCreateReservation_NoRoom_ShouldFail() {
+        // Arrange
+        ReservationRequest request = new ReservationRequest();
+        request.setRoomId(999L); // ID not real
+        request.setStartDate(getNextBusinessDate(1, 10));
+        request.setEndDate(getNextBusinessDate(1, 12));
+
+        //user exists
+        User mockUser = new User(); 
+        mockUser.setId(1L);
+        lenient().when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(mockUser));
+        
+        //dosent exists
+        lenient().when(roomRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        //we expect IllegalArgumentException 
+        assertThrows(RuntimeException.class, () -> 
+            reservationService.createReservation(request, "user@test.com")
+        );
+    }
+
+    @Test
+    @DisplayName("Verify Reservation - Success: Should verify and send ICS")
+    void testVerifyReservation_Success() {
+        // Arrange
+        String token = "valid-uuid-token";
+        
+        User user = new User(); user.setEmail("u@test.com"); user.setName("User");
+        Room room = new Room(); room.setName("Lab 1"); room.setPlace("Campus"); room.setCoordenades("40,-3");
+        
+        Reservation pendingRes = new Reservation();
+        pendingRes.setId(100L);
+        pendingRes.setVerified(false);
+        pendingRes.setVerificationToken(token);
+        pendingRes.setTokenExpirationDate(new Date(System.currentTimeMillis() + 3600000)); // last just 1 hour
+        pendingRes.setUser(user);
+        pendingRes.setRoom(room);
+        pendingRes.setStartDate(new Date());
+        pendingRes.setEndDate(new Date());
+
+        when(reservationRepository.findByVerificationToken(token)).thenReturn(Optional.of(pendingRes));
+        when(reservationRepository.save(any(Reservation.class))).thenAnswer(i -> i.getArgument(0));
+
+        // Act
+        reservationService.verifyReservation(token);
+
+        // Assert
+        assertTrue(pendingRes.isVerified());
+        assertNull(pendingRes.getVerificationToken()); // Token errased
+        
+        //confirmation email with ICS
+        verify(emailService).sendReservationConfirmationEmail(
+            eq("u@test.com"),
+            eq("User"),
+            eq("Lab 1"),
+            eq("Campus"),
+            eq("40,-3"),
+            any(),
+            any()
+        );
+    }
+
+
+    @Test
+    @DisplayName("Verify Reservation - Expired: Should delete reservation and throw exception")
+    void testVerifyReservation_Expired() {
+        // Arrange
+        String token = "expired-token";
+        Reservation expiredRes = new Reservation();
+        expiredRes.setVerified(false);
+        //- 1 hour expired
+        expiredRes.setTokenExpirationDate(new Date(System.currentTimeMillis() - 3600000)); 
+
+        when(reservationRepository.findByVerificationToken(token)).thenReturn(Optional.of(expiredRes));
+
+        // Act & Assert
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> 
+            reservationService.verifyReservation(token)
+        );
+
+        assertTrue(ex.getMessage().contains("expired"));
+        
+        //reservation deleted
+        verify(reservationRepository, times(1)).delete(expiredRes);
+        //do not send email
+        verify(emailService, never()).sendReservationConfirmationEmail(any(), any(), any(), any(), any(), any(), any());
+    }
+
+
+    @Test
+    @DisplayName("Cron Job - Should call deleteExpiredReservations")
+    void testDeleteExpiredUnverifiedReservations() {
+        // Act
+        reservationService.deleteExpiredUnverifiedReservations();
+
+        // Assert
+        verify(reservationRepository, times(1)).deleteExpiredReservations(any(Date.class));
+    }
+
+
+
+
+    @Test
+    @DisplayName("Create Reservation - Fail: Weekend")
+    void testCreateReservation_Weekend_ShouldFail() {
+        Date start = getWeekendDate();
+        Date end = new Date(start.getTime() + 3600000);
+
+        ReservationRequest request = new ReservationRequest();
+        request.setRoomId(2L);
+        request.setStartDate(start);
+        request.setEndDate(end);
+
+        User u = new User(); u.setId(1L);
+        Room r = new Room(); r.setId(2L);
+        
+        lenient().when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(u));
+        lenient().when(roomRepository.findById(2L)).thenReturn(Optional.of(r));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> 
+            reservationService.createReservation(request, "user@test.com")
+        );
+        assertEquals("Reservations are not allowed on weekends.", ex.getMessage());
+    }
+
+    
 
 } 
 

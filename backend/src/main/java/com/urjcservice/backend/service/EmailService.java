@@ -1,10 +1,21 @@
 package com.urjcservice.backend.service;
 
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+import java.util.UUID;
 
 @Service
 public class EmailService {
@@ -74,4 +85,134 @@ public class EmailService {
         
         mailSender.send(message);
     }
+
+    
+
+    public void sendReservationConfirmationEmail(String to, String userName, String roomName, 
+                                                 String place, String coordinates, 
+                                                 Date startRaw, Date endRaw) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
+
+            helper.setFrom(fromEmail);
+            helper.setTo(to);
+            helper.setSubject("Booking confirmation - " + roomName);
+
+            SimpleDateFormat printFormat = new SimpleDateFormat("HH:mm dd/MM/yyyy");
+            String startStr = printFormat.format(startRaw);
+            String endStr = printFormat.format(endRaw);
+
+            String locationText = (coordinates != null && !coordinates.isEmpty()) ? "See map (Coordinates)" : (place != null ? place : "Campus");
+
+            String body = "Dear " + userName + ",\n\n" +
+                          "Your reservation has been confirmed.\n" +
+                          "Room: " + roomName + "\n" +
+                          "Location: " + locationText + "\n" +
+                          "Start: " + startStr + "\n" +
+                          "End: " + endStr + "\n\n" +
+                          "Attached you will find an .ics file to add it to your personal calendar.";
+            
+            helper.setText(body);
+
+            String icsContent = generateIcsContent(roomName, place, coordinates, startRaw, endRaw);
+            
+            helper.addAttachment("reserva.ics", new ByteArrayResource(icsContent.getBytes(StandardCharsets.UTF_8)));
+
+            mailSender.send(message);
+
+        } catch (MessagingException e) {
+            System.err.println("Error sending email with attachment: " + e.getMessage());
+        }
+    }
+
+
+
+    public void sendVerificationEmail(String to, String userName, String token) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(to);
+        message.setSubject("Action Required: Confirm your StudySpace Reservation");
+        //local npm start/ng serve
+        //String verificationLink = "https://localhost:4200/verify-reservation?token=" + token;
+        //docker
+        String verificationLink = "https://localhost/verify-reservation?token=" + token;
+
+        message.setText("Dear " + userName + ",\n\n" +
+                        "You have requested a reservation on StudySpace.\n" +
+                        "Please click the link below to confirm your booking and receive the calendar event:\n\n" +
+                        verificationLink + "\n\n" +
+                        "If you did not request this, please ignore this email.");
+        
+        mailSender.send(message);
+    }
+
+    private String generateIcsContent(String roomName, String place, String coordinates, Date start, Date end) {
+        SimpleDateFormat icsFormat = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
+        icsFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        
+        String startIcs = icsFormat.format(start);
+        String endIcs = icsFormat.format(end);
+        String nowIcs = icsFormat.format(new Date());
+        String uid = UUID.randomUUID().toString();
+
+        String summary = escapeIcs("Reservation: " + roomName);
+        String description = escapeIcs("Confirmed reservation at " + roomName + " via StudySpace.");
+        
+        //ubication
+        String locationVal = "";
+        String geoVal = null;
+
+        if (coordinates != null && !coordinates.isEmpty()) {
+            String cleanCoords = coordinates.replaceAll("\\s+", ""); 
+            geoVal = cleanCoords.replace(",", ";");
+            
+            //visual coordenades
+            locationVal = escapeIcs(coordinates);
+        } else if (place != null && !place.isEmpty()) {
+            locationVal = escapeIcs(place);
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("BEGIN:VCALENDAR\r\n");
+        sb.append("VERSION:2.0\r\n");
+        sb.append("PRODID:-//StudySpace//Reserva//EN\r\n");
+        sb.append("CALSCALE:GREGORIAN\r\n");
+        sb.append("METHOD:PUBLISH\r\n");
+        
+        sb.append("BEGIN:VEVENT\r\n");
+        sb.append("UID:").append(uid).append("\r\n");
+        sb.append("DTSTAMP:").append(nowIcs).append("\r\n");
+        sb.append("DTSTART:").append(startIcs).append("\r\n");
+        sb.append("DTEND:").append(endIcs).append("\r\n");
+        
+        sb.append("SUMMARY:").append(summary).append("\r\n");
+        sb.append("DESCRIPTION:").append(description).append("\r\n");
+        
+        if (!locationVal.isEmpty()) {
+            sb.append("LOCATION:").append(locationVal).append("\r\n");
+        }
+        
+        if (geoVal != null) {
+            sb.append("GEO:").append(geoVal).append("\r\n");
+        }
+
+        sb.append("STATUS:CONFIRMED\r\n");
+        sb.append("SEQUENCE:0\r\n");
+        sb.append("END:VEVENT\r\n");
+        sb.append("END:VCALENDAR\r\n");
+
+        return sb.toString();
+    }
+
+    //to avoid incorrect caracters in the ICS breaking the format
+    private String escapeIcs(String input) {
+        if (input == null) return "";
+        return input.replace("\\", "\\\\")
+                    .replace(";", "\\;")
+                    .replace(",", "\\,")
+                    .replace("\n", "\\n");
+    }
+
+
 }

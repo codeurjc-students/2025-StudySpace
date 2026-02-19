@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 // 1. Import HttpClientModule for REST
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
@@ -26,6 +26,9 @@ import { PaginationComponent } from './components/pagination/pagination.componen
 import { PasswordInputComponent } from './components/password-input/password-input.component';
 import { ForgotPasswordComponent } from './login/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './login/reset-password/reset-password.component';
+import { FullCalendarModule } from '@fullcalendar/angular';
+import { VerifyReservationComponent } from './components/verify-reservation/verify-reservation.component';
+import { RouterModule } from '@angular/router';
 
 
 @NgModule({
@@ -47,8 +50,8 @@ import { ResetPasswordComponent } from './login/reset-password/reset-password.co
     ManageReservationsComponent,
     PaginationComponent,
     PasswordInputComponent,
-    ForgotPasswordComponent,    // <--- Necesario para que Angular reconozca este componente
-    ResetPasswordComponent
+    ForgotPasswordComponent,   
+    ResetPasswordComponent, VerifyReservationComponent
   ],
   imports: [
     BrowserModule,
@@ -59,7 +62,9 @@ import { ResetPasswordComponent } from './login/reset-password/reset-password.co
 
     // 4. Add FormsModule to imports array
     FormsModule,
-      NgbModule
+    NgbModule,
+    FullCalendarModule,
+    RouterModule
   ],
   providers: [
     {

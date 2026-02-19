@@ -7,6 +7,7 @@ import com.urjcservice.backend.service.EmailService;
 import com.urjcservice.backend.service.FileStorageService;
 import com.urjcservice.backend.service.RoomService;
 import com.urjcservice.backend.service.SoftwareService;
+import com.urjcservice.backend.dtos.RoomCalendarDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -283,5 +284,28 @@ public class RoomRestControllerTest {
 
         mockMvc.perform(get("/api/rooms/1/image"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    public void testGetRoomCalendar_Success() throws Exception {
+        Long roomId = 1L;
+        String startStr = "2026-02-01";
+        String endStr = "2026-02-28";
+        
+        RoomCalendarDTO mockDto = new RoomCalendarDTO(new ArrayList<>(), new ArrayList<>());
+        
+        // Mock of service response
+        given(roomService.findById(roomId)).willReturn(Optional.of(new Room()));
+        given(roomService.getRoomCalendarData(eq(roomId), any(LocalDate.class), any(LocalDate.class)))
+            .willReturn(mockDto);
+
+        mockMvc.perform(get("/api/rooms/{id}/calendar", roomId)
+                .param("start", "2026-02-01T00:00:00+01:00") 
+                .param("end", "2026-02-28T00:00:00+01:00")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.events").isArray())
+                .andExpect(jsonPath("$.dailyOccupancy").isArray());
     }
 }

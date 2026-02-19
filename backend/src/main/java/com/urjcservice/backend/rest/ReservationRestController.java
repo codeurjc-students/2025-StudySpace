@@ -46,6 +46,7 @@ public class ReservationRestController {
         
         public Long getRoomId() { return roomId; }
         public void setRoomId(Long roomId) { this.roomId = roomId; }
+        
         public Date getStartDate() { return startDate; }
         public void setStartDate(Date startDate) { this.startDate = startDate; }
         public Date getEndDate() { return endDate; }
@@ -197,6 +198,19 @@ public class ReservationRestController {
         return reservationService.adminCancelReservation(id, reason)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+
+
+
+    @GetMapping("/verify")
+    public ResponseEntity<String> verifyReservation(@RequestParam("token") String token) {
+        try {
+            reservationService.verifyReservation(token);
+            return ResponseEntity.ok("Reservation confirmed successfully! Check your email for the calendar event.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
     
 

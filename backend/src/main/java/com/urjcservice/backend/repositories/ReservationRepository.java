@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 
 import java.util.List;
+import java.util.Optional;
 import java.time.LocalDate;
 import java.util.Date;
 
@@ -96,4 +97,42 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     @Query("SELECT r FROM Reservation r WHERE r.room.id = :roomId AND r.endDate > :date AND r.cancelled = false")
     List<Reservation> findActiveReservationsByRoomIdAndEndDateAfter(@Param("roomId") Long roomId, @Param("date") Date date);
+
+
+
+
+    @Query("SELECT r FROM Reservation r " +
+       "WHERE r.room.id = :roomId " +
+       "AND r.cancelled = false " +
+       "AND r.startDate < :endDate " +
+       "AND r.endDate > :startDate")
+    List<Reservation> findActiveReservationsByRoomIdAndDateRange(
+        @Param("roomId") Long roomId, 
+        @Param("startDate") Date startDate, 
+        @Param("endDate") Date endDate
+    );
+
+
+
+
+
+    @Query("SELECT r FROM Reservation r WHERE r.user.id = :userId " +
+           "AND r.cancelled = false " +
+           "AND r.startDate < :end AND r.endDate > :start")
+    List<Reservation> findUserOverlappingReservations(//active reservations that colide with new ones
+        @Param("userId") Long userId, 
+        @Param("start") Date start, 
+        @Param("end") Date end
+    );
+
+
+
+
+    Optional<Reservation> findByVerificationToken(String verificationToken);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Reservation r WHERE r.verified = false AND r.tokenExpirationDate < :now")
+    void deleteExpiredReservations(@Param("now") Date now);
+
 }

@@ -32,6 +32,8 @@ import java.time.LocalTime;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -489,6 +491,31 @@ public class ReservationRestControllerTest {
                 .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.adminModificationReason").value("Room maintenance"));
+    }
+
+
+
+    @Test
+    @DisplayName("GET /verify - Success")
+    @WithMockUser(username = "user", roles = "USER") //for not 401 unautorized
+    public void testVerifyReservation_Success() throws Exception {
+        String token = "valid-token";
+        doNothing().when(reservationService).verifyReservation(token);
+
+        mockMvc.perform(get("/api/reservations/verify").param("token", token))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("confirmed successfully")));
+    }
+
+    @Test
+    @DisplayName("GET /verify - Failure")
+    @WithMockUser(username = "user", roles = "USER") //for not 401 unautorized
+    public void testVerifyReservation_Failure() throws Exception {
+        String token = "invalid";
+        doThrow(new RuntimeException("Invalid token")).when(reservationService).verifyReservation(token);
+
+        mockMvc.perform(get("/api/reservations/verify").param("token", token))
+                .andExpect(status().isBadRequest());
     }
 
 }

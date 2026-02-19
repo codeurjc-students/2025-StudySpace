@@ -3,6 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { RoomDTO } from '../dtos/room.dto';
 import { Page } from '../dtos/page.model';
+import { RoomCalendarDTO } from '../dtos/calendar-data.dto';
+
 
 //const BASE_URL = 'https://localhost:8443/api/rooms';
 const BASE_URL = '/api/rooms';
@@ -51,6 +53,13 @@ export class RoomsService {
 
   public deleteRoom(id: number, reason: string): Observable<any> {
     return this.http.delete(`${BASE_URL}/${id}?reason=${encodeURIComponent(reason)}`);
+  }
+
+
+
+
+  getRoomCalendar(roomId: number, start: string, end: string): Observable<RoomCalendarDTO> {
+    return this.http.get<RoomCalendarDTO>(`/api/rooms/${roomId}/calendar?start=${start}&end=${end}`);
   }
 
 

@@ -1,0 +1,12 @@
+.verify-container {
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.card {
+    border-radius: 15px;
+    max-width: 600px;
+    margin: 0 auto;
+}

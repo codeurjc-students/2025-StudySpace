@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 import org.slf4j.Logger; 
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -194,7 +195,48 @@ public class DatabaseInitializer implements CommandLineRunner {
             res3.setUser(student2);
             res3.setRoom(aulaDiseno);
 
-            reservationRepository.saveAll(Arrays.asList(res1, res2,res3));
+
+            LocalDate today = LocalDate.now();
+            LocalDate nextMonday = today.with(java.time.temporal.TemporalAdjusters.next(java.time.DayOfWeek.MONDAY));
+            LocalDate nextTuesday = today.with(java.time.temporal.TemporalAdjusters.next(java.time.DayOfWeek.TUESDAY));
+            //6 hours red
+            Reservation resRed1 = new Reservation();
+            resRed1.setStartDate(java.sql.Timestamp.valueOf(nextMonday.atTime(8, 0)));
+            resRed1.setEndDate(java.sql.Timestamp.valueOf(nextMonday.atTime(14, 0)));
+            resRed1.setReason("Hackathon Urjc (Parte 1)");
+            resRed1.setUser(student1);
+            resRed1.setRoom(lab1);
+
+            //  6 hours red
+            Reservation resRed2 = new Reservation();
+            resRed2.setStartDate(java.sql.Timestamp.valueOf(nextMonday.atTime(15, 0)));
+            resRed2.setEndDate(java.sql.Timestamp.valueOf(nextMonday.atTime(21, 0)));
+            resRed2.setReason("Hackathon Urjc (Parte 2)");
+            resRed2.setUser(student2);
+            resRed2.setRoom(lab1);
+
+
+            // Yellow 7 hours
+            Reservation resYellow = new Reservation();
+            resYellow.setStartDate(java.sql.Timestamp.valueOf(nextTuesday.atTime(9, 0)));
+            resYellow.setEndDate(java.sql.Timestamp.valueOf(nextTuesday.atTime(16, 0)));
+            resYellow.setReason("Curso Intensivo Java");
+            resYellow.setUser(student3);
+            resYellow.setRoom(lab1); 
+
+
+            //green 2 hours
+            LocalDate nextWednesday = today.with(java.time.temporal.TemporalAdjusters.next(java.time.DayOfWeek.WEDNESDAY));
+            Reservation resGreen = new Reservation();
+            resGreen.setStartDate(java.sql.Timestamp.valueOf(nextWednesday.atTime(10, 0)));
+            resGreen.setEndDate(java.sql.Timestamp.valueOf(nextWednesday.atTime(12, 0)));
+            resGreen.setReason("Tutoría");
+            resGreen.setUser(student1);
+            resGreen.setRoom(lab1);
+
+            reservationRepository.saveAll(Arrays.asList(resRed1, resRed2, resYellow, resGreen));
+
+            //reservationRepository.saveAll(Arrays.asList(res1, res2,res3));
 
             logger.info("--------------------------------------");
             logger.info(" Database initialized with test data:");

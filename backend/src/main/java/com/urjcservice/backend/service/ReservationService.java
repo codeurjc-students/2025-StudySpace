@@ -15,11 +15,14 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.transaction.annotation.Transactional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -267,10 +270,25 @@ public class ReservationService {
         if (!room.isActive()) {
         throw new RuntimeException("Reservations are not possible: The classroom is temporarily unavailable.");
         }
+
+
+
+
+        List<Reservation> userConflicts = reservationRepository.findUserOverlappingReservations(
+                user.getId(), 
+                request.getStartDate(), 
+                request.getEndDate()
+        );
+
+        if (!userConflicts.isEmpty()) {
+            throw new IllegalArgumentException("You already have an active reservation for this time slot. You cannot be in two classrooms at the same time.");
+        }
         
+
+
         validateReservationRules(request.getStartDate(), request.getEndDate()); 
 
-
+        
         LocalDateTime start = request.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
         LocalDateTime end = request.getEndDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
         long newDuration = java.time.Duration.between(start, end).toMinutes();
@@ -308,7 +326,82 @@ public class ReservationService {
         reservation.setRoom(room);
         reservation.setCancelled(false);
 
-        return reservationRepository.save(reservation);
+        reservation.setVerified(false); 
+        reservation.setVerificationToken(java.util.UUID.randomUUID().toString()); 
+
+        Date now = new Date();
+        Date expiration = new Date(now.getTime() + 3600000); 
+        reservation.setTokenExpirationDate(expiration);
+
+        //first save reservation
+        Reservation savedReservation = reservationRepository.save(reservation);
+
+        // try confirmation email
+        try {
+            emailService.sendVerificationEmail(
+                user.getEmail(),
+                user.getName(),
+                savedReservation.getVerificationToken() 
+            );
+        } catch (Exception e) {
+            System.err.println("Error sending verification email: " + e.getMessage());
+        }
+
+        return savedReservation;
+    }
+
+
+    public void verifyReservation(String token) {
+        Reservation reservation = reservationRepository.findByVerificationToken(token) 
+                .orElseThrow(() -> new RuntimeException("Invalid verification token."));
+
+        //is verified?
+        if (reservation.isVerified()) {
+            throw new RuntimeException("Reservation is already verified.");
+        }
+
+        //token expired?
+        if (reservation.getTokenExpirationDate() != null && 
+            reservation.getTokenExpirationDate().before(new Date())) {
+            
+            //if expired delete the reservation
+            reservationRepository.delete(reservation);
+            
+            throw new RuntimeException("Verification link has expired. The reservation has been cancelled. Please book again.");
+        }
+
+        reservation.setVerified(true);
+        reservation.setVerificationToken(null); //delete token
+        reservation.setTokenExpirationDate(null); //delete token date
+        
+        Reservation savedReservation = reservationRepository.save(reservation);
+
+        //send email with calendar event
+        try {
+            User user = savedReservation.getUser();
+            Room room = savedReservation.getRoom();
+            
+            emailService.sendReservationConfirmationEmail(
+                user.getEmail(),
+                user.getName(),
+                room.getName(),
+                room.getPlace(),        
+                room.getCoordenades(),  
+                savedReservation.getStartDate(), 
+                savedReservation.getEndDate()    
+            );
+        } catch (Exception e) {
+            System.err.println("Error sending confirmation email: " + e.getMessage());
+        }
+    }
+
+
+    @Scheduled(fixedRate = 60000) //every minute we search for new reservations that are not verified and have expired token
+    @Transactional
+    public void deleteExpiredUnverifiedReservations() {
+        Date now = new Date();
+        
+        reservationRepository.deleteExpiredReservations(now);
     }
 
 
@@ -345,6 +438,11 @@ public class ReservationService {
 
         if (!end.isAfter(start)) {
             throw new IllegalArgumentException("End date must be after start date.");
+        }
+        
+        DayOfWeek day = start.getDayOfWeek();
+        if (day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY) {
+             throw new IllegalArgumentException("Reservations are not allowed on weekends.");
         }
 
         //validate (08:00 - 21:00)

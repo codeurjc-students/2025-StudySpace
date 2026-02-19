@@ -1,5 +1,6 @@
 package com.urjcservice.backend.rest; 
 
+import com.urjcservice.backend.dtos.RoomCalendarDTO;
 import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.entities.Software;
 import com.urjcservice.backend.service.FileStorageService;
@@ -203,6 +204,40 @@ public class RoomRestController {
         return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_JPEG) 
                 .body(file);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    @GetMapping("/{id}/calendar")
+    public ResponseEntity<RoomCalendarDTO> getRoomCalendar(
+            @PathVariable Long id,
+            @RequestParam String start, 
+            @RequestParam String end    
+    ) {
+        // exists room
+        if (roomService.findById(id).isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        //FullCalendar sends "2026-02-01T00:00:00+01:00".
+        // cur first 10 chars to "2026-0.2-01".
+        LocalDate startDate = LocalDate.parse(start.substring(0, 10));
+        LocalDate endDate = LocalDate.parse(end.substring(0, 10));
+
+        return ResponseEntity.ok(roomService.getRoomCalendarData(id, startDate, endDate));
     }
 
 

@@ -2,6 +2,7 @@ package com.urjcservice.backend.service;
 
 import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.entities.Software;
+import com.urjcservice.backend.dtos.RoomCalendarDTO;
 import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.repositories.ReservationRepository;
 import com.urjcservice.backend.repositories.RoomRepository;
@@ -12,9 +13,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+import java.time.temporal.ChronoUnit;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Optional;
@@ -315,6 +318,103 @@ public class RoomService {
                 System.err.println("Error sending email to user " + res.getUser().getEmail());
             }
         }
+    }
+
+
+
+
+
+
+
+
+
+
+    public RoomCalendarDTO getRoomCalendarData(Long roomId, LocalDate startStr, LocalDate endStr) {
+        Date startDate = java.sql.Date.valueOf(startStr);
+        Date endDate = java.sql.Date.valueOf(endStr);
+
+        // obtain reservations
+        List<Reservation> reservations = reservationRepository.findActiveReservationsByRoomIdAndDateRange(roomId, startDate, endDate);
+
+        //transform to visual events
+        List<com.urjcservice.backend.dtos.RoomCalendarDTO.CalendarEvent> events = new ArrayList<>();
+        SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+
+        for (Reservation r : reservations) {
+            events.add(new com.urjcservice.backend.dtos.RoomCalendarDTO.CalendarEvent(
+                r.getId(),
+                "Occupied", 
+                isoFormat.format(r.getStartDate()),
+                isoFormat.format(r.getEndDate())
+            ));
+        }
+
+        // HEATMAP of days(Red, Yellow, Green)
+        List<com.urjcservice.backend.dtos.RoomCalendarDTO.DailyOccupancy> occupancyList = new ArrayList<>();
+        ZoneId zone = ZoneId.of("Europe/Madrid");
+        
+        // day by day
+        LocalDate current = startStr;
+        while (current.isBefore(endStr) || current.equals(endStr)) {
+            
+            //not weekends
+            DayOfWeek dow = current.getDayOfWeek();
+            if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) {
+                current = current.plusDays(1);
+                continue; 
+            }
+
+            final LocalDate thisDay = current;
+            
+            //all min of that day
+            long minutesOccupied = reservations.stream()
+                .filter(r -> {
+                    LocalDate rDate = r.getStartDate().toInstant().atZone(zone).toLocalDate();
+                    return rDate.equals(thisDay);
+                })
+                .mapToLong(r -> {
+                    long duration = java.time.Duration.between(
+                        r.getStartDate().toInstant(), 
+                        r.getEndDate().toInstant()
+                    ).toMinutes();
+                    return duration;
+                })
+                .sum();
+
+            double hoursOccupied = minutesOccupied / 60.0;
+            double totalOperativeHours = 13.0; // 08:00 to 21:00
+            double hoursFree = totalOperativeHours - hoursOccupied; 
+
+            String color;
+            String status;
+
+            // --- TRAFFIC LIGHT RULES (HEATMAP)---
+            // RED: Less than 2 hours free (or occupied > 11 hours)
+            if (hoursFree <= 2.0) {
+                color = "#dc3545"; 
+                status = "High";
+            } 
+            // YELLOW: Occupied for more than 6 hours (but less than 11)
+            else if (hoursOccupied >= 6.0) {
+                color = "#ffc107"; 
+                status = "Medium";
+            } 
+            // GREEN: Busy less than 6 hours
+            else {
+                color = "#198754"; 
+                status = "Low";
+            }
+
+            occupancyList.add(new RoomCalendarDTO.DailyOccupancy(
+                thisDay.toString(),
+                color,
+                status
+            ));
+
+            current = current.plusDays(1);
+        }
+
+        return new RoomCalendarDTO(events, occupancyList);
     }
 
 

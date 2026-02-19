@@ -9,6 +9,7 @@ import com.urjcservice.backend.repositories.RoomRepository;
 import com.urjcservice.backend.repositories.SoftwareRepository;
 import com.urjcservice.backend.rest.RoomRestController.RoomRequest; // Internal DTO 
 import com.urjcservice.backend.rest.RoomRestController;
+import com.urjcservice.backend.dtos.RoomCalendarDTO;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,6 +34,7 @@ import java.util.Optional;
 import java.util.List;
 import java.util.Date;
 import java.util.Map;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -521,5 +523,71 @@ public class RoomServiceTest {
         verify(roomRepository, times(1)).deleteById(roomId); 
     }
 
+
+
+
+    @Test
+    @DisplayName("Calendar: Should calculate High Occupancy (Red)")
+    void testGetRoomCalendarData_HighOccupancy() {
+        Long roomId = 1L;
+        LocalDate monday = LocalDate.of(2026, 2, 2); // Un Lunes
+        
+        //high occupation 12 hours
+        Reservation hugeRes = new Reservation();
+        hugeRes.setId(10L);
+        hugeRes.setStartDate(java.sql.Timestamp.valueOf(monday.atTime(8, 0)));
+        hugeRes.setEndDate(java.sql.Timestamp.valueOf(monday.atTime(20, 0)));
+        
+        when(reservationRepository.findActiveReservationsByRoomIdAndDateRange(anyLong(), any(), any()))
+            .thenReturn(List.of(hugeRes));
+
+        // Act
+        RoomCalendarDTO result = roomService.getRoomCalendarData(roomId, monday, monday);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.getDailyOccupancy().size());
+        assertEquals("#dc3545", result.getDailyOccupancy().get(0).getColor()); // Rojo
+        assertEquals("High", result.getDailyOccupancy().get(0).getStatus());
+    }
+
+    @Test
+    @DisplayName("Calendar: Should calculate Low Occupancy (Green)")
+    void testGetRoomCalendarData_LowOccupancy() {
+        Long roomId = 1L;
+        LocalDate tuesday = LocalDate.of(2026, 2, 3);
+        
+        //1 hout reservation
+        Reservation smallRes = new Reservation();
+        smallRes.setId(11L);
+        smallRes.setStartDate(java.sql.Timestamp.valueOf(tuesday.atTime(10, 0)));
+        smallRes.setEndDate(java.sql.Timestamp.valueOf(tuesday.atTime(11, 0)));
+
+        when(reservationRepository.findActiveReservationsByRoomIdAndDateRange(anyLong(), any(), any()))
+            .thenReturn(List.of(smallRes));
+
+        RoomCalendarDTO result = roomService.getRoomCalendarData(roomId, tuesday, tuesday);
+
+        assertEquals("#198754", result.getDailyOccupancy().get(0).getColor()); 
+        assertEquals("Low", result.getDailyOccupancy().get(0).getStatus());
+    }
+
+    @Test
+    @DisplayName("Calendar: Should skip Weekends")
+    void testGetRoomCalendarData_SkipsWeekend() {
+        Long roomId = 1L;
+        LocalDate friday = LocalDate.of(2026, 2, 6);
+        LocalDate monday = LocalDate.of(2026, 2, 9);
+        
+        when(reservationRepository.findActiveReservationsByRoomIdAndDateRange(anyLong(), any(), any()))
+            .thenReturn(Collections.emptyList());
+
+        RoomCalendarDTO result = roomService.getRoomCalendarData(roomId, friday, monday);
+
+        //only 2 days
+        assertEquals(2, result.getDailyOccupancy().size());
+        assertEquals(friday.toString(), result.getDailyOccupancy().get(0).getDate());
+        assertEquals(monday.toString(), result.getDailyOccupancy().get(1).getDate());
+    }
 
 }

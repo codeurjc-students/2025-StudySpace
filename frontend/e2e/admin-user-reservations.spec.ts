@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Gestión de Reservas de Usuarios por Admin', () => {
+test.describe('User Reservation Management by Admin', () => {
 
-  test.setTimeout(60000);
+  test.setTimeout(120000);
 
-  test('Admin debe poder ver las reservas de un usuario específico', async ({ page }) => {
+  test('Admin should be able to see a specific users bookings', async ({ page,request }) => {
     
     const timestamp = Date.now();
     const uniqueReason = 'Reunión E2E ' + timestamp;
@@ -17,13 +17,16 @@ test.describe('Gestión de Reservas de Usuarios por Admin', () => {
     while (targetDate.getDay() === 0 || targetDate.getDay() === 6) {
         targetDate.setDate(targetDate.getDate() + 1);
     }
-    const dateStr = targetDate.toISOString().split('T')[0];
+    const year = targetDate.getFullYear();
+    const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+    const day = String(targetDate.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
     // ------------------------------------------------
 
     // ==========================================
     // NEW USER REGISTRATION
     // ==========================================
-    await test.step('Registrar usuario nuevo', async () => {
+    await test.step('Register new user', async () => {
       await page.goto('/login');
       await page.getByRole('button', { name: 'Register' }).click();
       
@@ -42,7 +45,7 @@ test.describe('Gestión de Reservas de Usuarios por Admin', () => {
     // ==========================================
     // LOGIN & RESERVATION (USER)
     // ==========================================
-    await test.step('Usuario crea una reserva', async () => {
+    await test.step('User creates a reservation', async () => {
       await page.goto('/login');
       
       await page.getByPlaceholder('Email Address').fill(uniqueUserEmail);
@@ -50,45 +53,85 @@ test.describe('Gestión de Reservas de Usuarios por Admin', () => {
       await page.getByRole('main').getByRole('button', { name: 'Log In' }).click();
       await expect(page).toHaveURL('/');
 
-      //create reservation
-      await page.getByRole('button', { name: 'Book a room' }).click();
+      await page.getByRole('button', { name: /Book a room/i }).click();
       
-      const roomSelect = page.locator('select[name="roomId"]');
-      await expect(roomSelect).not.toBeDisabled();
-      await roomSelect.selectOption({ index: 1 });
+      page.on('response', res => {
+          if (!res.ok() && res.url().includes('api/')) {
+              console.error(`[BACKEND ERROR] ${res.status()}: ${res.url()}`);
+          }
+      });
 
-      await page.fill('input[name="selectedDate"]', dateStr);
-      await page.locator('input[name="selectedDate"]').dispatchEvent('change');
+      const roomSelect = page.locator('select[name="roomId"]');
+      await expect(roomSelect).toBeEnabled();
+      await roomSelect.selectOption({ index: 1 });
+      await page.waitForTimeout(1000); 
+
+
+      const dateInput = page.getByLabel('2. Select Date');
+      await dateInput.click();
+      await dateInput.fill(dateStr);
+      await dateInput.press('Tab'); 
+
+      await page.waitForTimeout(3000); 
 
       const startSelect = page.locator('select[name="startTime"]');
-      await expect(startSelect).toBeEnabled();
-      
-      //whait for operations
-      await expect(startSelect.locator('option')).toHaveCount(await startSelect.locator('option').count());
-      
-      const optionsCount = await startSelect.locator('option').count();
-      if (optionsCount > 3) {
-           await startSelect.selectOption({ index: 3 }); 
-      } else {
-           await startSelect.selectOption({ index: 1 });
-      }
+      await expect(startSelect).toBeEnabled({ timeout: 15000 }); 
+      await expect(startSelect.locator('option').nth(1)).toBeAttached({ timeout: 10000 });
+      await startSelect.selectOption({ index: 1 });
+
+      await page.waitForTimeout(500);
 
       const endSelect = page.locator('select[name="endTime"]');
-      await expect(endSelect).toBeEnabled();
-      await page.waitForTimeout(200); 
+      await expect(endSelect).toBeEnabled({ timeout: 15000 });
+      await expect(endSelect.locator('option').nth(1)).toBeAttached({ timeout: 10000 });
       await endSelect.selectOption({ index: 1 });
 
       await page.locator('textarea[name="reason"]').fill(uniqueReason);
-
       await page.getByRole('button', { name: 'Confirm Reservation' }).click();
       
-      await expect(page).toHaveURL('/');
+      // ---------------------------------------------------------
+      // LÓGICA DE MAILHOG
+      // ---------------------------------------------------------
+      let message = null;
+      for (let i = 0; i < 15; i++) {
+          try {
+              const response = await request.get('http://127.0.0.1:8025/api/v2/messages');
+              if (response.ok()) {
+                  const emailData = await response.json();
+                  const found = emailData.items.find((msg: any) => 
+                      msg.Content.Headers.To && msg.Content.Headers.To[0].includes(uniqueUserEmail)
+                  );
+                  if (found) {
+                      message = found;
+                      break; 
+                  }
+              }
+          } catch (e) { }
+          await page.waitForTimeout(1000); 
+      }
+      
+      expect(message, 'The verification email was not found in MailHog').toBeTruthy();
+
+      const cleanBody = message.Content.Body.replace(/=\r?\n/g, '');
+      
+      const match = cleanBody.match(/token=([a-zA-Z0-9-]+)/);
+      
+      if (match) {
+        const token = match[1]; 
+        await page.goto(`/verify-reservation?token=${token}`); 
+        await expect(page.getByText(/confirmed successfully|Reservation Confirmed/i)).toBeVisible();
+      } else {
+          throw new Error(`Token not found in email. Text received: ${cleanBody}`);
+      }
+      
+      await page.goto('/');
+        
     });
 
     // ==========================================
     // 3. LOGOUT
     // ==========================================
-    await test.step('Logout del usuario', async () => {
+    await test.step('User logout', async () => {
       await page.evaluate(() => {
           localStorage.clear();
           sessionStorage.clear();
@@ -100,7 +143,7 @@ test.describe('Gestión de Reservas de Usuarios por Admin', () => {
     // ==========================================
     // ADMIN QUERY
     // ==========================================
-    await test.step('Admin busca al usuario y ve sus reservas', async () => {
+    await test.step('Admin searches for the user and views their bookings', async () => {
       await page.getByPlaceholder('Email Address').fill('admin@studyspace.com');
       await page.locator('input[placeholder="Enter password"]').fill('Admin12.');
       await page.getByRole('main').getByRole('button', { name: 'Log In' }).click();
@@ -110,45 +153,82 @@ test.describe('Gestión de Reservas de Usuarios por Admin', () => {
       
       // ROBUST SEARCH FUNCTION
       const findUserRobustly = async (email: string) => {
-          const row = page.getByRole('row').filter({ hasText: email });
-          const pageIndicator = page.locator('small', { hasText: /Showing page/ });
+           const row = page.getByRole('row').filter({ hasText: email });
+           const pageIndicator = page.locator('small', { hasText: /Showing page/ });
 
-          while (true) {
-              //try the actual page
-              try {
-                  await expect(row).toBeVisible({ timeout: 2000 });
-                  return true; //finded
-              } catch (e) {
-                  //not this page, we try again
-              }
+           await expect(page.locator('tbody tr').first()).toBeVisible({ timeout: 10000 });
 
-              // next button
-              const nextBtn = page.getByRole('button', { name: '»', exact: true });
+           while (true) {
+               try {
+                   await expect(row).toBeVisible({ timeout: 3000 });
+                   return true; 
+               } catch (e) {}
 
-              const isNextDisabled = await nextBtn.isDisabled() || 
-                                     await page.locator('li.page-item.disabled button', { hasText: '»' }).count() > 0;
+               const nextBtn = page.getByRole('button', { name: '»', exact: true });
+               
+               if (!(await nextBtn.isVisible())) {
+                   return false; 
+               }
 
-              if (!await nextBtn.isVisible() || isNextDisabled) {
-                  return false; //no more pages
-              }
+               const isNextDisabled = await nextBtn.isDisabled() || 
+                                      await page.locator('li.page-item.disabled button', { hasText: '»' }).count() > 0;
 
-              //next page
-              const currentText = await pageIndicator.textContent();
-              await nextBtn.click({ force: true });
+               if (isNextDisabled) {
+                   return false; 
+               }
 
-              //wait till the number of page change
-              await expect(pageIndicator).not.toHaveText(currentText!, { timeout: 5000 });
-          }
-      };
+               let currentText = "";
+               if (await pageIndicator.isVisible()) {
+                   currentText = await pageIndicator.textContent() || "";
+               }
+               
+               await nextBtn.click({ force: true });
+               
+               if (currentText !== "") {
+                   await expect(pageIndicator).not.toHaveText(currentText, { timeout: 5000 });
+               } else {
+                   await page.waitForTimeout(1000); 
+               }
+           }
+       };
 
       const found = await findUserRobustly(uniqueUserEmail);
-      expect(found, `El usuario ${uniqueUserEmail} no apareció en ninguna página de la tabla`).toBeTruthy();
+      expect(found, `The user ${uniqueUserEmail} did not appear on any page`).toBeTruthy();
 
       const userRow = page.getByRole('row').filter({ hasText: uniqueUserEmail });
-      await userRow.getByTitle('See Reservations').click();
+      
+      await userRow.getByRole('button', { name: /Books|📅/ }).click();
 
       const reservationReason = page.getByText(uniqueReason);
       await expect(reservationReason).toBeVisible();
+
+      // ==========================================
+      // CLEANUP 
+      // ==========================================
+      await test.step('Cleanup: Delete the test user', async () => {
+          await page.getByRole('button', { name: /Back to Users/i }).click().catch(() => {
+             console.log("The back button could not be clicked, forcing navigation...");
+          });
+          
+          if (!page.url().includes('/admin/users')) {
+             await page.getByRole('button', { name: 'Manage Users' }).click();
+          }
+
+          const foundAgain = await findUserRobustly(uniqueUserEmail);
+          
+          if (foundAgain) {
+              const deleteRow = page.getByRole('row').filter({ hasText: uniqueUserEmail });
+              
+              // acept confirm on navigation
+              page.on('dialog', dialog => dialog.accept());
+              
+              await deleteRow.getByRole('button', { name: /Delete|🗑️/ }).click();
+              
+              await expect(deleteRow).not.toBeVisible();
+          }
+      });
+
+
     });
 
   });
