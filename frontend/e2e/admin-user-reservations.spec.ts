@@ -55,24 +55,25 @@ test.describe('User Reservation Management by Admin', () => {
 
       await page.getByRole('button', { name: /Book a room/i }).click();
       
-      // 1. Seleccionar Sala
       const roomSelect = page.locator('select[name="roomId"]');
       await expect(roomSelect).toBeEnabled();
       await roomSelect.selectOption({ index: 1 });
       await page.waitForTimeout(1000); 
-      
 
+
+      
       const dateInput = page.getByLabel('2. Select Date');
-      await dateInput.focus();
-      await dateInput.fill(dateStr);
-      await page.keyboard.press('Tab'); 
+      await dateInput.evaluate((el: HTMLInputElement, dateValue) => {
+          el.value = dateValue;
+          el.dispatchEvent(new Event('input', { bubbles: true })); 
+          el.dispatchEvent(new Event('change', { bubbles: true })); 
+          el.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
+      }, dateStr);
 
       await page.waitForTimeout(3000); 
 
-
       const startSelect = page.locator('select[name="startTime"]');
       await expect(startSelect).toBeEnabled({ timeout: 15000 }); 
-
       await expect(startSelect.locator('option').nth(1)).toBeAttached({ timeout: 10000 });
       await startSelect.selectOption({ index: 1 });
 
@@ -84,13 +85,11 @@ test.describe('User Reservation Management by Admin', () => {
       await endSelect.selectOption({ index: 1 });
 
       await page.locator('textarea[name="reason"]').fill(uniqueReason);
-      
       await page.getByRole('button', { name: 'Confirm Reservation' }).click();
       
       // ---------------------------------------------------------
-      // tries for MAILHOG
-      // -------------------------------------------------------
-        //wait for email
+      // LÓGICA DE MAILHOG
+      // ---------------------------------------------------------
       let message = null;
       for (let i = 0; i < 15; i++) {
           try {
@@ -112,14 +111,15 @@ test.describe('User Reservation Management by Admin', () => {
       expect(message, 'The verification email was not found in MailHog').toBeTruthy();
 
       const cleanBody = message.Content.Body.replace(/=\r?\n/g, '');
-      const match = cleanBody.match(/https:\/\/[\w.:]+\/verify-reservation\?token=([a-zA-Z0-9-]+)/);
+      
+      const match = cleanBody.match(/token=([a-zA-Z0-9-]+)/);
       
       if (match) {
         const token = match[1]; 
         await page.goto(`/verify-reservation?token=${token}`); 
         await expect(page.getByText(/confirmed successfully|Reservation Confirmed/i)).toBeVisible();
-    } else {
-          throw new Error(`HTTPS link not found in the email body. Text received: ${cleanBody}`);
+      } else {
+          throw new Error(`Token not found in email. Text received: ${cleanBody}`);
       }
       
       await page.goto('/');

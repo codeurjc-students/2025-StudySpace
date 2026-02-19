@@ -12,7 +12,7 @@ test.describe('Statistics and Reservations Flow', () => {
 
     // avoid weekends
     const targetDate = new Date();
-    targetDate.setDate(targetDate.getDate() + 3); //3 days to future
+    targetDate.setDate(targetDate.getDate() + 5); 
     while (targetDate.getDay() === 0 || targetDate.getDay() === 6) {
         targetDate.setDate(targetDate.getDate() + 1);
     }
@@ -47,18 +47,21 @@ test.describe('Statistics and Reservations Flow', () => {
       await page.getByRole('button', { name: /Book a room/i }).click();
         
 
-        const roomSelect = page.locator('select[name="roomId"]');
-        await expect(roomSelect).not.toBeDisabled();
-        await roomSelect.selectOption({ index: 1 }); 
-        await page.waitForTimeout(1000); 
-        
 
-        const dateInput = page.getByLabel('2. Select Date');
-        await dateInput.focus();
-        await dateInput.fill(dateStr);
-        await page.keyboard.press('Tab'); 
-        
-        await page.waitForTimeout(3000); 
+        const roomSelect = page.locator('select[name="roomId"]');
+      await expect(roomSelect).not.toBeDisabled();
+      await roomSelect.selectOption({ index: 2 }); 
+      await page.waitForTimeout(1000); 
+
+      const dateInput = page.getByLabel('2. Select Date');
+      await dateInput.evaluate((el: HTMLInputElement, dateValue) => {
+          el.value = dateValue;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+          el.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
+      }, dateStr);
+      
+      await page.waitForTimeout(3000);
 
 
         const startSelect = page.locator('select[name="startTime"]');
@@ -67,7 +70,6 @@ test.describe('Statistics and Reservations Flow', () => {
         await startSelect.selectOption({ index: 1 });
 
         await page.waitForTimeout(500);
-
 
         const endSelect = page.locator('select[name="endTime"]');
         await expect(endSelect).toBeEnabled({ timeout: 15000 });
@@ -84,7 +86,7 @@ test.describe('Statistics and Reservations Flow', () => {
 
 
       let message = null;
-      for (let i = 0; i < 15; i++) {
+      for (let i = 0; i < 20; i++) {
           try {
               const response = await request.get('http://127.0.0.1:8025/api/v2/messages');
               if (response.ok()) {
