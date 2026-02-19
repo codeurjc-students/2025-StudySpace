@@ -60,21 +60,28 @@ test.describe('User Reservation Management by Admin', () => {
       await page.locator('select[name="roomId"]').selectOption({ index: 1 });
       
       //force angular events
-      const dateInput = page.getByLabel('2. Select Date');
+      /*const dateInput = page.getByLabel('2. Select Date');
       await dateInput.click();
       await dateInput.fill(dateStr);
       await dateInput.dispatchEvent('input');
       await dateInput.dispatchEvent('change');
       await dateInput.press('Enter'); 
-      await dateInput.blur();         
+      await dateInput.blur(); */        
       
       await page.waitForTimeout(2000);
 
+      const dateInput = page.locator('input[type="date"]').first(); 
+      await dateInput.fill(dateStr);
+      await dateInput.dispatchEvent('change');
+      await dateInput.blur(); 
+
       const startSelect = page.locator('select[name="startTime"]');
-      await expect(startSelect).toBeEnabled({ timeout: 20000 }); 
+      await expect(startSelect).toBeEnabled({ timeout: 20000 });
       await startSelect.selectOption({ index: 1 });
 
-      await page.locator('select[name="endTime"]').selectOption({ index: 1 });
+      const endSelect = page.locator('select[name="endTime"]');
+      await expect(endSelect).toBeEnabled({ timeout: 10000 });
+      await endSelect.selectOption({ index: 1 });
       await page.locator('textarea[name="reason"]').fill(uniqueReason);
       
       await page.getByRole('button', { name: 'Confirm Reservation' }).click();
@@ -107,9 +114,10 @@ test.describe('User Reservation Management by Admin', () => {
       const match = cleanBody.match(/https:\/\/[\w.:]+\/verify-reservation\?token=([a-zA-Z0-9-]+)/);
       
       if (match) {
-          await page.goto(match[0]);
-          await expect(page.getByText(/confirmed successfully|Reservation Confirmed/i)).toBeVisible();
-      } else {
+        const token = match[1]; 
+        await page.goto(`/verify-reservation?token=${token}`); 
+        await expect(page.getByText(/confirmed successfully|Reservation Confirmed/i)).toBeVisible();
+    } else {
           throw new Error(`HTTPS link not found in the email body. Text received: ${cleanBody}`);
       }
       

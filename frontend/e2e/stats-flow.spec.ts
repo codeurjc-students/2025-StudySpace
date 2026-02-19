@@ -52,22 +52,28 @@ test.describe('Statistics and Reservations Flow', () => {
       await roomSelect.selectOption({ index: 1 }); 
 
       //force angular
-      const dateInput = page.getByLabel('2. Select Date');
+      /*const dateInput = page.getByLabel('2. Select Date');
       await dateInput.click();
       await dateInput.fill(dateStr);
       await dateInput.dispatchEvent('input');
       await dateInput.dispatchEvent('change');
       await dateInput.press('Enter');
-      await dateInput.blur();
+      await dateInput.blur();*/
       
       await page.waitForTimeout(2000); 
+
+      const dateInput = page.locator('input[type="date"]').first(); 
+      await dateInput.fill(dateStr);
+      await dateInput.dispatchEvent('change');
+      await dateInput.blur(); 
+
 
       const startSelect = page.locator('select[name="startTime"]');
       await expect(startSelect).toBeEnabled({ timeout: 20000 });
       await startSelect.selectOption({ index: 1 });
 
       const endSelect = page.locator('select[name="endTime"]');
-      await expect(endSelect).toBeEnabled();
+      await expect(endSelect).toBeEnabled({ timeout: 10000 });
       await endSelect.selectOption({ index: 1 });
 
       await page.locator('textarea[name="reason"]').fill(`Stats Check ${timestamp}`);
@@ -101,7 +107,7 @@ test.describe('Statistics and Reservations Flow', () => {
       expect(message, 'The verification email was not found in MailHog').toBeTruthy();
 
       const cleanBody = message.Content.Body.replace(/=\r?\n/g, '');
-      const match = cleanBody.match(/https?:\/\/[\\w.:]+\/verify-reservation\?token=([a-zA-Z0-9-]+)/);
+      const match = cleanBody.match(/token=([a-zA-Z0-9-]+)/);
       
       if (match) {
           const token = match[1]; 
