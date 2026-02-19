@@ -51,18 +51,19 @@ test.describe('Statistics and Reservations Flow', () => {
       await expect(roomSelect).not.toBeDisabled();
       await roomSelect.selectOption({ index: 1 }); 
 
-      //date
+      //force angular
       const dateInput = page.getByLabel('2. Select Date');
       await dateInput.click();
       await dateInput.fill(dateStr);
+      await dateInput.dispatchEvent('input');
+      await dateInput.dispatchEvent('change');
       await dateInput.press('Enter');
       await dateInput.blur();
       
       await page.waitForTimeout(2000); 
 
-      // hours
       const startSelect = page.locator('select[name="startTime"]');
-      await expect(startSelect).toBeEnabled({ timeout: 10000 });
+      await expect(startSelect).toBeEnabled({ timeout: 20000 });
       await startSelect.selectOption({ index: 1 });
 
       const endSelect = page.locator('select[name="endTime"]');

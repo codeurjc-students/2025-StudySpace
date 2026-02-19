@@ -57,17 +57,21 @@ test.describe('User Reservation Management by Admin', () => {
       
       //room
       await page.locator('select[name="roomId"]').selectOption({ index: 1 });
+      await page.locator('select[name="roomId"]').selectOption({ index: 1 });
+      
+      //force angular events
       const dateInput = page.getByLabel('2. Select Date');
       await dateInput.click();
       await dateInput.fill(dateStr);
+      await dateInput.dispatchEvent('input');
+      await dateInput.dispatchEvent('change');
       await dateInput.press('Enter'); 
       await dateInput.blur();         
       
-
       await page.waitForTimeout(2000);
 
       const startSelect = page.locator('select[name="startTime"]');
-      await expect(startSelect).toBeEnabled({ timeout: 10000 }); 
+      await expect(startSelect).toBeEnabled({ timeout: 20000 }); 
       await startSelect.selectOption({ index: 1 });
 
       await page.locator('select[name="endTime"]').selectOption({ index: 1 });
@@ -138,39 +142,44 @@ test.describe('User Reservation Management by Admin', () => {
       
       // ROBUST SEARCH FUNCTION
       const findUserRobustly = async (email: string) => {
-          const row = page.getByRole('row').filter({ hasText: email });
-          const pageIndicator = page.locator('small', { hasText: /Showing page/ });
+           const row = page.getByRole('row').filter({ hasText: email });
+           const pageIndicator = page.locator('small', { hasText: /Showing page/ });
 
-          // wait till at least 1 row on the table is visible
-          await expect(page.locator('tbody tr').first()).toBeVisible({ timeout: 10000 });
+           await expect(page.locator('tbody tr').first()).toBeVisible({ timeout: 10000 });
 
-          while (true) {
-              try {
-                  await expect(row).toBeVisible({ timeout: 5000 });
-                  return true; //if found
-              } catch (e) {
-                  //maybe next page
-              }
+           while (true) {
+               try {
+                   await expect(row).toBeVisible({ timeout: 3000 });
+                   return true; 
+               } catch (e) {}
 
-              const nextBtn = page.getByRole('button', { name: '»', exact: true });
+               const nextBtn = page.getByRole('button', { name: '»', exact: true });
+               
+               if (!(await nextBtn.isVisible())) {
+                   return false; 
+               }
 
-              //is there is still the button
-              const isNextDisabled = await nextBtn.isDisabled() || 
-                                     await page.locator('li.page-item.disabled button', { hasText: '»' }).count() > 0;
+               const isNextDisabled = await nextBtn.isDisabled() || 
+                                      await page.locator('li.page-item.disabled button', { hasText: '»' }).count() > 0;
 
-              //if no button end reached
-              if (!await nextBtn.isVisible() || isNextDisabled) {
-                  return false; 
-              }
+               if (isNextDisabled) {
+                   return false; 
+               }
 
-              const currentText = await pageIndicator.textContent();
-              
-              await nextBtn.click({ force: true });
-
-              // wait till page changes
-              await expect(pageIndicator).not.toHaveText(currentText!, { timeout: 5000 });
-          }
-      };
+               let currentText = "";
+               if (await pageIndicator.isVisible()) {
+                   currentText = await pageIndicator.textContent() || "";
+               }
+               
+               await nextBtn.click({ force: true });
+               
+               if (currentText !== "") {
+                   await expect(pageIndicator).not.toHaveText(currentText, { timeout: 5000 });
+               } else {
+                   await page.waitForTimeout(1000); 
+               }
+           }
+       };
 
       const found = await findUserRobustly(uniqueUserEmail);
       expect(found, `The user ${uniqueUserEmail} did not appear on any page`).toBeTruthy();

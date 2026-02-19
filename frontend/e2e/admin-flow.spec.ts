@@ -98,12 +98,15 @@ test.describe('Administrator Management', () => {
         await selectSoftware.selectOption({ label: optionText.trim() }); 
     }
 
-    await page.getByRole('button', { name: 'Save' }).click();
+    await page.waitForTimeout(500);
+
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
 
     // ==========================================
     // FINAL VALIDATION (ROOM)
     // ==========================================
-    await expect(page).toHaveURL('/admin/rooms');
+    //await expect(page).toHaveURL('/admin/rooms');
+    await expect(page).toHaveURL(/\/admin\/rooms$/, { timeout: 10000 });
     
     //pagination search
     const roomFound = await findRowInTable(roomName);

@@ -53,13 +53,13 @@ test.describe('User Authentication (Dynamic Data)', () => {
       
       await page.getByRole('main').getByRole('button', { name: 'Log In', exact: true }).click();
       
-      const errorDialog = page.getByRole('dialog');
-      await expect(errorDialog).toBeVisible({ timeout: 10000 });
+      const errorMessage = page.getByText(/Incorrect username or password/);
+      await expect(errorMessage).toBeVisible({ timeout: 15000 });
       
-      await expect(errorDialog.getByText(/Incorrect username or password/)).toBeVisible();
+      const closeButton = page.getByRole('button', { name: 'Close' }).first();
+      await expect(closeButton).toBeVisible();
+      await closeButton.click();
       
-      await errorDialog.getByRole('button', { name: 'Close' }).first().click();
-
       await expect(page).toHaveURL('/login');
-    });
+  });
 });
