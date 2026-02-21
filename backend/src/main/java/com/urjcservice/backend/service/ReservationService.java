@@ -487,4 +487,11 @@ public class ReservationService {
 
 
 
+
+    public List<Reservation> getActiveReservationsForUserAndDate(String email, LocalDate date) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
+        return reservationRepository.findActiveByUserIdAndDate(user.getId(), date);
+    }
+
 }

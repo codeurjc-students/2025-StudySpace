@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  mysql-e2e:
+    image: mysql:8.0
+    container_name: study_space_mysql_e2e
+    environment:
+      MYSQL_ROOT_PASSWORD: toor
+      MYSQL_DATABASE: study_space_e2e_db
+    ports:
+      - "3307:3306" # port 3307 to not collide with local data base
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: study_space_mailhog_e2e
+    ports:
+      - "1025:1025"
+      - "8025:8025"

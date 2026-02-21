@@ -155,11 +155,25 @@ public class ReservationRestController {
     @GetMapping("/check-availability")
     public ResponseEntity<List<Reservation>> checkAvailability(
             @RequestParam Long roomId, 
-            @RequestParam String date) { 
+            @RequestParam String date,
+            Principal principal) { 
         
         try {
             LocalDate localDate = LocalDate.parse(date);
+            
             List<Reservation> reservations = reservationService.getActiveReservationsForRoomAndDate(roomId, localDate);
+            
+            if (principal != null) {
+                List<Reservation> userReservations = reservationService.getActiveReservationsForUserAndDate(principal.getName(), localDate);
+                
+                List<Long> existingIds = reservations.stream().map(Reservation::getId).toList();
+                for (Reservation userRes : userReservations) {
+                    if (!existingIds.contains(userRes.getId())) {
+                        reservations.add(userRes);
+                    }
+                }
+            }
+            
             return ResponseEntity.ok(reservations);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();

@@ -32,6 +32,7 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: toor
           MYSQL_DATABASE: study_space_e2e_db 
+          TZ: Europe/Madrid
         ports:
           - 3307:3306 
         options: >-
@@ -139,3 +140,6 @@ jobs:
       if: failure()
       working-directory: ./backend
       run: cat backend.log
+
+
+      # npx playwright test --ui

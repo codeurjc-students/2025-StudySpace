@@ -22,13 +22,13 @@ services:
 
 
 
-  mailhog:
-      image: mailhog/mailhog
-      container_name: study_space_mailhog
-      restart: always
-      ports:
-        - "1025:1025" # SMTP (backend send)
-        - "8025:8025" # Web port(for emails)
+  #mailhog:
+   #   image: mailhog/mailhog
+    #  container_name: study_space_mailhog
+     # restart: always
+      #ports:
+       # - "1025:1025" # SMTP (backend send)
+        #- "8025:8025" # Web port(for emails)
         
   # Backend (Spring Boot)
   backend:  
@@ -40,15 +40,15 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-      mailhog:
-        condition: service_started
+      #mailhog:
+       # condition: service_started
     environment:
-      SPRING_MAIL_HOST: mailhog
-      SPRING_MAIL_PORT: 1025
-      SPRING_MAIL_USERNAME: test
-      SPRING_MAIL_PASSWORD: test
-      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: false
-      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: false
+      #SPRING_MAIL_HOST: mailhog
+      #SPRING_MAIL_PORT: 1025
+      #SPRING_MAIL_USERNAME: test
+      #SPRING_MAIL_PASSWORD: test
+      #SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: false
+      #SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: false
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/study_space_db
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: toor
