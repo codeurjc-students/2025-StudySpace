@@ -1,9 +1,8 @@
 <div class="container mt-5 mb-5 d-flex justify-content-center">
-    <div class="card shadow p-4" style="max-width: 600px; width: 100%;">
+    <div class="card shadow p-4 software-form-card">
         <h3 class="mb-4 text-center text-primary">{{ isEditMode ? 'Edit' : 'New' }} Software</h3>
         
         <form (ngSubmit)="save()" #f="ngForm">
-            
             <div class="mb-3">
                 <label for="name" class="form-label fw-bold">Name</label>
                 <input id="name" type="text" name="name" [(ngModel)]="software.name" class="form-control" required>
@@ -21,7 +20,9 @@
 
             <div class="d-flex justify-content-between">
                 <button type="button" class="btn btn-outline-secondary" routerLink="/admin/softwares">Cancel</button>
-                <button type="submit" class="btn btn-success" [disabled]="!f.valid">Save</button>
+                <button type="submit" class="btn btn-success" [disabled]="!f.form.valid">
+                    <i class="fa fa-save"></i> Save
+                </button>
             </div>
         </form>
     </div>

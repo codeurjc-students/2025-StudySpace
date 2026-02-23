@@ -1,5 +1,5 @@
 <div class="container mt-5 mb-5 d-flex justify-content-center">
-    <div class="card shadow p-4" style="max-width: 600px; width: 100%;">
+    <div class="card shadow p-4 reservation-card">
         
         <h3 class="mb-4 text-center text-primary">Make a Reservation</h3>
         <p class="text-center text-muted">You are booking the classroom #{{ roomId }}</p>
@@ -28,13 +28,14 @@
                 <div class="col-md-6 mb-3">
                     <label for="startTime" class="form-label fw-bold">3. Start Time</label>
                     <select id="startTime" name="startTime" 
-                            [(ngModel)]="selectedStartTime" (change)="onStartTimeChange()"
+                            [(ngModel)]="selectedStartTime" 
+                            (change)="onStartTimeChange()" 
                             class="form-select" 
-                            [disabled]="!selectedDate || startTimes.length === 0" required>
+                            [disabled]="!roomId || !selectedDate" required>
                         <option value="" disabled>-- Select Start --</option>
                         <option *ngFor="let t of startTimes" [value]="t">{{ t }}</option>
                     </select>
-                    <div *ngIf="selectedDate && startTimes.length === 0" class="text-danger small mt-1">
+                    <div *ngIf="roomId && selectedDate && startTimes.length === 0" class="text-danger small mt-1">
                         No available slots for this day.
                     </div>
                 </div>

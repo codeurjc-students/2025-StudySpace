@@ -17,8 +17,7 @@
                         <td>
                             <div class="d-flex align-items-center">
                                 <img [src]="user.imageName ? 'https://localhost:8443/api/users/' + user.id + '/image' : 'assets/user_placeholder.png'" 
-                                    class="rounded-circle me-2" 
-                                    width="30" height="30" style="object-fit: cover;"
+                                    class="rounded-circle me-2 avatar-img" 
                                     (error)="user.imageName = undefined">
                                 <strong>{{ user.name }}</strong>
                                 <span *ngIf="user.roles.includes('ADMIN')" class="badge bg-primary ms-2">ADMIN</span>
@@ -26,24 +25,19 @@
                         </td>
                         <td>{{ user.email }}</td>
                         <td>
-                            <span *ngIf="user.blocked" class="badge bg-danger">BLOCKED</span>
-                            <span *ngIf="!user.blocked" class="badge bg-success">ACTIVE</span>
+                            <span *ngIf="user.blocked" class="badge bg-danger">Blocked</span>
+                            <span *ngIf="!user.blocked" class="badge bg-success">Active</span>
                         </td>
                         <td class="text-center">
-                            <div class="btn-group">
-                                <button class="btn btn-sm" 
-                                        [class.btn-outline-warning]="!user.roles.includes('ADMIN')"
-                                        [class.btn-outline-secondary]="user.roles.includes('ADMIN')"
-                                        (click)="toggleAdmin(user)"
-                                        title="Change Role">
-                                    {{ user.roles.includes('ADMIN') ? '⬇️ User' : '⬆️ Admin' }}
-                                </button>
-                                <button class="btn btn-sm btn-outline-info" 
-                                    [routerLink]="['/admin/users', user.id, 'reservations']" 
-                                    title="See Reservations">
-                                    📅 Books
-                                </button>
+                            <div class="btn-group" role="group">
                                 
+                                <button class="btn btn-sm btn-outline-info" [routerLink]="['/admin/users', user.id, 'reservations']" title="View Books">
+                                    📅 User Reservations
+                                </button>
+
+                                <button class="btn btn-sm btn-outline-primary" (click)="toggleAdmin(user)" title="Toggle Admin Role">
+                                    {{ user.roles.includes('ADMIN') ? '⬇️ Remove Admin' : '⬆️ Make Admin' }}
+                                </button>
 
                                 <button class="btn btn-sm"
                                         [class.btn-outline-dark]="!user.blocked"
@@ -54,7 +48,7 @@
                                 </button>
 
                                 <button class="btn btn-sm btn-outline-danger" (click)="deleteUser(user)" title="Delete User">
-                                    🗑️
+                                    🗑️ Delete
                                 </button>
                             </div>
                         </td>

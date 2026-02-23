@@ -1,1 +1,13 @@
-/*Future stgyles for admin menu component*/
+.admin-container {
+    min-height: 70vh;
+}
+
+.admin-card {
+    width: 100%;
+    max-width: 400px;
+    background-color: #f3f4f6;
+}
+
+.admin-btn {
+    transition: 0.3s;
+}

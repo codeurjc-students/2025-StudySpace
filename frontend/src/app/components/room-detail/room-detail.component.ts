@@ -108,7 +108,13 @@ export class RoomDetailComponent implements OnInit {
     this.loadStats(); // load charts
     
     // soft scroll to stats
-    document.querySelector('#stats-section')?.scrollIntoView({ behavior: 'smooth' });
+    //document.querySelector('#stats-section')?.scrollIntoView({ behavior: 'smooth' });
+    setTimeout(() => {
+      const statsElement = document.getElementById('stats-section');
+      if (statsElement) {
+        statsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 150);
   }
 
   //load data from backend

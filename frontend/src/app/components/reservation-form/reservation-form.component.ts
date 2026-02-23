@@ -68,7 +68,14 @@ export class ReservationFormComponent implements OnInit {
 
   
   calculateStartTimes() {
-    this.startTimes = ReservationLogic.generateStartTimes(this.occupiedSlots);
+    const rawStartTimes = ReservationLogic.generateStartTimes(this.occupiedSlots);
+    const now = new Date(); //actual hour
+    
+    this.startTimes = rawStartTimes.filter(time => {
+      const slotDateTime = new Date(`${this.selectedDate}T${time}:00`);
+      
+      return slotDateTime > now;
+    });
   }
 
   //calculate end date by the selected start date

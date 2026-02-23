@@ -7,7 +7,7 @@ import { PaginationUtil } from '../../utils/pagination.util';
 @Component({
   selector: 'app-manage-rooms',
   templateUrl: './manage-rooms.component.html',
-  styleUrl: './manage-rooms.component.css'
+  //styleUrl: './manage-rooms.component.css'
 })
 export class ManageRoomsComponent implements OnInit {
   rooms: RoomDTO[] = [];

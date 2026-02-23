@@ -103,4 +103,21 @@ describe('RoomsService', () => {
     expect(req.request.method).toBe('GET');
     req.flush({});
   });
+
+  it('should get room calendar data', () => {
+    const roomId = 1;
+    const start = '2026-02-01T00:00:00+01:00';
+    const end = '2026-03-14T00:00:00+01:00';
+    const mockResponse = { events: [], dailyOccupancy: [] };
+
+    service.getRoomCalendar(roomId, start, end).subscribe(res => {
+      expect(res).toEqual(mockResponse);
+    });
+
+    const req = httpMock.expectOne(`/api/rooms/${roomId}/calendar?start=${start}&end=${end}`);
+    expect(req.request.method).toBe('GET');
+    req.flush(mockResponse);
+  });
+
+  
 });

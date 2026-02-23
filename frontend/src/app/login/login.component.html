@@ -1,5 +1,5 @@
-<div *ngIf="!loginService.isLogged()" class="d-flex align-items-center p-5 justify-content-center" style="min-height: 60vh;">
-    <div class="card p-4 shadow" style="max-width: 400px; width: 100%;">
+<div *ngIf="!loginService.isLogged()" class="d-flex align-items-center p-5 justify-content-center auth-container">
+    <div class="card p-4 shadow auth-card">
         <h3 class="mb-4 text-center">Please Log In</h3>
         
         <form (ngSubmit)="logIn()">
@@ -25,8 +25,6 @@
                 </div>
             </div>
 
-            
-            
             <div class="d-grid gap-2 mt-4">
                 <button type="submit" class="btn btn-primary btn-lg">
                     Log In
@@ -49,6 +47,6 @@
         <p>Incorrect username or password. Please try again.</p>
     </div>
     <div class="modal-footer">
-        <button class="btn btn-secondary" (click)="modal.close()">Close</button>
+        <button class="btn btn-secondary" (click)="modal.dismiss()">Close</button>
     </div>
 </ng-template>

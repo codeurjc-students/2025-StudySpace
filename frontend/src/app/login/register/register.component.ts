@@ -5,7 +5,7 @@ import { LoginService } from '../login.service';
 @Component({
   selector: 'app-register',
   templateUrl: './register.component.html',
-  styleUrls: ['./register.component.css']
+  styleUrls: ['../login.component.css']
 })
 export class RegisterComponent {
   registerData = { name: '', email: '', password: '' };

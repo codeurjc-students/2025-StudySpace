@@ -164,3 +164,32 @@
 ::ng-deep .fc-timeGridWeek-view .fc-event:not(.fc-bg-event) {
     display: block !important;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.room-detail-img {
+    object-fit: cover; 
+    max-height: 400px; 
+    width: 100%; 
+    border-radius: 8px;
+}
+
+.hourly-chart-container {
+    height: 300px;
+}
+
+.occupancy-chart-container {
+    height: 250px;
+}

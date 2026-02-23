@@ -10,3 +10,13 @@
     max-width: 600px;
     margin: 0 auto;
 }
+
+
+.verify-spinner {
+    width: 3rem; 
+    height: 3rem;
+}
+
+.verify-icon {
+    font-size: 4rem;
+}

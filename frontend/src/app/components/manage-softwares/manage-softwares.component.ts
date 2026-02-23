@@ -6,7 +6,7 @@ import { PaginationUtil } from '../../utils/pagination.util';
 @Component({
   selector: 'app-manage-softwares',
   templateUrl: './manage-softwares.component.html',
-  styleUrls: ['./manage-softwares.component.css']
+  //styleUrls: ['./manage-softwares.component.css']
 })
 export class ManageSoftwaresComponent implements OnInit {
   softwares: SoftwareDTO[] = [];

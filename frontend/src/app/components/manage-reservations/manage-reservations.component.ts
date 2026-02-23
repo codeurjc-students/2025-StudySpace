@@ -10,7 +10,7 @@ import { ReservationLogic } from '../../utils/reservation-logic.util';
 @Component({
   selector: 'app-manage-reservations',
   templateUrl: './manage-reservations.component.html',
-  styleUrls: ['./manage-reservations.component.css']
+  //styleUrls: ['./manage-reservations.component.css']
 })
 export class ManageReservationsComponent implements OnInit {
 

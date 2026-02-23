@@ -1,1 +1,4 @@
-/* for resrvation form component styles*/
+.reservation-card {
+    max-width: 600px;
+    width: 100%;
+}

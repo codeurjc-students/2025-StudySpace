@@ -30,8 +30,12 @@
                     
                     <div *ngIf="room.software && room.software.length > 0">
                         <small class="text-muted fw-bold">Available software:</small>
-                        <ul class="ps-3 mb-0" style="font-size: 0.9rem;">
-                            <li *ngFor="let s of room.software">{{ s.name }}</li>
+                        <ul class="ps-3 mb-0 software-list">
+                            <li *ngFor="let s of room.software | slice:0:10">{{ s.name }}</li>
+                            
+                            <li *ngIf="room.software.length > 10" class="text-muted fst-italic small extra-software">
+                                ...and {{ room.software.length - 10 }} more. See details.
+                            </li>
                         </ul>
                     </div>
                 </div>

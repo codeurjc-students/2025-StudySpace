@@ -1,25 +1,25 @@
 .navbar {
-  display: flex; /* <-- La magia de Flexbox empieza aquí */
-  justify-content: space-between; /* Empuja izq y dcha a los extremos */
-  align-items: center; /* Centra todo verticalmente */
-  padding: 1rem 2rem; /* Espaciado interno (arriba/abajo | izq/dcha) */
-  background-color: #007bff; /* Un color azul (ajusta al que te guste) */
-  color: black; /* Color de texto por defecto (aunque lo cambiaremos) */
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  padding: 1rem 2rem; 
+  background-color: #007bff; 
+  color: black; 
 }
 
-/* --- Lado Izquierdo --- */
+
 .navbar-left .logo {
-  font-size: 1.5rem; /* Tamaño de fuente grande */
+  font-size: 1.5rem; 
   font-weight: bold;
   color: black;
-  text-decoration: none; /* Sin subrayado */
+  text-decoration: none; 
 }
 
-/* --- Lado Derecho --- */
+
 .navbar-right {
-  display: flex; /* Hacemos flexbox el contenedor de la derecha también */
+  display: flex; 
   align-items: center;
-  gap: 20px; /* Espacio entre los enlaces y el botón */
+  gap: 20px; 
 }
 
 .navbar-right .nav-link {
@@ -29,23 +29,23 @@
 }
 
 .navbar-right .nav-link:hover {
-  text-decoration: underline; /* Efecto al pasar el ratón */
+  text-decoration: underline; 
 }
 
-/* El botón negro especial */
+
 .navbar-right .nav-button-cta {
   background-color: black;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
-  border-radius: 5px; /* Bordes redondeados */
-  cursor: pointer; /* Cambia el cursor a una manita */
+  border-radius: 5px; 
+  cursor: pointer; /*change cursor aperance*/
   font-weight: bold;
   font-size: 0.9rem;
 }
 
 .navbar-right .nav-button-cta:hover {
-  opacity: 0.9; /* Pequeño efecto al pasar el ratón */
+  opacity: 0.9; 
 }
 
 /* Style for the small header icon */

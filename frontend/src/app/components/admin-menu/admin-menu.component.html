@@ -1,32 +1,24 @@
-<div class="container d-flex flex-column align-items-center justify-content-center" style="min-height: 70vh;">
-    
+<div class="container d-flex flex-column align-items-center justify-content-center admin-container">
     <h2 class="mb-4 fw-bold">Welcome Admin</h2>
 
-    <div class="card shadow border-0 p-5" style="width: 100%; max-width: 400px; background-color: #f3f4f6;">
+    <div class="card shadow border-0 p-5 admin-card">
         <div class="d-grid gap-3">
-            
-            <button routerLink="/admin/rooms" class="btn btn-light border py-3 text-secondary fw-bold shadow-sm user-select-none" style="transition: 0.3s;">
+            <button routerLink="/admin/rooms" class="btn btn-light border py-3 text-secondary fw-bold shadow-sm user-select-none admin-btn">
                 Manage rooms
             </button>
-
-            <button routerLink="/admin/softwares" class="btn btn-light border py-3 text-secondary fw-bold shadow-sm user-select-none" style="transition: 0.3s;">
+            <button routerLink="/admin/softwares" class="btn btn-light border py-3 text-secondary fw-bold shadow-sm user-select-none admin-btn">
                 Manage Software
             </button>
-
-            <button routerLink="/admin/users" class="btn btn-light border py-3 text-secondary fw-bold shadow-sm user-select-none" style="transition: 0.3s;">
+            <button routerLink="/admin/users" class="btn btn-light border py-3 text-secondary fw-bold shadow-sm user-select-none admin-btn">
                 Manage Users
             </button>
-
-            <button routerLink="/admin/stats" class="btn btn-light border py-3 text-secondary fw-bold shadow-sm user-select-none" style="transition: 0.3s;">
+            <button routerLink="/admin/stats" class="btn btn-light border py-3 text-secondary fw-bold shadow-sm user-select-none admin-btn">
                 Occupancy Statistics
             </button>
-
         </div>
     </div>
 
-
-    <div class="w-100 mt-5" style="max-width: 800px;">
-        <button routerLink="/" class="btn btn-outline-dark px-4 py-2">Back</button>
+    <div class="mt-4">
+        <button routerLink="/" class="btn btn-outline-secondary">&laquo; Back to Home</button>
     </div>
-
 </div>
