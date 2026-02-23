@@ -1,69 +1,81 @@
 <div class="container mt-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Manage Rooms</h2>
-        
-        <button class="btn btn-success" routerLink="/admin/rooms/create">
-            <i class="fa fa-plus"></i> + Create New Room
-        </button>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Manage Rooms</h2>
+
+    <button class="btn btn-success" routerLink="/admin/rooms/create">
+      <i class="fa fa-plus"></i> + Create New Room
+    </button>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Capacity</th>
+            <th>Campus</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let room of rooms" [class.table-secondary]="!room.active">
+            <td>
+              {{ room.name }}
+              <i
+                *ngIf="!room.active"
+                class="fa fa-ban text-danger ms-1"
+                title="Disabled"
+              ></i>
+            </td>
+
+            <td>
+              <span *ngIf="room.active" class="badge bg-success">Active</span>
+              <span *ngIf="!room.active" class="badge bg-danger">Disabled</span>
+            </td>
+
+            <td>{{ room.capacity }}</td>
+            <td>
+              <span class="badge bg-info text-dark">{{ room.camp }}</span>
+            </td>
+
+            <td class="text-end">
+              <button
+                class="btn btn-sm btn-outline-primary me-2"
+                [routerLink]="['/admin/rooms/edit', room.id]"
+              >
+                Edit
+              </button>
+              <button
+                class="btn btn-sm btn-outline-danger"
+                (click)="deleteRoom(room.id)"
+              >
+                Delete
+              </button>
+            </td>
+          </tr>
+
+          <tr *ngIf="rooms.length === 0">
+            <td colspan="5" class="text-center py-3 text-muted">
+              No rooms found.
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
+  </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body p-0">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Name</th>
-                        <th>Status</th> 
-                        <th>Capacity</th>
-                        <th>Campus</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let room of rooms" [class.table-secondary]="!room.active">
-                        <td>
-                            {{ room.name }}
-                            <i *ngIf="!room.active" class="fa fa-ban text-danger ms-1" title="Disabled"></i>
-                        </td>
-                        
-                        <td>
-                            <span *ngIf="room.active" class="badge bg-success">Active</span>
-                            <span *ngIf="!room.active" class="badge bg-danger">Disabled</span>
-                        </td>
+  <app-pagination
+    [pageData]="pageData"
+    [currentPage]="currentPage"
+    (pageChange)="loadRooms($event)"
+  >
+  </app-pagination>
 
-                        <td>{{ room.capacity }}</td>
-                        <td><span class="badge bg-info text-dark">{{ room.camp }}</span></td>
-                        
-                        <td class="text-end">
-                            <button class="btn btn-sm btn-outline-primary me-2" 
-                                    [routerLink]="['/admin/rooms/edit', room.id]">
-                                Edit
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger" (click)="deleteRoom(room.id)">
-                                Delete
-                            </button>
-                        </td>
-                    </tr>
-
-                    <tr *ngIf="rooms.length === 0">
-                        <td colspan="5" class="text-center py-3 text-muted">
-                            No rooms found.
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <app-pagination 
-        [pageData]="pageData" 
-        [currentPage]="currentPage" 
-        (pageChange)="loadRooms($event)">
-    </app-pagination>
-
-    <div class="d-flex justify-content-start mb-5">
-        <button class="btn btn-outline-secondary" routerLink="/admin">
-            <i class="bi bi-arrow-left me-2"></i> Back to Admin menu
-        </button>
-    </div>
+  <div class="d-flex justify-content-start mb-5">
+    <button class="btn btn-outline-secondary" routerLink="/admin">
+      <i class="bi bi-arrow-left me-2"></i> Back to Admin menu
+    </button>
+  </div>
 </div>

@@ -6,7 +6,7 @@ import { handleSaveRequest } from '../../utils/form-helpers.util';
 @Component({
   selector: 'app-software-form',
   templateUrl: './software-form.component.html',
-  styleUrls: ['./software-form.component.css']
+  styleUrls: ['./software-form.component.css'],
 })
 export class SoftwareFormComponent implements OnInit {
   isEditMode = false;
@@ -15,13 +15,13 @@ export class SoftwareFormComponent implements OnInit {
   software = {
     name: '',
     version: 1.0,
-    description: ''
+    description: '',
   };
 
   constructor(
     private readonly softwareService: SoftwareService,
     private readonly router: Router,
-    private readonly route: ActivatedRoute
+    private readonly route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
@@ -29,28 +29,29 @@ export class SoftwareFormComponent implements OnInit {
     if (id) {
       this.isEditMode = true;
       this.softwareId = +id;
-      this.softwareService.getSoftware(+id).subscribe(data => {
-          this.software = { 
-              name: data.name, 
-              version: Number(data.version), 
-              description: data.description 
-          };
+      this.softwareService.getSoftware(+id).subscribe((data) => {
+        this.software = {
+          name: data.name,
+          version: Number(data.version),
+          description: data.description,
+        };
       });
     }
   }
 
   save() {
-      const request$ = (this.isEditMode && this.softwareId)
-          ? this.softwareService.updateSoftware(this.softwareId, this.software)
-          : this.softwareService.createSoftware(this.software);
+    const request$ =
+      this.isEditMode && this.softwareId
+        ? this.softwareService.updateSoftware(this.softwareId, this.software)
+        : this.softwareService.createSoftware(this.software);
 
-      handleSaveRequest(
-          request$,
-          () => {
-              this.router.navigate(['/admin/softwares']);
-          },
-          'Software', 
-          'Error: This software version already exists. Please change the name or version.' // 409
-      );
+    handleSaveRequest(
+      request$,
+      () => {
+        this.router.navigate(['/admin/softwares']);
+      },
+      'Software',
+      'Error: This software version already exists. Please change the name or version.', // 409
+    );
   }
 }

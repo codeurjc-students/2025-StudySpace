@@ -2,7 +2,7 @@ package com.urjcservice.backend.rest;
 
 import com.urjcservice.backend.dtos.DashboardStatsDTO;
 import com.urjcservice.backend.service.StatsService;
-import com.urjcservice.backend.security.jwt.JwtTokenProvider; 
+import com.urjcservice.backend.security.jwt.JwtTokenProvider;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 import org.junit.jupiter.api.Test;
@@ -24,7 +24,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(StatsRestController.class)
-@AutoConfigureMockMvc(addFilters = false) //Desactivate filters for avoid using tokens and prove the real functionality of the file
+@AutoConfigureMockMvc(addFilters = false) // Desactivate filters for avoid using tokens and prove the real functionality
+                                          // of the file
 public class StatsRestControllerTest {
 
     @Autowired
@@ -33,13 +34,11 @@ public class StatsRestControllerTest {
     @MockBean
     private StatsService statsService;
 
-   
     @MockBean
     private JwtTokenProvider jwtTokenProvider;
 
     @MockBean
     private UserDetailsService userDetailsService;
-    
 
     @Test
     @WithMockUser(roles = "ADMIN")

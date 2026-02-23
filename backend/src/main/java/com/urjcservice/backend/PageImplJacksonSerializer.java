@@ -38,4 +38,3 @@ public class PageImplJacksonSerializer extends JsonSerializer<PageImpl<?>> {
         jsonGenerator.writeEndObject();
     }
 }
-

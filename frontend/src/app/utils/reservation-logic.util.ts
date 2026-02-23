@@ -1,25 +1,26 @@
-
-
 export class ReservationLogic {
-
   static toMinutes(timeStr: string): number {
     const [h, m] = timeStr.split(':').map(Number);
     return h * 60 + m;
   }
 
-  // add 0 to left 
+  // add 0 to left
   static pad(n: number): string {
     return n < 10 ? '0' + n : '' + n;
   }
 
-  static isOverlap(startStr: string, endStr: string, occupiedSlots: any[]): boolean {
+  static isOverlap(
+    startStr: string,
+    endStr: string,
+    occupiedSlots: any[],
+  ): boolean {
     const s = this.toMinutes(startStr);
     const e = this.toMinutes(endStr);
 
-    return occupiedSlots.some(res => {
+    return occupiedSlots.some((res) => {
       const resStart = new Date(res.startDate);
       const resEnd = new Date(res.endDate);
-      
+
       const startMins = resStart.getHours() * 60 + resStart.getMinutes();
       const endMins = resEnd.getHours() * 60 + resEnd.getMinutes();
 
@@ -32,12 +33,12 @@ export class ReservationLogic {
     let h = 8;
     let m = 0;
 
-    while (h < 21 || (h === 20 && m <= 30)) { 
+    while (h < 21 || (h === 20 && m <= 30)) {
       const timeStr = `${this.pad(h)}:${this.pad(m)}`;
-      
+
       const timeMins = this.toMinutes(timeStr);
-      
-      const isOccupied = occupiedSlots.some(res => {
+
+      const isOccupied = occupiedSlots.some((res) => {
         const start = new Date(res.startDate);
         const end = new Date(res.endDate);
         const sMins = start.getHours() * 60 + start.getMinutes();
@@ -50,7 +51,10 @@ export class ReservationLogic {
       }
 
       m += 30;
-      if (m === 60) { h++; m = 0; }
+      if (m === 60) {
+        h++;
+        m = 0;
+      }
     }
     return times;
   }
@@ -64,7 +68,10 @@ export class ReservationLogic {
 
     let h = startH;
     let m = startM + 30;
-    if (m === 60) { h++; m = 0; }
+    if (m === 60) {
+      h++;
+      m = 0;
+    }
 
     while (h < 21 || (h === 21 && m === 0)) {
       const currentTotalMins = h * 60 + m;
@@ -79,7 +86,10 @@ export class ReservationLogic {
       endTimes.push(timeStr);
 
       m += 30;
-      if (m === 60) { h++; m = 0; }
+      if (m === 60) {
+        h++;
+        m = 0;
+      }
     }
     return endTimes;
   }

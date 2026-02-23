@@ -1,24 +1,27 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import {
+  HttpClientTestingModule,
+  HttpTestingController,
+} from '@angular/common/http/testing';
 import { ReservationService } from './reservation.service';
 
 describe('ReservationService', () => {
   let service: ReservationService;
   let httpMock: HttpTestingController;
-  
+
   const BASE_URL = '/api/reservations';
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [ReservationService]
+      providers: [ReservationService],
     });
     service = TestBed.inject(ReservationService);
     httpMock = TestBed.inject(HttpTestingController);
   });
 
   afterEach(() => {
-    httpMock.verify(); 
+    httpMock.verify();
   });
 
   it('should be created', () => {
@@ -27,7 +30,7 @@ describe('ReservationService', () => {
 
   it('getReservationsByUser should call correct URL', () => {
     service.getReservationsByUser(1, 0, 5).subscribe();
-    
+
     const req = httpMock.expectOne(`/api/users/1/reservations?page=0&size=5`);
     expect(req.request.method).toBe('GET');
     req.flush({});
@@ -36,7 +39,9 @@ describe('ReservationService', () => {
   it('deleteReservation should call DELETE api', () => {
     service.deleteReservation(123).subscribe();
 
-    const req = httpMock.expectOne(req => req.url.includes('/api/reservations/123'));
+    const req = httpMock.expectOne((req) =>
+      req.url.includes('/api/reservations/123'),
+    );
     expect(req.request.method).toBe('DELETE');
     req.flush({});
   });
@@ -45,7 +50,9 @@ describe('ReservationService', () => {
     const updateData = { reason: 'Changed' };
     service.updateReservation(10, updateData).subscribe();
 
-    const req = httpMock.expectOne(req => req.url.includes('/api/reservations/10'));
+    const req = httpMock.expectOne((req) =>
+      req.url.includes('/api/reservations/10'),
+    );
     expect(req.request.method).toBe('PUT');
     expect(req.request.body).toEqual(updateData);
     req.flush({});
@@ -62,7 +69,10 @@ describe('ReservationService', () => {
     const req = httpMock.expectOne(`${BASE_URL}`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({
-      roomId, startDate, endDate, reason
+      roomId,
+      startDate,
+      endDate,
+      reason,
     });
     req.flush({});
   });
@@ -70,7 +80,9 @@ describe('ReservationService', () => {
   it('getMyReservations should call correct URL', () => {
     service.getMyReservations(0, 10).subscribe();
 
-    const req = httpMock.expectOne(req => req.url.includes('/my-reservations'));
+    const req = httpMock.expectOne((req) =>
+      req.url.includes('/my-reservations'),
+    );
     expect(req.request.method).toBe('GET');
     req.flush({});
   });
@@ -89,7 +101,9 @@ describe('ReservationService', () => {
 
     service.checkAvailability(roomId, dateStr).subscribe();
 
-    const req = httpMock.expectOne(`${BASE_URL}/check-availability?roomId=1&date=2026-01-31`);
+    const req = httpMock.expectOne(
+      `${BASE_URL}/check-availability?roomId=1&date=2026-01-31`,
+    );
     expect(req.request.method).toBe('GET');
     req.flush([]);
   });
@@ -116,11 +130,13 @@ describe('ReservationService', () => {
   });
 
   it('checkAvailability should format URL parameters correctly', () => {
-      service.checkAvailability(5, '2026-12-25').subscribe();
+    service.checkAvailability(5, '2026-12-25').subscribe();
 
-      // Ajustado para que coincida con el formato del servicio
-      const req = httpMock.expectOne(`${BASE_URL}/check-availability?roomId=5&date=2026-12-25`);
-      expect(req.request.method).toBe('GET');
-      req.flush([]);
+    // Ajustado para que coincida con el formato del servicio
+    const req = httpMock.expectOne(
+      `${BASE_URL}/check-availability?roomId=5&date=2026-12-25`,
+    );
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
   });
 });

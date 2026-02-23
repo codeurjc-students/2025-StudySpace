@@ -9,18 +9,19 @@ public class Reservation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; //Primary key
+    private Long id; // Primary key
     private Date startDate;
     private Date endDate;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties("reservations") //to avoid infinite recursion during serialization
-    private User user; //one user can have many bookings
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties("reservations") // to avoid infinite recursion during
+                                                                           // serialization
+    private User user; // one user can have many bookings
 
     @ManyToOne
     @JoinColumn(name = "room_id")
-    private Room room;  //one room can have many bookings
+    private Room room; // one room can have many bookings
 
     private String reason;
 
@@ -32,9 +33,9 @@ public class Reservation {
     @Column(name = "reminder_sent")
     private boolean reminderSent = false;
 
-    //for email of confirmation of reservation
+    // for email of confirmation of reservation
     @Column(nullable = false)
-    private boolean verified = false; 
+    private boolean verified = false;
     @Column(name = "verification_token")
     private String verificationToken;
     @Column(name = "token_expiration_date")
@@ -50,7 +51,7 @@ public class Reservation {
         this.user = user;
         this.room = room;
         this.reason = reason;
-        this.cancelled=cancelled;
+        this.cancelled = cancelled;
     }
 
     public Long getId() {
@@ -106,7 +107,8 @@ public class Reservation {
     }
 
     public void setRoomId(Long roomId) {
-        if (this.room == null) this.room = new Room();
+        if (this.room == null)
+            this.room = new Room();
         this.room.setId(roomId);
     }
 
@@ -115,12 +117,18 @@ public class Reservation {
     }
 
     public void setUserId(Long userId) {
-        if (this.user == null) this.user = new User();
+        if (this.user == null)
+            this.user = new User();
         this.user.setId(userId);
     }
 
-    public boolean isCancelled() { return cancelled; }
-    public void setCancelled(boolean cancelled) { this.cancelled = cancelled; }
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
+    }
 
     public boolean isReminderSent() {
         return reminderSent;
@@ -138,11 +146,21 @@ public class Reservation {
         this.adminModificationReason = adminModificationReason;
     }
 
-    public boolean isVerified() { return verified; }
-    public void setVerified(boolean verified) { this.verified = verified; }
+    public boolean isVerified() {
+        return verified;
+    }
 
-    public String getVerificationToken() { return verificationToken; }
-    public void setVerificationToken(String verificationToken) { this.verificationToken = verificationToken; }
+    public void setVerified(boolean verified) {
+        this.verified = verified;
+    }
+
+    public String getVerificationToken() {
+        return verificationToken;
+    }
+
+    public void setVerificationToken(String verificationToken) {
+        this.verificationToken = verificationToken;
+    }
 
     public Date getTokenExpirationDate() {
         return tokenExpirationDate;

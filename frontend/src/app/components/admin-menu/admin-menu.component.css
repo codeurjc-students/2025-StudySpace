@@ -1,13 +1,13 @@
 .admin-container {
-    min-height: 70vh;
+  min-height: 70vh;
 }
 
 .admin-card {
-    width: 100%;
-    max-width: 400px;
-    background-color: #f3f4f6;
+  width: 100%;
+  max-width: 400px;
+  background-color: #f3f4f6;
 }
 
 .admin-btn {
-    transition: 0.3s;
+  transition: 0.3s;
 }

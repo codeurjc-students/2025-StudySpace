@@ -28,7 +28,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class SoftwareServiceTest {
-  @Mock
+    @Mock
     private SoftwareRepository softwareRepository;
 
     @Mock
@@ -41,7 +41,8 @@ public class SoftwareServiceTest {
     @DisplayName("Test Find All Paginated")
     public void testFindAll() {
         Pageable pageable = PageRequest.of(0, 10);
-        Software s1 = new Software(); s1.setName("Java");
+        Software s1 = new Software();
+        s1.setName("Java");
         Page<Software> page = new PageImpl<>(List.of(s1));
 
         when(softwareRepository.findAll(pageable)).thenReturn(page);
@@ -79,22 +80,22 @@ public class SoftwareServiceTest {
         verify(softwareRepository).save(s);
     }
 
-    // --- TEST DELETE  ---
+    // --- TEST DELETE ---
 
     @Test
     public void testDeleteSoftwareRemovesAssociations() {
-        
+
         Long softId = 1L;
         Software software = new Software();
         software.setId(softId);
-        
+
         Room room = new Room();
         room.setId(10L);
         room.setSoftware(new ArrayList<>(Arrays.asList(software)));
         software.setRooms(new ArrayList<>(Arrays.asList(room)));
 
         when(softwareRepository.findById(softId)).thenReturn(Optional.of(software));
-        
+
         softwareService.deleteById(softId);
 
         // Verify
@@ -109,7 +110,7 @@ public class SoftwareServiceTest {
         Long softId = 1L;
         Software software = new Software();
         software.setId(softId);
-        software.setRooms(null); 
+        software.setRooms(null);
 
         when(softwareRepository.findById(softId)).thenReturn(Optional.of(software));
 
@@ -142,7 +143,7 @@ public class SoftwareServiceTest {
 
         Software updatedData = new Software();
         updatedData.setName("New Name");
-        updatedData.setVersion(2.0f); 
+        updatedData.setVersion(2.0f);
         updatedData.setDescription("New Desc");
 
         when(softwareRepository.findById(id)).thenReturn(Optional.of(existing));
@@ -152,7 +153,7 @@ public class SoftwareServiceTest {
 
         assertTrue(result.isPresent());
         assertEquals("New Name", result.get().getName());
-        assertEquals(2.0f, result.get().getVersion()); 
+        assertEquals(2.0f, result.get().getVersion());
         assertEquals("New Desc", result.get().getDescription());
     }
 
@@ -164,7 +165,7 @@ public class SoftwareServiceTest {
         assertTrue(result.isEmpty());
     }
 
-    // --- TEST PATCH  ---
+    // --- TEST PATCH ---
 
     @Test
     @DisplayName("Test Patch: Updates only non-null fields")
@@ -172,13 +173,13 @@ public class SoftwareServiceTest {
         Long id = 1L;
         Software existing = new Software();
         existing.setName("Old Name");
-        existing.setVersion(1.0f);       
-        existing.setDescription("Old Desc"); 
+        existing.setVersion(1.0f);
+        existing.setDescription("Old Desc");
 
         Software patch = new Software();
-        patch.setName("New Name"); 
-        patch.setVersion(null); 
-        patch.setDescription(null); 
+        patch.setName("New Name");
+        patch.setVersion(null);
+        patch.setDescription(null);
 
         when(softwareRepository.findById(id)).thenReturn(Optional.of(existing));
         when(softwareRepository.save(any(Software.class))).thenAnswer(i -> i.getArguments()[0]);
@@ -187,10 +188,10 @@ public class SoftwareServiceTest {
 
         assertTrue(result.isPresent());
         assertEquals("New Name", result.get().getName());
-        assertEquals(1.0f, result.get().getVersion()); 
+        assertEquals(1.0f, result.get().getVersion());
         assertEquals("Old Desc", result.get().getDescription());
     }
-    
+
     @Test
     @DisplayName("Test Patch: Not Found")
     public void testPatchSoftware_NotFound() {
@@ -235,7 +236,7 @@ public class SoftwareServiceTest {
         updateRequest.setVersion(3.9f);
 
         Software otherSoft = new Software();
-        otherSoft.setId(2L); 
+        otherSoft.setId(2L);
         otherSoft.setName("Python");
         otherSoft.setVersion(3.9f);
 
@@ -247,7 +248,7 @@ public class SoftwareServiceTest {
         assertThrows(ResponseStatusException.class, () -> {
             softwareService.updateSoftware(myId, updateRequest);
         });
-        
+
         verify(softwareRepository, never()).save(any(Software.class));
     }
 
@@ -263,8 +264,8 @@ public class SoftwareServiceTest {
 
         when(softwareRepository.findById(myId)).thenReturn(Optional.of(mySoft));
         when(softwareRepository.findByNameAndVersion("Java", 17.0f))
-                .thenReturn(Optional.of(mySoft)); 
-        
+                .thenReturn(Optional.of(mySoft));
+
         when(softwareRepository.save(any(Software.class))).thenAnswer(i -> i.getArguments()[0]);
 
         // WHEN
@@ -279,6 +280,5 @@ public class SoftwareServiceTest {
         assertTrue(result.isPresent());
         assertEquals("New Description", result.get().getDescription());
     }
-
 
 }

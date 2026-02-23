@@ -22,7 +22,7 @@ public class PasswordResetService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @Value("${app.frontend.url:https://localhost:4200}") 
+    @Value("${app.frontend.url:https://localhost:4200}")
     private String frontendUrl;
 
     public void processForgotPassword(String email) {
@@ -30,13 +30,13 @@ public class PasswordResetService {
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
 
         String token = UUID.randomUUID().toString();
-        
+
         user.setResetPasswordToken(token);
         user.setResetPasswordTokenExpiry(LocalDateTime.now().plusMinutes(15));
         userRepository.save(user);
 
         String resetLink = frontendUrl + "/reset-password?token=" + token;
-        
+
         emailService.sendResetPasswordEmail(user.getEmail(), resetLink);
     }
 
@@ -49,10 +49,10 @@ public class PasswordResetService {
         }
 
         user.setEncodedPassword(passwordEncoder.encode(newPassword));
-        
+
         user.setResetPasswordToken(null);
         user.setResetPasswordTokenExpiry(null);
-        
+
         userRepository.save(user);
     }
 }

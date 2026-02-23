@@ -1,52 +1,67 @@
-<div *ngIf="!loginService.isLogged()" class="d-flex align-items-center p-5 justify-content-center auth-container">
-    <div class="card p-4 shadow auth-card">
-        <h3 class="mb-4 text-center">Please Log In</h3>
-        
-        <form (ngSubmit)="logIn()">
-            <div class="mb-3">
-                <label for="username" class="form-label">Email</label>
-                <input type="email" 
-                       class="form-control" 
-                       id="username" 
-                       name="username" 
-                       [(ngModel)]="loginData.user"
-                       placeholder="Email Address">
-            </div>
-            
-            <div class="mb-3">
-                <label class="form-label">Password</label>
-                <app-password-input 
-                    [(ngModel)]="loginData.password" 
-                    name="password" 
-                    placeholder="Enter password">
-                </app-password-input>
-                <div class="text-end mt-1">
-                    <a routerLink="/forgot-password" class="text-decoration-none small">Forgot password?</a>
-                </div>
-            </div>
+<div
+  *ngIf="!loginService.isLogged()"
+  class="d-flex align-items-center p-5 justify-content-center auth-container"
+>
+  <div class="card p-4 shadow auth-card">
+    <h3 class="mb-4 text-center">Please Log In</h3>
 
-            <div class="d-grid gap-2 mt-4">
-                <button type="submit" class="btn btn-primary btn-lg">
-                    Log In
-                </button>
-                
-                <button type="button" class="btn btn-outline-secondary" [routerLink]="['/']">
-                    Back
-                </button>
-            </div>
-        </form>
-    </div>
+    <form (ngSubmit)="logIn()">
+      <div class="mb-3">
+        <label for="username" class="form-label">Email</label>
+        <input
+          type="email"
+          class="form-control"
+          id="username"
+          name="username"
+          [(ngModel)]="loginData.user"
+          placeholder="Email Address"
+        />
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Password</label>
+        <app-password-input
+          [(ngModel)]="loginData.password"
+          name="password"
+          placeholder="Enter password"
+        >
+        </app-password-input>
+        <div class="text-end mt-1">
+          <a routerLink="/forgot-password" class="text-decoration-none small"
+            >Forgot password?</a
+          >
+        </div>
+      </div>
+
+      <div class="d-grid gap-2 mt-4">
+        <button type="submit" class="btn btn-primary btn-lg">Log In</button>
+
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          [routerLink]="['/']"
+        >
+          Back
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <ng-template #loginErrorModal let-modal>
-    <div class="modal-header bg-danger text-white">
-        <h4 class="modal-title">Login Error</h4>
-        <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
-    </div>
-    <div class="modal-body">
-        <p>Incorrect username or password. Please try again.</p>
-    </div>
-    <div class="modal-footer">
-        <button class="btn btn-secondary" (click)="modal.dismiss()">Close</button>
-    </div>
+  <div class="modal-header bg-danger text-white">
+    <h4 class="modal-title">Login Error</h4>
+    <button
+      type="button"
+      class="btn-close"
+      aria-label="Close"
+      (click)="modal.dismiss()"
+    ></button>
+  </div>
+  <div class="modal-body">
+    <p>Incorrect username or password. Please try again.</p>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" (click)="modal.dismiss()">Close</button>
+  </div>
 </ng-template>

@@ -46,13 +46,13 @@ public class StatsServiceTest {
     public void testGetStatsWithData() {
         // GIVEN
         LocalDate today = LocalDate.now();
-        
+
         // Mockl
         when(roomRepo.countTotalRooms()).thenReturn(10L);
         when(resRepo.countOccupiedRoomsByDate(today)).thenReturn(5L);
         when(resRepo.countOccupiedWithSoftwareByDate(today)).thenReturn(4L);
         Reservation res = new Reservation();
-        res.setStartDate(toDate(today.atTime(10, 0))); 
+        res.setStartDate(toDate(today.atTime(10, 0)));
         res.setEndDate(toDate(today.atTime(11, 0)));
 
         when(resRepo.findAllActiveByDate(today)).thenReturn(List.of(res));
@@ -60,30 +60,28 @@ public class StatsServiceTest {
         // WHEN
         DashboardStatsDTO result = statsService.getStats(today);
 
-
-
         assertEquals(10, result.getTotalRooms());
-        assertEquals(50.0, result.getOccupiedPercentage()); 
+        assertEquals(50.0, result.getOccupiedPercentage());
         assertEquals(50.0, result.getFreePercentage());
         assertEquals(80.0, result.getRoomsWithSoftwarePercentage());
         assertNotNull(result.getHourlyOccupancy());
         assertEquals(1L, result.getHourlyOccupancy().get("10:00"));
         assertEquals(1L, result.getHourlyOccupancy().get("10:30"));
-        assertEquals(0L, result.getHourlyOccupancy().get("09:30")); 
-        assertEquals(0L, result.getHourlyOccupancy().get("11:00")); 
+        assertEquals(0L, result.getHourlyOccupancy().get("09:30"));
+        assertEquals(0L, result.getHourlyOccupancy().get("11:00"));
         verify(resRepo).findAllActiveByDate(eq(today));
     }
 
     @Test
     public void testGetStatsNoRooms() {
         LocalDate today = LocalDate.now();
-        
+
         when(roomRepo.countTotalRooms()).thenReturn(0L);
         when(resRepo.countOccupiedRoomsByDate(today)).thenReturn(0L);
         when(resRepo.findAllActiveByDate(today)).thenReturn(Collections.emptyList());
 
         DashboardStatsDTO result = statsService.getStats(today);
-        
+
         // Verify
         assertEquals(0, result.getTotalRooms());
         assertEquals(0.0, result.getOccupiedPercentage());
@@ -92,13 +90,13 @@ public class StatsServiceTest {
     @Test
     public void testGetStatsNoReservations() {
         LocalDate today = LocalDate.now();
-        
+
         when(roomRepo.countTotalRooms()).thenReturn(10L);
         when(resRepo.countOccupiedRoomsByDate(today)).thenReturn(0L);
         when(resRepo.findAllActiveByDate(today)).thenReturn(Collections.emptyList());
 
         DashboardStatsDTO result = statsService.getStats(today);
-        
+
         // Verify
         assertEquals(0.0, result.getOccupiedPercentage());
         assertEquals(100.0, result.getFreePercentage());

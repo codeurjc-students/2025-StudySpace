@@ -30,18 +30,17 @@ import java.text.SimpleDateFormat;
 @Service
 public class RoomService {
 
-    
     private final RoomRepository roomRepository;
     private final SoftwareRepository softwareRepository;
     private final ReservationRepository reservationRepository;
     private final EmailService emailService;
     private final FileStorageService fileStorageService;
-    
+
     public RoomService(RoomRepository roomRepository,
-                       SoftwareRepository softwareRepository,
-                        ReservationRepository reservationRepository,
-                    EmailService emailService,
-                FileStorageService fileStorageService) {
+            SoftwareRepository softwareRepository,
+            ReservationRepository reservationRepository,
+            EmailService emailService,
+            FileStorageService fileStorageService) {
         this.roomRepository = roomRepository;
         this.softwareRepository = softwareRepository;
         this.reservationRepository = reservationRepository;
@@ -55,14 +54,15 @@ public class RoomService {
 
     public Room save(Room room) {
         // resolve or create softwares
-        
+
         if (roomRepository.existsByName(room.getName())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "The room name already exists.");
         }
         List<Software> linked = new ArrayList<>();
         if (room.getSoftware() != null) {
             for (Software s : room.getSoftware()) {
-                if (s == null) continue;
+                if (s == null)
+                    continue;
                 if (s.getId() != null) {
                     softwareRepository.findById(s.getId()).ifPresent(linked::add);
                 } else {
@@ -94,27 +94,25 @@ public class RoomService {
         return existing;
     }
 
-    
     public Optional<Room> updateRoom(Long id, Room updatedRoom) {
         return roomRepository.findById(id).map(existingRoom -> {
-            if (!existingRoom.getName().equals(updatedRoom.getName()) && 
-                roomRepository.existsByName(updatedRoom.getName())) {
+            if (!existingRoom.getName().equals(updatedRoom.getName()) &&
+                    roomRepository.existsByName(updatedRoom.getName())) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "The room name already exists.");
             }
-            //if is disable future reservations are cancelled
-            //true if was active and now is disabled
+            // if is disable future reservations are cancelled
+            // true if was active and now is disabled
             if (existingRoom.isActive() && !updatedRoom.isActive()) {
                 List<Reservation> affectedReservations = reservationRepository
-                    .findActiveReservationsByRoomIdAndEndDateAfter(id, new Date());
-                
+                        .findActiveReservationsByRoomIdAndEndDateAfter(id, new Date());
+
                 String reason = "The room has been temporarily disabled, you would need to book it again when it will be enabled again.\n Sorry for the inconvenience.";
 
-                
-                for (Reservation res : affectedReservations) { 
+                for (Reservation res : affectedReservations) {
                     res.setAdminModificationReason(reason);
                     res.setCancelled(true);
-                    //send email
-                    
+                    // send email
+
                     notifyUserCancellation(res, reason);
 
                     reservationRepository.save(res);
@@ -122,21 +120,15 @@ public class RoomService {
 
             }
 
-            
-            
-
             updateRoomBasicInfo(existingRoom, updatedRoom);
             updateRoomSoftware(existingRoom, updatedRoom.getSoftware());
             updateImageData(existingRoom, updatedRoom);
-            
-            
-
 
             return roomRepository.save(existingRoom);
         });
     }
 
-    //auxiliar methods 
+    // auxiliar methods
     private void updateRoomBasicInfo(Room existing, Room updated) {
         existing.setName(updated.getName());
         existing.setCapacity(updated.getCapacity());
@@ -144,7 +136,8 @@ public class RoomService {
         existing.setPlace(updated.getPlace());
         existing.setCoordenades(updated.getCoordenades());
         existing.setActive(updated.isActive());
-        if (existing.getImageName() != null) existing.setImageName(existing.getImageName());
+        if (existing.getImageName() != null)
+            existing.setImageName(existing.getImageName());
     }
 
     private void updateImageData(Room existing, Room data) {
@@ -155,7 +148,7 @@ public class RoomService {
 
     private void updateRoomSoftware(Room existing, List<Software> newSoftwareList) {
         List<Software> newList = newSoftwareList != null ? newSoftwareList : new ArrayList<>();
-        
+
         removeOldSoftware(existing, newList);
         addNewSoftware(existing, newList);
     }
@@ -164,7 +157,7 @@ public class RoomService {
         List<Software> toRemove = new ArrayList<>();
         for (Software s : existing.getSoftware()) {
             boolean stillExists = newList.stream()
-                .anyMatch(n -> n.getId() != null && n.getId().equals(s.getId()));
+                    .anyMatch(n -> n.getId() != null && n.getId().equals(s.getId()));
             if (!stillExists) {
                 toRemove.add(s);
             }
@@ -177,8 +170,9 @@ public class RoomService {
 
     private void addNewSoftware(Room existing, List<Software> newList) {
         for (Software s : newList) {
-            if (s == null) continue;
-            
+            if (s == null)
+                continue;
+
             if (s.getId() != null) {
                 softwareRepository.findById(s.getId()).ifPresent(found -> {
                     if (!existing.getSoftware().contains(found)) {
@@ -192,13 +186,11 @@ public class RoomService {
         }
     }
 
-
-    
     public Optional<Room> patchRoom(Long id, Room partialRoom) {
         return roomRepository.findById(id).map(existingRoom -> {
             patchRoomBasicInfo(existingRoom, partialRoom);
             patchRoomSoftware(existingRoom, partialRoom.getSoftware());
-            
+
             return roomRepository.save(existingRoom);
         });
     }
@@ -210,29 +202,30 @@ public class RoomService {
         if (partial.getCapacity() != null) {
             existing.setCapacity(partial.getCapacity());
         }
-        if (partial.getCamp() != null) existing.setCamp(partial.getCamp());
-        if (partial.getPlace() != null) existing.setPlace(partial.getPlace());
-        if (partial.getCoordenades() != null) existing.setCoordenades(partial.getCoordenades());
+        if (partial.getCamp() != null)
+            existing.setCamp(partial.getCamp());
+        if (partial.getPlace() != null)
+            existing.setPlace(partial.getPlace());
+        if (partial.getCoordenades() != null)
+            existing.setCoordenades(partial.getCoordenades());
     }
 
     private void patchRoomSoftware(Room existing, List<Software> newList) {
-        //if we dont update the list is null
+        // if we dont update the list is null
         if (newList != null) {
             removeOldSoftware(existing, newList);
             addNewSoftware(existing, newList);
         }
     }
 
-
-
-
     public Map<String, Object> getRoomDailyStats(Long roomId, LocalDate date) {
-        List<Reservation> reservations = reservationRepository.findByRoomIdAndDate(roomId, date,Pageable.unpaged()).getContent();//check itttttttttttt
-        
+        List<Reservation> reservations = reservationRepository.findByRoomIdAndDate(roomId, date, Pageable.unpaged())
+                .getContent();// check itttttttttttt
+
         // Map shorted by hours (8:00 to 21:00) -> true/false (occupied/free)
         Map<Integer, Boolean> hourlyStatus = new TreeMap<>();
         int startHour = 8;
-        int endHour = 21; 
+        int endHour = 21;
         // False=free
         for (int i = startHour; i <= endHour; i++) {
             hourlyStatus.put(i, false);
@@ -243,8 +236,8 @@ public class RoomService {
         for (Reservation r : reservations) {
             int hStart = r.getStartDate().toInstant().atZone(zone).getHour();
             int hEnd = r.getEndDate().toInstant().atZone(zone).getHour();
-            
-            //fill the hours of the reservations
+
+            // fill the hours of the reservations
             for (int h = hStart; h < hEnd; h++) {
                 if (h >= startHour && h <= endHour) {
                     hourlyStatus.put(h, true);
@@ -252,10 +245,10 @@ public class RoomService {
             }
         }
 
-        //% porcentages
+        // % porcentages
         long occupiedCount = hourlyStatus.values().stream().filter(v -> v).count();
         long totalHours = hourlyStatus.size();
-        
+
         double occupiedPct = ((double) occupiedCount / totalHours) * 100;
         double freePct = 100 - occupiedPct;
 
@@ -263,13 +256,9 @@ public class RoomService {
         result.put("hourlyStatus", hourlyStatus);
         result.put("occupiedPercentage", Math.round(occupiedPct * 100.0) / 100.0);
         result.put("freePercentage", Math.round(freePct * 100.0) / 100.0);
-        
+
         return result;
     }
-
-
-
-
 
     public void deleteRoom(Long id, String reason) {
         Optional<Room> roomOp = roomRepository.findById(id);
@@ -278,21 +267,22 @@ public class RoomService {
             Room room = roomOp.get();
 
             List<Reservation> affectedReservations = reservationRepository
-                .findActiveReservationsByRoomIdAndEndDateAfter(id, new Date());
+                    .findActiveReservationsByRoomIdAndEndDateAfter(id, new Date());
 
             for (Reservation res : affectedReservations) {
                 notifyUserCancellation(res, reason);
             }
             reservationRepository.deleteByRoomIdAndEndDateAfter(id, new Date());
-            
-            //if image, delte first image
+
+            // if image, delte first image
             if (room.getImageName() != null && !room.getImageName().isEmpty()) {
                 fileStorageService.delete(room.getImageName());
             }
             roomRepository.deleteById(id);
         }
     }
-    //auxiliar method to send cancelation emails to users with the reason you want
+
+    // auxiliar method to send cancelation emails to users with the reason you want
     private void notifyUserCancellation(Reservation res, String reason) {
         if (res.getUser() != null) {
             try {
@@ -302,88 +292,77 @@ public class RoomService {
                 String dateStr = dateFormat.format(res.getStartDate());
                 String startStr = timeFormat.format(res.getStartDate());
                 String endStr = timeFormat.format(res.getEndDate());
-                
+
                 String roomName = (res.getRoom() != null) ? res.getRoom().getName() : "Unknown room";
 
                 emailService.sendReservationCancellationEmail(
-                    res.getUser().getEmail(),
-                    res.getUser().getName(),
-                    roomName,
-                    dateStr,
-                    startStr,
-                    endStr, 
-                    reason
-                );
+                        res.getUser().getEmail(),
+                        res.getUser().getName(),
+                        roomName,
+                        dateStr,
+                        startStr,
+                        endStr,
+                        reason);
             } catch (Exception e) {
                 System.err.println("Error sending email to user " + res.getUser().getEmail());
             }
         }
     }
 
-
-
-
-
-
-
-
-
-
     public RoomCalendarDTO getRoomCalendarData(Long roomId, LocalDate startStr, LocalDate endStr) {
         Date startDate = java.sql.Date.valueOf(startStr);
         Date endDate = java.sql.Date.valueOf(endStr);
 
         // obtain reservations
-        List<Reservation> reservations = reservationRepository.findActiveReservationsByRoomIdAndDateRange(roomId, startDate, endDate);
+        List<Reservation> reservations = reservationRepository.findActiveReservationsByRoomIdAndDateRange(roomId,
+                startDate, endDate);
 
-        //transform to visual events
+        // transform to visual events
         List<com.urjcservice.backend.dtos.RoomCalendarDTO.CalendarEvent> events = new ArrayList<>();
         SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
         for (Reservation r : reservations) {
             events.add(new com.urjcservice.backend.dtos.RoomCalendarDTO.CalendarEvent(
-                r.getId(),
-                "Occupied", 
-                isoFormat.format(r.getStartDate()),
-                isoFormat.format(r.getEndDate())
-            ));
+                    r.getId(),
+                    "Occupied",
+                    isoFormat.format(r.getStartDate()),
+                    isoFormat.format(r.getEndDate())));
         }
 
         // HEATMAP of days(Red, Yellow, Green)
         List<com.urjcservice.backend.dtos.RoomCalendarDTO.DailyOccupancy> occupancyList = new ArrayList<>();
         ZoneId zone = ZoneId.of("Europe/Madrid");
-        
+
         // day by day
         LocalDate current = startStr;
         while (current.isBefore(endStr) || current.equals(endStr)) {
-            
-            //not weekends
+
+            // not weekends
             DayOfWeek dow = current.getDayOfWeek();
             if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) {
                 current = current.plusDays(1);
-                continue; 
+                continue;
             }
 
             final LocalDate thisDay = current;
-            
-            //all min of that day
+
+            // all min of that day
             long minutesOccupied = reservations.stream()
-                .filter(r -> {
-                    LocalDate rDate = r.getStartDate().toInstant().atZone(zone).toLocalDate();
-                    return rDate.equals(thisDay);
-                })
-                .mapToLong(r -> {
-                    long duration = java.time.Duration.between(
-                        r.getStartDate().toInstant(), 
-                        r.getEndDate().toInstant()
-                    ).toMinutes();
-                    return duration;
-                })
-                .sum();
+                    .filter(r -> {
+                        LocalDate rDate = r.getStartDate().toInstant().atZone(zone).toLocalDate();
+                        return rDate.equals(thisDay);
+                    })
+                    .mapToLong(r -> {
+                        long duration = java.time.Duration.between(
+                                r.getStartDate().toInstant(),
+                                r.getEndDate().toInstant()).toMinutes();
+                        return duration;
+                    })
+                    .sum();
 
             double hoursOccupied = minutesOccupied / 60.0;
             double totalOperativeHours = 13.0; // 08:00 to 21:00
-            double hoursFree = totalOperativeHours - hoursOccupied; 
+            double hoursFree = totalOperativeHours - hoursOccupied;
 
             String color;
             String status;
@@ -391,31 +370,29 @@ public class RoomService {
             // --- TRAFFIC LIGHT RULES (HEATMAP)---
             // RED: Less than 2 hours free (or occupied > 11 hours)
             if (hoursFree <= 2.0) {
-                color = "#dc3545"; 
+                color = "#dc3545";
                 status = "High";
-            } 
+            }
             // YELLOW: Occupied for more than 6 hours (but less than 11)
             else if (hoursOccupied >= 6.0) {
-                color = "#ffc107"; 
+                color = "#ffc107";
                 status = "Medium";
-            } 
+            }
             // GREEN: Busy less than 6 hours
             else {
-                color = "#198754"; 
+                color = "#198754";
                 status = "Low";
             }
 
             occupancyList.add(new RoomCalendarDTO.DailyOccupancy(
-                thisDay.toString(),
-                color,
-                status
-            ));
+                    thisDay.toString(),
+                    color,
+                    status));
 
             current = current.plusDays(1);
         }
 
         return new RoomCalendarDTO(events, occupancyList);
     }
-
 
 }

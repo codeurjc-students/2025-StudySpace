@@ -15,21 +15,19 @@ describe('ManageSoftwaresComponent', () => {
     content: [{ id: 1, name: 'Java', version: '17', description: 'JDK' }],
     totalPages: 2,
     number: 0,
-    size: 10
+    size: 10,
   };
 
   beforeEach(async () => {
-    softwareServiceSpy = jasmine.createSpyObj('SoftwareService', ['getAllSoftwares', 'deleteSoftware']);
+    softwareServiceSpy = jasmine.createSpyObj('SoftwareService', [
+      'getAllSoftwares',
+      'deleteSoftware',
+    ]);
 
     await TestBed.configureTestingModule({
-      declarations: [ManageSoftwaresComponent, PaginationComponent ],
-      imports: [
-        HttpClientTestingModule,
-        RouterTestingModule
-      ],
-      providers: [
-        { provide: SoftwareService, useValue: softwareServiceSpy }
-      ]
+      declarations: [ManageSoftwaresComponent, PaginationComponent],
+      imports: [HttpClientTestingModule, RouterTestingModule],
+      providers: [{ provide: SoftwareService, useValue: softwareServiceSpy }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ManageSoftwaresComponent);
@@ -48,7 +46,9 @@ describe('ManageSoftwaresComponent', () => {
 
   it('should handle load error', () => {
     spyOn(console, 'error');
-    softwareServiceSpy.getAllSoftwares.and.returnValue(throwError(() => 'Error'));
+    softwareServiceSpy.getAllSoftwares.and.returnValue(
+      throwError(() => 'Error'),
+    );
     component.loadSoftwares(1);
     expect(console.error).toHaveBeenCalled();
   });
@@ -61,7 +61,9 @@ describe('ManageSoftwaresComponent', () => {
     component.deleteSoftware(10);
 
     expect(softwareServiceSpy.deleteSoftware).toHaveBeenCalledWith(10);
-    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/deleted/i));
+    expect(window.alert).toHaveBeenCalledWith(
+      jasmine.stringMatching(/deleted/i),
+    );
   });
 
   it('should NOT delete if user cancels', () => {
@@ -79,7 +81,7 @@ describe('ManageSoftwaresComponent', () => {
 
     expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/Error/i));
   });
-  
+
   it('pagination logic', () => {
     component.pageData = { totalPages: 2 } as any;
     expect(component.getVisiblePages()).toEqual([0, 1]);

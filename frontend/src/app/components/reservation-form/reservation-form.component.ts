@@ -8,20 +8,19 @@ import { ReservationLogic } from '../../utils/reservation-logic.util';
 @Component({
   selector: 'app-reservation-form',
   templateUrl: './reservation-form.component.html',
-  styleUrls: ['./reservation-form.component.css']
+  styleUrls: ['./reservation-form.component.css'],
 })
 export class ReservationFormComponent implements OnInit {
-
   rooms: RoomDTO[] = [];
   roomId: number | null = null;
   reason: string = '';
 
-  selectedDate: string = ''; 
-  minDate: string = ''; 
-  
+  selectedDate: string = '';
+  minDate: string = '';
+
   startTimes: string[] = [];
   endTimes: string[] = [];
-  
+
   selectedStartTime: string = '';
   selectedEndTime: string = '';
 
@@ -30,7 +29,7 @@ export class ReservationFormComponent implements OnInit {
   constructor(
     private router: Router,
     private reservationService: ReservationService,
-    private roomsService: RoomsService
+    private roomsService: RoomsService,
   ) {}
 
   ngOnInit(): void {
@@ -45,7 +44,7 @@ export class ReservationFormComponent implements OnInit {
           this.roomId = this.rooms[0].id;
         }
       },
-      error: (err) => console.error('Error loading rooms', err)
+      error: (err) => console.error('Error loading rooms', err),
     });
   }
 
@@ -56,24 +55,27 @@ export class ReservationFormComponent implements OnInit {
     this.endTimes = [];
 
     if (this.roomId && this.selectedDate) {
-      this.reservationService.checkAvailability(this.roomId, this.selectedDate).subscribe({
-        next: (data) => {
-          this.occupiedSlots = data;
-          this.calculateStartTimes();
-        },
-        error: (e) => console.error("Error checking availability", e)
-      });
+      this.reservationService
+        .checkAvailability(this.roomId, this.selectedDate)
+        .subscribe({
+          next: (data) => {
+            this.occupiedSlots = data;
+            this.calculateStartTimes();
+          },
+          error: (e) => console.error('Error checking availability', e),
+        });
     }
   }
 
-  
   calculateStartTimes() {
-    const rawStartTimes = ReservationLogic.generateStartTimes(this.occupiedSlots);
+    const rawStartTimes = ReservationLogic.generateStartTimes(
+      this.occupiedSlots,
+    );
     const now = new Date(); //actual hour
-    
-    this.startTimes = rawStartTimes.filter(time => {
+
+    this.startTimes = rawStartTimes.filter((time) => {
       const slotDateTime = new Date(`${this.selectedDate}T${time}:00`);
-      
+
       return slotDateTime > now;
     });
   }
@@ -81,28 +83,37 @@ export class ReservationFormComponent implements OnInit {
   //calculate end date by the selected start date
   onStartTimeChange() {
     this.selectedEndTime = '';
-    this.endTimes = ReservationLogic.generateEndTimes(this.selectedStartTime, this.occupiedSlots);
+    this.endTimes = ReservationLogic.generateEndTimes(
+      this.selectedStartTime,
+      this.occupiedSlots,
+    );
   }
 
   onSubmit() {
-    if (this.roomId && this.selectedDate && this.selectedStartTime && this.selectedEndTime) {
+    if (
+      this.roomId &&
+      this.selectedDate &&
+      this.selectedStartTime &&
+      this.selectedEndTime
+    ) {
       //ISO: YYYY-MM-DDTHH:mm:00
-      const start = new Date(`${this.selectedDate}T${this.selectedStartTime}:00`);
+      const start = new Date(
+        `${this.selectedDate}T${this.selectedStartTime}:00`,
+      );
       const end = new Date(`${this.selectedDate}T${this.selectedEndTime}:00`);
 
-      this.reservationService.createReservation(this.roomId, start, end, this.reason).subscribe({
-        next: () => {
-          alert('Reservation successfully created!');
-          this.router.navigate(['/']);
-        },
-        error: (err) => {
-          console.error(err);
-          alert(err.error || 'Error creating reservation'); 
-        }
-      });
+      this.reservationService
+        .createReservation(this.roomId, start, end, this.reason)
+        .subscribe({
+          next: () => {
+            alert('Reservation successfully created!');
+            this.router.navigate(['/']);
+          },
+          error: (err) => {
+            console.error(err);
+            alert(err.error || 'Error creating reservation');
+          },
+        });
     }
   }
-
-
-
 }

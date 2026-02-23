@@ -40,7 +40,7 @@ public class PasswordResetServiceTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(passwordResetService, "frontendUrl", "https://localhost:4200");
-        
+
         mockUser = new User();
         mockUser.setId(1L);
         mockUser.setEmail("test@example.com");
@@ -73,7 +73,7 @@ public class PasswordResetServiceTest {
         Exception exception = assertThrows(RuntimeException.class, () -> {
             passwordResetService.processForgotPassword("nonexistent@example.com");
         });
-        
+
         assertTrue(exception.getMessage().contains("User not found"));
         verify(emailService, never()).sendResetPasswordEmail(anyString(), anyString());
     }
@@ -84,10 +84,10 @@ public class PasswordResetServiceTest {
         // Arrange
         String token = "valid-token";
         String newPassword = "NewStrongPassword1!";
-        
+
         mockUser.setResetPasswordToken(token);
-        mockUser.setResetPasswordTokenExpiry(LocalDateTime.now().plusMinutes(10)); 
-        
+        mockUser.setResetPasswordTokenExpiry(LocalDateTime.now().plusMinutes(10));
+
         when(userRepository.findByResetPasswordToken(token)).thenReturn(Optional.of(mockUser));
         when(passwordEncoder.encode(newPassword)).thenReturn("encodedPassword");
 
@@ -95,7 +95,7 @@ public class PasswordResetServiceTest {
         passwordResetService.processResetPassword(token, newPassword);
 
         // Assert
-        assertNull(mockUser.getResetPasswordToken()); 
+        assertNull(mockUser.getResetPasswordToken());
         assertNull(mockUser.getResetPasswordTokenExpiry());
         assertEquals("encodedPassword", mockUser.getEncodedPassword());
         verify(userRepository).save(mockUser);

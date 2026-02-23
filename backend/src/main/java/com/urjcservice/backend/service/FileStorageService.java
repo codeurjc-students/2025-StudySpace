@@ -48,7 +48,7 @@ public class FileStorageService {
             try (InputStream inputStream = file.getInputStream()) {
                 Files.copy(inputStream, destinationFile, StandardCopyOption.REPLACE_EXISTING);
             }
-            return filename; 
+            return filename;
         } catch (IOException e) {
             throw new RuntimeException("Failed to save file.", e);
         }
@@ -67,7 +67,7 @@ public class FileStorageService {
             throw new RuntimeException("The file cannot be read: " + filename, e);
         }
     }
-    
+
     public void delete(String filename) {
         try {
             Path file = rootLocation.resolve(filename);

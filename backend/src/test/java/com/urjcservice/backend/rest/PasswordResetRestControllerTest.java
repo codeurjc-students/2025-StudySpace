@@ -50,12 +50,12 @@ public class PasswordResetRestControllerTest {
     @Test
     @DisplayName("POST /forgot-password - Invalid Email Format")
     public void testForgotPassword_InvalidEmail() throws Exception {
-        String jsonRequest = "{\"email\": \"\"}";//empty json
+        String jsonRequest = "{\"email\": \"\"}";// empty json
 
         mockMvc.perform(post("/api/auth/forgot-password")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequest))
-                .andExpect(status().isBadRequest()); 
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -80,11 +80,11 @@ public class PasswordResetRestControllerTest {
     @DisplayName("POST /reset-password - Success")
     public void testResetPassword_Success() throws Exception {
         String jsonRequest = """
-            {
-                "token": "valid-token-123",
-                "newPassword": "StrongPassword1!"
-            }
-        """;
+                    {
+                        "token": "valid-token-123",
+                        "newPassword": "StrongPassword1!"
+                    }
+                """;
 
         doNothing().when(passwordResetService).processResetPassword(anyString(), anyString());
 
@@ -99,11 +99,11 @@ public class PasswordResetRestControllerTest {
     @DisplayName("POST /reset-password - Weak Password Validation")
     public void testResetPassword_WeakPassword() throws Exception {
         String jsonRequest = """
-            {
-                "token": "valid-token",
-                "newPassword": "weak"
-            }
-        """;
+                    {
+                        "token": "valid-token",
+                        "newPassword": "weak"
+                    }
+                """;
 
         mockMvc.perform(post("/api/auth/reset-password")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -115,11 +115,11 @@ public class PasswordResetRestControllerTest {
     @DisplayName("POST /reset-password - Expired/Invalid Token")
     public void testResetPassword_InvalidToken() throws Exception {
         String jsonRequest = """
-            {
-                "token": "invalid-token",
-                "newPassword": "StrongPassword1!"
-            }
-        """;
+                    {
+                        "token": "invalid-token",
+                        "newPassword": "StrongPassword1!"
+                    }
+                """;
 
         doThrow(new RuntimeException("Invalid token"))
                 .when(passwordResetService).processResetPassword(anyString(), anyString());

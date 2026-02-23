@@ -24,8 +24,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import jakarta.servlet.http.Cookie;
 
-
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.urjcservice.backend.service.ReservationService;
 import com.urjcservice.backend.service.UserService;
@@ -45,7 +43,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class UserRestControllerTest { 
+public class UserRestControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -67,7 +65,6 @@ public class UserRestControllerTest {
 
     private User mockUser;
 
-
     @BeforeEach
     void setUp() {
         mockUser = new User();
@@ -78,11 +75,8 @@ public class UserRestControllerTest {
         mockUser.setType(User.UserType.USER_REGISTERED);
     }
 
-
-
-
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void testListUsersAsAdmin() throws Exception {
         Page<User> page = new PageImpl<>(Collections.singletonList(mockUser));
         given(userService.findAll(any(Pageable.class))).willReturn(page);
@@ -127,12 +121,12 @@ public class UserRestControllerTest {
     @WithMockUser(roles = "ADMIN")
     public void testCreateUser_Success() throws Exception {
         String newUserJson = """
-            {
-                "name": "Test User",
-                "email": "test@example.com",
-                "password": "StrongPass1!" 
-            }
-        """;
+                    {
+                        "name": "Test User",
+                        "email": "test@example.com",
+                        "password": "StrongPass1!"
+                    }
+                """;
         given(userService.save(any(User.class))).willReturn(mockUser);
 
         mockMvc.perform(post("/api/users")
@@ -211,7 +205,7 @@ public class UserRestControllerTest {
     public void testChangeRole_Success() throws Exception {
         User adminUser = new User();
         adminUser.setType(User.UserType.ADMIN);
-        
+
         given(userService.changeRole(1L, "ADMIN")).willReturn(Optional.of(adminUser));
 
         mockMvc.perform(put("/api/users/1/role")
@@ -239,7 +233,7 @@ public class UserRestControllerTest {
     @WithMockUser(roles = "ADMIN")
     public void testGetUserReservations_AsAdmin() throws Exception {
         Page<Reservation> reservationsPage = new PageImpl<>(Collections.emptyList());
-        
+
         given(reservationService.getReservationsByUserId(eq(2L), any(Pageable.class)))
                 .willReturn(reservationsPage);
 
@@ -251,29 +245,24 @@ public class UserRestControllerTest {
                 .andExpect(jsonPath("$.content").isArray());
     }
 
-
     @Test
     @DisplayName("Create User via Admin API should fail with weak password")
     @WithMockUser(roles = "ADMIN")
     void testCreateUser_WeakPassword_ShouldFail() throws Exception {
         String invalidJson = """
-            {
-                "name": "Admin Created",
-                "email": "valid@email.com",
-                "password": "weak" 
-            }
-        """;
+                    {
+                        "name": "Admin Created",
+                        "email": "valid@email.com",
+                        "password": "weak"
+                    }
+                """;
 
-        mockMvc.perform(post("/api/users") 
+        mockMvc.perform(post("/api/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(invalidJson))
-                .andExpect(status().isBadRequest()) //400
+                .andExpect(status().isBadRequest()) // 400
                 .andExpect(jsonPath("$.message.password").exists());
     }
-
-
-
-
 
     @Test
     @WithMockUser(roles = "USER")
@@ -281,7 +270,7 @@ public class UserRestControllerTest {
         // GIVEN
         MockMultipartFile file = new MockMultipartFile(
                 "file", "profile.png", "image/png", "content".getBytes());
-        
+
         String jwtToken = "token-falso-para-el-test";
         given(fileStorageService.store(any())).willReturn("uuid_profile.png");
 
@@ -291,7 +280,7 @@ public class UserRestControllerTest {
         mockMvc.perform(multipart("/api/users/1/image")
                 .file(file)
                 .with(csrf())
-                .cookie(new Cookie("accessToken", jwtToken)) 
+                .cookie(new Cookie("accessToken", jwtToken))
                 .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.imageName").value("uuid_profile.png"));
@@ -303,7 +292,7 @@ public class UserRestControllerTest {
         // GIVEN
         mockUser.setImageName("my-photo.jpg");
         given(userService.findById(1L)).willReturn(Optional.of(mockUser));
-        
+
         // Simulamos que el fichero existe y tiene contenido
         given(fileStorageService.loadAsResource("my-photo.jpg"))
                 .willReturn(new ByteArrayResource("fake-image-content".getBytes()));

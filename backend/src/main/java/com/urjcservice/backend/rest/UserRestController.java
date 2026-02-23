@@ -29,63 +29,76 @@ import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
-
 import static org.springframework.web.servlet.support.ServletUriComponentsBuilder.fromCurrentRequest;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserRestController {
 
-   
     private final UserService userService;
     private final ReservationService reservationService;
     private final PasswordEncoder passwordEncoder;
     private final FileStorageService fileStorageService;
-    
-    public UserRestController(UserService userService, ReservationService reservationService,PasswordEncoder passwordEncoder, FileStorageService fileStorageService) {
+
+    public UserRestController(UserService userService, ReservationService reservationService,
+            PasswordEncoder passwordEncoder, FileStorageService fileStorageService) {
         this.userService = userService;
         this.reservationService = reservationService;
         this.passwordEncoder = passwordEncoder;
         this.fileStorageService = fileStorageService;
     }
-    
-
 
     public static class UserCreationRequest {
-        
+
         @NotBlank(message = "Name cannot be empty")
         private String name;
 
         @NotBlank(message = "Email cannot be empty")
-        @Pattern(
-            regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", 
-            message = "Email must be valid and contain an extension (e.g., .com, .es)"
-        )
+        @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", message = "Email must be valid and contain an extension (e.g., .com, .es)")
         private String email;
 
         @NotBlank(message = "Password cannot be empty")
-        @Pattern(
-            regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&.])(?=\\S+$).{8,}$",
-            message = "Password must have at least 8 chars, 1 uppercase, 1 lowercase, 1 number and 1 special char"
-        )
+        @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&.])(?=\\S+$).{8,}$", message = "Password must have at least 8 chars, 1 uppercase, 1 lowercase, 1 number and 1 special char")
         private String password;
 
         private List<String> roles;
 
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-        public String getPassword() { return password; }
-        public void setPassword(String password) { this.password = password; }
-        public List<String> getRoles() { return roles; }
-        public void setRoles(List<String> roles) { this.roles = roles; }
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+
+        public List<String> getRoles() {
+            return roles;
+        }
+
+        public void setRoles(List<String> roles) {
+            this.roles = roles;
+        }
     }
 
-
-
     @GetMapping
-    public Page<User> getAllUsers(@PageableDefault(size = 10) Pageable pageable) {//if frontend dont send size, default 10
+    public Page<User> getAllUsers(@PageableDefault(size = 10) Pageable pageable) {// if frontend dont send size, default
+                                                                                  // 10
         return userService.findAll(pageable);
     }
 
@@ -96,7 +109,6 @@ public class UserRestController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    
     @PutMapping("/{id}/block")
     public ResponseEntity<User> toggleBlock(@PathVariable Long id) {
         return userService.toggleBlock(id)
@@ -107,8 +119,8 @@ public class UserRestController {
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
         Optional<User> user = userService.findById(id);
-    return user.map(ResponseEntity::ok) // Returns 200 OK if found
-           .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
+        return user.map(ResponseEntity::ok) // Returns 200 OK if found
+                .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
     }
 
     @PostMapping
@@ -116,13 +128,12 @@ public class UserRestController {
         User user = new User();
         user.setName(request.getName());
         user.setEmail(request.getEmail());
-        
 
         user.setEncodedPassword(passwordEncoder.encode(request.getPassword()));
         if (request.getRoles() != null && !request.getRoles().isEmpty()) {
             user.setRoles(request.getRoles());
         } else {
-            user.setRoles(List.of("USER"));//role by default
+            user.setRoles(List.of("USER"));// role by default
         }
         User savedUser = userService.save(user);
 
@@ -134,61 +145,49 @@ public class UserRestController {
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
         Optional<User> user = userService.updateUser(id, updatedUser);
-    return user.map(ResponseEntity::ok) // Returns 200 OK if updated successfully
-           .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
+        return user.map(ResponseEntity::ok) // Returns 200 OK if updated successfully
+                .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<User> patchUser(@PathVariable Long id, @RequestBody User partialUser) {
         Optional<User> user = userService.patchUser(id, partialUser);
-    return user.map(ResponseEntity::ok) // Returns 200 OK if partially updated
-           .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
+        return user.map(ResponseEntity::ok) // Returns 200 OK if partially updated
+                .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<User> deleteUser(@PathVariable Long id) {
         Optional<User> deleted = userService.deleteById(id);
         return deleted.map(ResponseEntity::ok)
-                      .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    //for getting reservations of a user
+    // for getting reservations of a user
     @GetMapping("/{id}/reservations")
     public ResponseEntity<Page<Reservation>> getUserReservations(@PathVariable Long id,
-            @PageableDefault(size = 10) 
-            @SortDefault(sort = "startDate", direction = Sort.Direction.DESC) 
-            Pageable pageable
-    ) {
+            @PageableDefault(size = 10) @SortDefault(sort = "startDate", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(reservationService.getReservationsByUserId(id, pageable));
     }
 
-
-
-
-
-
-
-
-
-
     @PostMapping("/{id}/image")
-    public ResponseEntity<User> uploadImage(@PathVariable Long id, 
-                                            @RequestParam("file") MultipartFile file) throws IOException {
-        
+    public ResponseEntity<User> uploadImage(@PathVariable Long id,
+            @RequestParam("file") MultipartFile file) throws IOException {
+
         Optional<User> userOp = userService.findById(id);
         if (userOp.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        
+
         User user = userOp.get();
-        
-        //delete the older image if exists
+
+        // delete the older image if exists
         if (user.getImageName() != null) {
             fileStorageService.delete(user.getImageName());
         }
-        //save 
+        // save
         String filename = fileStorageService.store(file);
-        //update
+        // update
         user.setImageName(filename);
         userService.save(user);
 
@@ -203,7 +202,7 @@ public class UserRestController {
         }
 
         Resource file = fileStorageService.loadAsResource(userOp.get().getImageName());
-        
+
         // try to see what is (jpg, png, etc)
         String contentType = "image/jpeg"; // Default
         try {
@@ -216,6 +215,5 @@ public class UserRestController {
                 .contentType(MediaType.parseMediaType(contentType))
                 .body(file);
     }
-
 
 }

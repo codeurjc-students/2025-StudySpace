@@ -12,27 +12,33 @@ describe('SoftwareFormComponent', () => {
   let mockRouter: any;
   let mockActivatedRoute: any;
 
-  
   const configureModule = async (routeParams: any) => {
     mockSoftwareService = {
-      getSoftware: jasmine.createSpy('getSoftware').and.returnValue(of({ id: 1, name: 'Java', version: '17', description: 'JDK' })),
-      createSoftware: jasmine.createSpy('createSoftware').and.returnValue(of({})),
-      updateSoftware: jasmine.createSpy('updateSoftware').and.returnValue(of({}))
+      getSoftware: jasmine
+        .createSpy('getSoftware')
+        .and.returnValue(
+          of({ id: 1, name: 'Java', version: '17', description: 'JDK' }),
+        ),
+      createSoftware: jasmine
+        .createSpy('createSoftware')
+        .and.returnValue(of({})),
+      updateSoftware: jasmine
+        .createSpy('updateSoftware')
+        .and.returnValue(of({})),
     };
     mockRouter = { navigate: jasmine.createSpy('navigate') };
-    mockActivatedRoute = { snapshot: { paramMap: { get: (key: string) => routeParams[key] } } };
+    mockActivatedRoute = {
+      snapshot: { paramMap: { get: (key: string) => routeParams[key] } },
+    };
 
-
-
-    
     await TestBed.configureTestingModule({
-      declarations: [ SoftwareFormComponent ],
-      imports: [ FormsModule ],
+      declarations: [SoftwareFormComponent],
+      imports: [FormsModule],
       providers: [
         { provide: SoftwareService, useValue: mockSoftwareService },
         { provide: Router, useValue: mockRouter },
-        { provide: ActivatedRoute, useValue: mockActivatedRoute }
-      ]
+        { provide: ActivatedRoute, useValue: mockActivatedRoute },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SoftwareFormComponent);
@@ -42,7 +48,7 @@ describe('SoftwareFormComponent', () => {
 
   describe('Create Mode', () => {
     beforeEach(async () => {
-      await configureModule({}); 
+      await configureModule({});
     });
 
     it('should initialize in Create Mode', () => {
@@ -50,7 +56,11 @@ describe('SoftwareFormComponent', () => {
     });
 
     it('should call createSoftware on save', () => {
-      component.software = { name: 'Python', version: 3.9, description: 'Lang' };
+      component.software = {
+        name: 'Python',
+        version: 3.9,
+        description: 'Lang',
+      };
       component.save();
       expect(mockSoftwareService.createSoftware).toHaveBeenCalled();
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/admin/softwares']);
@@ -59,7 +69,7 @@ describe('SoftwareFormComponent', () => {
 
   describe('Edit Mode', () => {
     beforeEach(async () => {
-      await configureModule({ id: '1' }); 
+      await configureModule({ id: '1' });
     });
 
     it('should initialize in Edit Mode and load data', () => {
@@ -69,8 +79,11 @@ describe('SoftwareFormComponent', () => {
     });
 
     it('should call updateSoftware on save', () => {
-      component.save(); 
-      expect(mockSoftwareService.updateSoftware).toHaveBeenCalledWith(1, component.software);
+      component.save();
+      expect(mockSoftwareService.updateSoftware).toHaveBeenCalledWith(
+        1,
+        component.software,
+      );
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/admin/softwares']);
     });
   });

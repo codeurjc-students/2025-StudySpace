@@ -9,14 +9,13 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
     {
       provide: NG_VALUE_ACCESSOR,
       useExisting: forwardRef(() => PasswordInputComponent),
-      multi: true
-    }
-  ]
+      multi: true,
+    },
+  ],
 })
 export class PasswordInputComponent implements ControlValueAccessor {
-  
   @Input() placeholder: string = 'Enter password';
-  
+
   // Estado interno
   public value: string = '';
   public visible: boolean = false;

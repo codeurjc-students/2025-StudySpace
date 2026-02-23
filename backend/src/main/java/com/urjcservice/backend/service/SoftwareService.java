@@ -17,12 +17,11 @@ import java.util.Optional;
 @Service
 public class SoftwareService {
 
-    
     private final SoftwareRepository softwareRepository;
     private final RoomRepository roomRepository;
-    
+
     public SoftwareService(SoftwareRepository softwareRepository,
-                           RoomRepository roomRepository) {
+            RoomRepository roomRepository) {
         this.softwareRepository = softwareRepository;
         this.roomRepository = roomRepository;
     }
@@ -33,8 +32,8 @@ public class SoftwareService {
 
     public Software save(Software software) {
         if (softwareRepository.findByNameAndVersion(software.getName(), software.getVersion()).isPresent()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, 
-                "Software with this name and version already exists.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Software with this name and version already exists.");
         }
         return softwareRepository.save(software);
     }
@@ -62,13 +61,12 @@ public class SoftwareService {
     public Optional<Software> updateSoftware(Long id, Software updatedSoftware) {
         return softwareRepository.findById(id).map(existingSoftware -> {
             Optional<Software> duplicate = softwareRepository.findByNameAndVersion(
-                updatedSoftware.getName(), 
-                updatedSoftware.getVersion()
-            );
+                    updatedSoftware.getName(),
+                    updatedSoftware.getVersion());
 
             if (duplicate.isPresent() && !duplicate.get().getId().equals(id)) {
-                 throw new ResponseStatusException(HttpStatus.CONFLICT, 
-                    "Ya existe otro software con este nombre y versión.");
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Ya existe otro software con este nombre y versión.");
             }
 
             existingSoftware.setName(updatedSoftware.getName());
@@ -93,5 +91,4 @@ public class SoftwareService {
         });
     }
 
-    
 }

@@ -1,5 +1,8 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import {
+  HttpClientTestingModule,
+  HttpTestingController,
+} from '@angular/common/http/testing';
 import { SoftwareService } from './software.service';
 
 describe('SoftwareService', () => {
@@ -10,7 +13,7 @@ describe('SoftwareService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [SoftwareService]
+      providers: [SoftwareService],
     });
     service = TestBed.inject(SoftwareService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -22,7 +25,7 @@ describe('SoftwareService', () => {
 
   it('should retrieve all softwares', () => {
     service.getAllSoftwares(0, 10).subscribe();
-    
+
     const req = httpMock.expectOne(`${BASE_URL}?page=0&size=10`);
     expect(req.request.method).toBe('GET');
     req.flush({});

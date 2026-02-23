@@ -1,70 +1,83 @@
 <div class="bg-primary text-white text-center py-5 mb-4 shadow-sm">
-    <div class="container py-4">
-        <h1 class="display-5 fw-bold">Welcome to StudySpace</h1>
-        <p class="lead mb-0">Find the classroom that best suits your needs instantly.</p>
-    </div>
+  <div class="container py-4">
+    <h1 class="display-5 fw-bold">Welcome to StudySpace</h1>
+    <p class="lead mb-0">
+      Find the classroom that best suits your needs instantly.
+    </p>
+  </div>
 </div>
 
 <div class="container">
-    
-    <h3 class="mb-4 mt-5 pt-3">Available Rooms</h3>
+  <h3 class="mb-4 mt-5 pt-3">Available Rooms</h3>
 
-    <div *ngIf="rooms.length === 0" class="alert alert-info">
-        There are no available rooms in this moment.
-    </div>
+  <div *ngIf="rooms.length === 0" class="alert alert-info">
+    There are no available rooms in this moment.
+  </div>
 
-    <div class="row row-cols-1 row-cols-md-3 g-4">
-        <div *ngFor="let room of rooms" class="col">
-            
-            <div class="card h-100 shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="card-title mb-0">{{ room.name }}</h5>
-                </div>
-                
-                <div class="card-body">
-                    <p class="card-text">
-                        <strong>Campus:</strong> {{ room.camp }}<br>
-                        <strong>Ubication:</strong> {{ room.place }}<br>
-                        <strong>Capacity:</strong> {{ room.capacity }} people
-                    </p>
-                    
-                    <div *ngIf="room.software && room.software.length > 0">
-                        <small class="text-muted fw-bold">Available software:</small>
-                        <ul class="ps-3 mb-0 software-list">
-                            <li *ngFor="let s of room.software | slice:0:10">{{ s.name }}</li>
-                            
-                            <li *ngIf="room.software.length > 10" class="text-muted fst-italic small extra-software">
-                                ...and {{ room.software.length - 10 }} more. See details.
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="card-footer bg-white border-top-0">
-                    <button [routerLink]="['/rooms', room.id]" class="btn btn-outline-primary btn-sm w-100">
-                        Show Details
-                    </button>
-                </div>
-            </div>
+  <div class="row row-cols-1 row-cols-md-3 g-4">
+    <div *ngFor="let room of rooms" class="col">
+      <div class="card h-100 shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="card-title mb-0">{{ room.name }}</h5>
         </div>
-    </div>
 
-    <app-pagination 
-        [pageData]="pageData" 
-        [currentPage]="currentPage" 
-        (pageChange)="loadPage($event)">
-    </app-pagination>
-    
-    <div *ngIf="loginService.isLogged()" class="text-center mt-5 mb-5">
-        <button [routerLink]="['/reservations/create']" class="btn btn-success btn-lg shadow px-5">
-            📅 Book a room
-        </button>
-        
-        <button *ngIf="loginService.isAdmin()" 
-                [routerLink]="['/admin']" 
-                class="btn btn-dark btn-lg shadow px-5 ms-2">
-            ⚙️ Admin Dashboard
-        </button>
-    </div>
+        <div class="card-body">
+          <p class="card-text">
+            <strong>Campus:</strong> {{ room.camp }}<br />
+            <strong>Ubication:</strong> {{ room.place }}<br />
+            <strong>Capacity:</strong> {{ room.capacity }} people
+          </p>
 
+          <div *ngIf="room.software && room.software.length > 0">
+            <small class="text-muted fw-bold">Available software:</small>
+            <ul class="ps-3 mb-0 software-list">
+              <li *ngFor="let s of room.software | slice: 0 : 10">
+                {{ s.name }}
+              </li>
+
+              <li
+                *ngIf="room.software.length > 10"
+                class="text-muted fst-italic small extra-software"
+              >
+                ...and {{ room.software.length - 10 }} more. See details.
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card-footer bg-white border-top-0">
+          <button
+            [routerLink]="['/rooms', room.id]"
+            class="btn btn-outline-primary btn-sm w-100"
+          >
+            Show Details
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <app-pagination
+    [pageData]="pageData"
+    [currentPage]="currentPage"
+    (pageChange)="loadPage($event)"
+  >
+  </app-pagination>
+
+  <div *ngIf="loginService.isLogged()" class="text-center mt-5 mb-5">
+    <button
+      [routerLink]="['/reservations/create']"
+      class="btn btn-success btn-lg shadow px-5"
+    >
+      📅 Book a room
+    </button>
+
+    <button
+      *ngIf="loginService.isAdmin()"
+      [routerLink]="['/admin']"
+      class="btn btn-dark btn-lg shadow px-5 ms-2"
+    >
+      ⚙️ Admin Dashboard
+    </button>
+  </div>
 </div>

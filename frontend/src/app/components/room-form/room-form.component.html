@@ -1,79 +1,150 @@
 <div class="container mt-5 mb-5 d-flex justify-content-center">
-    <div class="card shadow p-4 room-form-card">
-        <h3 class="mb-4 text-center text-primary fw-bold">
-            {{ isEditMode ? 'Edit Room' : 'Create New Room' }}
-        </h3>
+  <div class="card shadow p-4 room-form-card">
+    <h3 class="mb-4 text-center text-primary fw-bold">
+      {{ isEditMode ? "Edit Room" : "Create New Room" }}
+    </h3>
 
-        <form (ngSubmit)="save()" #roomForm="ngForm">
-            <div class="mb-3">
-                <label for="name" class="form-label fw-bold">Name</label>
-                <input id="name" type="text" name="name" [(ngModel)]="room.name" class="form-control" required>
-            </div>
+    <form (ngSubmit)="save()" #roomForm="ngForm">
+      <div class="mb-3">
+        <label for="name" class="form-label fw-bold">Name</label>
+        <input
+          id="name"
+          type="text"
+          name="name"
+          [(ngModel)]="room.name"
+          class="form-control"
+          required
+        />
+      </div>
 
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="capacity" class="form-label fw-bold">Capacity</label>
-                    <input id="capacity" type="number" name="capacity" [(ngModel)]="room.capacity" class="form-control" required>
-                </div>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="capacity" class="form-label fw-bold">Capacity</label>
+          <input
+            id="capacity"
+            type="number"
+            name="capacity"
+            [(ngModel)]="room.capacity"
+            class="form-control"
+            required
+          />
+        </div>
 
-                <div class="col-md-6 mb-3">
-                    <label for="camp" class="form-label fw-bold">Campus</label>
-                    <select id="camp" name="camp" [(ngModel)]="room.camp" class="form-select">
-                        <option *ngFor="let c of campusOptions" [value]="c">{{ c }}</option>
-                    </select>
-                </div>
-            </div>
+        <div class="col-md-6 mb-3">
+          <label for="camp" class="form-label fw-bold">Campus</label>
+          <select
+            id="camp"
+            name="camp"
+            [(ngModel)]="room.camp"
+            class="form-select"
+          >
+            <option *ngFor="let c of campusOptions" [value]="c">{{ c }}</option>
+          </select>
+        </div>
+      </div>
 
-            <div class="mb-3">
-                <label for="place" class="form-label fw-bold">Location (Building / Floor)</label>
-                <input id="place" type="text" name="place" [(ngModel)]="room.place" class="form-control" required>
-            </div>
+      <div class="mb-3">
+        <label for="place" class="form-label fw-bold"
+          >Location (Building / Floor)</label
+        >
+        <input
+          id="place"
+          type="text"
+          name="place"
+          [(ngModel)]="room.place"
+          class="form-control"
+          required
+        />
+      </div>
 
-            <div class="mb-3">
-                <label for="softwareIds" class="form-label fw-bold">Installed Software</label>
-                <select id="softwareIds" name="softwareIds" [(ngModel)]="room.softwareIds" class="form-select" multiple size="5">
-                    <option *ngFor="let soft of availableSoftware" [value]="soft.id">
-                        {{ soft.name }} (v{{ soft.version }})
-                    </option>
-                </select>
-                <small class="text-muted">Hold Ctrl (or Cmd on Mac) to select multiple software.</small>
-            </div>
+      <div class="mb-3">
+        <label for="softwareIds" class="form-label fw-bold"
+          >Installed Software</label
+        >
+        <select
+          id="softwareIds"
+          name="softwareIds"
+          [(ngModel)]="room.softwareIds"
+          class="form-select"
+          multiple
+          size="5"
+        >
+          <option *ngFor="let soft of availableSoftware" [value]="soft.id">
+            {{ soft.name }} (v{{ soft.version }})
+          </option>
+        </select>
+        <small class="text-muted"
+          >Hold Ctrl (or Cmd on Mac) to select multiple software.</small
+        >
+      </div>
 
-            <div class="mb-3 border p-3 rounded bg-light">
-                <label class="form-label fw-bold">Room Image</label>
-                
-                <div *ngIf="currentImageUrl" class="mb-3 text-center">
-                    <img [src]="currentImageUrl" alt="Current room image" class="img-thumbnail rounded shadow-sm" style="max-height: 200px;">
-                    <div class="mt-2 text-muted small">Current Image</div>
-                </div>
+      <div class="mb-3 border p-3 rounded bg-light">
+        <label class="form-label fw-bold">Room Image</label>
 
-                <input type="file" (change)="onFileSelected($event)" class="form-control" accept="image/*">
-                <small class="text-muted">Leave empty to keep current image (or default).</small>
-            </div>
-            
-            <div class="card bg-light mb-4 border-0">
-                <div class="card-body">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="activeSwitch" name="active" [(ngModel)]="room.active">
-                        <label class="form-check-label fw-bold" for="activeSwitch">
-                            Enable Room
-                        </label>
-                    </div>
-                    <div *ngIf="!room.active" class="alert alert-warning mt-2 mb-0 d-flex align-items-center">
-                        <i class="fa fa-exclamation-triangle me-2"></i>
-                        <small>
-                            <strong>Warning:</strong> Disabling this room will automatically cancel any future reservations associated with it.
-                        </small>
-                    </div>
-                </div>
-            </div>
+        <div *ngIf="currentImageUrl" class="mb-3 text-center">
+          <img
+            [src]="currentImageUrl"
+            alt="Current room image"
+            class="img-thumbnail rounded shadow-sm"
+            style="max-height: 200px"
+          />
+          <div class="mt-2 text-muted small">Current Image</div>
+        </div>
 
-            <div class="d-flex justify-content-between pt-3 border-top">
-                <button type="button" class="btn btn-outline-secondary" routerLink="/admin/rooms">Cancel</button>
-                <button type="submit" class="btn btn-success px-4" [disabled]="!roomForm.form.valid">
-                    <i class="fa fa-save"></i> {{ isEditMode ? 'Update' : 'Save' }}
-                </button>
-            </div>
-        </form>
-    </div>
+        <input
+          type="file"
+          (change)="onFileSelected($event)"
+          class="form-control"
+          accept="image/*"
+        />
+        <small class="text-muted"
+          >Leave empty to keep current image (or default).</small
+        >
+      </div>
+
+      <div class="card bg-light mb-4 border-0">
+        <div class="card-body">
+          <div class="form-check form-switch">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="activeSwitch"
+              name="active"
+              [(ngModel)]="room.active"
+            />
+            <label class="form-check-label fw-bold" for="activeSwitch">
+              Enable Room
+            </label>
+          </div>
+          <div
+            *ngIf="!room.active"
+            class="alert alert-warning mt-2 mb-0 d-flex align-items-center"
+          >
+            <i class="fa fa-exclamation-triangle me-2"></i>
+            <small>
+              <strong>Warning:</strong> Disabling this room will automatically
+              cancel any future reservations associated with it.
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-between pt-3 border-top">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          routerLink="/admin/rooms"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="btn btn-success px-4"
+          [disabled]="!roomForm.form.valid"
+        >
+          <i class="fa fa-save"></i> {{ isEditMode ? "Update" : "Save" }}
+        </button>
+      </div>
+    </form>
+  </div>
 </div>

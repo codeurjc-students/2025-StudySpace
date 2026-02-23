@@ -17,14 +17,13 @@ public class Room {
         QUINTANA
     }
 
-    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(unique = true)
-    private String name; //primary key
+    private String name; // primary key
     private Integer capacity;
-    private CampusType Camp; 
+    private CampusType Camp;
     private String place;
     private String coordenades;
 
@@ -35,21 +34,16 @@ public class Room {
     private boolean active = true;
 
     @ManyToMany
-    @JoinTable(
-        name = "room_software",
-        joinColumns = @JoinColumn(name = "room_id"),
-        inverseJoinColumns = @JoinColumn(name = "software_id")
-    )
+    @JoinTable(name = "room_software", joinColumns = @JoinColumn(name = "room_id"), inverseJoinColumns = @JoinColumn(name = "software_id"))
     private List<Software> software = new ArrayList<>();
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Reservation> reservations = new ArrayList<>();
 
-    
-
     public Room() {
     }
+
     public Room(Long id, String name, Integer capacity, CampusType camp, String place, String coordenades,
             List<Software> software, boolean active) {
         this.id = id;
@@ -59,8 +53,9 @@ public class Room {
         this.place = place;
         this.coordenades = coordenades;
         this.software = software;
-        this.active=active;
+        this.active = active;
     }
+
     public Long getId() {
         return id;
     }
@@ -76,24 +71,31 @@ public class Room {
     public void setName(String name) {
         this.name = name;
     }
+
     public Integer getCapacity() {
         return capacity;
     }
+
     public void setCapacity(Integer capacity) {
         this.capacity = capacity;
     }
+
     public CampusType getCamp() {
         return Camp;
     }
+
     public void setCamp(CampusType camp) {
         Camp = camp;
     }
+
     public String getPlace() {
         return place;
     }
+
     public void setPlace(String place) {
         this.place = place;
     }
+
     public String getCoordenades() {
         return coordenades;
     }
@@ -102,7 +104,6 @@ public class Room {
         this.coordenades = coordenades;
     }
 
-
     public String getImageName() {
         return imageName;
     }
@@ -110,8 +111,6 @@ public class Room {
     public void setImageName(String imageName) {
         this.imageName = imageName;
     }
-
-
 
     public List<Software> getSoftware() {
         return software;
@@ -131,9 +130,9 @@ public class Room {
     }
 
     public void removeSoftware(Software s) {
-        if (s != null && this.software.remove(s) && s.getRooms() != null){
+        if (s != null && this.software.remove(s) && s.getRooms() != null) {
             s.getRooms().remove(this);
-            
+
         }
     }
 
@@ -145,7 +144,6 @@ public class Room {
         this.active = active;
     }
 
-    
     @JsonIgnore
     public List<Reservation> getReservations() {
         return reservations;
@@ -163,13 +161,10 @@ public class Room {
     }
 
     public void removeReservation(Reservation reservation) {
-        if (reservation != null && this.reservations.remove(reservation) && reservation.getRoom() == this){
+        if (reservation != null && this.reservations.remove(reservation) && reservation.getRoom() == this) {
             reservation.setRoom(null);
-            
+
         }
     }
-
-    
-    
 
 }

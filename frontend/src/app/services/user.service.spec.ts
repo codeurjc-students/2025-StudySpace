@@ -1,5 +1,8 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import {
+  HttpClientTestingModule,
+  HttpTestingController,
+} from '@angular/common/http/testing';
 import { UserService } from './user.service';
 
 describe('UserService', () => {
@@ -12,7 +15,7 @@ describe('UserService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [UserService]
+      providers: [UserService],
     });
     service = TestBed.inject(UserService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -29,7 +32,6 @@ describe('UserService', () => {
     expect(req.request.method).toBe('GET');
     req.flush({});
   });
-
 
   it('should change role to ADMIN', () => {
     service.changeRole(1, true).subscribe();

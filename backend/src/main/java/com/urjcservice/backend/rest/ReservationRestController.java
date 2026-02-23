@@ -30,9 +30,8 @@ import static org.springframework.web.servlet.support.ServletUriComponentsBuilde
 @RequestMapping("/api/reservations")
 public class ReservationRestController {
 
-    
     private final ReservationService reservationService;
-    
+
     public ReservationRestController(ReservationService reservationService) {
         this.reservationService = reservationService;
     }
@@ -43,16 +42,38 @@ public class ReservationRestController {
         private Date startDate;
         private Date endDate;
         private String reason;
-        
-        public Long getRoomId() { return roomId; }
-        public void setRoomId(Long roomId) { this.roomId = roomId; }
-        
-        public Date getStartDate() { return startDate; }
-        public void setStartDate(Date startDate) { this.startDate = startDate; }
-        public Date getEndDate() { return endDate; }
-        public void setEndDate(Date endDate) { this.endDate = endDate; }
-        public String getReason() { return reason; }
-        public void setReason(String reason) { this.reason = reason; }
+
+        public Long getRoomId() {
+            return roomId;
+        }
+
+        public void setRoomId(Long roomId) {
+            this.roomId = roomId;
+        }
+
+        public Date getStartDate() {
+            return startDate;
+        }
+
+        public void setStartDate(Date startDate) {
+            this.startDate = startDate;
+        }
+
+        public Date getEndDate() {
+            return endDate;
+        }
+
+        public void setEndDate(Date endDate) {
+            this.endDate = endDate;
+        }
+
+        public String getReason() {
+            return reason;
+        }
+
+        public void setReason(String reason) {
+            this.reason = reason;
+        }
     }
 
     public static class AdminReservationUpdateRequest {
@@ -60,7 +81,7 @@ public class ReservationRestController {
         public LocalDate date;
         public LocalTime startTime;
         public LocalTime endTime;
-        public String adminReason; 
+        public String adminReason;
     }
 
     public static class AdminCancellationRequest {
@@ -68,31 +89,29 @@ public class ReservationRestController {
     }
 
     @GetMapping
-    public Page<Reservation> getAllReservations(@PageableDefault(size = 10) Pageable pageable) {//if frontend dont send size, default 10
+    public Page<Reservation> getAllReservations(@PageableDefault(size = 10) Pageable pageable) {// if frontend dont send
+                                                                                                // size, default 10
         return reservationService.findAll(pageable);
     }
 
     @GetMapping("/my-reservations")
     public ResponseEntity<Page<Reservation>> getMyReservations(
-        @PageableDefault(size = 10) 
-        @SortDefault(sort = "startDate", direction = Sort.Direction.DESC)
-        Pageable pageable) {
-        
+            @PageableDefault(size = 10) @SortDefault(sort = "startDate", direction = Sort.Direction.DESC) Pageable pageable) {
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
 
         Page<Reservation> reservations = reservationService.getReservationsByUserEmail(email, pageable);
-        
+
         return ResponseEntity.ok(reservations);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Reservation> getReservationById(@PathVariable Long id) {
         Optional<Reservation> reservation = reservationService.findById(id);
-    return reservation.map(ResponseEntity::ok) // Returns 200 OK if found
-              .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
+        return reservation.map(ResponseEntity::ok) // Returns 200 OK if found
+                .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
     }
-
 
     @PostMapping
     public ResponseEntity<Object> createReservation(@RequestBody ReservationRequest request) {
@@ -101,39 +120,42 @@ public class ReservationRestController {
             String currentUserEmail = auth.getName();
 
             Reservation newReservation = reservationService.createReservation(request, currentUserEmail);
-            
+
             URI location = fromCurrentRequest().path("/{id}").buildAndExpand(newReservation.getId()).toUri();
             return ResponseEntity.created(location).body(newReservation);
 
         } catch (IllegalArgumentException e) {
-             return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (RuntimeException e) {
-             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
-    }    
+    }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Reservation> updateReservation(@PathVariable Long id, @RequestBody Reservation updatedReservation) {
-    Optional<Reservation> reservation = reservationService.updateReservation(id, updatedReservation);
-    return reservation.map(ResponseEntity::ok) // Returns 200 OK if updated successfully
-              .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
+    public ResponseEntity<Reservation> updateReservation(@PathVariable Long id,
+            @RequestBody Reservation updatedReservation) {
+        Optional<Reservation> reservation = reservationService.updateReservation(id, updatedReservation);
+        return reservation.map(ResponseEntity::ok) // Returns 200 OK if updated successfully
+                .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Reservation> patchReservation(@PathVariable Long id, @RequestBody Reservation partialReservation) {
-    Optional<Reservation> reservation = reservationService.patchReservation(id, partialReservation);
-    return reservation.map(ResponseEntity::ok) // Returns 200 OK if partially updated
-              .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
+    public ResponseEntity<Reservation> patchReservation(@PathVariable Long id,
+            @RequestBody Reservation partialReservation) {
+        Optional<Reservation> reservation = reservationService.patchReservation(id, partialReservation);
+        return reservation.map(ResponseEntity::ok) // Returns 200 OK if partially updated
+                .orElseGet(() -> ResponseEntity.notFound().build()); // Returns 404 Not Found if not found
     }
 
-    @PatchMapping("/{id}/cancel")//try to integrate with the upper one
-    public ResponseEntity<Reservation> cancelReservation(@PathVariable Long id,Principal principal,HttpServletRequest request) {//CHECK ittttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt
+    @PatchMapping("/{id}/cancel") // try to integrate with the upper one
+    public ResponseEntity<Reservation> cancelReservation(@PathVariable Long id, Principal principal,
+            HttpServletRequest request) {// CHECK ittttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         String userEmail = principal.getName();
-        //We verify if his role is admin
+        // We verify if his role is admin
         boolean isAdmin = request.isUserInRole("ROLE_ADMIN");
 
         try {
@@ -149,23 +171,24 @@ public class ReservationRestController {
     public ResponseEntity<Reservation> deleteReservation(@PathVariable Long id) {
         Optional<Reservation> deleted = reservationService.deleteById(id);
         return deleted.map(ResponseEntity::ok)
-                      .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/check-availability")
     public ResponseEntity<List<Reservation>> checkAvailability(
-            @RequestParam Long roomId, 
+            @RequestParam Long roomId,
             @RequestParam String date,
-            Principal principal) { 
-        
+            Principal principal) {
+
         try {
             LocalDate localDate = LocalDate.parse(date);
-            
+
             List<Reservation> reservations = reservationService.getActiveReservationsForRoomAndDate(roomId, localDate);
-            
+
             if (principal != null) {
-                List<Reservation> userReservations = reservationService.getActiveReservationsForUserAndDate(principal.getName(), localDate);
-                
+                List<Reservation> userReservations = reservationService
+                        .getActiveReservationsForUserAndDate(principal.getName(), localDate);
+
                 List<Long> existingIds = reservations.stream().map(Reservation::getId).toList();
                 for (Reservation userRes : userReservations) {
                     if (!existingIds.contains(userRes.getId())) {
@@ -173,49 +196,44 @@ public class ReservationRestController {
                     }
                 }
             }
-            
+
             return ResponseEntity.ok(reservations);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
     }
 
-
     @PutMapping("/admin/{id}")
-    public ResponseEntity<Reservation> updateReservationAsAdmin(@PathVariable Long id, 
-                                                                @RequestBody AdminReservationUpdateRequest request) {
-        
-        String reason = (request.adminReason != null && !request.adminReason.isBlank()) 
-                        ? request.adminReason 
-                        : null;//null if empty
+    public ResponseEntity<Reservation> updateReservationAsAdmin(@PathVariable Long id,
+            @RequestBody AdminReservationUpdateRequest request) {
+
+        String reason = (request.adminReason != null && !request.adminReason.isBlank())
+                ? request.adminReason
+                : null;// null if empty
 
         return reservationService.adminUpdateReservation(
-                id, 
-                request.roomId, 
-                request.date, 
-                request.startTime, 
-                request.endTime, 
-                reason
-        )
-        .map(ResponseEntity::ok)
-        .orElse(ResponseEntity.notFound().build());
+                id,
+                request.roomId,
+                request.date,
+                request.startTime,
+                request.endTime,
+                reason)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PatchMapping("/admin/{id}/cancel")
-    public ResponseEntity<Reservation> cancelReservationAsAdmin(@PathVariable Long id, 
-                                                                @RequestBody AdminCancellationRequest request) {
-        
-        String reason = (request.reason != null && !request.reason.isBlank()) 
-                        ? request.reason 
-                        : "Administrative cancellation without specified reason.";
+    public ResponseEntity<Reservation> cancelReservationAsAdmin(@PathVariable Long id,
+            @RequestBody AdminCancellationRequest request) {
+
+        String reason = (request.reason != null && !request.reason.isBlank())
+                ? request.reason
+                : "Administrative cancellation without specified reason.";
 
         return reservationService.adminCancelReservation(id, reason)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-
-
-
 
     @GetMapping("/verify")
     public ResponseEntity<String> verifyReservation(@RequestParam("token") String token) {
@@ -226,9 +244,5 @@ public class ReservationRestController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
-    
-
-
-
 
 }

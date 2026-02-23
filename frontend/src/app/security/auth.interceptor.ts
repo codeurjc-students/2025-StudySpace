@@ -1,49 +1,81 @@
-// src/app/security/auth.interceptor.ts
-import { Injectable } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import {
   HttpRequest,
   HttpHandler,
   HttpEvent,
-  HttpInterceptor
+  HttpInterceptor,
+  HttpErrorResponse,
 } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, throwError, BehaviorSubject } from 'rxjs';
+import { catchError, switchMap, filter, take } from 'rxjs/operators';
+import { LoginService } from '../login/login.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
+  private isRefreshing = false;
+  private refreshTokenSubject: BehaviorSubject<any> = new BehaviorSubject<any>(
+    null,
+  );
 
-  constructor() {}
+  //injector to avoid circular depndency with login service
+  constructor(private injector: Injector) {}
 
-  intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    /*
-    // 1. Intentamos leer la cookie 'AuthToken'
-    const token = this.getCookie('AuthToken');
+  intercept(
+    request: HttpRequest<unknown>,
+    next: HttpHandler,
+  ): Observable<HttpEvent<unknown>> {
+    //alwais cookies to back
+    request = request.clone({ withCredentials: true });
 
-    if (token) {
-      // 2. Si existe, clonamos la petición y añadimos la cabecera Authorization
-      const authReq = request.clone({
-        headers: request.headers.set('Authorization', `Bearer ${token}`)
-      });
-      return next.handle(authReq);
-    }
-
-    // 3. Si no hay cookie, pasa la petición normal (ej. login)
-    return next.handle(request);
+    return next.handle(request).pipe(
+      catchError((error: HttpErrorResponse) => {
+        // 401 and no try to login
+        if (
+          error.status === 401 &&
+          !request.url.includes('/api/auth/login') &&
+          !request.url.includes('/api/auth/refresh')
+        ) {
+          return this.handle401Error(request, next);
+        }
+        return throwError(() => error);
+      }),
+    );
   }
 
-  // Función auxiliar para leer cookies nativas del navegador
-  private getCookie(name: string): string | null {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
-    return null;
-  }*/
+  private handle401Error(request: HttpRequest<any>, next: HttpHandler) {
+    const loginService = this.injector.get(LoginService);
 
+    if (!this.isRefreshing) {
+      this.isRefreshing = true;
+      this.refreshTokenSubject.next(null);
 
-  const authReq = request.clone({
-      withCredentials: true 
-    });
+      //ask new token
+      return loginService.refreshToken().pipe(
+        switchMap(() => {
+          this.isRefreshing = false;
+          this.refreshTokenSubject.next(true);
 
-    
-    return next.handle(authReq);
+          //clone oringinal to add token on petition
+          return next.handle(request.clone({ withCredentials: true }));
+        }),
+        catchError((err) => {
+          this.isRefreshing = false;
+          console.error('Failure when refreshing the token:', err);
+
+          loginService.logOut();
+          alert('🔒Your session has permanently expired. Please log in again.');
+          return throwError(() => err);
+        }),
+      );
+    } else {
+      //already a resfesh we wait
+      return this.refreshTokenSubject.pipe(
+        filter((token) => token != null),
+        take(1),
+        switchMap(() => {
+          return next.handle(request.clone({ withCredentials: true }));
+        }),
+      );
+    }
   }
 }

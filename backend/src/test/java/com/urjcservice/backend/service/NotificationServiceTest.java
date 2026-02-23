@@ -35,7 +35,7 @@ public class NotificationServiceTest {
     @DisplayName("Should send reminders for upcoming reservations and mark them as sent")
     void testSendReservationReminders_Success() {
         // Arrange
-        long fifteenMinutesLater = System.currentTimeMillis() + (15 * 60 * 1000) + 1000; //plus 1 sec of margin
+        long fifteenMinutesLater = System.currentTimeMillis() + (15 * 60 * 1000) + 1000; // plus 1 sec of margin
         Date startDate = new Date(fifteenMinutesLater);
 
         User mockUser = new User();
@@ -60,11 +60,10 @@ public class NotificationServiceTest {
 
         // Assert
         verify(emailService, times(1)).sendReservationReminder(
-                eq("user@test.com"), 
-                eq("John Doe"), 
-                eq("Sala 101"), 
-                anyString() 
-        );
+                eq("user@test.com"),
+                eq("John Doe"),
+                eq("Sala 101"),
+                anyString());
         verify(reservationRepository, times(1)).save(argThat(r -> r.isReminderSent() == true));
     }
 
@@ -72,7 +71,7 @@ public class NotificationServiceTest {
     @DisplayName("Should not send email if start date is in the past (diff <= 0)")
     void testSendReservationReminders_SkippedIfLate() {
         // Arrange
-        Date pastDate = new Date(System.currentTimeMillis() - 1000); 
+        Date pastDate = new Date(System.currentTimeMillis() - 1000);
 
         Reservation reservation = new Reservation();
         reservation.setStartDate(pastDate);

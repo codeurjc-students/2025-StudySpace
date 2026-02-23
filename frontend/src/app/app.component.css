@@ -1,25 +1,23 @@
 .navbar {
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center; 
-  padding: 1rem 2rem; 
-  background-color: #007bff; 
-  color: black; 
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: #007bff;
+  color: black;
 }
-
 
 .navbar-left .logo {
-  font-size: 1.5rem; 
+  font-size: 1.5rem;
   font-weight: bold;
   color: black;
-  text-decoration: none; 
+  text-decoration: none;
 }
 
-
 .navbar-right {
-  display: flex; 
+  display: flex;
   align-items: center;
-  gap: 20px; 
+  gap: 20px;
 }
 
 .navbar-right .nav-link {
@@ -29,41 +27,40 @@
 }
 
 .navbar-right .nav-link:hover {
-  text-decoration: underline; 
+  text-decoration: underline;
 }
-
 
 .navbar-right .nav-button-cta {
   background-color: black;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
-  border-radius: 5px; 
+  border-radius: 5px;
   cursor: pointer; /*change cursor aperance*/
   font-weight: bold;
   font-size: 0.9rem;
 }
 
 .navbar-right .nav-button-cta:hover {
-  opacity: 0.9; 
+  opacity: 0.9;
 }
 
 /* Style for the small header icon */
 .profile-icon-header {
-    width: 40px;
-    height: 40px;
-    object-fit: cover; /* It ensures that the image is not distorted. */
-    border: 2px solid #fff; 
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    cursor: pointer;
-    transition: transform 0.2s;
+  width: 40px;
+  height: 40px;
+  object-fit: cover; /* It ensures that the image is not distorted. */
+  border: 2px solid #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform 0.2s;
 }
 
 .profile-icon-header:hover {
-    transform: scale(1.05); /* Small effect when hovering the mouse */
+  transform: scale(1.05); /* Small effect when hovering the mouse */
 }
 
 /* Remove the arrow that Bootstrap adds by default to dropdowns */
 .no-arrow::after {
-    display: none !important;
+  display: none !important;
 }

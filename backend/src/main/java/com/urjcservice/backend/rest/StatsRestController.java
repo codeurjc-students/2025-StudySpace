@@ -25,13 +25,13 @@ public class StatsRestController {
     @GetMapping
     public ResponseEntity<DashboardStatsDTO> getDashboardStats(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        
+
         // Today if no date given
         if (date == null) {
             date = LocalDate.now();
         }
-        
+
         return ResponseEntity.ok(statsService.getStats(date));
     }
-    
+
 }

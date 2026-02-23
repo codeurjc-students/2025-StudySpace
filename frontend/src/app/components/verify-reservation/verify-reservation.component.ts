@@ -5,7 +5,7 @@ import { HttpClient } from '@angular/common/http';
 @Component({
   selector: 'app-verify-reservation',
   templateUrl: './verify-reservation.component.html',
-  styleUrls: ['./verify-reservation.component.css']
+  styleUrls: ['./verify-reservation.component.css'],
 })
 export class VerifyReservationComponent implements OnInit {
   loading = true;
@@ -14,12 +14,12 @@ export class VerifyReservationComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private http: HttpClient
+    private http: HttpClient,
   ) {}
 
   ngOnInit() {
     const token = this.route.snapshot.queryParamMap.get('token');
-    
+
     if (token) {
       this.verifyToken(token);
     } else {
@@ -28,20 +28,22 @@ export class VerifyReservationComponent implements OnInit {
   }
 
   verifyToken(token: string) {
-    this.http.get('/api/reservations/verify', { 
+    this.http
+      .get('/api/reservations/verify', {
         params: { token: token },
-        responseType: 'text' 
-    })
-    .subscribe({
-      next: () => {
-        this.loading = false;
-        this.success = true;
-      },
-      error: (err) => {
-        const msg = err.error || 'The verification link is invalid or has expired.';
-        this.handleError(msg);
-      }
-    });
+        responseType: 'text',
+      })
+      .subscribe({
+        next: () => {
+          this.loading = false;
+          this.success = true;
+        },
+        error: (err) => {
+          const msg =
+            err.error || 'The verification link is invalid or has expired.';
+          this.handleError(msg);
+        },
+      });
   }
 
   private handleError(message: string) {

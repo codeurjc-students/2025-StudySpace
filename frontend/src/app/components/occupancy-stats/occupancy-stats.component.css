@@ -1,25 +1,25 @@
 .stats-date-input {
-    outline: none;
+  outline: none;
 }
 
 .stats-hero-card {
-    background: linear-gradient(45deg, #0d6efd, #0a58ca);
+  background: linear-gradient(45deg, #0d6efd, #0a58ca);
 }
 
 .stats-icon-green {
-    color: #198754;
+  color: #198754;
 }
 
 .stats-icon-purple {
-    color: #6610f2;
+  color: #6610f2;
 }
 
 .chart-container-sm {
-    height: 300px;
+  height: 300px;
 }
 
 .chart-container-lg {
-    height: 400px; 
-    position: relative; 
-    width: 100%;
+  height: 400px;
+  position: relative;
+  width: 100%;
 }

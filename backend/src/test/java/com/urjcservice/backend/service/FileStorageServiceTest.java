@@ -14,13 +14,11 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class FileStorageServiceTest {
 
-    
     @TempDir
     Path tempDir;
 
@@ -30,9 +28,8 @@ class FileStorageServiceTest {
     void setUp() {
         fileStorageService = new FileStorageService();
 
-        
         ReflectionTestUtils.setField(fileStorageService, "storageLocation", tempDir.toString());
-        
+
         fileStorageService.init();
     }
 
@@ -44,22 +41,21 @@ class FileStorageServiceTest {
         // GIVEN
         String filename = "test-image.jpg";
         MockMultipartFile file = new MockMultipartFile(
-                "file", 
-                filename, 
-                "image/jpeg", 
-                "fake-image-content".getBytes()
-        );
+                "file",
+                filename,
+                "image/jpeg",
+                "fake-image-content".getBytes());
 
         // WHEN
         String storedFilename = fileStorageService.store(file);
 
         // THEN
         assertNotNull(storedFilename);
-        
-        //file exists
+
+        // file exists
         Path expectedPath = tempDir.resolve(storedFilename);
         assertTrue(Files.exists(expectedPath), "El fichero debería existir en el disco");
-        
+
         assertArrayEquals("fake-image-content".getBytes(), Files.readAllBytes(expectedPath));
     }
 
@@ -112,7 +108,7 @@ class FileStorageServiceTest {
         String filename = "borrame.txt";
         Path filePath = tempDir.resolve(filename);
         Files.createFile(filePath);
-        assertTrue(Files.exists(filePath)); 
+        assertTrue(Files.exists(filePath));
 
         // WHEN
         fileStorageService.delete(filename);
@@ -120,9 +116,9 @@ class FileStorageServiceTest {
         // THEN
         assertFalse(Files.exists(filePath), "El fichero debería haber sido eliminado");
     }
-    
+
     // --- TEST INIT ---
-    
+
     @Test
     @DisplayName("Init should create directory if not exists")
     void testInit() {
@@ -130,12 +126,13 @@ class FileStorageServiceTest {
         fileStorageService.init();
         assertTrue(Files.exists(tempDir));
     }
+
     @Test
     @DisplayName("Store should throw RuntimeException when IOException occurs")
     void testStore_Failure_IOException() throws IOException {
         // GIVEN
         MultipartFile mockFile = mock(MultipartFile.class);
-        
+
         when(mockFile.isEmpty()).thenReturn(false);
         when(mockFile.getOriginalFilename()).thenReturn("fail.txt");
         when(mockFile.getInputStream()).thenThrow(new IOException("Simulated Disk Error"));
@@ -170,14 +167,14 @@ class FileStorageServiceTest {
         Files.createFile(existingFile);
 
         FileStorageService serviceWithError = new FileStorageService();
-        
+
         ReflectionTestUtils.setField(serviceWithError, "storageLocation", existingFile.toString());
 
         // WHEN & THEN
         RuntimeException ex = assertThrows(RuntimeException.class, () -> {
             serviceWithError.init();
         });
-        
+
         assertTrue(ex.getMessage().contains("The storage folder could not be initialized"));
     }
 }

@@ -1,49 +1,56 @@
-import { Component,OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { RoomsService } from '../../services/rooms.service';
 import { SoftwareService, SoftwareDTO } from '../../services/software.service';
-import { Page } from '../../dtos/page.model'; 
+import { Page } from '../../dtos/page.model';
 import { handleSaveRequest } from '../../utils/form-helpers.util';
 
 @Component({
   selector: 'app-room-form',
   templateUrl: './room-form.component.html',
-  styleUrl: './room-form.component.css'
+  styleUrl: './room-form.component.css',
 })
 export class RoomFormComponent implements OnInit {
-
-  isEditMode: boolean = false; 
+  isEditMode: boolean = false;
   roomId: number | null = null;
   selectedFile: File | null = null;
   currentImageUrl: string | null = null;
 
-  room = {   //defect values
+  room = {
+    //defect values
     name: '',
     capacity: 0,
-    camp: 'MOSTOLES', 
+    camp: 'MOSTOLES',
     place: '',
-    coordenades: '' ,
+    coordenades: '',
     active: true,
-    softwareIds: [] as number[]  // Array to hold selected software IDs
+    softwareIds: [] as number[], // Array to hold selected software IDs
   };
 
   // Options for campus select, should match with Enum CampusType in backend
-  campusOptions = ['ALCORCON', 'MOSTOLES', 'VICALVARO', 'FUENLABRADA', 'QUINTANA'];
+  campusOptions = [
+    'ALCORCON',
+    'MOSTOLES',
+    'VICALVARO',
+    'FUENLABRADA',
+    'QUINTANA',
+  ];
   availableSoftware: SoftwareDTO[] = [];
 
   constructor(
     private readonly roomsService: RoomsService,
     private readonly softwareService: SoftwareService,
     private readonly router: Router,
-    private readonly route: ActivatedRoute
+    private readonly route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
-    this.softwareService.getAllSoftwares(0, 100).subscribe({//pool of 100 softwares, check if beteter solution, just for the moment the solution
-        next: (data) => {
-            this.availableSoftware = data.content;
-        },
-        error: (err) => console.error('Error loading software:', err)
+    this.softwareService.getAllSoftwares(0, 100).subscribe({
+      //pool of 100 softwares, check if beteter solution, just for the moment the solution
+      next: (data) => {
+        this.availableSoftware = data.content;
+      },
+      error: (err) => console.error('Error loading software:', err),
     });
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
@@ -61,58 +68,57 @@ export class RoomFormComponent implements OnInit {
         this.room.camp = data.camp;
         this.room.place = data.place;
         this.room.coordenades = data.coordenades;
-        
-        this.room.active = (data.active !== undefined) ? data.active : true; //if undefined we asume true
+
+        this.room.active = data.active !== undefined ? data.active : true; //if undefined we asume true
 
         // Load associated software IDs
         if (data.software) {
-            this.room.softwareIds = data.software.map(s => s.id);
+          this.room.softwareIds = data.software.map((s) => s.id);
         }
         if (data.imageName) {
-            this.currentImageUrl = `https://localhost:8443/api/rooms/${data.id}/image`;
+          this.currentImageUrl = `https://localhost:8443/api/rooms/${data.id}/image`;
         }
       },
-      error: (err) => console.error('Error loading classroom', err)
+      error: (err) => console.error('Error loading classroom', err),
     });
   }
 
   save() {
-      const request$ = (this.isEditMode && this.roomId)
-          ? this.roomsService.updateRoom(this.roomId, this.room)
-          : this.roomsService.createRoom(this.room);
+    const request$ =
+      this.isEditMode && this.roomId
+        ? this.roomsService.updateRoom(this.roomId, this.room)
+        : this.roomsService.createRoom(this.room);
 
-      handleSaveRequest(
-          request$,
-          (response) => {
-              if (this.selectedFile) {
-                  this.uploadImageAndNavigate(response.id);
-              } else {
-                  const action = this.isEditMode ? 'updated' : 'created';
-                  alert(`Classroom ${action} correctly!`);
-                  this.router.navigate(['/admin/rooms']);
-              }
-          },
-          'Classroom', 
-          'Error: A classroom with that name already exists. Please choose another.' // 409
-      );
+    handleSaveRequest(
+      request$,
+      (response) => {
+        if (this.selectedFile) {
+          this.uploadImageAndNavigate(response.id);
+        } else {
+          const action = this.isEditMode ? 'updated' : 'created';
+          alert(`Classroom ${action} correctly!`);
+          this.router.navigate(['/admin/rooms']);
+        }
+      },
+      'Classroom',
+      'Error: A classroom with that name already exists. Please choose another.', // 409
+    );
   }
 
   onFileSelected(event: any) {
     this.selectedFile = event.target.files[0];
   }
 
-  
-
   uploadImageAndNavigate(id: number) {
-     this.roomsService.uploadRoomImage(id, this.selectedFile!).subscribe({
-         next: () => {
-             alert('Room and image saved correctly!');
-             this.router.navigate(['/admin/rooms']);
-         },
-         error: () => {
-             alert('Room saved but image upload failed.');
-             this.router.navigate(['/admin/rooms']);
-         }
-     });
+    this.roomsService.uploadRoomImage(id, this.selectedFile!).subscribe({
+      next: () => {
+        alert('Room and image saved correctly!');
+        this.router.navigate(['/admin/rooms']);
+      },
+      error: () => {
+        alert('Room saved but image upload failed.');
+        this.router.navigate(['/admin/rooms']);
+      },
+    });
   }
 }

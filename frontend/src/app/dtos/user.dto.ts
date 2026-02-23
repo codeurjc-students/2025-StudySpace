@@ -1,12 +1,12 @@
 export interface UserDTO {
-    id: number;
-    name: string;
-    email: string;
-    roles: string[];
-    
-    reservations: any[]; 
+  id: number;
+  name: string;
+  email: string;
+  roles: string[];
 
-    blocked: boolean;
+  reservations: any[];
 
-    imageName?: string;
+  blocked: boolean;
+
+  imageName?: string;
 }

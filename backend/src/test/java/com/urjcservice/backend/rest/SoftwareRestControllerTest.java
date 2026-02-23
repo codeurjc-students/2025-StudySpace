@@ -43,7 +43,6 @@ public class SoftwareRestControllerTest {
 
     private Software mockSoftware;
 
-
     @BeforeEach
     void setUp() {
         mockSoftware = new Software();
@@ -52,7 +51,6 @@ public class SoftwareRestControllerTest {
         mockSoftware.setVersion(2024.1f);
         mockSoftware.setDescription("Java IDE");
     }
-
 
     @Test
     @WithMockUser(roles = "USER")
@@ -66,17 +64,13 @@ public class SoftwareRestControllerTest {
         // WHEN & THEN
         mockMvc.perform(get("/api/softwares")
                 .param("page", "0")
-                .param("size", "2") 
+                .param("size", "2")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size").value(2)); 
+                .andExpect(jsonPath("$.size").value(2));
     }
 
-
-
     // --- GET ALL ---
-
-    
 
     @Test
     @WithMockUser
@@ -114,7 +108,7 @@ public class SoftwareRestControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     public void testCreateSoftware_Success() throws Exception {
-        //dto for the request
+        // dto for the request
         SoftwareRequest request = new SoftwareRequest();
         request.setName("New Software");
         request.setVersion(1.0f);
@@ -139,7 +133,7 @@ public class SoftwareRestControllerTest {
         Software updatedSoftware = new Software();
         updatedSoftware.setId(1L);
         updatedSoftware.setName("Updated Name");
-        
+
         given(softwareService.updateSoftware(eq(1L), any(Software.class)))
                 .willReturn(Optional.of(updatedSoftware));
 
@@ -154,7 +148,7 @@ public class SoftwareRestControllerTest {
     @WithMockUser(roles = "ADMIN")
     public void testUpdateSoftware_NotFound() throws Exception {
         SoftwareRequest request = new SoftwareRequest();
-        
+
         given(softwareService.updateSoftware(eq(99L), any(Software.class)))
                 .willReturn(Optional.empty());
 
@@ -182,7 +176,7 @@ public class SoftwareRestControllerTest {
         mockMvc.perform(delete("/api/softwares/99"))
                 .andExpect(status().isNotFound()); // 404
     }
-    
+
     @Test
     public void testGetSoftwareUnauthenticated() throws Exception {
         mockMvc.perform(get("/api/softwares")
@@ -190,5 +184,4 @@ public class SoftwareRestControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    
 }

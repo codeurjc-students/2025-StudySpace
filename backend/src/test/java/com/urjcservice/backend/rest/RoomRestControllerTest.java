@@ -27,7 +27,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDate;
 import java.util.*;
 
-
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -48,7 +47,6 @@ public class RoomRestControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    
     @MockBean
     private RoomService roomService;
 
@@ -58,9 +56,8 @@ public class RoomRestControllerTest {
     @MockBean
     private FileStorageService fileStorageService;
 
-    @MockBean 
+    @MockBean
     private EmailService emailService;
-
 
     private Room mockRoom;
     private Software mockSoftware;
@@ -130,18 +127,16 @@ public class RoomRestControllerTest {
         request.setName("Aula Nueva");
         request.setCapacity(40);
         request.setCamp(Room.CampusType.MOSTOLES);
-        request.setSoftwareIds(List.of(10L)); 
+        request.setSoftwareIds(List.of(10L));
         request.setActive(true);
 
-
         given(softwareService.findById(10L)).willReturn(Optional.of(mockSoftware));
-        
 
         Room savedRoom = new Room();
         savedRoom.setId(2L);
         savedRoom.setName("Aula Nueva");
         savedRoom.setSoftware(List.of(mockSoftware));
-        
+
         given(roomService.save(any(Room.class))).willReturn(savedRoom);
 
         // WHEN & THEN
@@ -226,7 +221,7 @@ public class RoomRestControllerTest {
         Map<String, Object> mockStats = new HashMap<>();
         mockStats.put("occupiedPercentage", 75.5);
         mockStats.put("totalHours", 10);
-        
+
         given(roomService.getRoomDailyStats(eq(1L), any(LocalDate.class))).willReturn(mockStats);
 
         mockMvc.perform(get("/api/rooms/1/stats")
@@ -242,22 +237,24 @@ public class RoomRestControllerTest {
     public void testUploadRoomImage_Success() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "room.jpg", "image/jpeg", "fake-bytes".getBytes());
-        
-        //room exists
+
+        // room exists
         given(roomService.findById(1L)).willReturn(Optional.of(mockRoom));
-        
-        //save picture
+
+        // save picture
         given(fileStorageService.store(any())).willReturn("generated_uuid.jpg");
-        
-        //updated room
+
+        // updated room
         given(roomService.updateRoom(eq(1L), any(Room.class))).willReturn(Optional.of(mockRoom));
         mockMvc.perform(multipart("/api/rooms/1/image")
-            .file(file)
-            .with(csrf())) // Asegúrate de tener csrf si usas seguridad web
-            .andExpect(status().isOk());
-        /*mockMvc.perform(multipart("/api/rooms/1/image")
-                .file(file))
-                .andExpect(status().isOk());*/
+                .file(file)
+                .with(csrf())) // Asegúrate de tener csrf si usas seguridad web
+                .andExpect(status().isOk());
+        /*
+         * mockMvc.perform(multipart("/api/rooms/1/image")
+         * .file(file))
+         * .andExpect(status().isOk());
+         */
     }
 
     @Test
@@ -265,8 +262,8 @@ public class RoomRestControllerTest {
     public void testGetRoomImage_Success() throws Exception {
         mockRoom.setImageName("my-photo.jpg");
         given(roomService.findById(1L)).willReturn(Optional.of(mockRoom));
-        
-        //simulate file loading
+
+        // simulate file loading
         given(fileStorageService.loadAsResource("my-photo.jpg"))
                 .willReturn(new ByteArrayResource("fake-image-content".getBytes()));
 
@@ -292,16 +289,16 @@ public class RoomRestControllerTest {
         Long roomId = 1L;
         String startStr = "2026-02-01";
         String endStr = "2026-02-28";
-        
+
         RoomCalendarDTO mockDto = new RoomCalendarDTO(new ArrayList<>(), new ArrayList<>());
-        
+
         // Mock of service response
         given(roomService.findById(roomId)).willReturn(Optional.of(new Room()));
         given(roomService.getRoomCalendarData(eq(roomId), any(LocalDate.class), any(LocalDate.class)))
-            .willReturn(mockDto);
+                .willReturn(mockDto);
 
         mockMvc.perform(get("/api/rooms/{id}/calendar", roomId)
-                .param("start", "2026-02-01T00:00:00+01:00") 
+                .param("start", "2026-02-01T00:00:00+01:00")
                 .param("end", "2026-02-28T00:00:00+01:00")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())

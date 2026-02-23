@@ -6,14 +6,13 @@ import { PaginationUtil } from '../../utils/pagination.util';
 @Component({
   selector: 'app-manage-softwares',
   templateUrl: './manage-softwares.component.html',
-  //styleUrls: ['./manage-softwares.component.css']
 })
 export class ManageSoftwaresComponent implements OnInit {
   softwares: SoftwareDTO[] = [];
   pageData?: Page<SoftwareDTO>;
   currentPage: number = 0;
 
-  constructor(private readonly softwareService: SoftwareService) { }
+  constructor(private readonly softwareService: SoftwareService) {}
 
   ngOnInit(): void {
     this.loadSoftwares(0);
@@ -21,12 +20,12 @@ export class ManageSoftwaresComponent implements OnInit {
 
   loadSoftwares(page: number) {
     this.softwareService.getAllSoftwares(page).subscribe({
-        next: (data) => {
-            this.pageData = data;
-            this.softwares = data.content; 
-            this.currentPage = data.number;
-        },
-        error: (e) => console.error(e)
+      next: (data) => {
+        this.pageData = data;
+        this.softwares = data.content;
+        this.currentPage = data.number;
+      },
+      error: (e) => console.error(e),
     });
   }
   getVisiblePages(): number[] {
@@ -34,14 +33,14 @@ export class ManageSoftwaresComponent implements OnInit {
   }
 
   deleteSoftware(id: number) {
-    if(confirm("Are you sure you want to delete this software?")) {
-        this.softwareService.deleteSoftware(id).subscribe({
-            next: () => {
-                this.softwares = this.softwares.filter(s => s.id !== id);
-                alert("Software deleted!");
-            },
-            error: () => alert("Error deleting software.")
-        });
+    if (confirm('Are you sure you want to delete this software?')) {
+      this.softwareService.deleteSoftware(id).subscribe({
+        next: () => {
+          this.softwares = this.softwares.filter((s) => s.id !== id);
+          alert('Software deleted!');
+        },
+        error: () => alert('Error deleting software.'),
+      });
     }
   }
 }
