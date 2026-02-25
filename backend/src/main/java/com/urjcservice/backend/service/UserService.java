@@ -41,6 +41,9 @@ public class UserService {
         Optional<User> existing = userRepository.findById(id);
 
         existing.ifPresent(user -> {
+            if ("studyspacetfg@gmail.com".equals(user.getEmail())) {
+                throw new RuntimeException("Cannot delete the Super Administrator.");
+            }
             // if picture, first delete picture
             if (user.getImageName() != null && !user.getImageName().isEmpty()) {
                 fileStorageService.delete(user.getImageName());
@@ -74,6 +77,9 @@ public class UserService {
     // to upgrade or downgrade permisions
     public Optional<User> changeRole(Long id, String role) {
         return userRepository.findById(id).map(user -> {
+            if ("studyspacetfg@gmail.com".equals(user.getEmail()) && !"ADMIN".equals(role)) {
+                throw new RuntimeException("Cannot remove the ADMIN role from the Super Administrator.");
+            }
             // to avoid duplicities and conflicts
             user.getRoles().clear();
 
@@ -91,6 +97,9 @@ public class UserService {
     // to block or unblock a user
     public Optional<User> toggleBlock(Long id) {
         return userRepository.findById(id).map(user -> {
+            if ("studyspacetfg@gmail.com".equals(user.getEmail())) {
+                throw new RuntimeException("Cannot block the Super Administrator.");
+            }
             user.setBlocked(!user.isBlocked()); // inverts the value
             return userRepository.save(user);
         });

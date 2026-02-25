@@ -49,6 +49,7 @@
                 </button>
 
                 <button
+                  *ngIf="user.email !== 'studyspacetfg@gmail.com'"
                   class="btn btn-sm btn-outline-primary"
                   (click)="toggleAdmin(user)"
                   title="Toggle Admin Role"
@@ -61,6 +62,7 @@
                 </button>
 
                 <button
+                  *ngIf="user.email !== 'studyspacetfg@gmail.com'"
                   class="btn btn-sm"
                   [class.btn-outline-dark]="!user.blocked"
                   [class.btn-success]="user.blocked"
@@ -71,6 +73,7 @@
                 </button>
 
                 <button
+                  *ngIf="user.email !== 'studyspacetfg@gmail.com'"
                   class="btn btn-sm btn-outline-danger"
                   (click)="deleteUser(user)"
                   title="Delete User"
