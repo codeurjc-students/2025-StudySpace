@@ -71,7 +71,7 @@ services:
     restart: always
     ports:
       - "443:443" #
-      - "80:80" #  HTTPS
+      #- "80:80" #  HTTPS
     volumes:
       - ./frontend/certs:/etc/nginx/certs
       - ./backend/uploads:/usr/share/nginx/html/uploads

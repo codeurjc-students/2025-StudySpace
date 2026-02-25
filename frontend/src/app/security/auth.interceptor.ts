@@ -33,7 +33,8 @@ export class AuthInterceptor implements HttpInterceptor {
         if (
           error.status === 401 &&
           !request.url.includes('/api/auth/login') &&
-          !request.url.includes('/api/auth/refresh')
+          !request.url.includes('/api/auth/refresh') &&
+          !request.url.includes('/api/auth/logout')
         ) {
           return this.handle401Error(request, next);
         }
@@ -62,8 +63,8 @@ export class AuthInterceptor implements HttpInterceptor {
           this.isRefreshing = false;
           console.error('Failure when refreshing the token:', err);
 
-          loginService.logOut();
           alert('🔒Your session has permanently expired. Please log in again.');
+          loginService.logOut();
           return throwError(() => err);
         }),
       );
