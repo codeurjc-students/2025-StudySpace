@@ -381,14 +381,14 @@ public class ReservationService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
 
-        return reservationRepository.findByUser(user, pageable);
+        return reservationRepository.findByUserWithActivePriority(user, pageable);
     }
 
     public Page<Reservation> getReservationsByUserId(Long userId, Pageable pageable) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
 
-        return reservationRepository.findByUser(user, pageable);
+        return reservationRepository.findByUserWithActivePriority(user, pageable);
     }
 
     public List<Reservation> getActiveReservationsForRoomAndDate(Long roomId, LocalDate date) {

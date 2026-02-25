@@ -96,7 +96,7 @@ public class ReservationRestController {
 
     @GetMapping("/my-reservations")
     public ResponseEntity<Page<Reservation>> getMyReservations(
-            @PageableDefault(size = 10) @SortDefault(sort = "startDate", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 10) Pageable pageable) {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();

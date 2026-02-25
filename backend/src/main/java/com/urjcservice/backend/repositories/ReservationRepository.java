@@ -17,94 +17,89 @@ import java.time.LocalDate;
 import java.util.Date;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
-    Page<Reservation> findByUser(User user, Pageable pageable);
+        Page<Reservation> findByUser(User user, Pageable pageable);
 
-    @Modifying
-    @Transactional
-    @Query("DELETE FROM Reservation r WHERE r.room.id = :roomId AND r.endDate > :date")
-    void deleteByRoomIdAndEndDateAfter(@Param("roomId") Long roomId, @Param("date") Date date);
+        @Modifying
+        @Transactional
+        @Query("DELETE FROM Reservation r WHERE r.room.id = :roomId AND r.endDate > :date")
+        void deleteByRoomIdAndEndDateAfter(@Param("roomId") Long roomId, @Param("date") Date date);
 
-    @Query("SELECT COUNT(DISTINCT r.room.id) FROM Reservation r WHERE DATE(r.startDate) = :date AND r.cancelled = false")
-    long countOccupiedRoomsByDate(@Param("date") LocalDate date);
+        @Query("SELECT COUNT(DISTINCT r.room.id) FROM Reservation r WHERE DATE(r.startDate) = :date AND r.cancelled = false")
+        long countOccupiedRoomsByDate(@Param("date") LocalDate date);
 
-    @Query("SELECT COUNT(DISTINCT r.room.id) FROM Reservation r WHERE DATE(r.startDate) = :date AND SIZE(r.room.software) > 0 AND r.cancelled = false")
-    long countOccupiedWithSoftwareByDate(@Param("date") LocalDate date);
+        @Query("SELECT COUNT(DISTINCT r.room.id) FROM Reservation r WHERE DATE(r.startDate) = :date AND SIZE(r.room.software) > 0 AND r.cancelled = false")
+        long countOccupiedWithSoftwareByDate(@Param("date") LocalDate date);
 
-    @Query("SELECT r.startDate FROM Reservation r WHERE DATE(r.startDate) = :date AND r.cancelled = false")
-    Page<Date> findStartDatesByDate(@Param("date") LocalDate date, Pageable pageable);
+        @Query("SELECT r.startDate FROM Reservation r WHERE DATE(r.startDate) = :date AND r.cancelled = false")
+        Page<Date> findStartDatesByDate(@Param("date") LocalDate date, Pageable pageable);
 
-    @Query("SELECT r FROM Reservation r WHERE r.room.id = :roomId AND DATE(r.startDate) = :date")
-    Page<Reservation> findByRoomIdAndDate(@Param("roomId") Long roomId, @Param("date") LocalDate date,
-            Pageable pageable);
+        @Query("SELECT r FROM Reservation r WHERE r.room.id = :roomId AND DATE(r.startDate) = :date")
+        Page<Reservation> findByRoomIdAndDate(@Param("roomId") Long roomId, @Param("date") LocalDate date,
+                        Pageable pageable);
 
-    @Query("SELECT r FROM Reservation r WHERE r.room.id = :roomId " +
-            "AND r.cancelled = false " +
-            "AND r.startDate < :endDate AND r.endDate > :startDate")
-    Page<Reservation> findOverlappingReservations(@Param("roomId") Long roomId,
-            @Param("startDate") Date startDate,
-            @Param("endDate") Date endDate,
-            Pageable pageable);
+        @Query("SELECT r FROM Reservation r WHERE r.room.id = :roomId " +
+                        "AND r.cancelled = false " +
+                        "AND r.startDate < :endDate AND r.endDate > :startDate")
+        Page<Reservation> findOverlappingReservations(@Param("roomId") Long roomId,
+                        @Param("startDate") Date startDate,
+                        @Param("endDate") Date endDate,
+                        Pageable pageable);
 
-    /*
-     * @Modifying
-     * 
-     * @Transactional
-     * 
-     * @Query("UPDATE Reservation r SET r.cancelled = true WHERE r.room.id = :roomId AND r.endDate > :date"
-     * )
-     * void cancelByRoomIdAndEndDateAfter(@Param("roomId") Long
-     * roomId, @Param("date") Date date);
-     */
+        // really similar
+        @Query("SELECT r FROM Reservation r WHERE r.room.id = :roomId " +
+                        "AND DATE(r.startDate) = :date " +
+                        "AND r.cancelled = false")
+        List<Reservation> findActiveReservationsByRoomAndDate(
+                        @Param("roomId") Long roomId,
+                        @Param("date") LocalDate date);
 
-    // really similar
-    @Query("SELECT r FROM Reservation r WHERE r.room.id = :roomId " +
-            "AND DATE(r.startDate) = :date " +
-            "AND r.cancelled = false")
-    List<Reservation> findActiveReservationsByRoomAndDate(
-            @Param("roomId") Long roomId,
-            @Param("date") LocalDate date);
+        // to see total hours reserved a day
+        @Query("SELECT r FROM Reservation r WHERE r.user.id = :userId " +
+                        "AND DATE(r.startDate) = :date " +
+                        "AND r.cancelled = false")
+        List<Reservation> findActiveByUserIdAndDate(
+                        @Param("userId") Long userId,
+                        @Param("date") LocalDate date);
 
-    // to see total hours reserved a day
-    @Query("SELECT r FROM Reservation r WHERE r.user.id = :userId " +
-            "AND DATE(r.startDate) = :date " +
-            "AND r.cancelled = false")
-    List<Reservation> findActiveByUserIdAndDate(
-            @Param("userId") Long userId,
-            @Param("date") LocalDate date);
+        @Query("SELECT r FROM Reservation r WHERE r.startDate BETWEEN :now AND :limitTime AND r.reminderSent = false AND r.cancelled = false")
+        List<Reservation> findPendingReminders(@Param("now") Date now, @Param("limitTime") Date limitTime);
 
-    @Query("SELECT r FROM Reservation r WHERE r.startDate BETWEEN :now AND :limitTime AND r.reminderSent = false AND r.cancelled = false")
-    List<Reservation> findPendingReminders(@Param("now") Date now, @Param("limitTime") Date limitTime);
+        @Query("SELECT r FROM Reservation r WHERE DATE(r.startDate) = :date AND r.cancelled = false")
+        List<Reservation> findAllActiveByDate(@Param("date") LocalDate date);
 
-    @Query("SELECT r FROM Reservation r WHERE DATE(r.startDate) = :date AND r.cancelled = false")
-    List<Reservation> findAllActiveByDate(@Param("date") LocalDate date);
+        @Query("SELECT r FROM Reservation r WHERE r.room.id = :roomId AND r.endDate > :date AND r.cancelled = false")
+        List<Reservation> findActiveReservationsByRoomIdAndEndDateAfter(@Param("roomId") Long roomId,
+                        @Param("date") Date date);
 
-    @Query("SELECT r FROM Reservation r WHERE r.room.id = :roomId AND r.endDate > :date AND r.cancelled = false")
-    List<Reservation> findActiveReservationsByRoomIdAndEndDateAfter(@Param("roomId") Long roomId,
-            @Param("date") Date date);
+        @Query("SELECT r FROM Reservation r " +
+                        "WHERE r.room.id = :roomId " +
+                        "AND r.cancelled = false " +
+                        "AND r.startDate < :endDate " +
+                        "AND r.endDate > :startDate")
+        List<Reservation> findActiveReservationsByRoomIdAndDateRange(
+                        @Param("roomId") Long roomId,
+                        @Param("startDate") Date startDate,
+                        @Param("endDate") Date endDate);
 
-    @Query("SELECT r FROM Reservation r " +
-            "WHERE r.room.id = :roomId " +
-            "AND r.cancelled = false " +
-            "AND r.startDate < :endDate " +
-            "AND r.endDate > :startDate")
-    List<Reservation> findActiveReservationsByRoomIdAndDateRange(
-            @Param("roomId") Long roomId,
-            @Param("startDate") Date startDate,
-            @Param("endDate") Date endDate);
+        @Query("SELECT r FROM Reservation r WHERE r.user.id = :userId " +
+                        "AND r.cancelled = false " +
+                        "AND r.startDate < :end AND r.endDate > :start")
+        List<Reservation> findUserOverlappingReservations(// active reservations that colide with new ones
+                        @Param("userId") Long userId,
+                        @Param("start") Date start,
+                        @Param("end") Date end);
 
-    @Query("SELECT r FROM Reservation r WHERE r.user.id = :userId " +
-            "AND r.cancelled = false " +
-            "AND r.startDate < :end AND r.endDate > :start")
-    List<Reservation> findUserOverlappingReservations(// active reservations that colide with new ones
-            @Param("userId") Long userId,
-            @Param("start") Date start,
-            @Param("end") Date end);
+        Optional<Reservation> findByVerificationToken(String verificationToken);
 
-    Optional<Reservation> findByVerificationToken(String verificationToken);
+        @Modifying
+        @Transactional
+        @Query("DELETE FROM Reservation r WHERE r.verified = false AND r.tokenExpirationDate < :now")
+        void deleteExpiredReservations(@Param("now") Date now);
 
-    @Modifying
-    @Transactional
-    @Query("DELETE FROM Reservation r WHERE r.verified = false AND r.tokenExpirationDate < :now")
-    void deleteExpiredReservations(@Param("now") Date now);
+        @Query("SELECT r FROM Reservation r WHERE r.user = :user " +
+                        "ORDER BY CASE WHEN (r.cancelled = false AND r.endDate > CURRENT_TIMESTAMP) THEN 0 ELSE 1 END ASC, "
+                        +
+                        "r.startDate DESC")
+        Page<Reservation> findByUserWithActivePriority(@Param("user") User user, Pageable pageable);
 
 }

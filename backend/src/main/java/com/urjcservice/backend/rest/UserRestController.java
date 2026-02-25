@@ -166,7 +166,7 @@ public class UserRestController {
     // for getting reservations of a user
     @GetMapping("/{id}/reservations")
     public ResponseEntity<Page<Reservation>> getUserReservations(@PathVariable Long id,
-            @PageableDefault(size = 10) @SortDefault(sort = "startDate", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 10) Pageable pageable) {
         return ResponseEntity.ok(reservationService.getReservationsByUserId(id, pageable));
     }
 
