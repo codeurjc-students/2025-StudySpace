@@ -3,6 +3,7 @@ import {
   TestBed,
   fakeAsync,
   tick,
+  flush,
 } from '@angular/core/testing';
 import { RoomDetailComponent } from './room-detail.component';
 import { RoomsService } from '../../services/rooms.service';
@@ -17,7 +18,16 @@ describe('RoomDetailComponent', () => {
   let fixture: ComponentFixture<RoomDetailComponent>;
   let mockRoomsService: any;
 
-  const defaultRoom = { id: 1, name: 'Lab 1', active: true, software: [] };
+  const defaultRoom: any = {
+    id: 1,
+    name: 'Lab 1',
+    active: true,
+    software: [],
+    capacity: 30,
+    camp: 'MOSTOLES',
+    place: 'Edificio Departamental',
+    coordenades: '40.33, -3.87',
+  };
   const mockStats = {
     hourlyStatus: { '8': false, '9': true },
     occupiedPercentage: 50,
@@ -292,4 +302,70 @@ describe('RoomDetailComponent', () => {
       .toBeTruthy();
     expect(lowOccupancy.backgroundColor).toBe('#d1e7dd');
   });
+
+  it('should call loadCalendarData when datesSet is triggered from calendar', () => {
+    spyOn(component, 'loadCalendarData');
+    const dateInfo = {
+      startStr: '2026-02-01T00:00:00',
+      endStr: '2026-03-01T00:00:00',
+    };
+
+    if (component.calendarOptions.datesSet) {
+      component.calendarOptions.datesSet(dateInfo as any);
+    }
+
+    expect(component.loadCalendarData).toHaveBeenCalledWith(
+      '2026-02-01T00:00:00',
+      '2026-03-01T00:00:00',
+    );
+  });
+
+  it('should handle error when loadCalendarData fails', () => {
+    spyOn(console, 'error');
+    mockRoomsService.getRoomCalendar.and.returnValue(
+      throwError(() => new Error('Calendar HTTP Error')),
+    );
+
+    component.roomId = 1;
+
+    component.loadCalendarData('start', 'end');
+
+    expect(console.error).toHaveBeenCalledWith(
+      'Error loading calendar:', 
+      jasmine.any(Error),
+    );
+  });
+
+  it('should destroy existing charts before rendering new ones', fakeAsync(() => {
+    component.room = defaultRoom;
+    component.roomId = 1;
+    fixture.detectChanges();
+
+    mockRoomsService.getRoomStats.and.returnValue(of(mockStats));
+
+    component.selectedDate = '2026-02-10';
+    component.loadStats();
+    tick();
+
+    expect((component as any).hourlyChart).toBeTruthy();
+    expect((component as any).occupancyChart).toBeTruthy();
+
+    const hourlyChartSpy = spyOn(
+      (component as any).hourlyChart,
+      'destroy',
+    ).and.callThrough();
+    const occupancyChartSpy = spyOn(
+      (component as any).occupancyChart,
+      'destroy',
+    ).and.callThrough();
+
+    component.selectedDate = '2026-02-11';
+    component.loadStats();
+    tick();
+
+    expect(hourlyChartSpy).toHaveBeenCalled();
+    expect(occupancyChartSpy).toHaveBeenCalled();
+
+    flush();
+  }));
 });
