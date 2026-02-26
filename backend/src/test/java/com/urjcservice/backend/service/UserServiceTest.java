@@ -321,4 +321,47 @@ public class UserServiceTest {
         verify(userRepository, times(1)).delete(user);
     }
 
+    @Test
+    @DisplayName("Delete User - Should throw exception for Super Admin")
+    void testDeleteUser_SuperAdminException() {
+        User superAdmin = new User();
+        superAdmin.setEmail("studyspacetfg@gmail.com");
+        when(userRepository.findById(1L)).thenReturn(Optional.of(superAdmin));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> userService.deleteById(1L));
+        assertEquals("Cannot delete the Super Administrator.", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("Toggle Block - Should throw exception for Super Admin")
+    void testToggleBlock_SuperAdminException() {
+        User superAdmin = new User();
+        superAdmin.setEmail("studyspacetfg@gmail.com");
+        when(userRepository.findById(1L)).thenReturn(Optional.of(superAdmin));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> userService.toggleBlock(1L));
+        assertEquals("Cannot block the Super Administrator.", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("Change Role - Should throw exception if removing ADMIN from Super Admin")
+    void testChangeRole_SuperAdminException() {
+        User superAdmin = new User();
+        superAdmin.setEmail("studyspacetfg@gmail.com");
+        when(userRepository.findById(1L)).thenReturn(Optional.of(superAdmin));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> userService.changeRole(1L, "USER"));
+        assertEquals("Cannot remove the ADMIN role from the Super Administrator.", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("Exists By Email - True and False")
+    void testExistsByEmail() {
+        when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(new User()));
+        when(userRepository.findByEmail("notfound@test.com")).thenReturn(Optional.empty());
+
+        assertTrue(userService.existsByEmail("test@test.com"));
+        assertFalse(userService.existsByEmail("notfound@test.com"));
+    }
+
 }

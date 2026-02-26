@@ -574,4 +574,50 @@ public class RoomServiceTest {
         assertEquals(monday.toString(), result.getDailyOccupancy().get(1).getDate());
     }
 
+    @Test
+    @DisplayName("Save Room - Should fail if name already exists")
+    void testSaveRoom_DuplicateName() {
+        Room room = new Room();
+        room.setName("Aula 1");
+
+        when(roomRepository.existsByName("Aula 1")).thenReturn(true);
+
+        assertThrows(ResponseStatusException.class, () -> roomService.save(room));
+    }
+
+    @Test
+    @DisplayName("Update Room - Changing to disabled cancels active reservations")
+    void testUpdateRoom_DeactivateCancelsReservations() {
+        // Arrange
+        Room existing = new Room();
+        existing.setName("Aula 1");
+        existing.setActive(true);
+
+        Room updated = new Room();
+        updated.setName("Aula 1");
+        updated.setActive(false);
+
+        Reservation res = new Reservation();
+        User u = new User();
+        u.setEmail("test@test.com");
+        u.setName("Test");
+        res.setUser(u);
+        res.setStartDate(new Date());
+        res.setEndDate(new Date());
+
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(reservationRepository.findActiveReservationsByRoomIdAndEndDateAfter(eq(1L), any(Date.class)))
+                .thenReturn(List.of(res));
+        when(roomRepository.save(any())).thenAnswer(i -> i.getArguments()[0]);
+
+        // Act
+        roomService.updateRoom(1L, updated);
+
+        // Assert
+        assertTrue(res.isCancelled());
+        verify(reservationRepository, times(1)).save(res);
+        verify(emailService, times(1)).sendReservationCancellationEmail(anyString(), anyString(), any(), anyString(),
+                anyString(), anyString(), anyString());
+    }
+
 }

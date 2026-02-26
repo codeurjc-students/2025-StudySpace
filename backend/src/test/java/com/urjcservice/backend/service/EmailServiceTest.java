@@ -16,9 +16,14 @@ import jakarta.mail.Session;
 import jakarta.mail.Message;
 import java.util.Date;
 import static org.mockito.Mockito.when;
-
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -187,6 +192,21 @@ public class EmailServiceTest {
         assertTrue(body.contains(token), "The email body must contain the token");
         // Verify route
         assertTrue(body.contains("verify-reservation"), "The body must contain the path verify-reservation");
+    }
+
+    @Test
+    @DisplayName("Should handle MessagingException cleanly")
+    void testSendReservationConfirmationEmail_MessagingException() throws jakarta.mail.MessagingException {
+        MimeMessage mimeMessage = mock(MimeMessage.class);
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+
+        doThrow(new jakarta.mail.MessagingException("Forced error"))
+                .when(mimeMessage).setSubject(anyString(), anyString());
+
+        assertDoesNotThrow(() -> {
+            emailService.sendReservationConfirmationEmail("test@test.com", "John", "Room A", "Place", "40.0,-3.0",
+                    new Date(), new Date());
+        });
     }
 
 }
