@@ -8,7 +8,6 @@ import { ReservationService } from './reservation.service';
 describe('ReservationService', () => {
   let service: ReservationService;
   let httpMock: HttpTestingController;
-
   const BASE_URL = '/api/reservations';
 
   beforeEach(() => {
@@ -28,120 +27,85 @@ describe('ReservationService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('getReservationsByUser should call correct URL', () => {
-    service.getReservationsByUser(1, 0, 5).subscribe();
-
-    const req = httpMock.expectOne(`/api/users/1/reservations?page=0&size=5`);
+  it('should get reservations by user', () => {
+    service.getReservationsByUser(1, 0, 10).subscribe();
+    const req = httpMock.expectOne(`/api/users/1/reservations?page=0&size=10`);
     expect(req.request.method).toBe('GET');
     req.flush({});
   });
 
-  it('deleteReservation should call DELETE api', () => {
+  it('should delete reservation', () => {
     service.deleteReservation(123).subscribe();
-
-    const req = httpMock.expectOne((req) =>
-      req.url.includes('/api/reservations/123'),
-    );
+    const req = httpMock.expectOne(`${BASE_URL}/123`);
     expect(req.request.method).toBe('DELETE');
     req.flush({});
   });
 
-  it('updateReservation should call PUT api with data', () => {
-    const updateData = { reason: 'Changed' };
-    service.updateReservation(10, updateData).subscribe();
+  it('should update a reservation', () => {
+    const mockRes = { reason: 'update' };
+    service.updateReservation(1, mockRes).subscribe();
+    const req = httpMock.expectOne(`${BASE_URL}/1`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual(mockRes);
+    req.flush({});
+  });
 
-    const req = httpMock.expectOne((req) =>
-      req.url.includes('/api/reservations/10'),
+  it('should create a reservation', () => {
+    const startDate = new Date();
+    const endDate = new Date();
+    service.createReservation(1, startDate, endDate, 'test reason').subscribe();
+    const req = httpMock.expectOne(`${BASE_URL}`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      roomId: 1,
+      startDate: startDate,
+      endDate: endDate,
+      reason: 'test reason',
+    });
+    req.flush({});
+  });
+
+  it('should get my reservations', () => {
+    service.getMyReservations(0, 10).subscribe();
+    const req = httpMock.expectOne(
+      `${BASE_URL}/my-reservations?page=0&size=10`,
     );
+    expect(req.request.method).toBe('GET');
+    req.flush({});
+  });
+
+  it('should cancel a reservation', () => {
+    service.cancelReservation(1).subscribe();
+    const req = httpMock.expectOne(`${BASE_URL}/1/cancel`);
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({});
+    req.flush({});
+  });
+
+  it('should check availability', () => {
+    service.checkAvailability(5, '2026-03-01').subscribe();
+    const req = httpMock.expectOne(
+      `${BASE_URL}/check-availability?roomId=5&date=2026-03-01`,
+    );
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+  });
+
+  it('should update reservation admin', () => {
+    const updateData = { roomId: 5, adminReason: 'Moved' };
+    service.updateReservationAdmin(1, updateData).subscribe();
+    const req = httpMock.expectOne(`${BASE_URL}/admin/1`);
     expect(req.request.method).toBe('PUT');
     expect(req.request.body).toEqual(updateData);
     req.flush({});
   });
 
-  it('createReservation should post correct body structure', () => {
-    const roomId = 5;
-    const startDate = new Date('2026-01-01T10:00:00');
-    const endDate = new Date('2026-01-01T12:00:00');
-    const reason = 'Meeting';
-
-    service.createReservation(roomId, startDate, endDate, reason).subscribe();
-
-    const req = httpMock.expectOne(`${BASE_URL}`);
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({
-      roomId,
-      startDate,
-      endDate,
-      reason,
-    });
-    req.flush({});
-  });
-
-  it('getMyReservations should call correct URL', () => {
-    service.getMyReservations(0, 10).subscribe();
-
-    const req = httpMock.expectOne((req) =>
-      req.url.includes('/my-reservations'),
-    );
-    expect(req.request.method).toBe('GET');
-    req.flush({});
-  });
-
-  it('cancelReservation should call PATCH api', () => {
-    service.cancelReservation(55).subscribe();
-
-    const req = httpMock.expectOne(`${BASE_URL}/55/cancel`);
-    expect(req.request.method).toBe('PATCH');
-    req.flush({});
-  });
-
-  it('checkAvailability should call GET with query params', () => {
-    const roomId = 1;
-    const dateStr = '2026-01-31';
-
-    service.checkAvailability(roomId, dateStr).subscribe();
-
-    const req = httpMock.expectOne(
-      `${BASE_URL}/check-availability?roomId=1&date=2026-01-31`,
-    );
-    expect(req.request.method).toBe('GET');
-    req.flush([]);
-  });
-
-  it('cancelReservationAdmin should send PATCH request with reason', () => {
-    const reservationId = 123;
+  it('should cancel reservation admin', () => {
     const reason = 'Maintenance issue';
-    service.cancelReservationAdmin(reservationId, reason).subscribe();
-
-    const req = httpMock.expectOne(`${BASE_URL}/admin/${reservationId}/cancel`);
+    service.cancelReservationAdmin(123, reason).subscribe();
+    const req = httpMock.expectOne(`${BASE_URL}/admin/123/cancel`);
     expect(req.request.method).toBe('PATCH');
     expect(req.request.body).toEqual({ reason });
     req.flush({});
   });
-
-  it('updateReservationAdmin should send PUT request with adminReason', () => {
-    const reservationId = 1;
-    const updateData = { roomId: 5, adminReason: 'Moved' };
-
-    service.updateReservationAdmin(reservationId, updateData).subscribe();
-    const req = httpMock.expectOne(`${BASE_URL}/admin/${reservationId}`);
-    expect(req.request.method).toBe('PUT');
-    req.flush({});
-  });
-
-  it('checkAvailability should format URL parameters correctly', () => {
-    service.checkAvailability(5, '2026-12-25').subscribe();
-
-    // Ajustado para que coincida con el formato del servicio
-    const req = httpMock.expectOne(
-      `${BASE_URL}/check-availability?roomId=5&date=2026-12-25`,
-    );
-    expect(req.request.method).toBe('GET');
-    req.flush([]);
-  });
-
-
-
-
-  
 });
