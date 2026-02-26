@@ -14,8 +14,22 @@ describe('ManageUsersComponent', () => {
   let mockUserService: any;
   let mockLoginService: any;
 
-  const mockUser1: UserDTO = { id: 1, name: 'User1', email: 'u1@test.com', roles: ['USER'], blocked: false, reservations: [] };
-  const mockUserAdmin: UserDTO = { id: 2, name: 'Admin1', email: 'a1@test.com', roles: ['USER', 'ADMIN'], blocked: true, reservations: [] };
+  const mockUser1: UserDTO = {
+    id: 1,
+    name: 'User1',
+    email: 'u1@test.com',
+    roles: ['USER'],
+    blocked: false,
+    reservations: [],
+  };
+  const mockUserAdmin: UserDTO = {
+    id: 2,
+    name: 'Admin1',
+    email: 'a1@test.com',
+    roles: ['USER', 'ADMIN'],
+    blocked: true,
+    reservations: [],
+  };
 
   const mockPageData = {
     content: [mockUser1, mockUserAdmin],
@@ -24,7 +38,7 @@ describe('ManageUsersComponent', () => {
     size: 10,
     first: true,
     last: false,
-    totalElements: 50
+    totalElements: 50,
   };
 
   beforeEach(async () => {
@@ -32,20 +46,20 @@ describe('ManageUsersComponent', () => {
       getUsers: jasmine.createSpy('getUsers').and.returnValue(of(mockPageData)),
       changeRole: jasmine.createSpy('changeRole').and.returnValue(of({})),
       toggleBlock: jasmine.createSpy('toggleBlock').and.returnValue(of({})),
-      deleteUser: jasmine.createSpy('deleteUser').and.returnValue(of({}))
+      deleteUser: jasmine.createSpy('deleteUser').and.returnValue(of({})),
     };
 
     mockLoginService = {
-      currentUser: { id: 999 } 
+      currentUser: { id: 999 },
     };
 
     await TestBed.configureTestingModule({
-      declarations: [ ManageUsersComponent,PaginationComponent ],
-      imports: [ RouterTestingModule, FormsModule ],
+      declarations: [ManageUsersComponent, PaginationComponent],
+      imports: [RouterTestingModule, FormsModule],
       providers: [
         { provide: UserService, useValue: mockUserService },
-        { provide: LoginService, useValue: mockLoginService }
-      ]
+        { provide: LoginService, useValue: mockLoginService },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ManageUsersComponent);
@@ -60,8 +74,10 @@ describe('ManageUsersComponent', () => {
   });
 
   it('should handle error when loading users', () => {
-    spyOn(console, 'error'); 
-    mockUserService.getUsers.and.returnValue(throwError(() => new Error('Load error')));
+    spyOn(console, 'error');
+    mockUserService.getUsers.and.returnValue(
+      throwError(() => new Error('Load error')),
+    );
     component.loadUsers(1);
     expect(console.error).toHaveBeenCalled();
   });
@@ -71,7 +87,7 @@ describe('ManageUsersComponent', () => {
   it('should toggle admin role', () => {
     component.toggleAdmin(mockUser1);
     expect(mockUserService.changeRole).toHaveBeenCalledWith(1, true);
-    expect(mockUserService.getUsers).toHaveBeenCalledTimes(2); 
+    expect(mockUserService.getUsers).toHaveBeenCalledTimes(2);
   });
 
   it('should toggle block status', () => {
@@ -98,9 +114,11 @@ describe('ManageUsersComponent', () => {
   it('should handle error when deleting user', () => {
     spyOn(window, 'confirm').and.returnValue(true);
     spyOn(window, 'alert');
-    spyOn(console, 'error'); 
+    spyOn(console, 'error');
 
-    mockUserService.deleteUser.and.returnValue(throwError(() => new Error('Delete failed')));
+    mockUserService.deleteUser.and.returnValue(
+      throwError(() => new Error('Delete failed')),
+    );
 
     component.deleteUser(mockUser1);
 
@@ -126,31 +144,42 @@ describe('ManageUsersComponent', () => {
     expect(pages).toContain(15);
   });
 
-
-
-
-
-
   it('should render user image URL in the table', () => {
-    const userWithPic: UserDTO = { id: 5, name: 'User Pic', email: 'p@test.com', roles: [], blocked: false, reservations: [], imageName: 'avatar.png' };
-    
+    const userWithPic: UserDTO = {
+      id: 5,
+      name: 'User Pic',
+      email: 'p@test.com',
+      roles: [],
+      blocked: false,
+      reservations: [],
+      imageName: 'avatar.png',
+    };
+
     component.users = [userWithPic];
     fixture.detectChanges();
 
-    const img: HTMLImageElement = fixture.nativeElement.querySelector('tbody tr td img');
-    
+    const img: HTMLImageElement =
+      fixture.nativeElement.querySelector('tbody tr td img');
+
     expect(img).toBeTruthy();
     expect(img.src).toContain('/api/users/5/image');
   });
 
   it('should render placeholder when user has no image', () => {
-    const userNoPic: UserDTO = { id: 6, name: 'User NoPic', email: 'np@test.com', roles: [], blocked: false, reservations: [] };
-    
+    const userNoPic: UserDTO = {
+      id: 6,
+      name: 'User NoPic',
+      email: 'np@test.com',
+      roles: [],
+      blocked: false,
+      reservations: [],
+    };
+
     component.users = [userNoPic];
     fixture.detectChanges();
 
-    const img: HTMLImageElement = fixture.nativeElement.querySelector('tbody tr td img');
+    const img: HTMLImageElement =
+      fixture.nativeElement.querySelector('tbody tr td img');
     expect(img.src).toContain('assets/user_placeholder.png');
   });
-
 });

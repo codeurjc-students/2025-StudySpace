@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # Data Base MySQL
@@ -9,29 +9,27 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: toor
       MYSQL_DATABASE: study_space_db
-      
+
       TZ: Europe/Madrid
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 20s
       retries: 10
 
+  #mailhog:
+  #   image: mailhog/mailhog
+  #  container_name: study_space_mailhog
+  # restart: always
+  #ports:
+  # - "1025:1025" # SMTP (backend send)
+  #- "8025:8025" # Web port(for emails)
 
-
-  mailhog:
-      image: mailhog/mailhog
-      container_name: study_space_mailhog
-      restart: always
-      ports:
-        - "1025:1025" # SMTP (backend send)
-        - "8025:8025" # Web port(for emails)
-        
   # Backend (Spring Boot)
-  backend:  
+  backend:
     build: ./backend
     container_name: study_space_backend
     restart: always
@@ -40,15 +38,15 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-      mailhog:
-        condition: service_started
+      #mailhog:
+      # condition: service_started
     environment:
-      SPRING_MAIL_HOST: mailhog
-      SPRING_MAIL_PORT: 1025
-      SPRING_MAIL_USERNAME: test
-      SPRING_MAIL_PASSWORD: test
-      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: false
-      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: false
+      #SPRING_MAIL_HOST: mailhog
+      #SPRING_MAIL_PORT: 1025
+      #SPRING_MAIL_USERNAME: test
+      #SPRING_MAIL_PASSWORD: test
+      #SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: false
+      #SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: false
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/study_space_db
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: toor
@@ -60,21 +58,20 @@ services:
       SERVER_SSL_KEY_STORE_PASSWORD: "password"
       SERVER_SSL_KEY_STORE_TYPE: "JKS"
 
-
       TZ: Europe/Madrid
       JAVA_TOOL_OPTIONS: "-Duser.timezone=Europe/Madrid"
 
     volumes:
-      - ./backend/uploads:/app/uploads 
+      - ./backend/uploads:/app/uploads
 
-  # 3. Frontend (Angular) 
+  # 3. Frontend (Angular)
   frontend:
     build: ./frontend
     container_name: study_space_frontend
     restart: always
     ports:
-      - "443:443"  # 
-      - "80:80"    #  HTTPS 
+      - "443:443" #
+      #- "80:80" #  HTTPS
     volumes:
       - ./frontend/certs:/etc/nginx/certs
       - ./backend/uploads:/usr/share/nginx/html/uploads
@@ -83,8 +80,6 @@ services:
 
 volumes:
   mysql_data:
-
-
 
   #docker-compose up -d --build
   #for restart:      docker-compose down -v

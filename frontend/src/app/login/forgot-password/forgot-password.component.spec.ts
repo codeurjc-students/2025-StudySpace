@@ -15,19 +15,14 @@ describe('ForgotPasswordComponent', () => {
     const spy = jasmine.createSpyObj('LoginService', ['forgotPassword']);
 
     await TestBed.configureTestingModule({
-      declarations: [ ForgotPasswordComponent ],
-      imports: [ 
-        FormsModule,            
-        RouterTestingModule,    
-        HttpClientTestingModule 
-      ],
-      providers: [
-        { provide: LoginService, useValue: spy }
-      ]
-    })
-    .compileComponents();
+      declarations: [ForgotPasswordComponent],
+      imports: [FormsModule, RouterTestingModule, HttpClientTestingModule],
+      providers: [{ provide: LoginService, useValue: spy }],
+    }).compileComponents();
 
-    loginServiceSpy = TestBed.inject(LoginService) as jasmine.SpyObj<LoginService>;
+    loginServiceSpy = TestBed.inject(
+      LoginService,
+    ) as jasmine.SpyObj<LoginService>;
     fixture = TestBed.createComponent(ForgotPasswordComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

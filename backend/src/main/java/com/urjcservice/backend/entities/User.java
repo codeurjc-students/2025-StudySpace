@@ -21,16 +21,16 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String email; //Primary key
+    private String email; // Primary key
     private String encodedPassword;
     private String name;
-    private UserType type; //admin, user not-registered and registered
-    private boolean blocked = false;//in order to block users
+    private UserType type; // admin, user not-registered and registered
+    private boolean blocked = false;// in order to block users
 
-    private String resetPasswordToken;//to recover password
+    private String resetPasswordToken;// to recover password
     private LocalDateTime resetPasswordTokenExpiry;
 
-    @ElementCollection(fetch = FetchType.EAGER)//for later autentication
+    @ElementCollection(fetch = FetchType.EAGER) // for later autentication
     private List<String> roles;
 
     @Column(name = "image_name")
@@ -50,37 +50,47 @@ public class User {
         this.name = name;
         this.type = type;
     }
-    
+
     public Long getId() {
         return id;
     }
+
     public void setId(Long id) {
         this.id = id;
     }
+
     public String getEmail() {
         return email;
     }
+
     public void setEmail(String email) {
         this.email = email;
     }
+
     public String getEncodedPassword() {
         return encodedPassword;
     }
+
     public void setEncodedPassword(String password) {
         this.encodedPassword = password;
     }
+
     public String getName() {
         return name;
     }
+
     public void setName(String name) {
         this.name = name;
     }
+
     public UserType getType() {
         return type;
     }
+
     public void setType(UserType type) {
         this.type = type;
     }
+
     public String getImageName() {
         return imageName;
     }
@@ -108,22 +118,25 @@ public class User {
     public void removeReservation(Reservation reservation) {
         if (reservation != null && this.reservations.remove(reservation) && reservation.getUser() == this) {
             reservation.setUser(null);
-            
+
         }
     }
+
     public List<String> getRoles() {
         return roles;
     }
+
     public void setRoles(List<String> roles) {
         this.roles = roles;
     }
+
     public boolean isBlocked() {
         return blocked;
     }
+
     public void setBlocked(boolean blocked) {
         this.blocked = blocked;
     }
-
 
     public String getResetPasswordToken() {
         return resetPasswordToken;

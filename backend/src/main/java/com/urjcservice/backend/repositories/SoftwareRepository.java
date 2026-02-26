@@ -6,7 +6,6 @@ import java.util.Optional;
 
 public interface SoftwareRepository extends JpaRepository<Software, Long> {
 
-
     Optional<Software> findByNameAndVersion(String name, Float version);
 
 }

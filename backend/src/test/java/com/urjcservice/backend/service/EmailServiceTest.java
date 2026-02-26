@@ -16,9 +16,14 @@ import jakarta.mail.Session;
 import jakarta.mail.Message;
 import java.util.Date;
 import static org.mockito.Mockito.when;
-
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,13 +54,12 @@ public class EmailServiceTest {
         verify(mailSender).send(messageCaptor.capture());
 
         SimpleMailMessage sentMessage = messageCaptor.getValue();
-        
+
         assertEquals("test@urjc.es", sentMessage.getFrom());
         assertEquals(to, sentMessage.getTo()[0]);
         assertEquals("Password reset", sentMessage.getSubject());
         assertTrue(sentMessage.getText().contains(resetUrl));
     }
-
 
     @Test
     @DisplayName("Should send reservation reminder email with correct content")
@@ -78,16 +82,13 @@ public class EmailServiceTest {
         assertEquals("test@urjc.es", sentMessage.getFrom());
         assertEquals(to, sentMessage.getTo()[0]);
         assertEquals("Reminder: Your reservation starts in 15 minutes", sentMessage.getSubject());
-        
-        //verify
+
+        // verify
         String body = sentMessage.getText();
         assertTrue(body.contains("Alex"));
         assertTrue(body.contains("Lab 1"));
         assertTrue(body.contains("10:30"));
     }
-
-
-
 
     @Test
     @DisplayName("Should send modification email with end time and reason")
@@ -98,7 +99,7 @@ public class EmailServiceTest {
         String roomName = "Lab 3";
         String date = "2026-03-15";
         String startTime = "10:00";
-        String endTime = "12:00"; 
+        String endTime = "12:00";
         String reason = "Maintenance works";
 
         // Act
@@ -112,9 +113,9 @@ public class EmailServiceTest {
         String body = sentMessage.getText();
 
         assertEquals(to, sentMessage.getTo()[0]);
-        assertTrue(sentMessage.getSubject().contains("modified")); 
+        assertTrue(sentMessage.getSubject().contains("modified"));
         assertTrue(body.contains(reason));
-        assertTrue(body.contains(endTime)); 
+        assertTrue(body.contains(endTime));
         assertTrue(body.contains(roomName));
     }
 
@@ -124,23 +125,21 @@ public class EmailServiceTest {
         // Arrange
         String to = "student@test.com";
         String reason = "Classroom closure";
-        
+
         // Act
         emailService.sendReservationCancellationEmail(
-            to, "Alex", "Lab 1", "2026-03-20", "09:00", "11:00", reason
-        );
+                to, "Alex", "Lab 1", "2026-03-20", "09:00", "11:00", reason);
 
         // Assert
         ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
         verify(mailSender).send(messageCaptor.capture());
 
         SimpleMailMessage msg = messageCaptor.getValue();
-        
+
         assertTrue(msg.getSubject().contains("CANCELLED"));
         assertTrue(msg.getText().contains(reason));
-        assertTrue(msg.getText().contains("11:00")); 
+        assertTrue(msg.getText().contains("11:00"));
     }
-
 
     @Test
     @DisplayName("Should send reservation confirmation email with ICS attachment")
@@ -149,10 +148,10 @@ public class EmailServiceTest {
         String to = "user@test.com";
         String userName = "John Doe";
         String roomName = "Lab A";
-        String place = "Building 1";      
-        String coords = "40.5,-3.5";      
+        String place = "Building 1";
+        String coords = "40.5,-3.5";
         Date start = new Date();
-        Date end = new Date(System.currentTimeMillis() + 3600000); 
+        Date end = new Date(System.currentTimeMillis() + 3600000);
 
         MimeMessage mimeMessage = new MimeMessage((Session) null);
         when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
@@ -168,7 +167,6 @@ public class EmailServiceTest {
         assertEquals(to, sentMessage.getRecipients(Message.RecipientType.TO)[0].toString());
         assertEquals("Booking confirmation - " + roomName, sentMessage.getSubject());
     }
-
 
     @Test
     @DisplayName("Should send verification email with link")
@@ -188,13 +186,27 @@ public class EmailServiceTest {
         SimpleMailMessage sentMsg = captor.getValue();
         assertEquals(to, sentMsg.getTo()[0]);
         assertTrue(sentMsg.getSubject().contains("Action Required"));
-        
+
         String body = sentMsg.getText();
         // Verify token
         assertTrue(body.contains(token), "The email body must contain the token");
-        // Verify route 
+        // Verify route
         assertTrue(body.contains("verify-reservation"), "The body must contain the path verify-reservation");
     }
-    
+
+    @Test
+    @DisplayName("Should handle MessagingException cleanly")
+    void testSendReservationConfirmationEmail_MessagingException() throws jakarta.mail.MessagingException {
+        MimeMessage mimeMessage = mock(MimeMessage.class);
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+
+        doThrow(new jakarta.mail.MessagingException("Forced error"))
+                .when(mimeMessage).setSubject(anyString(), anyString());
+
+        assertDoesNotThrow(() -> {
+            emailService.sendReservationConfirmationEmail("test@test.com", "John", "Room A", "Place", "40.0,-3.0",
+                    new Date(), new Date());
+        });
+    }
 
 }

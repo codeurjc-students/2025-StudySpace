@@ -1,5 +1,8 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import {
+  HttpClientTestingModule,
+  HttpTestingController,
+} from '@angular/common/http/testing';
 import { RoomsService } from './rooms.service';
 
 describe('RoomsService', () => {
@@ -10,7 +13,7 @@ describe('RoomsService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [RoomsService]
+      providers: [RoomsService],
     });
     service = TestBed.inject(RoomsService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -28,7 +31,7 @@ describe('RoomsService', () => {
   });
 
   it('should delete a room', () => {
-    service.deleteRoom(1, "").subscribe();
+    service.deleteRoom(1, '').subscribe();
     const req = httpMock.expectOne(`${BASE_URL}/1?reason=`);
     expect(req.request.method).toBe('DELETE');
     req.flush({});
@@ -37,7 +40,7 @@ describe('RoomsService', () => {
   it('should delete a room with a reason', () => {
     const reason = 'Mantenimiento preventivo';
     service.deleteRoom(1, reason).subscribe();
-    
+
     const encodedReason = encodeURIComponent(reason);
     const req = httpMock.expectOne(`${BASE_URL}/1?reason=${encodedReason}`);
     expect(req.request.method).toBe('DELETE');
@@ -67,7 +70,9 @@ describe('RoomsService', () => {
     const roomId = 123;
     service.getRoom(roomId).subscribe();
 
-    const req = httpMock.expectOne(`${BASE_URL}/${roomId}?projection=withSoftware`);
+    const req = httpMock.expectOne(
+      `${BASE_URL}/${roomId}?projection=withSoftware`,
+    );
     expect(req.request.method).toBe('GET');
     req.flush({ id: roomId, name: 'Test Room' });
   });
@@ -75,7 +80,7 @@ describe('RoomsService', () => {
   it('should update room data', () => {
     const roomId = 1;
     const updateData = { name: 'Updated Name', capacity: 50 };
-    
+
     service.updateRoom(roomId, updateData).subscribe();
 
     const req = httpMock.expectOne(`${BASE_URL}/${roomId}`);
@@ -87,7 +92,7 @@ describe('RoomsService', () => {
   it('should get room stats for a specific date', () => {
     const roomId = 1;
     const date = '2024-05-20';
-    
+
     service.getRoomStats(roomId, date).subscribe();
 
     const req = httpMock.expectOne(`${BASE_URL}/${roomId}/stats?date=${date}`);
@@ -99,8 +104,27 @@ describe('RoomsService', () => {
     const stringId = 'abc-123';
     service.getRoom(stringId).subscribe();
 
-    const req = httpMock.expectOne(`${BASE_URL}/${stringId}?projection=withSoftware`);
+    const req = httpMock.expectOne(
+      `${BASE_URL}/${stringId}?projection=withSoftware`,
+    );
     expect(req.request.method).toBe('GET');
     req.flush({});
+  });
+
+  it('should get room calendar data', () => {
+    const roomId = 1;
+    const start = '2026-02-01T00:00:00+01:00';
+    const end = '2026-03-14T00:00:00+01:00';
+    const mockResponse = { events: [], dailyOccupancy: [] };
+
+    service.getRoomCalendar(roomId, start, end).subscribe((res) => {
+      expect(res).toEqual(mockResponse);
+    });
+
+    const req = httpMock.expectOne(
+      `/api/rooms/${roomId}/calendar?start=${start}&end=${end}`,
+    );
+    expect(req.request.method).toBe('GET');
+    req.flush(mockResponse);
   });
 });

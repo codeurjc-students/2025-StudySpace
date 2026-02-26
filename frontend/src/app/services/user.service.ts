@@ -4,19 +4,17 @@ import { Observable } from 'rxjs';
 import { UserDTO } from '../dtos/user.dto';
 import { Page } from '../dtos/page.model';
 
-
 //const BASE_URL = 'https://localhost:8443/api/users';
 const BASE_URL = '/api/users';
 
-
 @Injectable({ providedIn: 'root' })
 export class UserService {
-
-  constructor(private readonly http: HttpClient) { }
-
+  constructor(private readonly http: HttpClient) {}
 
   getUsers(page: number = 0, size: number = 10): Observable<Page<UserDTO>> {
-    return this.http.get<Page<UserDTO>>(`${BASE_URL}?page=${page}&size=${size}`);
+    return this.http.get<Page<UserDTO>>(
+      `${BASE_URL}?page=${page}&size=${size}`,
+    );
   }
 
   changeRole(id: number, isAdmin: boolean): Observable<any> {
@@ -37,5 +35,4 @@ export class UserService {
     formData.append('file', file);
     return this.http.post(`${BASE_URL}/${id}/image`, formData);
   }
-
 }

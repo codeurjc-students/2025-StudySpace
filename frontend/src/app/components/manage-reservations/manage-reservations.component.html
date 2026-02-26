@@ -1,154 +1,230 @@
 <div class="container mt-5 mb-5">
-    <h2 class="mb-4 text-dark fw-bold">Manage User Reservations</h2>
+  <h2 class="mb-4 text-dark fw-bold">Manage User Reservations</h2>
 
-    <div *ngIf="editingReservation" class="card shadow-lg mb-4 border-warning">
-        <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between align-items-center">
-            <span>Editing Reservation #{{ editingReservation.id }}</span>
-            <button type="button" class="btn-close" aria-label="Close" (click)="cancelEdit()"></button>
-        </div>
-        <div class="card-body">
-            <form (ngSubmit)="saveEdit()">
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold" for="editRoomId">Room</label>
-                        <select [(ngModel)]="editingReservation.roomId" 
-                                (change)="onConfigChange()"
-                                name="roomId" id="editRoomId" class="form-select">
-                            <option *ngFor="let r of rooms" [value]="r.id">{{ r.name }}</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold" for="editDate">Date</label>
-                        <input type="date" [(ngModel)]="editDateStr" 
-                               (change)="onConfigChange()"
-                               [min]="minDate"
-                               name="editDate" id="editDate" class="form-control">
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold" for="editStartTime">Start Time</label>
-                        <select [(ngModel)]="editStartTime" 
-                                (change)="onStartTimeChange()"
-                                name="editStartTime" id="editStartTime" 
-                                class="form-select"
-                                [disabled]="!editDateStr || availableStartTimes.length === 0">
-                            <option value="" disabled>-- Select Start --</option>
-                            <option *ngFor="let t of availableStartTimes" [value]="t">{{ t }}</option>
-                        </select>
-                        <small *ngIf="editDateStr && availableStartTimes.length === 0" class="text-danger">
-                            No available slots (fully booked).
-                        </small>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold" for="editEndTime">End Time</label>
-                        <select [(ngModel)]="editEndTime" 
-                                name="editEndTime" id="editEndTime" 
-                                class="form-select"
-                                [disabled]="!editStartTime">
-                            <option value="" disabled>-- Select End --</option>
-                            <option *ngFor="let t of availableEndTimes" [value]="t">{{ t }}</option>
-                        </select>
-                    </div>
-
-                    <div class="col-12 mb-3">
-                        <label class="form-label fw-bold" for="editReason">Reason of the user</label>
-                        <input type="text" [(ngModel)]="editingReservation.reason" name="reason" id="editReason" class="form-control">
-                    </div>
-
-                    <div class="col-12 mt-3">
-                        <label class="form-label text-danger fw-bold">Modification Reason</label>
-                        <textarea 
-                            class="form-control" 
-                            rows="2" 
-                            [(ngModel)]="adminModificationReason" 
-                            name="adminReason"
-                            placeholder="Reason for moving this reservation..." 
-                            required>
-                        </textarea>
-                    </div>
-                </div>
-
-                <div class="d-flex justify-content-end gap-2 mt-2">
-                    <button type="button" class="btn btn-secondary" (click)="cancelEdit()">Cancel</button>
-                    <button type="submit" class="btn btn-success" 
-                            [disabled]="!editStartTime || !editEndTime">
-                        Save Changes
-                    </button>
-                </div>
-            </form>
-        </div>
+  <div *ngIf="editingReservation" class="card shadow-lg mb-4 border-warning">
+    <div
+      class="card-header bg-warning text-dark fw-bold d-flex justify-content-between align-items-center"
+    >
+      <span>Editing Reservation #{{ editingReservation.id }}</span>
+      <button
+        type="button"
+        class="btn-close"
+        aria-label="Close"
+        (click)="cancelEdit()"
+      ></button>
     </div>
+    <div class="card-body">
+      <form (ngSubmit)="saveEdit()">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold" for="editRoomId">Room</label>
+            <select
+              [(ngModel)]="editingReservation.roomId"
+              (change)="onConfigChange()"
+              name="roomId"
+              id="editRoomId"
+              class="form-select"
+            >
+              <option *ngFor="let r of rooms" [value]="r.id">
+                {{ r.name }}
+              </option>
+            </select>
+          </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body p-0">
-            <table class="table table-hover mb-0 align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>ID</th>
-                        <th>Room</th>
-                        <th>Dates</th>
-                        <th>Status</th>
-                        <th>Reason</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let res of reservations">
-                        <td>{{ res.id }}</td>
-                        <td><span class="fw-bold">{{ res.room?.name || 'Unknown' }}</span></td>
-                        <td>
-                            <div class="small">
-                                <div>Start: {{ res.startDate | date:'medium' }}</div>
-                                <div>End: &nbsp;{{ res.endDate | date:'medium' }}</div>
-                            </div>
-                        </td>
-                        <td>
-                            <span *ngIf="res.cancelled" class="badge bg-secondary">CANCELLED</span>
-                            <span *ngIf="!res.cancelled && isReservationActive(res)" class="badge bg-success">ACTIVE</span>
-                            <span *ngIf="!res.cancelled && !isReservationActive(res)" class="badge bg-light text-dark border">COMPLETED</span>
-                        </td>
-                        <td class="text-muted fst-italic">{{ res.reason }}</td>
-                        <td class="text-end">
-                            <div class="btn-group">
-                                <button *ngIf="isReservationActive(res)" 
-                                        class="btn btn-sm btn-outline-primary" 
-                                        (click)="startEdit(res)" 
-                                        title="Edit">
-                                    ✏️
-                                </button>
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold" for="editDate">Date</label>
+            <input
+              type="date"
+              [(ngModel)]="editDateStr"
+              (change)="onConfigChange()"
+              [min]="minDate"
+              name="editDate"
+              id="editDate"
+              class="form-control"
+            />
+          </div>
 
-                                <button *ngIf="isReservationActive(res) && !res.cancelled" 
-                                        class="btn btn-sm btn-outline-warning" 
-                                        (click)="performCancel(res.id)" 
-                                        title="Cancel">
-                                    🚫
-                                </button>
-                                
-                                <button class="btn btn-sm btn-outline-danger" 
-                                        (click)="deleteReservation(res.id)" 
-                                        title="Delete Permanently">
-                                    🗑️
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr *ngIf="reservations.length === 0">
-                        <td colspan="6" class="text-center py-4 text-muted">This user has no reservations.</td>
-                    </tr>
-                </tbody>
-            </table>
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold" for="editStartTime"
+              >Start Time</label
+            >
+            <select
+              [(ngModel)]="editStartTime"
+              (change)="onStartTimeChange()"
+              name="editStartTime"
+              id="editStartTime"
+              class="form-select"
+              [disabled]="!editDateStr || availableStartTimes.length === 0"
+            >
+              <option value="" disabled>-- Select Start --</option>
+              <option *ngFor="let t of availableStartTimes" [value]="t">
+                {{ t }}
+              </option>
+            </select>
+            <small
+              *ngIf="editDateStr && availableStartTimes.length === 0"
+              class="text-danger"
+            >
+              No available slots (fully booked).
+            </small>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold" for="editEndTime">End Time</label>
+            <select
+              [(ngModel)]="editEndTime"
+              name="editEndTime"
+              id="editEndTime"
+              class="form-select"
+              [disabled]="!editStartTime"
+            >
+              <option value="" disabled>-- Select End --</option>
+              <option *ngFor="let t of availableEndTimes" [value]="t">
+                {{ t }}
+              </option>
+            </select>
+          </div>
+
+          <div class="col-12 mb-3">
+            <label class="form-label fw-bold" for="editReason"
+              >Reason of the user</label
+            >
+            <input
+              type="text"
+              [(ngModel)]="editingReservation.reason"
+              name="reason"
+              id="editReason"
+              class="form-control"
+            />
+          </div>
+
+          <div class="col-12 mt-3">
+            <label class="form-label text-danger fw-bold"
+              >Modification Reason</label
+            >
+            <textarea
+              class="form-control"
+              rows="2"
+              [(ngModel)]="adminModificationReason"
+              name="adminReason"
+              placeholder="Reason for moving this reservation..."
+              required
+            >
+            </textarea>
+          </div>
         </div>
-    </div>
 
-    <app-pagination 
-        [pageData]="pageData" 
-        [currentPage]="currentPage" 
-        (pageChange)="loadReservations($event)">
-    </app-pagination>
-
-    <div class="mt-4">
-        <button routerLink="/admin/users" class="btn btn-outline-secondary">Back to Users</button>
+        <div class="d-flex justify-content-end gap-2 mt-2">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="cancelEdit()"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn btn-success"
+            [disabled]="!editStartTime || !editEndTime"
+          >
+            Save Changes
+          </button>
+        </div>
+      </form>
     </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Room</th>
+            <th>Dates</th>
+            <th>Status</th>
+            <th>Reason</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let res of reservations">
+            <td>{{ res.id }}</td>
+            <td>
+              <span class="fw-bold">{{ res.room?.name || "Unknown" }}</span>
+            </td>
+            <td>
+              <div class="small">
+                <div>Start: {{ res.startDate | date: "medium" }}</div>
+                <div>End: &nbsp;{{ res.endDate | date: "medium" }}</div>
+              </div>
+            </td>
+            <td>
+              <span *ngIf="res.cancelled" class="badge bg-secondary"
+                >CANCELLED</span
+              >
+              <span
+                *ngIf="!res.cancelled && isReservationActive(res)"
+                class="badge bg-success"
+                >ACTIVE</span
+              >
+              <span
+                *ngIf="!res.cancelled && !isReservationActive(res)"
+                class="badge bg-light text-dark border"
+                >COMPLETED</span
+              >
+            </td>
+            <td class="text-muted fst-italic">{{ res.reason }}</td>
+            <td class="text-end">
+              <div class="btn-group">
+                <button
+                  *ngIf="isReservationActive(res)"
+                  class="btn btn-sm btn-outline-primary"
+                  (click)="startEdit(res)"
+                  title="Edit"
+                >
+                  ✏️
+                </button>
+
+                <button
+                  *ngIf="isReservationActive(res) && !res.cancelled"
+                  class="btn btn-sm btn-outline-warning"
+                  (click)="performCancel(res.id)"
+                  title="Cancel"
+                >
+                  🚫
+                </button>
+
+                <button
+                  class="btn btn-sm btn-outline-danger"
+                  (click)="deleteReservation(res.id)"
+                  title="Delete Permanently"
+                >
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="reservations.length === 0">
+            <td colspan="6" class="text-center py-4 text-muted">
+              This user has no reservations.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <app-pagination
+    [pageData]="pageData"
+    [currentPage]="currentPage"
+    (pageChange)="loadReservations($event)"
+  >
+  </app-pagination>
+
+  <div class="mt-4">
+    <button routerLink="/admin/users" class="btn btn-outline-secondary">
+      Back to Users
+    </button>
+  </div>
 </div>

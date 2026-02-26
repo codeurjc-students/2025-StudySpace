@@ -32,15 +32,15 @@ public class StatsService {
 
         long totalRooms = roomRepo.countTotalRooms();
         stats.setTotalRooms(totalRooms);
-        //total bookings
+        // total bookings
         long occupied = resRepo.countOccupiedRoomsByDate(date);
 
         if (totalRooms > 0) {
-            //total ocupation 
+            // total ocupation
             double occPct = ((double) occupied / totalRooms) * 100;
             stats.setOccupiedPercentage(Math.round(occPct * 100.0) / 100.0);
             stats.setFreePercentage(Math.round((100 - occPct) * 100.0) / 100.0);
-        }else {
+        } else {
             stats.setOccupiedPercentage(0);
             stats.setFreePercentage(100);
         }
@@ -48,30 +48,29 @@ public class StatsService {
         // Software on book rooms
         if (occupied > 0) {
             long occupiedWithSoft = resRepo.countOccupiedWithSoftwareByDate(date);
-            
+
             double softPct = ((double) occupiedWithSoft / occupied) * 100;
             stats.setRoomsWithSoftwarePercentage(Math.round(softPct * 100.0) / 100.0);
             stats.setRoomsWithoutSoftwarePercentage(Math.round((100 - softPct) * 100.0) / 100.0);
         } else {
-            //no books, 0%
+            // no books, 0%
             stats.setRoomsWithSoftwarePercentage(0);
             stats.setRoomsWithoutSoftwarePercentage(0);
         }
 
-
-        //Hour traffic 
+        // Hour traffic
 
         List<Reservation> todaysReservations = resRepo.findAllActiveByDate(date);
-        Map<String, Long> occupancyMap = new TreeMap<>();//to order
+        Map<String, Long> occupancyMap = new TreeMap<>();// to order
         LocalTime currentSlot = LocalTime.of(8, 0);
         LocalTime closeTime = LocalTime.of(21, 0);
         ZoneId zone = ZoneId.systemDefault();
-        
+
         while (currentSlot.isBefore(closeTime)) {
             final LocalTime slotStart = currentSlot;
             final LocalTime slotEnd = currentSlot.plusMinutes(30);
 
-            //how many overlaps
+            // how many overlaps
             long count = todaysReservations.stream().filter(res -> {
                 LocalTime rStart = res.getStartDate().toInstant().atZone(zone).toLocalTime();
                 LocalTime rEnd = res.getEndDate().toInstant().atZone(zone).toLocalTime();

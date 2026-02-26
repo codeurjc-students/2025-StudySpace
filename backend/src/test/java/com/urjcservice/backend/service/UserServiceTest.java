@@ -3,7 +3,7 @@ package com.urjcservice.backend.service;
 import com.urjcservice.backend.controller.NoSuchElementExceptionCA;
 import com.urjcservice.backend.entities.User;
 import com.urjcservice.backend.repositories.UserRepository;
-import com.urjcservice.backend.controller.NoSuchElementExceptionCA; 
+import com.urjcservice.backend.controller.NoSuchElementExceptionCA;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,7 +16,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageImpl;
-
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -33,10 +32,10 @@ public class UserServiceTest {
     @Mock
     private UserRepository userRepository;
 
-    @Mock 
+    @Mock
     private PasswordEncoder passwordEncoder;
 
-    @Mock 
+    @Mock
     private FileStorageService fileStorageService;
 
     @InjectMocks
@@ -46,7 +45,7 @@ public class UserServiceTest {
     public void testToggleBlock() {
         User user = new User();
         user.setId(1L);
-        user.setBlocked(false); //not blocked initially
+        user.setBlocked(false); // not blocked initially
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArguments()[0]);
@@ -62,20 +61,17 @@ public class UserServiceTest {
     public void testChangeRoleToAdmin() {
         User user = new User();
         user.setId(1L);
-        user.setRoles(new ArrayList<>()); //empty roles
+        user.setRoles(new ArrayList<>()); // empty roles
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenReturn(user);
 
         userService.changeRole(1L, "ADMIN");
 
-        //Verify roles
+        // Verify roles
         assertTrue(user.getRoles().contains("ADMIN"));
         assertEquals(User.UserType.ADMIN, user.getType());
     }
-
-
-
 
     @Test
     public void testChangePassword_Success() {
@@ -89,7 +85,6 @@ public class UserServiceTest {
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(oldPass, "encoded_1234")).thenReturn(true);
         when(passwordEncoder.encode(newPass)).thenReturn("encoded_5678");
-
 
         boolean result = userService.changePassword(email, oldPass, newPass);
 
@@ -114,13 +109,10 @@ public class UserServiceTest {
         verify(userRepository, never()).save(any());
     }
 
-
-
-
-
     @Test
     public void testFindAll() {
-        when(userRepository.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(Arrays.asList(new User(), new User())));
+        when(userRepository.findAll(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(Arrays.asList(new User(), new User())));
         Page<User> result = userService.findAll(PageRequest.of(0, 10));
         assertEquals(2, result.getContent().size());
     }
@@ -174,10 +166,6 @@ public class UserServiceTest {
         assertEquals("keep@test.com", result.get().getEmail());
     }
 
-
-
-
-
     @Test
     public void testGetUsers_Paginated() {
         // GIVEN
@@ -213,7 +201,6 @@ public class UserServiceTest {
         assertTrue(result.get().getRoles().contains("ADMIN"));
     }
 
-
     @Test
     @DisplayName("Test Find By Id - Not Found")
     void testFindById_NotFound() {
@@ -241,14 +228,13 @@ public class UserServiceTest {
         User inputUser = new User();
         inputUser.setId(1L);
         inputUser.setEmail("test@test.com");
-        inputUser.setEncodedPassword("somePassword"); 
-
+        inputUser.setEncodedPassword("somePassword");
 
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArguments()[0]);
-        
+
         // Act
         User result = userService.save(inputUser);
-        
+
         // Assert
         assertNotNull(result);
         verify(userRepository).save(inputUser);
@@ -259,11 +245,11 @@ public class UserServiceTest {
     void testUpdateUser_NoRoles() {
         // Arrange
         Long userId = 1L;
-        
-        User updateData = new User(); 
+
+        User updateData = new User();
         updateData.setName("New Name");
         updateData.setEmail("new@test.com");
-        updateData.setRoles(null); 
+        updateData.setRoles(null);
 
         User existingUser = new User();
         existingUser.setId(userId);
@@ -280,7 +266,7 @@ public class UserServiceTest {
         // Assert
         assertTrue(result.isPresent());
         assertEquals("New Name", result.get().getName());
-        assertEquals(1, result.get().getRoles().size()); 
+        assertEquals(1, result.get().getRoles().size());
         assertEquals("USER", result.get().getRoles().get(0));
     }
 
@@ -288,15 +274,11 @@ public class UserServiceTest {
     @DisplayName("Test Toggle Block - User Not Found")
     void testToggleBlock_NotFound() {
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
-        
+
         Optional<User> result = userService.toggleBlock(99L);
-        
+
         assertTrue(result.isEmpty());
     }
-    
-
-
-
 
     @Test
     @DisplayName("Delete User - Should delete image file if exists")
@@ -315,7 +297,7 @@ public class UserServiceTest {
         // Assert
         // 1. Verificamos que se llamó al servicio de ficheros con el nombre correcto
         verify(fileStorageService, times(1)).delete("profile_pic_uuid.jpg");
-        
+
         // 2. Verificamos que se borró el usuario de la BD
         verify(userRepository, times(1)).delete(user);
     }
@@ -339,8 +321,47 @@ public class UserServiceTest {
         verify(userRepository, times(1)).delete(user);
     }
 
+    @Test
+    @DisplayName("Delete User - Should throw exception for Super Admin")
+    void testDeleteUser_SuperAdminException() {
+        User superAdmin = new User();
+        superAdmin.setEmail("studyspacetfg@gmail.com");
+        when(userRepository.findById(1L)).thenReturn(Optional.of(superAdmin));
 
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> userService.deleteById(1L));
+        assertEquals("Cannot delete the Super Administrator.", ex.getMessage());
+    }
 
+    @Test
+    @DisplayName("Toggle Block - Should throw exception for Super Admin")
+    void testToggleBlock_SuperAdminException() {
+        User superAdmin = new User();
+        superAdmin.setEmail("studyspacetfg@gmail.com");
+        when(userRepository.findById(1L)).thenReturn(Optional.of(superAdmin));
 
-    
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> userService.toggleBlock(1L));
+        assertEquals("Cannot block the Super Administrator.", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("Change Role - Should throw exception if removing ADMIN from Super Admin")
+    void testChangeRole_SuperAdminException() {
+        User superAdmin = new User();
+        superAdmin.setEmail("studyspacetfg@gmail.com");
+        when(userRepository.findById(1L)).thenReturn(Optional.of(superAdmin));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> userService.changeRole(1L, "USER"));
+        assertEquals("Cannot remove the ADMIN role from the Super Administrator.", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("Exists By Email - True and False")
+    void testExistsByEmail() {
+        when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(new User()));
+        when(userRepository.findByEmail("notfound@test.com")).thenReturn(Optional.empty());
+
+        assertTrue(userService.existsByEmail("test@test.com"));
+        assertFalse(userService.existsByEmail("notfound@test.com"));
+    }
+
 }

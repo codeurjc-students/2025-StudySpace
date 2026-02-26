@@ -15,18 +15,54 @@ public class DashboardStatsDTO {
     private double roomsWithSoftwarePercentage;
     private double roomsWithoutSoftwarePercentage;
 
-    public DashboardStatsDTO() {}
+    public DashboardStatsDTO() {
+    }
 
-    public long getTotalRooms() { return totalRooms; }
-    public void setTotalRooms(long totalRooms) { this.totalRooms = totalRooms; }
-    public double getOccupiedPercentage() { return occupiedPercentage; }
-    public void setOccupiedPercentage(double occupiedPercentage) { this.occupiedPercentage = occupiedPercentage; }
-    public double getFreePercentage() { return freePercentage; }
-    public void setFreePercentage(double freePercentage) { this.freePercentage = freePercentage; }
-    public Map<String, Long> getHourlyOccupancy() { return hourlyOccupancy; }
-    public void setHourlyOccupancy(Map<String, Long> hourlyOccupancy) { this.hourlyOccupancy = hourlyOccupancy; }
-    public double getRoomsWithSoftwarePercentage() { return roomsWithSoftwarePercentage; }
-    public void setRoomsWithSoftwarePercentage(double roomsWithSoftwarePercentage) { this.roomsWithSoftwarePercentage = roomsWithSoftwarePercentage; }
-    public double getRoomsWithoutSoftwarePercentage() { return roomsWithoutSoftwarePercentage; }
-    public void setRoomsWithoutSoftwarePercentage(double roomsWithoutSoftwarePercentage) { this.roomsWithoutSoftwarePercentage = roomsWithoutSoftwarePercentage; }
+    public long getTotalRooms() {
+        return totalRooms;
+    }
+
+    public void setTotalRooms(long totalRooms) {
+        this.totalRooms = totalRooms;
+    }
+
+    public double getOccupiedPercentage() {
+        return occupiedPercentage;
+    }
+
+    public void setOccupiedPercentage(double occupiedPercentage) {
+        this.occupiedPercentage = occupiedPercentage;
+    }
+
+    public double getFreePercentage() {
+        return freePercentage;
+    }
+
+    public void setFreePercentage(double freePercentage) {
+        this.freePercentage = freePercentage;
+    }
+
+    public Map<String, Long> getHourlyOccupancy() {
+        return hourlyOccupancy;
+    }
+
+    public void setHourlyOccupancy(Map<String, Long> hourlyOccupancy) {
+        this.hourlyOccupancy = hourlyOccupancy;
+    }
+
+    public double getRoomsWithSoftwarePercentage() {
+        return roomsWithSoftwarePercentage;
+    }
+
+    public void setRoomsWithSoftwarePercentage(double roomsWithSoftwarePercentage) {
+        this.roomsWithSoftwarePercentage = roomsWithSoftwarePercentage;
+    }
+
+    public double getRoomsWithoutSoftwarePercentage() {
+        return roomsWithoutSoftwarePercentage;
+    }
+
+    public void setRoomsWithoutSoftwarePercentage(double roomsWithoutSoftwarePercentage) {
+        this.roomsWithoutSoftwarePercentage = roomsWithoutSoftwarePercentage;
+    }
 }

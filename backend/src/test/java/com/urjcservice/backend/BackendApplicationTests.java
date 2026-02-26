@@ -11,11 +11,11 @@ import com.urjcservice.backend.service.FileStorageService;
 class BackendApplicationTests {
 
 	@MockBean
-    private EmailService emailService;
+	private EmailService emailService;
 
-    @MockBean
-    private FileStorageService fileStorageService;
-	
+	@MockBean
+	private FileStorageService fileStorageService;
+
 	@Test
 	void contextLoads() {
 	}

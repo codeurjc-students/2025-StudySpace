@@ -1,18 +1,20 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import {
+  HttpClientTestingModule,
+  HttpTestingController,
+} from '@angular/common/http/testing';
 import { UserService } from './user.service';
 
 describe('UserService', () => {
   let service: UserService;
   let httpMock: HttpTestingController;
 
-  //const BASE_URL = 'https://localhost:8443/api/users';
   const BASE_URL = '/api/users';
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [UserService]
+      providers: [UserService],
     });
     service = TestBed.inject(UserService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -29,7 +31,6 @@ describe('UserService', () => {
     expect(req.request.method).toBe('GET');
     req.flush({});
   });
-
 
   it('should change role to ADMIN', () => {
     service.changeRole(1, true).subscribe();
@@ -60,6 +61,15 @@ describe('UserService', () => {
 
     const req = httpMock.expectOne(`${BASE_URL}/1`);
     expect(req.request.method).toBe('DELETE');
+    req.flush({});
+  });
+
+  it('should upload user image', () => {
+    const file = new File([''], 'test.png', { type: 'image/png' });
+    service.uploadUserImage(1, file).subscribe();
+    const req = httpMock.expectOne(`${BASE_URL}/1/image`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body instanceof FormData).toBeTrue();
     req.flush({});
   });
 });

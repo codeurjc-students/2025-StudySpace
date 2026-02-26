@@ -1,1 +1,4 @@
-/*Future room form styles*/
+.room-form-card {
+  max-width: 700px;
+  width: 100%;
+}

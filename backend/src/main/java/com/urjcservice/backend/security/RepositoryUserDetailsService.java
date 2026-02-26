@@ -17,17 +17,15 @@ import com.urjcservice.backend.repositories.UserRepository;
 @Service
 public class RepositoryUserDetailsService implements UserDetailsService {
 
-	
     private final UserRepository userRepository;
-    
+
     public RepositoryUserDetailsService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
-	@Override
+    @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-        
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
@@ -36,15 +34,14 @@ public class RepositoryUserDetailsService implements UserDetailsService {
             roles.add(new SimpleGrantedAuthority("ROLE_" + role));
         }
 
-        
         return new org.springframework.security.core.userdetails.User(
-                user.getEmail(), 
-                user.getEncodedPassword(), 
+                user.getEmail(),
+                user.getEncodedPassword(),
                 true, // enabled
                 true, // accountNonExpired
                 true, // credentialsNonExpired
                 !user.isBlocked(), // accountNonLocked (if blocked false)
                 roles);
     }
-	
+
 }

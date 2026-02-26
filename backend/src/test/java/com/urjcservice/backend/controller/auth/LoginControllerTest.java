@@ -45,9 +45,9 @@ public class LoginControllerTest {
     @Test
     public void testLogin_Success() throws Exception {
         AuthResponse successResponse = new AuthResponse(AuthResponse.Status.SUCCESS, "Logged in");
-        
+
         when(userLoginService.login(any(HttpServletResponse.class), any(LoginRequest.class)))
-            .thenReturn(ResponseEntity.ok(successResponse));
+                .thenReturn(ResponseEntity.ok(successResponse));
 
         String jsonRequest = "{\"username\": \"test@urjc.es\", \"password\": \"1234\"}";
 
@@ -62,9 +62,9 @@ public class LoginControllerTest {
     @Test
     public void testRefresh_WithCookie_Success() throws Exception {
         AuthResponse refreshResponse = new AuthResponse(AuthResponse.Status.SUCCESS, "Token refreshed");
-        
+
         when(userLoginService.refresh(any(HttpServletResponse.class), eq("some-refresh-token")))
-            .thenReturn(ResponseEntity.ok(refreshResponse));
+                .thenReturn(ResponseEntity.ok(refreshResponse));
 
         mockMvc.perform(post("/api/auth/refresh")
                 .cookie(new Cookie("RefreshToken", "some-refresh-token")))
@@ -75,9 +75,9 @@ public class LoginControllerTest {
     @Test
     public void testRefresh_WithoutCookie_CallsServiceWithNull() throws Exception {
         AuthResponse failureResponse = new AuthResponse(AuthResponse.Status.FAILURE, "Missing token");
-        
+
         when(userLoginService.refresh(any(HttpServletResponse.class), eq(null)))
-            .thenReturn(ResponseEntity.ok(failureResponse));
+                .thenReturn(ResponseEntity.ok(failureResponse));
 
         mockMvc.perform(post("/api/auth/refresh"))
                 .andExpect(status().isOk())

@@ -20,29 +20,24 @@ describe('LoginComponent', () => {
     mockLoginService = {
       isLogged: () => false,
       logIn: jasmine.createSpy('logIn'),
-      logOut: jasmine.createSpy('logOut')
+      logOut: jasmine.createSpy('logOut'),
     };
 
     mockModalService = jasmine.createSpyObj('NgbModal', ['open']);
 
     await TestBed.configureTestingModule({
-      declarations: [ LoginComponent ],
-      imports: [ 
-        FormsModule,
-        RouterTestingModule.withRoutes([]), 
-        NgbModule 
-      ],
+      declarations: [LoginComponent],
+      imports: [FormsModule, RouterTestingModule.withRoutes([]), NgbModule],
       providers: [
         { provide: LoginService, useValue: mockLoginService },
         { provide: NgbModal, useValue: mockModalService },
         {
           provide: ActivatedRoute,
-          useValue: { snapshot: { queryParams: {} } }
-        }
+          useValue: { snapshot: { queryParams: {} } },
+        },
       ],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA]
-    })
-    .compileComponents();
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(LoginComponent);
     component = fixture.componentInstance;
@@ -55,11 +50,10 @@ describe('LoginComponent', () => {
     expect(component).toBeTruthy();
   });
 
-
   it('Login Success: should navigate to HOME if NO returnUrl', () => {
     const navigateSpy = spyOn(router, 'navigate');
     mockLoginService.logIn.and.returnValue(of({ success: true }));
-    
+
     activatedRoute.snapshot.queryParams = {};
 
     component.loginData.user = 'user';
@@ -84,13 +78,15 @@ describe('LoginComponent', () => {
     expect(navigateByUrlSpy).toHaveBeenCalledWith('/admin/users');
   });
 
-
   it('Login Error 401 (LOCKED): should show Access Denied alert', () => {
     spyOn(window, 'alert');
     spyOn(console, 'error'); // Silenciar log
     const navigateSpy = spyOn(router, 'navigate');
 
-    const errorResponse = { status: 401, error: { message: 'User account is LOCKED' } };
+    const errorResponse = {
+      status: 401,
+      error: { message: 'User account is LOCKED' },
+    };
     mockLoginService.logIn.and.returnValue(throwError(() => errorResponse));
 
     component.loginData.user = 'lockedUser';
@@ -98,7 +94,9 @@ describe('LoginComponent', () => {
 
     component.logIn();
 
-    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/ACCESS DENIED/));
+    expect(window.alert).toHaveBeenCalledWith(
+      jasmine.stringMatching(/ACCESS DENIED/),
+    );
     expect(mockLoginService.logOut).toHaveBeenCalled();
     expect(navigateSpy).toHaveBeenCalledWith(['/']);
   });
@@ -108,8 +106,11 @@ describe('LoginComponent', () => {
     spyOn(console, 'error');
     const navigateSpy = spyOn(router, 'navigate');
 
-    // 401 
-    const errorResponse = { status: 401, error: { message: 'Bad credentials' } };
+    // 401
+    const errorResponse = {
+      status: 401,
+      error: { message: 'Bad credentials' },
+    };
     mockLoginService.logIn.and.returnValue(throwError(() => errorResponse));
 
     component.loginData.user = 'user';
@@ -117,12 +118,14 @@ describe('LoginComponent', () => {
 
     component.logIn();
 
-    expect(mockModalService.open).toHaveBeenCalledWith(component.loginErrorModal);
+    expect(mockModalService.open).toHaveBeenCalledWith(
+      component.loginErrorModal,
+    );
   });
 
   it('Login Error Other (e.g. 500): should open Error Modal', () => {
     spyOn(console, 'error');
-    
+
     //500
     const errorResponse = { status: 500, message: 'Server error' };
     mockLoginService.logIn.and.returnValue(throwError(() => errorResponse));
@@ -133,6 +136,8 @@ describe('LoginComponent', () => {
     component.logIn();
 
     // Verify
-    expect(mockModalService.open).toHaveBeenCalledWith(component.loginErrorModal);
+    expect(mockModalService.open).toHaveBeenCalledWith(
+      component.loginErrorModal,
+    );
   });
 });

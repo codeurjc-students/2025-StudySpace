@@ -11,15 +11,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Arrays;
 
-
 @Service
 public class UserService {
     private final PasswordEncoder passwordEncoder;
-    
+
     private final UserRepository userRepository;
     private final FileStorageService fileStorageService;
-    
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,FileStorageService fileStorageService) {
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,
+            FileStorageService fileStorageService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.fileStorageService = fileStorageService;
@@ -39,15 +39,18 @@ public class UserService {
 
     public Optional<User> deleteById(Long id) {
         Optional<User> existing = userRepository.findById(id);
-        
+
         existing.ifPresent(user -> {
-            //if picture, first delete picture
+            if ("studyspacetfg@gmail.com".equals(user.getEmail())) {
+                throw new RuntimeException("Cannot delete the Super Administrator.");
+            }
+            // if picture, first delete picture
             if (user.getImageName() != null && !user.getImageName().isEmpty()) {
                 fileStorageService.delete(user.getImageName());
             }
             userRepository.delete(user);
         });
-        
+
         return existing;
     }
 
@@ -71,12 +74,15 @@ public class UserService {
         });
     }
 
-    //to upgrade or downgrade permisions
+    // to upgrade or downgrade permisions
     public Optional<User> changeRole(Long id, String role) {
         return userRepository.findById(id).map(user -> {
-            //to avoid duplicities and conflicts
-            user.getRoles().clear(); 
-            
+            if ("studyspacetfg@gmail.com".equals(user.getEmail()) && !"ADMIN".equals(role)) {
+                throw new RuntimeException("Cannot remove the ADMIN role from the Super Administrator.");
+            }
+            // to avoid duplicities and conflicts
+            user.getRoles().clear();
+
             if ("ADMIN".equals(role)) {
                 user.getRoles().addAll(Arrays.asList("USER", "ADMIN"));
                 user.setType(User.UserType.ADMIN);
@@ -88,20 +94,20 @@ public class UserService {
         });
     }
 
-    //to block or unblock a user
+    // to block or unblock a user
     public Optional<User> toggleBlock(Long id) {
         return userRepository.findById(id).map(user -> {
-            user.setBlocked(!user.isBlocked()); //inverts the value
+            if ("studyspacetfg@gmail.com".equals(user.getEmail())) {
+                throw new RuntimeException("Cannot block the Super Administrator.");
+            }
+            user.setBlocked(!user.isBlocked()); // inverts the value
             return userRepository.save(user);
         });
     }
 
-
-
-
     public boolean changePassword(String email, String oldPassword, String newPassword) {
         return userRepository.findByEmail(email).map(user -> {
-            //passed password match with the actual one
+            // passed password match with the actual one
             if (!passwordEncoder.matches(oldPassword, user.getEncodedPassword())) {
                 return false;
             }
@@ -114,9 +120,9 @@ public class UserService {
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
+
     public boolean existsByEmail(String email) {
         return userRepository.findByEmail(email).isPresent();
     }
-
 
 }

@@ -15,42 +15,46 @@ Chart.register(...registerables);
 @Component({
   selector: 'app-room-detail',
   templateUrl: './room-detail.component.html',
-  styleUrls: ['./room-detail.component.css']
+  styleUrls: ['./room-detail.component.css'],
 })
 export class RoomDetailComponent implements OnInit {
-
   room: RoomDTO | undefined;
   roomId!: number;
 
   selectedDate: string = '';
   @ViewChild('hourlyCanvas') hourlyCanvas!: ElementRef;
   @ViewChild('occupancyCanvas') occupancyCanvas!: ElementRef;
-  
+
   private hourlyChart: Chart | undefined;
   private occupancyChart: Chart | undefined;
 
   calendarOptions: CalendarOptions = {
-    plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, bootstrap5Plugin],
+    plugins: [
+      dayGridPlugin,
+      timeGridPlugin,
+      interactionPlugin,
+      bootstrap5Plugin,
+    ],
     themeSystem: 'bootstrap5',
     initialView: 'dayGridMonth',
-    
+
     //calendar menu
     buttonText: {
-      prev: '❮',   
-      next: '❯',   
+      prev: '❮',
+      next: '❯',
       today: 'Today',
       month: 'MONTH',
-      week: 'WEEK'
+      week: 'WEEK',
     },
     // --------------------------------
 
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
-      right: 'dayGridMonth,timeGridWeek'
+      right: 'dayGridMonth,timeGridWeek',
     },
-    
-    hiddenDays: [0, 6], 
+
+    hiddenDays: [0, 6],
     slotDuration: '00:30:00',
     slotLabelInterval: '01:00',
     slotMinTime: '08:00:00',
@@ -60,15 +64,15 @@ export class RoomDetailComponent implements OnInit {
     locale: 'es',
     dayMaxEvents: true,
     displayEventTime: true,
-    
+
     datesSet: (arg) => this.handleDatesSet(arg),
     dateClick: (arg) => this.handleDateClick(arg),
-    events: []
+    events: [],
   };
 
   constructor(
     private readonly route: ActivatedRoute,
-    private readonly roomsService: RoomsService
+    private readonly roomsService: RoomsService,
   ) {}
 
   ngOnInit(): void {
@@ -86,16 +90,10 @@ export class RoomDetailComponent implements OnInit {
 
   loadRoomDetails() {
     this.roomsService.getRoom(this.roomId).subscribe({
-      next: (data) => this.room = data,
-      error: (err) => console.error(err)
+      next: (data) => (this.room = data),
+      error: (err) => console.error(err),
     });
   }
-
-  
-
-
-
-
 
   handleDatesSet(arg: any) {
     // visible dates
@@ -106,9 +104,15 @@ export class RoomDetailComponent implements OnInit {
   handleDateClick(arg: any) {
     this.selectedDate = arg.dateStr; // new date
     this.loadStats(); // load charts
-    
+
     // soft scroll to stats
-    document.querySelector('#stats-section')?.scrollIntoView({ behavior: 'smooth' });
+    //document.querySelector('#stats-section')?.scrollIntoView({ behavior: 'smooth' });
+    setTimeout(() => {
+      const statsElement = document.getElementById('stats-section');
+      if (statsElement) {
+        statsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 150);
   }
 
   //load data from backend
@@ -127,9 +131,9 @@ export class RoomDetailComponent implements OnInit {
               title: evt.title || 'Reserved',
               start: evt.start,
               end: evt.end,
-              color: '#0d6efd', 
+              color: '#0d6efd',
               textColor: 'white',
-              display: 'block'
+              display: 'block',
             });
           });
         }
@@ -137,35 +141,37 @@ export class RoomDetailComponent implements OnInit {
         //HEATMAP
         if (data.dailyOccupancy) {
           data.dailyOccupancy.forEach((day) => {
-            
             let pastelColor = '#ffffff';
 
             // RED
             if (day.status === 'High' || day.color === '#dc3545') {
-                pastelColor = '#fadbd8'; // soft red
-            } 
+              pastelColor = '#fadbd8'; // soft red
+            }
             // YELLOW
             else if (day.status === 'Medium' || day.color === '#ffc107') {
-                pastelColor = '#fff3cd'; // soft yellow
-            } 
+              pastelColor = '#fff3cd'; // soft yellow
+            }
             // GREEN
             else if (day.status === 'Low' || day.color === '#198754') {
-                pastelColor = '#d1e7dd'; // soft green
+              pastelColor = '#d1e7dd'; // soft green
             }
 
             processedEvents.push({
               start: day.date,
               display: 'background',
-              backgroundColor: pastelColor, 
-              allDay: true 
+              backgroundColor: pastelColor,
+              allDay: true,
             });
           });
         }
 
         //update calendar
-        this.calendarOptions = { ...this.calendarOptions, events: processedEvents };
+        this.calendarOptions = {
+          ...this.calendarOptions,
+          events: processedEvents,
+        };
       },
-      error: (err) => console.error('Error loading calendar:', err)
+      error: (err) => console.error('Error loading calendar:', err),
     });
   }
 
@@ -182,7 +188,7 @@ export class RoomDetailComponent implements OnInit {
         this.destroyCharts();
         this.createCharts(stats);
       },
-      error: (err) => console.error('Error loading room stats', err)
+      error: (err) => console.error('Error loading room stats', err),
     });
   }
 
@@ -192,34 +198,43 @@ export class RoomDetailComponent implements OnInit {
   }
 
   createCharts(stats: any) {
-    const hours = Object.keys(stats.hourlyStatus).map(h => h + ':00');
-    const dataValues = Object.values(stats.hourlyStatus).map((isOccupied) => isOccupied ? 1 : 0);
-    const bgColors = Object.values(stats.hourlyStatus).map((isOccupied) => isOccupied ? '#dc3545' : '#198754');
+    const hours = Object.keys(stats.hourlyStatus).map((h) => h + ':00');
+    const dataValues = Object.values(stats.hourlyStatus).map((isOccupied) =>
+      isOccupied ? 1 : 0,
+    );
+    const bgColors = Object.values(stats.hourlyStatus).map((isOccupied) =>
+      isOccupied ? '#dc3545' : '#198754',
+    );
 
     if (this.hourlyCanvas) {
       this.hourlyChart = new Chart(this.hourlyCanvas.nativeElement, {
         type: 'bar',
         data: {
           labels: hours,
-          datasets: [{
-            label: 'State (1=Occupied, 0=Free)',
-            data: dataValues,
-            backgroundColor: bgColors,
-            borderRadius: 4
-          }]
+          datasets: [
+            {
+              label: 'State (1=Occupied, 0=Free)',
+              data: dataValues,
+              backgroundColor: bgColors,
+              borderRadius: 4,
+            },
+          ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            y: { 
-              beginAtZero: true, 
-              max: 1, 
-              ticks: { stepSize: 1, callback: (val) => (val === 1 ? 'Occupied' : 'Free') } 
-            }
+            y: {
+              beginAtZero: true,
+              max: 1,
+              ticks: {
+                stepSize: 1,
+                callback: (val) => (val === 1 ? 'Occupied' : 'Free'),
+              },
+            },
           },
-          plugins: { legend: { display: false } }
-        }
+          plugins: { legend: { display: false } },
+        },
       });
     }
 
@@ -227,22 +242,24 @@ export class RoomDetailComponent implements OnInit {
     if (this.occupancyCanvas) {
       const occupied = stats.occupiedPercentage;
       const free = stats.freePercentage;
-      
+
       this.occupancyChart = new Chart(this.occupancyCanvas.nativeElement, {
         type: 'doughnut',
         data: {
           labels: ['Occupied (%)', 'Free (%)'],
-          datasets: [{
-            data: [occupied, free],
-            backgroundColor: ['#dc3545', '#198754'],
-            hoverOffset: 4
-          }]
+          datasets: [
+            {
+              data: [occupied, free],
+              backgroundColor: ['#dc3545', '#198754'],
+              hoverOffset: 4,
+            },
+          ],
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom' } }
-        }
+          plugins: { legend: { position: 'bottom' } },
+        },
       });
     }
   }

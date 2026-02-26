@@ -20,48 +20,80 @@ import { ResetPasswordComponent } from './login/reset-password/reset-password.co
 import { ForgotPasswordComponent } from './login/forgot-password/forgot-password.component';
 import { VerifyReservationComponent } from './components/verify-reservation/verify-reservation.component';
 
-
 const routes: Routes = [
-  {path: '', component: HomeComponent},
-  {path: 'login', component: LoginComponent},
+  { path: '', component: HomeComponent },
+  { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'rooms/:id', component: RoomDetailComponent },
   { path: 'profile', component: UserProfileComponent },
   { path: 'forgot-password', component: ForgotPasswordComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
-  { 
-    path: 'profile', 
-    component: UserProfileComponent, 
-    canActivate: [authGuard] // only authenticated users can access
+  {
+    path: 'profile',
+    component: UserProfileComponent,
+    canActivate: [authGuard], // only authenticated users can access
   },
-  { 
-    path: 'reservations/create', 
+  {
+    path: 'reservations/create',
     component: ReservationFormComponent,
-    canActivate: [authGuard] // only authenticated users can access
-  }, 
-  { path: 'verify-reservation', component: VerifyReservationComponent },//email of verification of reservation
+    canActivate: [authGuard], // only authenticated users can access
+  },
+  { path: 'verify-reservation', component: VerifyReservationComponent }, //email of verification of reservation
   //admin routes
   { path: 'admin', component: AdminMenuComponent, canActivate: [adminGuard] },
-  { path: 'admin/rooms', component: ManageRoomsComponent, canActivate: [adminGuard] },
-  { path: 'admin/rooms/create', component: RoomFormComponent, canActivate: [adminGuard] },
-  { path: 'admin/rooms/edit/:id', component: RoomFormComponent, canActivate: [adminGuard] },
+  {
+    path: 'admin/rooms',
+    component: ManageRoomsComponent,
+    canActivate: [adminGuard],
+  },
+  {
+    path: 'admin/rooms/create',
+    component: RoomFormComponent,
+    canActivate: [adminGuard],
+  },
+  {
+    path: 'admin/rooms/edit/:id',
+    component: RoomFormComponent,
+    canActivate: [adminGuard],
+  },
 
-  { path: 'admin/users', component: ManageUsersComponent, canActivate: [adminGuard] },
-  { path: 'admin/users/:userId/reservations', component: ManageReservationsComponent, canActivate: [adminGuard] },
-  
-  { path: 'admin/softwares', component: ManageSoftwaresComponent, canActivate: [adminGuard] },
-  { path: 'admin/softwares/create', component: SoftwareFormComponent, canActivate: [adminGuard] },
-  { path: 'admin/softwares/edit/:id', component: SoftwareFormComponent, canActivate: [adminGuard] },
+  {
+    path: 'admin/users',
+    component: ManageUsersComponent,
+    canActivate: [adminGuard],
+  },
+  {
+    path: 'admin/users/:userId/reservations',
+    component: ManageReservationsComponent,
+    canActivate: [adminGuard],
+  },
 
-  { path: 'admin/stats', component: OccupancyStatsComponent, canActivate: [adminGuard] },
-  {path: '**', redirectTo: '' }
+  {
+    path: 'admin/softwares',
+    component: ManageSoftwaresComponent,
+    canActivate: [adminGuard],
+  },
+  {
+    path: 'admin/softwares/create',
+    component: SoftwareFormComponent,
+    canActivate: [adminGuard],
+  },
+  {
+    path: 'admin/softwares/edit/:id',
+    component: SoftwareFormComponent,
+    canActivate: [adminGuard],
+  },
+
+  {
+    path: 'admin/stats',
+    component: OccupancyStatsComponent,
+    canActivate: [adminGuard],
+  },
+  { path: '**', redirectTo: '' },
 ];
 
 @NgModule({
   imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
+  exports: [RouterModule],
 })
-export class AppRoutingModule { }
-
-
-
+export class AppRoutingModule {}

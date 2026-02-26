@@ -3,7 +3,7 @@ import { BrowserModule } from '@angular/platform-browser';
 // 1. Import HttpClientModule for REST
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 // 2. Import FormsModule to use [(ngModel)] in the login
-import { FormsModule } from '@angular/forms'; 
+import { FormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LoginComponent } from './login/login.component';
@@ -30,7 +30,6 @@ import { FullCalendarModule } from '@fullcalendar/angular';
 import { VerifyReservationComponent } from './components/verify-reservation/verify-reservation.component';
 import { RouterModule } from '@angular/router';
 
-
 @NgModule({
   declarations: [
     AppComponent,
@@ -50,8 +49,9 @@ import { RouterModule } from '@angular/router';
     ManageReservationsComponent,
     PaginationComponent,
     PasswordInputComponent,
-    ForgotPasswordComponent,   
-    ResetPasswordComponent, VerifyReservationComponent
+    ForgotPasswordComponent,
+    ResetPasswordComponent,
+    VerifyReservationComponent,
   ],
   imports: [
     BrowserModule,
@@ -64,15 +64,15 @@ import { RouterModule } from '@angular/router';
     FormsModule,
     NgbModule,
     FullCalendarModule,
-    RouterModule
+    RouterModule,
   ],
   providers: [
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
-      multi: true
-    }
+      multi: true,
+    },
   ],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}

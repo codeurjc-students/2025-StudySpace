@@ -16,10 +16,10 @@ public class RestConfiguration implements RepositoryRestConfigurer {
 
     @Override
     public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config, CorsRegistry cors) {
-        //to avoid the error of the infinite recursion
+        // to avoid the error of the infinite recursion
         config.getProjectionConfiguration().addProjection(RoomWithSoftware.class);
         config.getProjectionConfiguration().addProjection(ReservationWithRoom.class);
-        //to show the id fields in the json responses
+        // to show the id fields in the json responses
         config.exposeIdsFor(Room.class, Software.class, Reservation.class);
     }
 }

@@ -4,7 +4,7 @@ import { LoginService } from '../login.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { of, throwError } from 'rxjs';
-import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core'; 
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
 describe('ResetPasswordComponent', () => {
   let component: ResetPasswordComponent;
@@ -14,8 +14,8 @@ describe('ResetPasswordComponent', () => {
 
   const activatedRouteMock = {
     snapshot: {
-      queryParams: { token: 'valid-token-123' }
-    }
+      queryParams: { token: 'valid-token-123' },
+    },
   };
 
   beforeEach(async () => {
@@ -23,20 +23,21 @@ describe('ResetPasswordComponent', () => {
     const rSpy = jasmine.createSpyObj('Router', ['navigate']);
 
     await TestBed.configureTestingModule({
-      declarations: [ ResetPasswordComponent ],
-      imports: [ FormsModule ],
-      schemas: [ CUSTOM_ELEMENTS_SCHEMA ], 
+      declarations: [ResetPasswordComponent],
+      imports: [FormsModule],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
       providers: [
         { provide: LoginService, useValue: lSpy },
         { provide: Router, useValue: rSpy },
-        { provide: ActivatedRoute, useValue: activatedRouteMock }
-      ]
-    })
-    .compileComponents();
+        { provide: ActivatedRoute, useValue: activatedRouteMock },
+      ],
+    }).compileComponents();
 
-    loginServiceSpy = TestBed.inject(LoginService) as jasmine.SpyObj<LoginService>;
+    loginServiceSpy = TestBed.inject(
+      LoginService,
+    ) as jasmine.SpyObj<LoginService>;
     routerSpy = TestBed.inject(Router) as jasmine.SpyObj<Router>;
-    
+
     fixture = TestBed.createComponent(ResetPasswordComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -51,7 +52,6 @@ describe('ResetPasswordComponent', () => {
   it('should validate weak passwords frontend-side', () => {
     component.password = 'weak';
     component.onSubmit();
-    
 
     expect(loginServiceSpy.resetPassword).not.toHaveBeenCalled();
     expect(component.error).toContain('Password must have 8+ chars');
@@ -59,13 +59,18 @@ describe('ResetPasswordComponent', () => {
 
   it('should call resetPassword and navigate on success', () => {
     loginServiceSpy.resetPassword.and.returnValue(of({ message: 'Success' }));
-    spyOn(window, 'alert'); 
+    spyOn(window, 'alert');
 
-    component.password = 'StrongPass1!'; 
+    component.password = 'StrongPass1!';
     component.onSubmit();
 
-    expect(loginServiceSpy.resetPassword).toHaveBeenCalledWith('valid-token-123', 'StrongPass1!');
-    expect(window.alert).toHaveBeenCalledWith('Password successfully updated! Please log in.');
+    expect(loginServiceSpy.resetPassword).toHaveBeenCalledWith(
+      'valid-token-123',
+      'StrongPass1!',
+    );
+    expect(window.alert).toHaveBeenCalledWith(
+      'Password successfully updated! Please log in.',
+    );
     expect(routerSpy.navigate).toHaveBeenCalledWith(['/login']);
   });
 

@@ -6,17 +6,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "softwares",
-    uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"name", "version"})
-    }
-)
+@Table(name = "softwares", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "name", "version" })
+})
 public class Software {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; //Primary key
-    private String name; 
+    private Long id; // Primary key
+    private String name;
     private Float version;
     private String description;
 
@@ -85,9 +83,9 @@ public class Software {
     }
 
     public void removeRoom(Room room) {
-        if (room != null && this.rooms.remove(room) && room.getSoftware() != null){
+        if (room != null && this.rooms.remove(room) && room.getSoftware() != null) {
             room.getSoftware().remove(this);
-            
+
         }
     }
 

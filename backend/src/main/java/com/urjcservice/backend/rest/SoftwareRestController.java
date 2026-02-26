@@ -26,24 +26,40 @@ public class SoftwareRestController {
         this.softwareService = softwareService;
     }
 
-    // DTO 
+    // DTO
     public static class SoftwareRequest {
         private String name;
         private Float version;
         private String description;
 
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
+        public String getName() {
+            return name;
+        }
 
-        public Float getVersion() { return version; }
-        public void setVersion(Float version) { this.version = version; }
+        public void setName(String name) {
+            this.name = name;
+        }
 
-        public String getDescription() { return description; }
-        public void setDescription(String description) { this.description = description; }
+        public Float getVersion() {
+            return version;
+        }
+
+        public void setVersion(Float version) {
+            this.version = version;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
     }
 
     @GetMapping
-    public Page<Software> getAllSoftware(@PageableDefault(size = 10) Pageable pageable) {//if frontend dont send size, default 10
+    public Page<Software> getAllSoftware(@PageableDefault(size = 10) Pageable pageable) {// if frontend dont send size,
+                                                                                         // default 10
         return softwareService.findAll(pageable);
     }
 
@@ -56,14 +72,14 @@ public class SoftwareRestController {
 
     @PostMapping
     public ResponseEntity<Software> createSoftware(@RequestBody SoftwareRequest request) {
-        //to dto the entity
+        // to dto the entity
         Software software = new Software();
         software.setName(request.name);
         software.setVersion(request.version);
         software.setDescription(request.description);
 
         Software saved = softwareService.save(software);
-        
+
         URI location = fromCurrentRequest().path("/{id}").buildAndExpand(saved.getId()).toUri();
         return ResponseEntity.created(location).body(saved);
     }
@@ -81,14 +97,17 @@ public class SoftwareRestController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSoftware(@PathVariable Long id) {
-        Optional<Software> deleted = softwareService.deleteById(id);
-        if (deleted.isPresent()) {
-            return ResponseEntity.noContent().build();
+    public ResponseEntity<Software> deleteSoftware(@PathVariable Long id) {
+        Optional<Software> softwareOp = softwareService.findById(id);
+
+        if (softwareOp.isPresent()) {
+            Software software = softwareOp.get();
+
+            softwareService.deleteById(id);
+
+            return ResponseEntity.ok(software);
         } else {
             return ResponseEntity.notFound().build();
         }
     }
-
-
 }

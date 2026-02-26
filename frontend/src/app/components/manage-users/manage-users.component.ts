@@ -8,18 +8,17 @@ import { PaginationUtil } from '../../utils/pagination.util';
 @Component({
   selector: 'app-manage-users',
   templateUrl: './manage-users.component.html',
-  styleUrls: ['./manage-users.component.css']
+  styleUrls: ['./manage-users.component.css'],
 })
 export class ManageUsersComponent implements OnInit {
-
   users: UserDTO[] = [];
-  pageData?: Page<UserDTO>; 
-  currentPage: number = 0;  
+  pageData?: Page<UserDTO>;
+  currentPage: number = 0;
 
   constructor(
     private readonly userService: UserService,
-    private readonly loginService: LoginService
-  ) { }
+    private readonly loginService: LoginService,
+  ) {}
 
   ngOnInit(): void {
     this.loadUsers(0);
@@ -27,15 +26,15 @@ export class ManageUsersComponent implements OnInit {
 
   loadUsers(page: number) {
     this.userService.getUsers(page).subscribe({
-        next: (data) => {
-            this.pageData = data;
-            //if you are on the list, will show 9 elements instead of 10
-            const currentUserId = this.loginService.currentUser?.id;
-            this.users = data.content.filter(user => user.id !== currentUserId);
-            
-            this.currentPage = data.number;
-        },
-        error: (e) => console.error(e)
+      next: (data) => {
+        this.pageData = data;
+        //if you are on the list, will show 9 elements instead of 10
+        const currentUserId = this.loginService.currentUser?.id;
+        this.users = data.content.filter((user) => user.id !== currentUserId);
+
+        this.currentPage = data.number;
+      },
+      error: (e) => console.error(e),
     });
   }
 
@@ -44,36 +43,40 @@ export class ManageUsersComponent implements OnInit {
   }
 
   toggleAdmin(user: UserDTO) {
-    const isNowAdmin = !user.roles.includes('ADMIN'); //if then was admin, now not and viceversa  
-    this.userService.changeRole(user.id, isNowAdmin).subscribe(() => this.loadUsers(this.currentPage));
+    const isNowAdmin = !user.roles.includes('ADMIN'); //if then was admin, now not and viceversa
+    this.userService
+      .changeRole(user.id, isNowAdmin)
+      .subscribe(() => this.loadUsers(this.currentPage));
   }
-  
 
   toggleBlock(user: UserDTO) {
-    this.userService.toggleBlock(user.id).subscribe(() => this.loadUsers(this.currentPage));
+    this.userService
+      .toggleBlock(user.id)
+      .subscribe(() => this.loadUsers(this.currentPage));
   }
 
-  
-
   deleteUser(user: UserDTO) {
-    if(confirm(`Are you sure you want to delete user ${user.name}?`)) {
+    if (confirm(`Are you sure you want to delete user ${user.name}?`)) {
       this.userService.deleteUser(user.id).subscribe({
         next: () => {
           this.loadUsers(this.currentPage);
         },
-        
+
         error: (err) => {
           console.error(err);
-          alert("Error deleting user"); 
-        }
+          alert('Error deleting user');
+        },
       });
     }
   }
-  
-  
+
   //to see bookings
   viewReservations(user: UserDTO) {
-      alert("Functionality to view reservations" + user.name + " pending visual implementation.");
-      //navigate to reservations page with user id as parameter
+    alert(
+      'Functionality to view reservations' +
+        user.name +
+        ' pending visual implementation.',
+    );
+    //navigate to reservations page with user id as parameter
   }
 }

@@ -13,21 +13,14 @@ describe('AppComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [
-        RouterTestingModule,
-        HttpClientTestingModule 
-      ],
-      declarations: [
-        AppComponent
-      ],
-      providers: [
-        LoginService 
-      ]
+      imports: [RouterTestingModule, HttpClientTestingModule],
+      declarations: [AppComponent],
+      providers: [LoginService],
     }).compileComponents();
 
     fixture = TestBed.createComponent(AppComponent);
     component = fixture.componentInstance;
-    router = TestBed.inject(Router); 
+    router = TestBed.inject(Router);
     loginService = TestBed.inject(LoginService);
     fixture.detectChanges();
   });
@@ -40,11 +33,9 @@ describe('AppComponent', () => {
     expect(component.title).toEqual('frontend');
   });
 
-
-  
   it('goToLogIn should log message and navigate to /login', () => {
     const navigateSpy = spyOn(router, 'navigate');
-    
+
     spyOn(console, 'log');
 
     component.goToLogIn();
@@ -59,14 +50,22 @@ describe('AppComponent', () => {
   });
 
   it('getUserImageUrl should return placeholder if user exists but has no imageName', () => {
-    loginService.currentUser = { id: 1, name: 'Test', imageName: undefined } as any;
+    loginService.currentUser = {
+      id: 1,
+      name: 'Test',
+      imageName: undefined,
+    } as any;
     expect(component.getUserImageUrl()).toBe('assets/user_placeholder.png');
   });
 
   it('getUserImageUrl should return API URL if user has imageName', () => {
-    loginService.currentUser = { id: 99, name: 'Test', imageName: 'photo.jpg' } as any;
+    loginService.currentUser = {
+      id: 99,
+      name: 'Test',
+      imageName: 'photo.jpg',
+    } as any;
     const url = component.getUserImageUrl();
-    
+
     expect(url).toContain('https://localhost:8443/api/users/99/image');
   });
 });

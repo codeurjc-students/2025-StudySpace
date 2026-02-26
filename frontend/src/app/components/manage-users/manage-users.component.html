@@ -1,80 +1,107 @@
 <div class="container mt-5">
-    <h2 class="mb-4">Manage Users</h2>
+  <h2 class="mb-4">Manage Users</h2>
 
-    <div class="card shadow-sm">
-        <div class="card-body p-0">
-            <table class="table table-align-middle mb-0 table-hover">
-                <thead class="table-light">
-                    <tr>
-                        <th>User</th>
-                        <th>Email</th>
-                        <th>Status</th>
-                        <th class="text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let user of users" [class.table-danger]="user.blocked">
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <img [src]="user.imageName ? 'https://localhost:8443/api/users/' + user.id + '/image' : 'assets/user_placeholder.png'" 
-                                    class="rounded-circle me-2" 
-                                    width="30" height="30" style="object-fit: cover;"
-                                    (error)="user.imageName = undefined">
-                                <strong>{{ user.name }}</strong>
-                                <span *ngIf="user.roles.includes('ADMIN')" class="badge bg-primary ms-2">ADMIN</span>
-                            </div>
-                        </td>
-                        <td>{{ user.email }}</td>
-                        <td>
-                            <span *ngIf="user.blocked" class="badge bg-danger">BLOCKED</span>
-                            <span *ngIf="!user.blocked" class="badge bg-success">ACTIVE</span>
-                        </td>
-                        <td class="text-center">
-                            <div class="btn-group">
-                                <button class="btn btn-sm" 
-                                        [class.btn-outline-warning]="!user.roles.includes('ADMIN')"
-                                        [class.btn-outline-secondary]="user.roles.includes('ADMIN')"
-                                        (click)="toggleAdmin(user)"
-                                        title="Change Role">
-                                    {{ user.roles.includes('ADMIN') ? '⬇️ User' : '⬆️ Admin' }}
-                                </button>
-                                <button class="btn btn-sm btn-outline-info" 
-                                    [routerLink]="['/admin/users', user.id, 'reservations']" 
-                                    title="See Reservations">
-                                    📅 Books
-                                </button>
-                                
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <table class="table table-align-middle mb-0 table-hover">
+        <thead class="table-light">
+          <tr>
+            <th>User</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users" [class.table-danger]="user.blocked">
+            <td>
+              <div class="d-flex align-items-center">
+                <img
+                  [src]="
+                    user.imageName
+                      ? 'https://localhost:8443/api/users/' + user.id + '/image'
+                      : 'assets/user_placeholder.png'
+                  "
+                  class="rounded-circle me-2 avatar-img"
+                  (error)="user.imageName = undefined"
+                />
+                <strong>{{ user.name }}</strong>
+                <span
+                  *ngIf="user.roles.includes('ADMIN')"
+                  class="badge bg-primary ms-2"
+                  >ADMIN</span
+                >
+              </div>
+            </td>
+            <td>{{ user.email }}</td>
+            <td>
+              <span *ngIf="user.blocked" class="badge bg-danger">Blocked</span>
+              <span *ngIf="!user.blocked" class="badge bg-success">Active</span>
+            </td>
+            <td class="text-center">
+              <div class="btn-group" role="group">
+                <button
+                  class="btn btn-sm btn-outline-info"
+                  [routerLink]="['/admin/users', user.id, 'reservations']"
+                  title="View Books"
+                >
+                  📅 User Reservations
+                </button>
 
-                                <button class="btn btn-sm"
-                                        [class.btn-outline-dark]="!user.blocked"
-                                        [class.btn-success]="user.blocked"
-                                        (click)="toggleBlock(user)"
-                                        title="Block/Unblock">
-                                    {{ user.blocked ? '🔓 Unblock' : '🚫 Block' }}
-                                </button>
+                <button
+                  *ngIf="user.email !== 'studyspacetfg@gmail.com'"
+                  class="btn btn-sm btn-outline-primary"
+                  (click)="toggleAdmin(user)"
+                  title="Toggle Admin Role"
+                >
+                  {{
+                    user.roles.includes("ADMIN")
+                      ? "⬇️ Remove Admin"
+                      : "⬆️ Make Admin"
+                  }}
+                </button>
 
-                                <button class="btn btn-sm btn-outline-danger" (click)="deleteUser(user)" title="Delete User">
-                                    🗑️
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr *ngIf="users.length === 0">
-                         <td colspan="4" class="text-center py-3 text-muted">No users found on this page.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+                <button
+                  *ngIf="user.email !== 'studyspacetfg@gmail.com'"
+                  class="btn btn-sm"
+                  [class.btn-outline-dark]="!user.blocked"
+                  [class.btn-success]="user.blocked"
+                  (click)="toggleBlock(user)"
+                  title="Block/Unblock"
+                >
+                  {{ user.blocked ? "🔓 Unblock" : "🚫 Block" }}
+                </button>
+
+                <button
+                  *ngIf="user.email !== 'studyspacetfg@gmail.com'"
+                  class="btn btn-sm btn-outline-danger"
+                  (click)="deleteUser(user)"
+                  title="Delete User"
+                >
+                  🗑️ Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="users.length === 0">
+            <td colspan="4" class="text-center py-3 text-muted">
+              No users found on this page.
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-    <app-pagination 
-        [pageData]="pageData" 
-        [currentPage]="currentPage" 
-        (pageChange)="loadUsers($event)">
-    </app-pagination>
-    
-    <div class="d-flex justify-content-start mb-5">
-        <button class="btn btn-outline-secondary" routerLink="/admin">
-            <i class="bi bi-arrow-left me-2"></i> Back to Admin menu
-        </button>
-    </div>
+  </div>
+  <app-pagination
+    [pageData]="pageData"
+    [currentPage]="currentPage"
+    (pageChange)="loadUsers($event)"
+  >
+  </app-pagination>
+
+  <div class="d-flex justify-content-start mb-5">
+    <button class="btn btn-outline-secondary" routerLink="/admin">
+      <i class="bi bi-arrow-left me-2"></i> Back to Admin menu
+    </button>
+  </div>
 </div>

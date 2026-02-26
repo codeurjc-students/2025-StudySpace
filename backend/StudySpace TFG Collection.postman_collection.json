@@ -45,12 +45,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/rooms/1",
-              "protocol": "http",
+              "raw": "https://localhost:8443/api/rooms/1",
+              "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8080",
+              "port": "8443",
               "path": [
                 "api",
                 "rooms",
@@ -61,7 +61,7 @@
           "response": []
         },
         {
-          "name": "Post Room",
+          "name": "Admin Post Room",
           "request": {
             "auth": {
               "type": "jwt",
@@ -130,12 +130,12 @@
           "response": []
         },
         {
-          "name": "Delete Room",
+          "name": "Admin Delete Room",
           "request": {
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "https://localhost:8443/api/rooms/1",
+              "raw": "https://localhost:8443/api/rooms/2",
               "protocol": "https",
               "host": [
                 "localhost"
@@ -144,14 +144,14 @@
               "path": [
                 "api",
                 "rooms",
-                "1"
+                "2"
               ]
             }
           },
           "response": []
         },
         {
-          "name": "Put Room",
+          "name": "Admin Put Room",
           "request": {
             "method": "PUT",
             "header": [],
@@ -181,30 +181,139 @@
           "response": []
         },
         {
-          "name": "Patch Room",
+          "name": "Get room occupancy stats",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
           "request": {
-            "method": "PATCH",
+            "method": "GET",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n\t\"name\": \"Habitacion5\",\r\n    \"capacity\": 30,\r\n    \"camp\": \"MOSTOLES\",\r\n    \"place\": \"Calle Argentina N80\",\r\n    \"coordenades\":\"40.334619, -3.874812\",\r\n    \"software\": [{\"id\":1}]\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{ \"email\": \"ana@alumnos.urjc.es\" }"
             },
             "url": {
-              "raw": "http://localhost:8080/api/rooms/1",
-              "protocol": "http",
+              "raw": "https://localhost:8443/api/rooms/1/stats?date=2026-03-02",
+              "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8080",
+              "port": "8443",
               "path": [
                 "api",
                 "rooms",
-                "1"
+                "1",
+                "stats"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-03-02",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get room image",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://localhost:8443/api/rooms/1/image",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "8443",
+              "path": [
+                "api",
+                "rooms",
+                "1",
+                "image"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Upload room image",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "uuid": "e3f8d7ef-f38a-4417-a361-466084c03b8c",
+                  "src": "/C:/Users/guill/OneDrive/Documentos/GitHub/2025-StudySpace/backend/uploads/sala_multimedia.jpg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "https://localhost:8443/api/rooms/1/image?file",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "8443",
+              "path": [
+                "api",
+                "rooms",
+                "1",
+                "image"
+              ],
+              "query": [
+                {
+                  "key": "file",
+                  "value": null,
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Calendar data",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"username\": \"carlos@urjc.es\",\r\n  \"password\": \"1234aA..\"\r\n}"
+            },
+            "url": {
+              "raw": "https://localhost:8443/api/rooms/1/calendar?start=2026-03-01&end=2026-03-31",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "8443",
+              "path": [
+                "api",
+                "rooms",
+                "1",
+                "calendar"
+              ],
+              "query": [
+                {
+                  "key": "start",
+                  "value": "2026-03-01",
+                  "type": "text"
+                },
+                {
+                  "key": "end",
+                  "value": "2026-03-31",
+                  "type": "text"
+                }
               ]
             }
           },
@@ -216,7 +325,7 @@
       "name": "Users",
       "item": [
         {
-          "name": "Get Users",
+          "name": "Admin Get Users",
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           },
@@ -248,43 +357,28 @@
           "response": []
         },
         {
-          "name": "Get User",
+          "name": "Admin Get User",
           "request": {
-            "auth": {
-              "type": "basic",
-              "basic": [
-                {
-                  "key": "password",
-                  "value": "admin",
-                  "type": "string"
-                },
-                {
-                  "key": "username",
-                  "value": "admin@studyspace.com",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/users/15",
-              "protocol": "http",
+              "raw": "https://localhost:8443/api/users/4",
+              "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8080",
+              "port": "8443",
               "path": [
                 "api",
                 "users",
-                "15"
+                "4"
               ]
             }
           },
           "response": []
         },
         {
-          "name": "Post User",
+          "name": "Admin Post User",
           "request": {
             "auth": {
               "type": "basic",
@@ -328,7 +422,7 @@
           "response": []
         },
         {
-          "name": "Delete User",
+          "name": "Admin Delete User",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -337,7 +431,7 @@
               "raw": "{\r\n\t\"name\": \"Habitacion2\",\r\n    \"capacity\": 30,\r\n    \"camp\": \"MOSTOLES\",\r\n    \"place\": \"Calle Argentina N80\",\r\n    \"coordenades\":\"40.334619, -3.874812\"\r\n}"
             },
             "url": {
-              "raw": "https://localhost:8443/api/users/1",
+              "raw": "https://localhost:8443/api/users/7",
               "protocol": "https",
               "host": [
                 "localhost"
@@ -346,30 +440,15 @@
               "path": [
                 "api",
                 "users",
-                "1"
+                "7"
               ]
             }
           },
           "response": []
         },
         {
-          "name": "Put User",
+          "name": "Admin Put User",
           "request": {
-            "auth": {
-              "type": "basic",
-              "basic": [
-                {
-                  "key": "password",
-                  "value": "admin",
-                  "type": "string"
-                },
-                {
-                  "key": "username",
-                  "value": "admin@studyspace.com",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "PUT",
             "header": [],
             "body": {
@@ -382,23 +461,23 @@
               }
             },
             "url": {
-              "raw": "http://localhost:8080/api/users/2",
-              "protocol": "http",
+              "raw": "https://localhost:8443/api/users/7",
+              "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8080",
+              "port": "8443",
               "path": [
                 "api",
                 "users",
-                "2"
+                "7"
               ]
             }
           },
           "response": []
         },
         {
-          "name": "Patch User",
+          "name": "Admin Patch User",
           "request": {
             "method": "PATCH",
             "header": [],
@@ -412,16 +491,171 @@
               }
             },
             "url": {
-              "raw": "http://localhost:8080/api/users/2",
-              "protocol": "http",
+              "raw": "https://localhost:8443/api/users/7",
+              "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8080",
+              "port": "8443",
               "path": [
                 "api",
                 "users",
-                "2"
+                "7"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Change user role",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"email\": \"ana@alumnos.urjc.es\" }"
+            },
+            "url": {
+              "raw": "https://localhost:8443/api/users/2/role?role=ADMIN",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "8443",
+              "path": [
+                "api",
+                "users",
+                "2",
+                "role"
+              ],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "ADMIN"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Block user",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"email\": \"ana@alumnos.urjc.es\" }"
+            },
+            "url": {
+              "raw": "https://localhost:8443/api/users/2/block",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "8443",
+              "path": [
+                "api",
+                "users",
+                "2",
+                "block"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Get user resrvations",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"email\": \"ana@alumnos.urjc.es\" }"
+            },
+            "url": {
+              "raw": "https://localhost:8443/api/users/3/reservations",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "8443",
+              "path": [
+                "api",
+                "users",
+                "3",
+                "reservations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get user image",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"email\": \"ana@alumnos.urjc.es\" }"
+            },
+            "url": {
+              "raw": "https://localhost:8443/api/users/5/image",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "8443",
+              "path": [
+                "api",
+                "users",
+                "5",
+                "image"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "User Upload own image",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "uuid": "4a4cb894-815a-41c0-a92a-777c02608833",
+                  "src": "/C:/Users/guill/OneDrive/Documentos/GitHub/2025-StudySpace/backend/uploads/fran_perfil.jpg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "https://localhost:8443/api/users/4/image?file",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "8443",
+              "path": [
+                "api",
+                "users",
+                "4",
+                "image"
+              ],
+              "query": [
+                {
+                  "key": "file",
+                  "value": null
+                }
               ]
             }
           },
@@ -433,17 +667,17 @@
       "name": "Reservations",
       "item": [
         {
-          "name": "Get Reservation",
+          "name": "Admin Get Reservation",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/reservations/1",
-              "protocol": "http",
+              "raw": "https://localhost:8443/api/reservations/1",
+              "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8080",
+              "port": "8443",
               "path": [
                 "api",
                 "reservations",
@@ -454,7 +688,7 @@
           "response": []
         },
         {
-          "name": "Get Reservations",
+          "name": "Admin Get Reservations",
           "request": {
             "method": "GET",
             "header": [],
@@ -474,7 +708,7 @@
           "response": []
         },
         {
-          "name": "Post Reservation",
+          "name": "User Post Reservation",
           "request": {
             "auth": {
               "type": "basic",
@@ -495,7 +729,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{  \r\n   \"roomId\": 1,\r\n   \"startDate\": \"2026-06-09T15:00:00\",\r\n   \"endDate\": \"2026-06-09T16:30:00\",\r\n   \"reason\": \"Prueba de solapamiento\"\r\n}",
+              "raw": "{  \r\n   \"roomId\": 5,\r\n   \"startDate\": \"2026-06-09T15:00:00\",\r\n   \"endDate\": \"2026-06-09T16:30:00\",\r\n   \"reason\": \"Reserva de prueba en la lejania\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -518,27 +752,12 @@
           "response": []
         },
         {
-          "name": "Delete Reservation",
+          "name": "Admin Delete Reservation",
           "request": {
-            "auth": {
-              "type": "basic",
-              "basic": [
-                {
-                  "key": "password",
-                  "value": "admin",
-                  "type": "string"
-                },
-                {
-                  "key": "username",
-                  "value": "admin@studyspace.com",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "https://localhost:8443/api/reservations/8",
+              "raw": "https://localhost:8443/api/reservations/3",
               "protocol": "https",
               "host": [
                 "localhost"
@@ -547,14 +766,14 @@
               "path": [
                 "api",
                 "reservations",
-                "8"
+                "3"
               ]
             }
           },
           "response": []
         },
         {
-          "name": "Put Reservation",
+          "name": "Admin Put Reservation",
           "request": {
             "method": "PUT",
             "header": [],
@@ -568,12 +787,12 @@
               }
             },
             "url": {
-              "raw": "http://localhost:8080/api/reservations/1",
-              "protocol": "http",
+              "raw": "https://localhost:8443/api/reservations/1",
+              "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8080",
+              "port": "8443",
               "path": [
                 "api",
                 "reservations",
@@ -584,7 +803,7 @@
           "response": []
         },
         {
-          "name": "Patch Reservation",
+          "name": "Admin Patch Reservation",
           "request": {
             "method": "PATCH",
             "header": [],
@@ -598,16 +817,172 @@
               }
             },
             "url": {
-              "raw": "http://localhost:8080/api/reservations/1",
-              "protocol": "http",
+              "raw": "https://localhost:8443/api/reservations/1",
+              "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8080",
+              "port": "8443",
               "path": [
                 "api",
                 "reservations",
                 "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "User Get my reservations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://localhost:8443/api/reservations/my-reservations?page=0",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "8443",
+              "path": [
+                "api",
+                "reservations",
+                "my-reservations"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get room availability for reservation",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n  \"startDate\": \"2025-11-10T10:00:00.000+00:00\",\r\n  \"endDate\": \"2025-11-10T11:00:00.000+00:00\",\r\n  \"roomId\": 2,\r\n  \"userId\": 1,\r\n  \"reason\": \"Nueva Razón: Reunión de TFG con Tutor\"\r\n\r\n}"
+            },
+            "url": {
+              "raw": "https://localhost:8443/api/reservations/check-availability?roomId=1&date=2026-03-02",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "8443",
+              "path": [
+                "api",
+                "reservations",
+                "check-availability"
+              ],
+              "query": [
+                {
+                  "key": "roomId",
+                  "value": "1"
+                },
+                {
+                  "key": "date",
+                  "value": "2026-03-02"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify reservation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://localhost:8443/api/reservations/verify?token=92c3c76b-2aa4-4044-b67f-8a9e378e4c95",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "8443",
+              "path": [
+                "api",
+                "reservations",
+                "verify"
+              ],
+              "query": [
+                {
+                  "key": "token",
+                  "value": "92c3c76b-2aa4-4044-b67f-8a9e378e4c95"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "User Cancel reservation",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://localhost:8443/api/reservations/5/cancel",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "8443",
+              "path": [
+                "api",
+                "reservations",
+                "5",
+                "cancel"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Cancel reservation",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"reason\": \"Motivos de mantenimiento\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://localhost:8443/api/reservations/admin/2/cancel",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "8443",
+              "path": [
+                "api",
+                "reservations",
+                "admin",
+                "2",
+                "cancel"
               ]
             }
           },
@@ -644,12 +1019,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/softwares/5",
-              "protocol": "http",
+              "raw": "https://localhost:8443/api/softwares/5",
+              "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8080",
+              "port": "8443",
               "path": [
                 "api",
                 "softwares",
@@ -660,7 +1035,7 @@
           "response": []
         },
         {
-          "name": "Post Software",
+          "name": "Admin Post Software",
           "request": {
             "method": "POST",
             "header": [],
@@ -689,7 +1064,7 @@
           "response": []
         },
         {
-          "name": "Delete Software",
+          "name": "Admin Delete Software",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -710,7 +1085,7 @@
           "response": []
         },
         {
-          "name": "Put Softwares",
+          "name": "Admin Put Softwares",
           "request": {
             "method": "PUT",
             "header": [],
@@ -738,36 +1113,6 @@
             }
           },
           "response": []
-        },
-        {
-          "name": "Patch Softwares",
-          "request": {
-            "method": "PATCH",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"name\": \"Linux\",\r\n    \"version\": 20.5,\r\n    \"description\": \"Ordenador con Linux, de sobremesa, conectado a ethernet.\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "http://localhost:8080/api/softwares/3",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8080",
-              "path": [
-                "api",
-                "softwares",
-                "3"
-              ]
-            }
-          },
-          "response": []
         }
       ]
     },
@@ -775,13 +1120,108 @@
       "name": "Log in",
       "item": [
         {
+          "name": "Password",
+          "item": [
+            {
+              "name": "Change-Pasword",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"oldPassword\": \"1234aA..\",\r\n    \"newPassword\": \"Password123.\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "https://localhost:8443/api/auth/change-password",
+                  "protocol": "https",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8443",
+                  "path": [
+                    "api",
+                    "auth",
+                    "change-password"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Forgot password",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{ \"email\": \"guilleraes@gmail.com\" }",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "https://localhost:8443/api/auth/forgot-password",
+                  "protocol": "https",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8443",
+                  "path": [
+                    "api",
+                    "auth",
+                    "forgot-password"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Reset password",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{ \"token\": \"ed8efb1c-49d0-4939-91ed-eeceb44eeb37\", \"newPassword\": \"Password123.\" }",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "https://localhost:8443/api/auth/reset-password",
+                  "protocol": "https",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8443",
+                  "path": [
+                    "api",
+                    "auth",
+                    "reset-password"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
           "name": "Register",
           "request": {
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"name\": \"correo-malo\",\r\n    \"email\": \"correo-falso-sin-arroba@gmaill.com\",\r\n    \"password\": \"1234aA.a\"\r\n}",
+              "raw": "{\r\n    \"name\": \"correo-malo\",\r\n    \"email\": \"correo-falso-sin-arroba@gmaill.com\",\r\n    \"password\": \"1234aA..\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -811,7 +1251,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"username\": \"guilleraes@gmail.com\",\r\n  \"password\": \"1234aA..\"\r\n}",
+              "raw": "{\r\n  \"username\": \"carlos@urjc.es\",\r\n  \"password\": \"1234aA..\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -856,7 +1296,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"username\": \"admin@studyspace.com\",\r\n  \"password\": \"admin\"\r\n}",
+              "raw": "{\r\n  \"username\": \"studyspacetfg@gmail.com\",\r\n  \"password\": \"Admin12.\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -880,36 +1320,6 @@
           "response": []
         },
         {
-          "name": "Change-Pasword",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"oldPassword\": \"1234\",\r\n    \"newPassword\": \"123\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "https://localhost:8443/api/auth/change-password",
-              "protocol": "https",
-              "host": [
-                "localhost"
-              ],
-              "port": "8443",
-              "path": [
-                "api",
-                "auth",
-                "change-password"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
           "name": "Logout",
           "request": {
             "method": "POST",
@@ -925,6 +1335,80 @@
                 "api",
                 "auth",
                 "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Own user",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "password",
+                  "value": "1234",
+                  "type": "string"
+                },
+                {
+                  "key": "username",
+                  "value": "fran@gmail.com",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{  \r\n   \"roomId\": 1,\r\n   \"startDate\": \"2026-06-09T15:00:00\",\r\n   \"endDate\": \"2026-06-09T16:30:00\",\r\n   \"reason\": \"Prueba de solapamiento\"\r\n}"
+            },
+            "url": {
+              "raw": "https://localhost:8443/api/auth/me",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "8443",
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Stats",
+      "item": [
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://localhost:8443/api/stats?date=2026-03-01",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "8443",
+              "path": [
+                "api",
+                "stats"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-03-01"
+                }
               ]
             }
           },

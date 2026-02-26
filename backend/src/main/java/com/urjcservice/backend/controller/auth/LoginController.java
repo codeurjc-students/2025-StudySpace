@@ -17,11 +17,9 @@ import jakarta.servlet.http.HttpServletResponse;
 @RestController
 @RequestMapping("/api/auth")
 public class LoginController {
-	
-	
 
 	private final UserLoginService userService;
-	
+
 	public LoginController(UserLoginService userService) {
 		this.userService = userService;
 	}
@@ -30,7 +28,7 @@ public class LoginController {
 	public ResponseEntity<AuthResponse> login(
 			@RequestBody LoginRequest loginRequest,
 			HttpServletResponse response) {
-		
+
 		return userService.login(response, loginRequest);
 	}
 

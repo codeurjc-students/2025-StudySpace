@@ -1,1 +1,5 @@
-/*Future users component styles*/
+.avatar-img {
+  width: 30px;
+  height: 30px;
+  object-fit: cover;
+}
