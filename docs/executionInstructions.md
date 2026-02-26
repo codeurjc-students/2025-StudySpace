@@ -11,7 +11,8 @@ Para poder levantar el entorno y ejecutar las pruebas, es necesario tener instal
 
 ---
 
-###Levantar el entorno con Docker
+### Levantar el entorno con Docker
+
 En la raíz del proyecto, ejecutar el siguiente comando para levantar el entorno con Docker:
 
 ```bash
@@ -28,7 +29,8 @@ docker-compose down
 
 ### Ejecución de pruebas
 
-####Backend
+#### Backend
+
 Dentro de la carpeta `backend`, ejecutar en una terminal con mvn instalado:
 
 ```bash
@@ -38,7 +40,8 @@ mvn -B clean verify
 
 ---
 
-####Frontend
+#### Frontend
+
 Dentro de la carpeta `frontend`, ejecutar (Si no tienes los node_modules instalados.):
 
 ```bash
@@ -55,7 +58,8 @@ ng test
 
 ---
 
-####Pruebas E2E (con Playwright)
+#### Pruebas E2E (con Playwright)
+
 Para levantar el entorno de pruebas E2E es necesario seguir estos pasos.
 
 Desde la raíz del proyecto, asegúrate de apagar cualquier contenedor previo por si acaso:
