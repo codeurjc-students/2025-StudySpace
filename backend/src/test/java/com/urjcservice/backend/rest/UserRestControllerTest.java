@@ -265,42 +265,38 @@ public class UserRestControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "USER")
+    @WithMockUser(username = "ana@alumnos.urjc.es", roles = "USER")
     public void testUploadUserImage_Success() throws Exception {
-        // GIVEN
+        mockUser.setEmail("ana@alumnos.urjc.es");
         MockMultipartFile file = new MockMultipartFile(
                 "file", "profile.png", "image/png", "content".getBytes());
 
-        String jwtToken = "token-falso-para-el-test";
         given(fileStorageService.store(any())).willReturn("uuid_profile.png");
-
         given(userService.findById(1L)).willReturn(Optional.of(mockUser));
 
-        // WHEN & THEN
         mockMvc.perform(multipart("/api/users/1/image")
                 .file(file)
-                .with(csrf())
-                .cookie(new Cookie("accessToken", jwtToken))
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                .cookie(new jakarta.servlet.http.Cookie("accessToken", "dummy-token")) // Evita el crash del filtro JWT
                 .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.imageName").value("uuid_profile.png"));
     }
 
     @Test
-    @WithMockUser(roles = "USER")
+    @WithMockUser(username = "ana@alumnos.urjc.es", roles = "USER")
     public void testGetUserImage_Success() throws Exception {
-        // GIVEN
+        mockUser.setEmail("ana@alumnos.urjc.es");
         mockUser.setImageName("my-photo.jpg");
         given(userService.findById(1L)).willReturn(Optional.of(mockUser));
 
-        // Simulamos que el fichero existe y tiene contenido
         given(fileStorageService.loadAsResource("my-photo.jpg"))
-                .willReturn(new ByteArrayResource("fake-image-content".getBytes()));
+                .willReturn(new org.springframework.core.io.ByteArrayResource("fake-image-content".getBytes()));
 
-        // WHEN & THEN
-        mockMvc.perform(get("/api/users/1/image"))
+        mockMvc.perform(get("/api/users/1/image")
+                .cookie(new jakarta.servlet.http.Cookie("accessToken", "dummy-token")))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.IMAGE_JPEG)) // O lo que detecte tu controlador
+                .andExpect(content().contentType(MediaType.IMAGE_JPEG))
                 .andExpect(content().bytes("fake-image-content".getBytes()));
     }
 

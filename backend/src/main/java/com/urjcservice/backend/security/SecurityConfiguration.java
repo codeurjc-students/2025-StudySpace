@@ -63,22 +63,35 @@ public class SecurityConfiguration {
                 // activate cors here
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(authorize -> authorize
-                        // PUBLIC PAGES
+                        // Public
                         .requestMatchers("/").permitAll()
                         .requestMatchers("/error").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // CORS pre-flight
+
+                        // Auth
+                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh").permitAll()
+                        .requestMatchers("/api/auth/forgot-password", "/api/auth/reset-password").permitAll()
+
+                        // Public GET endpoints
                         .requestMatchers(new AntPathRequestMatcher("/api/rooms/**", "GET")).permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/api/softwares/**").hasRole("ADMIN")
-                        .requestMatchers("/api/auth/register").permitAll()
-                        .requestMatchers("/api/auth/login").permitAll()
-                        .requestMatchers("/api/auth/refresh").permitAll()
-                        // for password reset
-                        .requestMatchers("/api/auth/forgot-password").permitAll()
-                        .requestMatchers("/api/auth/reset-password").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/softwares/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/stats/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/users/*/image").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/reservations/check-availability").permitAll()
                         .requestMatchers("/api/reservations/verify").permitAll()
-                        // allows pre-flight requests (for CORS)
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // PRIVATE PAGES
-                        .anyRequest().authenticated())
+
+                        // User
+                        .requestMatchers("/api/auth/me", "/api/auth/change-password", "/api/auth/logout")
+                        .authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/users/*/image").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/users/*/image").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/reservations").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/reservations/my-reservations").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/reservations/*").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/api/reservations/*/cancel").authenticated()
+
+                        // Admin
+                        .anyRequest().hasRole("ADMIN"))
 
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(unauthorizedHandler) // for general exceptions
@@ -101,7 +114,7 @@ public class SecurityConfiguration {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         // allows Angular (port 4200)
-        configuration.setAllowedOrigins(Arrays.asList("https://localhost","https://localhost:4200"));
+        configuration.setAllowedOrigins(Arrays.asList("https://localhost", "https://localhost:4200"));
         // allows HTTP methods
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         // allows headers(Authorization for login)
@@ -114,4 +127,5 @@ public class SecurityConfiguration {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 }

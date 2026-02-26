@@ -165,7 +165,9 @@ test.describe('User Reservation Management by Admin', () => {
     // ADMIN QUERY
     // ==========================================
     await test.step('Admin searches for the user and views their bookings', async () => {
-      await page.getByPlaceholder('Email Address').fill('admin@studyspace.com');
+      await page
+        .getByPlaceholder('Email Address')
+        .fill('studyspacetfg@gmail.com');
       await page
         .locator('input[placeholder="Enter password"]')
         .fill('Admin12.');

@@ -150,7 +150,9 @@ test.describe('Statistics and Reservations Flow', () => {
 
     // ADMIN VERIFICATION
     await test.step('Admin checks the statistics', async () => {
-      await page.getByPlaceholder('Email Address').fill('admin@studyspace.com');
+      await page
+        .getByPlaceholder('Email Address')
+        .fill('studyspacetfg@gmail.com');
       await page
         .locator('input[placeholder="Enter password"]')
         .fill('Admin12.');

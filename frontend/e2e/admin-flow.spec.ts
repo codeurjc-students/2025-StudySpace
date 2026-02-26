@@ -8,7 +8,7 @@ test.describe('Administrator Management', () => {
     const emailInput = page.getByPlaceholder('Email Address');
     await expect(emailInput).toBeEditable();
 
-    await emailInput.fill('admin@studyspace.com');
+    await emailInput.fill('studyspacetfg@gmail.com');
     await page.locator('input[placeholder="Enter password"]').fill('Admin12.');
 
     await Promise.all([

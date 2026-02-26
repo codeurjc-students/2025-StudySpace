@@ -89,6 +89,9 @@ public class RoomService {
                     softwareRepository.save(s);
                 }
             }
+            if (r.getImageName() != null && !r.getImageName().isEmpty()) {
+                fileStorageService.delete(r.getImageName());
+            }
             roomRepository.delete(r);
         });
         return existing;

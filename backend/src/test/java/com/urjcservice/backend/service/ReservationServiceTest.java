@@ -80,12 +80,6 @@ public class ReservationServiceTest {
         return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
     }
 
-    /*
-     * private Date toLegacyDate(LocalDateTime ldt) {
-     * return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
-     * }
-     */
-
     private Date getWeekendDate() {
         LocalDateTime ldt = LocalDateTime.now().with(java.time.temporal.TemporalAdjusters.next(DayOfWeek.SATURDAY));
         ldt = ldt.withHour(10).withMinute(0).withSecond(0);
@@ -269,26 +263,22 @@ public class ReservationServiceTest {
     }
 
     @Test
+    @DisplayName("Get Reservations By User Email - Success")
     void testGetReservationsByUserEmail_Success() {
-        // GIVEN
-        String email = "test@user.com";
-        User user = new User();
-        user.setEmail(email);
-
         Pageable pageable = PageRequest.of(0, 10);
-        List<Reservation> resList = Arrays.asList(new Reservation(), new Reservation());
-        Page<Reservation> page = new PageImpl<>(resList);
+        Page<Reservation> page = new PageImpl<>(List.of(new Reservation()));
 
-        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        when(reservationRepository.findByUser(user, pageable)).thenReturn(page);
+        User mockUser = new User();
+        mockUser.setId(1L);
+        mockUser.setEmail("user@test.com");
 
-        // WHEN
-        Page<Reservation> result = reservationService.getReservationsByUserEmail(email, pageable);
+        when(userRepository.findByEmail("user@test.com")).thenReturn(Optional.of(mockUser));
+        when(reservationRepository.findByUserWithActivePriority(mockUser, pageable)).thenReturn(page);
 
-        // THEN
+        Page<Reservation> result = reservationService.getReservationsByUserEmail("user@test.com", pageable);
+
         assertNotNull(result);
-        assertEquals(2, result.getContent().size());
-        verify(reservationRepository).findByUser(user, pageable);
+        assertEquals(1, result.getTotalElements());
     }
 
     @Test
@@ -452,19 +442,21 @@ public class ReservationServiceTest {
     // --- search user by ID ---
 
     @Test
+    @DisplayName("Get Reservations By User ID - Success")
     void testGetReservationsByUserId_Success() {
-        Long userId = 1L;
-        User user = new User();
-        user.setId(userId);
         Pageable pageable = PageRequest.of(0, 10);
+        Page<Reservation> page = new PageImpl<>(List.of(new Reservation()));
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(reservationRepository.findByUser(user, pageable)).thenReturn(Page.empty());
+        User mockUser = new User();
+        mockUser.setId(1L);
 
-        Page<Reservation> result = reservationService.getReservationsByUserId(userId, pageable);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(mockUser));
+        when(reservationRepository.findByUserWithActivePriority(mockUser, pageable)).thenReturn(page);
+
+        Page<Reservation> result = reservationService.getReservationsByUserId(1L, pageable);
 
         assertNotNull(result);
-        verify(reservationRepository).findByUser(user, pageable);
+        assertEquals(1, result.getTotalElements());
     }
 
     @Test

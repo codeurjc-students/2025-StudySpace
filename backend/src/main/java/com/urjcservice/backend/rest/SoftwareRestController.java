@@ -97,13 +97,17 @@ public class SoftwareRestController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSoftware(@PathVariable Long id) {
-        Optional<Software> deleted = softwareService.deleteById(id);
-        if (deleted.isPresent()) {
-            return ResponseEntity.noContent().build();
+    public ResponseEntity<Software> deleteSoftware(@PathVariable Long id) {
+        Optional<Software> softwareOp = softwareService.findById(id);
+
+        if (softwareOp.isPresent()) {
+            Software software = softwareOp.get();
+
+            softwareService.deleteById(id);
+
+            return ResponseEntity.ok(software);
         } else {
             return ResponseEntity.notFound().build();
         }
     }
-
 }

@@ -7,6 +7,7 @@ import org.springframework.data.web.SortDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.core.Authentication;
 
 import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.service.FileStorageService;
@@ -17,6 +18,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import java.io.IOException;
 
@@ -172,7 +174,7 @@ public class UserRestController {
 
     @PostMapping("/{id}/image")
     public ResponseEntity<User> uploadImage(@PathVariable Long id,
-            @RequestParam("file") MultipartFile file) throws IOException {
+            @RequestParam("file") MultipartFile file, Authentication authentication) throws IOException {
 
         Optional<User> userOp = userService.findById(id);
         if (userOp.isEmpty()) {
@@ -181,6 +183,12 @@ public class UserRestController {
 
         User user = userOp.get();
 
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
+
+        if (!user.getEmail().equals(authentication.getName()) && !isAdmin) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // 403 Prohibido
+        }
         // delete the older image if exists
         if (user.getImageName() != null) {
             fileStorageService.delete(user.getImageName());
@@ -195,10 +203,18 @@ public class UserRestController {
     }
 
     @GetMapping("/{id}/image")
-    public ResponseEntity<Resource> getImage(@PathVariable Long id) {
+    public ResponseEntity<Resource> getImage(@PathVariable Long id, Authentication authentication) {
         Optional<User> userOp = userService.findById(id);
         if (userOp.isEmpty() || userOp.get().getImageName() == null) {
             return ResponseEntity.notFound().build();
+        }
+        User targetUser = userOp.get();
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
+
+        if (!targetUser.getEmail().equals(authentication.getName()) && !isAdmin) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // 403
         }
 
         Resource file = fileStorageService.loadAsResource(userOp.get().getImageName());
