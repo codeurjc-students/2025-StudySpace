@@ -1,7 +1,7 @@
 package com.urjcservice.backend.service;
 
 import com.urjcservice.backend.service.EmailService;
-
+import com.urjcservice.backend.dtos.SmartSuggestionDTO;
 import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.entities.User;
 import com.urjcservice.backend.entities.Room;
@@ -25,6 +25,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -461,6 +462,59 @@ public class ReservationService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
         return reservationRepository.findActiveByUserIdAndDate(user.getId(), date);
+    }
+
+    public List<SmartSuggestionDTO> smartFindAvailableRooms(
+            Date requestedStart,
+            Date requestedEnd,
+            Integer minCapacity,
+            Room.CampusType campus) {
+
+        List<SmartSuggestionDTO> suggestions = new ArrayList<>();
+
+        List<Room> candidateRooms = roomRepository.findAll().stream()
+                .filter(Room::isActive)
+                .filter(r -> minCapacity == null || r.getCapacity() >= minCapacity)
+                .filter(r -> campus == null || r.getCamp() == campus)
+                .toList();
+
+        long durationMillis = requestedEnd.getTime() - requestedStart.getTime();
+
+        for (Room room : candidateRooms) {
+            List<Reservation> overlaps = reservationRepository.findActiveReservationsByRoomIdAndDateRange(
+                    room.getId(), requestedStart, requestedEnd);
+
+            if (overlaps.isEmpty()) {
+                suggestions.add(new SmartSuggestionDTO(room, requestedStart, requestedEnd, "EXACT_MATCH", 100));
+            } else {
+                Date plus30Start = new Date(requestedStart.getTime() + (30 * 60000)); // 30 minutes later
+                Date plus30End = new Date(plus30Start.getTime() + durationMillis);
+                if (reservationRepository
+                        .findActiveReservationsByRoomIdAndDateRange(room.getId(), plus30Start, plus30End).isEmpty()) {
+                    suggestions.add(new SmartSuggestionDTO(room, plus30Start, plus30End, "ALTERNATIVE_TIME", 80));
+                }
+
+                Date minus30Start = new Date(requestedStart.getTime() - (30 * 60000)); // - 30 minutes later
+                Date minus30End = new Date(minus30Start.getTime() + durationMillis);
+                if (reservationRepository
+                        .findActiveReservationsByRoomIdAndDateRange(room.getId(), minus30Start, minus30End).isEmpty()) {
+                    suggestions.add(new SmartSuggestionDTO(room, minus30Start, minus30End, "ALTERNATIVE_TIME", 80));
+                }
+
+                Date plus60Start = new Date(requestedStart.getTime() + (60 * 60000)); // 60 minutes later
+                Date plus60End = new Date(plus60Start.getTime() + durationMillis);
+                if (reservationRepository
+                        .findActiveReservationsByRoomIdAndDateRange(room.getId(), plus60Start, plus60End).isEmpty()) {
+                    suggestions.add(new SmartSuggestionDTO(room, plus60Start, plus60End, "ALTERNATIVE_TIME", 60));
+                }
+            }
+        }
+
+        // order from best to worst
+        suggestions.sort((a, b) -> Integer.compare(b.getScore(), a.getScore()));
+
+        // only 10 better suggestions
+        return suggestions.stream().limit(10).toList();
     }
 
 }

@@ -1,9 +1,12 @@
 package com.urjcservice.backend.rest;
 
+import com.urjcservice.backend.dtos.SmartSuggestionDTO;
 import com.urjcservice.backend.entities.Reservation;
+import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.service.ReservationService;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.SortDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -243,6 +246,18 @@ public class ReservationRestController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
+    }
+
+    @GetMapping("/smart-search")
+    public ResponseEntity<List<SmartSuggestionDTO>> smartSearch(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date end,
+            @RequestParam(required = false) Integer minCapacity,
+            @RequestParam(required = false) Room.CampusType campus) {
+
+        List<SmartSuggestionDTO> suggestions = reservationService.smartFindAvailableRooms(start, end, minCapacity,
+                campus);
+        return ResponseEntity.ok(suggestions);
     }
 
 }

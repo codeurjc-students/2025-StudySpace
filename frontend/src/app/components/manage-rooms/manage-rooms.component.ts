@@ -13,6 +13,13 @@ export class ManageRoomsComponent implements OnInit {
   pageData?: Page<RoomDTO>;
   currentPage: number = 0;
 
+  //for search filter algorithm
+  public searchText: string = '';
+  public selectedCampus: string = '';
+  public filterActive: string = '';
+  public minCapacity: number | null = null;
+  public isSearching: boolean = false;
+
   constructor(private readonly roomsService: RoomsService) {}
 
   ngOnInit(): void {
@@ -20,14 +27,36 @@ export class ManageRoomsComponent implements OnInit {
   }
 
   loadRooms(page: number) {
-    this.roomsService.getRooms(page).subscribe({
-      next: (data) => {
-        this.pageData = data;
-        this.rooms = data.content;
-        this.currentPage = data.number;
-      },
-      error: (err) => console.error('Error loading rooms', err),
-    });
+    if (this.isSearching) {
+      let activeParam: boolean | undefined = undefined;
+      if (this.filterActive === 'true') activeParam = true;
+      if (this.filterActive === 'false') activeParam = false;
+
+      this.roomsService
+        .searchRooms(
+          this.searchText,
+          this.minCapacity || undefined,
+          this.selectedCampus || undefined,
+          activeParam,
+          page,
+        )
+        .subscribe({
+          next: (data) => {
+            this.pageData = data;
+            this.rooms = data.content;
+            this.currentPage = data.number;
+          },
+        });
+    } else {
+      this.roomsService.getRooms(page).subscribe({
+        next: (data) => {
+          this.pageData = data;
+          this.rooms = data.content;
+          this.currentPage = data.number;
+        },
+        error: (err) => console.error('Error loading rooms', err),
+      });
+    }
   }
 
   getVisiblePages(): number[] {
@@ -49,5 +78,27 @@ export class ManageRoomsComponent implements OnInit {
         console.error('Error deleting:', err);
       },
     });
+  }
+
+  onSearch() {
+    if (
+      !this.searchText &&
+      !this.selectedCampus &&
+      !this.minCapacity &&
+      !this.filterActive
+    ) {
+      this.clearSearch();
+      return;
+    }
+    this.isSearching = true;
+    this.loadRooms(0);
+  }
+
+  clearSearch() {
+    this.searchText = '';
+    this.selectedCampus = '';
+    this.minCapacity = null;
+    this.isSearching = false;
+    this.loadRooms(0);
   }
 }

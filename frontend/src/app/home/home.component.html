@@ -8,10 +8,75 @@
 </div>
 
 <div class="container">
-  <h3 class="mb-4 mt-5 pt-3">Available Rooms</h3>
+  <div class="card shadow-sm mt-4 mb-4 border-primary border-opacity-25">
+    <div class="card-body bg-light">
+      <form (ngSubmit)="onSearch()" class="row g-3 align-items-end">
+        <div class="col-md-5">
+          <label for="searchText" class="form-label fw-bold text-secondary"
+            >Intelligent Search</label
+          >
+          <input
+            type="text"
+            class="form-control"
+            id="searchText"
+            name="searchText"
+            [(ngModel)]="searchText"
+            placeholder="Room name, software (e.g., Java), place..."
+          />
+        </div>
+        <div class="col-md-3">
+          <label for="campus" class="form-label fw-bold text-secondary"
+            >Campus</label
+          >
+          <select
+            class="form-select"
+            id="campus"
+            name="campus"
+            [(ngModel)]="selectedCampus"
+          >
+            <option value="">All</option>
+            <option value="ALCORCON">Alcorcón</option>
+            <option value="MOSTOLES">Móstoles</option>
+            <option value="VICALVARO">Vicálvaro</option>
+            <option value="FUENLABRADA">Fuenlabrada</option>
+            <option value="QUINTANA">Quintana</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label for="capacity" class="form-label fw-bold text-secondary"
+            >Min. Capacity</label
+          >
+          <input
+            type="number"
+            class="form-control"
+            id="capacity"
+            name="capacity"
+            [(ngModel)]="minCapacity"
+            placeholder="e.g., 20"
+          />
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+          <button type="submit" class="btn btn-primary w-100 shadow-sm">
+            Search
+          </button>
+          <button
+            *ngIf="isSearching"
+            type="button"
+            class="btn btn-outline-secondary"
+            (click)="clearSearch()"
+          >
+            ✖
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <h3 class="mb-4 pt-2" *ngIf="!isSearching">Available Rooms</h3>
+  <h3 class="mb-4 pt-2 text-primary" *ngIf="isSearching">Search Results</h3>
 
   <div *ngIf="rooms.length === 0" class="alert alert-info">
-    There are no available rooms in this moment.
+    No rooms match your search criteria.
   </div>
 
   <div class="row row-cols-1 row-cols-md-3 g-4">
@@ -58,6 +123,7 @@
   </div>
 
   <app-pagination
+    *ngIf="pageData"
     [pageData]="pageData"
     [currentPage]="currentPage"
     (pageChange)="loadPage($event)"

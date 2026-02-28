@@ -5,7 +5,6 @@ import { RoomDTO } from '../dtos/room.dto';
 import { Page } from '../dtos/page.model';
 import { RoomCalendarDTO } from '../dtos/calendar-data.dto';
 
-//const BASE_URL = 'https://localhost:8443/api/rooms';
 const BASE_URL = '/api/rooms';
 
 @Injectable({
@@ -64,5 +63,23 @@ export class RoomsService {
     return this.http.get<RoomCalendarDTO>(
       `/api/rooms/${roomId}/calendar?start=${start}&end=${end}`,
     );
+  }
+
+  public searchRooms(
+    text?: string,
+    minCapacity?: number,
+    campus?: string,
+    active?: boolean,
+    page: number = 0,
+    size: number = 10,
+  ): Observable<Page<RoomDTO>> {
+    let queryParams = [`page=${page}&size=${size}`];
+    if (text) queryParams.push(`text=${encodeURIComponent(text)}`);
+    if (minCapacity) queryParams.push(`minCapacity=${minCapacity}`);
+    if (campus) queryParams.push(`campus=${campus}`);
+    if (active !== undefined) queryParams.push(`active=${active}`);
+    const queryString =
+      queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
+    return this.http.get<Page<RoomDTO>>(`/api/search/rooms${queryString}`);
   }
 }

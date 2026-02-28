@@ -15,6 +15,11 @@ export class HomeComponent implements OnInit {
   public rooms: RoomDTO[] = [];
   public pageData?: Page<RoomDTO>;
   public currentPage: number = 0;
+  //for search filter
+  public searchText: string = '';
+  public selectedCampus: string = '';
+  public minCapacity: number | null = null;
+  public isSearching: boolean = false;
 
   constructor(
     private readonly roomsService: RoomsService,
@@ -26,17 +31,50 @@ export class HomeComponent implements OnInit {
   }
 
   loadPage(page: number): void {
-    this.roomsService.getRooms(page).subscribe({
-      next: (data) => {
-        this.pageData = data;
-        this.rooms = data.content;
-        this.currentPage = data.number;
-      },
-      error: (err) => console.error('Error loading rooms:', err),
-    });
+    if (this.isSearching) {
+      this.roomsService
+        .searchRooms(
+          this.searchText,
+          this.minCapacity || undefined,
+          this.selectedCampus || undefined,
+          true,
+          page,
+        )
+        .subscribe({
+          next: (data) => {
+            this.pageData = data;
+            this.rooms = data.content;
+            this.currentPage = data.number;
+          },
+          error: (err) => console.error('Error in search:', err),
+        });
+    } else {
+      this.roomsService.getRooms(page).subscribe({
+        next: (data) => {
+          this.pageData = data;
+          this.rooms = data.content;
+          this.currentPage = data.number;
+        },
+        error: (err) => console.error('Error loading rooms:', err),
+      });
+    }
   }
 
-  /*getVisiblePages(): number[] {
-    return PaginationUtil.getVisiblePages(this.pageData, this.currentPage);
-  }*/
+  onSearch(): void {
+    if (!this.searchText && !this.selectedCampus && !this.minCapacity) {
+      this.clearSearch();
+      return;
+    }
+
+    this.isSearching = true;
+    this.loadPage(0);
+  }
+
+  clearSearch(): void {
+    this.searchText = '';
+    this.selectedCampus = '';
+    this.minCapacity = null;
+    this.isSearching = false;
+    this.loadPage(0);
+  }
 }

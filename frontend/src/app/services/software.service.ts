@@ -41,4 +41,23 @@ export class SoftwareService {
   deleteSoftware(id: number): Observable<any> {
     return this.http.delete(`${BASE_URL}/${id}`);
   }
+
+  searchSoftwares(
+    text?: string,
+    minVersion?: number,
+    page: number = 0,
+    size: number = 10,
+  ): Observable<Page<SoftwareDTO>> {
+    let queryParams = [`page=${page}&size=${size}`];
+
+    if (text) queryParams.push(`text=${encodeURIComponent(text)}`);
+    if (minVersion) queryParams.push(`minVersion=${minVersion}`);
+
+    const queryString =
+      queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
+
+    return this.http.get<Page<SoftwareDTO>>(
+      `/api/search/softwares${queryString}`,
+    );
+  }
 }

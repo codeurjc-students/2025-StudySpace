@@ -57,25 +57,93 @@
         />
       </div>
 
-      <div class="mb-3">
-        <label for="softwareIds" class="form-label fw-bold"
-          >Installed Software</label
-        >
-        <select
-          id="softwareIds"
-          name="softwareIds"
-          [(ngModel)]="room.softwareIds"
-          class="form-select"
-          multiple
-          size="5"
-        >
-          <option *ngFor="let soft of availableSoftware" [value]="soft.id">
-            {{ soft.name }} (v{{ soft.version }})
-          </option>
-        </select>
-        <small class="text-muted"
-          >Hold Ctrl (or Cmd on Mac) to select multiple software.</small
-        >
+      <div class="card bg-light mb-4 border-0 shadow-sm mt-3">
+        <div class="card-body">
+          <h5 class="fw-bold text-secondary mb-3">
+            <i class="fa fa-laptop me-2"></i> Room Software
+          </h5>
+
+          <div class="row g-2 mb-3">
+            <div class="col-md-7">
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Search software to add (e.g. Java, Matlab)..."
+                [(ngModel)]="softwareSearchText"
+                name="sName"
+                (ngModelChange)="searchSoftwareForDropdown()"
+              />
+            </div>
+            <div class="col-md-5">
+              <input
+                type="number"
+                step="0.1"
+                class="form-control"
+                placeholder="Min. Version (e.g. 17)"
+                [(ngModel)]="softwareMinVersion"
+                name="sVer"
+                (ngModelChange)="searchSoftwareForDropdown()"
+              />
+            </div>
+          </div>
+
+          <ul
+            class="list-group mb-3 shadow-sm"
+            *ngIf="availableSoftwares.length > 0"
+          >
+            <li
+              class="list-group-item d-flex justify-content-between align-items-center list-group-item-action"
+              *ngFor="let s of availableSoftwares"
+            >
+              <div>
+                <strong>{{ s.name }}</strong>
+                <span class="badge bg-secondary ms-2">v{{ s.version }}</span>
+                <br /><small class="text-muted">{{ s.description }}</small>
+              </div>
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-success rounded-pill px-3"
+                (click)="addSoftwareToRoom(s)"
+              >
+                <i class="fa fa-plus"></i> Add
+              </button>
+            </li>
+          </ul>
+
+          <div
+            *ngIf="
+              availableSoftwares.length === 0 &&
+              (softwareSearchText || softwareMinVersion)
+            "
+            class="text-muted small mb-3"
+          >
+            No matching software found to add.
+          </div>
+
+          <h6 class="fw-bold mt-4 mb-2 border-top pt-3">Selected Software:</h6>
+          <div class="d-flex flex-wrap gap-2">
+            <div
+              *ngIf="selectedSoftwares.length === 0"
+              class="text-muted small fst-italic"
+            >
+              No software added yet.
+            </div>
+
+            <span
+              class="badge bg-primary d-flex align-items-center p-2 fs-6 shadow-sm"
+              *ngFor="let sel of selectedSoftwares"
+            >
+              {{ sel.name }} v{{ sel.version }}
+              <button
+                type="button"
+                class="btn-close btn-close-white ms-2"
+                aria-label="Remove"
+                style="font-size: 0.6rem"
+                (click)="removeSoftwareFromRoom(sel.id)"
+              ></button>
+            </span>
+          </div>
+        </div>
       </div>
 
       <div class="mb-3 border p-3 rounded bg-light">

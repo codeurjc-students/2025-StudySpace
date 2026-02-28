@@ -74,6 +74,7 @@ public class SecurityConfiguration {
 
                         // Public GET endpoints
                         .requestMatchers(new AntPathRequestMatcher("/api/rooms/**", "GET")).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/search/rooms").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/softwares/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/stats/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users/*/image").permitAll()

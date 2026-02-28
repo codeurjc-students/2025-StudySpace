@@ -16,6 +16,11 @@ export class RoomFormComponent implements OnInit {
   selectedFile: File | null = null;
   currentImageUrl: string | null = null;
 
+  public softwareSearchText: string = '';
+  public softwareMinVersion: number | null = null;
+  public availableSoftwares: SoftwareDTO[] = [];
+  public selectedSoftwares: SoftwareDTO[] = [];
+
   room = {
     //defect values
     name: '',
@@ -27,7 +32,6 @@ export class RoomFormComponent implements OnInit {
     softwareIds: [] as number[], // Array to hold selected software IDs
   };
 
-  // Options for campus select, should match with Enum CampusType in backend
   campusOptions = [
     'ALCORCON',
     'MOSTOLES',
@@ -45,18 +49,32 @@ export class RoomFormComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.softwareService.getAllSoftwares(0, 100).subscribe({
-      //pool of 100 softwares, check if beteter solution, just for the moment the solution
-      next: (data) => {
-        this.availableSoftware = data.content;
-      },
-      error: (err) => console.error('Error loading software:', err),
-    });
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isEditMode = true;
       this.roomId = +id;
-      this.loadRoomData(this.roomId);
+      this.roomsService.getRoom(+id).subscribe({
+        next: (data) => {
+          this.room = {
+            name: data.name,
+            capacity: data.capacity,
+            camp: data.camp,
+            place: data.place,
+            coordenades: data.coordenades,
+            active: data.active,
+            softwareIds: data.software
+              ? data.software.map((s: any) => s.id)
+              : [],
+          };
+
+          if (data.imageName) {
+            this.currentImageUrl = `/api/rooms/${data.id}/image`;
+          }
+
+          this.selectedSoftwares = data.software ? [...data.software] : [];
+        },
+        error: (err) => console.error('Error loading classroom', err),
+      });
     }
   }
 
@@ -120,5 +138,51 @@ export class RoomFormComponent implements OnInit {
         this.router.navigate(['/admin/rooms']);
       },
     });
+  }
+
+  searchSoftwareForDropdown() {
+    if (!this.softwareSearchText && !this.softwareMinVersion) {
+      this.availableSoftwares = [];
+      return;
+    }
+
+    this.softwareService
+      .searchSoftwares(
+        this.softwareSearchText,
+        this.softwareMinVersion || undefined,
+      )
+      .subscribe({
+        next: (data) => {
+          const selectedIds = this.selectedSoftwares.map((s) => s.id);
+          this.availableSoftwares = data.content.filter(
+            (s) => !selectedIds.includes(s.id),
+          );
+        },
+        error: (e) => console.error(e),
+      });
+  }
+
+  addSoftwareToRoom(software: SoftwareDTO) {
+    if (!this.room.softwareIds) {
+      this.room.softwareIds = [];
+    }
+
+    this.room.softwareIds.push(software.id);
+    this.selectedSoftwares.push(software);
+
+    this.availableSoftwares = this.availableSoftwares.filter(
+      (s) => s.id !== software.id,
+    );
+  }
+
+  removeSoftwareFromRoom(softwareId: number) {
+    this.room.softwareIds = this.room.softwareIds.filter(
+      (id) => id !== softwareId,
+    );
+    this.selectedSoftwares = this.selectedSoftwares.filter(
+      (s) => s.id !== softwareId,
+    );
+
+    this.searchSoftwareForDropdown();
   }
 }
