@@ -3,7 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Page } from '../dtos/page.model';
 
-//const BASE_URL = 'https://localhost:8443/api/reservations';
 const BASE_URL = '/api/reservations';
 
 @Injectable({
@@ -71,5 +70,34 @@ export class ReservationService {
 
   cancelReservationAdmin(id: number, reason: string): Observable<any> {
     return this.http.patch(`${BASE_URL}/admin/${id}/cancel`, { reason });
+  }
+
+  searchReservationsAdmin(
+    userId: number,
+    text?: string,
+    date?: string,
+    page: number = 0,
+    size: number = 10,
+  ): Observable<Page<any>> {
+    let queryParams = [`page=${page}&size=${size}`];
+    if (text) queryParams.push(`text=${encodeURIComponent(text)}`);
+    if (date) queryParams.push(`date=${date}`);
+    return this.http.get<Page<any>>(
+      `/api/search/reservations/user/${userId}?${queryParams.join('&')}`,
+    );
+  }
+
+  searchMyReservations(
+    text?: string,
+    date?: string,
+    page: number = 0,
+    size: number = 10,
+  ): Observable<Page<any>> {
+    let queryParams = [`page=${page}&size=${size}`];
+    if (text) queryParams.push(`text=${encodeURIComponent(text)}`);
+    if (date) queryParams.push(`date=${date}`);
+    return this.http.get<Page<any>>(
+      `/api/search/reservations/me?${queryParams.join('&')}`,
+    );
   }
 }

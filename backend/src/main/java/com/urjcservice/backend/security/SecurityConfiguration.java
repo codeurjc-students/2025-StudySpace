@@ -90,6 +90,7 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET, "/api/reservations/my-reservations").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/reservations/*").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/api/reservations/*/cancel").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/search/reservations/me").authenticated()
 
                         // Admin
                         .anyRequest().hasRole("ADMIN"))

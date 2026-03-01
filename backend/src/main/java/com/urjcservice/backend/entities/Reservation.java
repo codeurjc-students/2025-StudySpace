@@ -30,6 +30,7 @@ public class Reservation {
     @JoinColumn(name = "room_id")
     private Room room; // one room can have many bookings
 
+    @FullTextField(analyzer = "standard")
     private String reason;
 
     @Column(name = "admin_modification_reason")

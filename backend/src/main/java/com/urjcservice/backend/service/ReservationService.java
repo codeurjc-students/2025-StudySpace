@@ -306,7 +306,7 @@ public class ReservationService {
         reservation.setVerificationToken(java.util.UUID.randomUUID().toString());
 
         Date now = new Date();
-        Date expiration = new Date(now.getTime() + 3600000);
+        Date expiration = new Date(now.getTime() + 3600000); // 1 hour
         reservation.setTokenExpirationDate(expiration);
 
         // first save reservation

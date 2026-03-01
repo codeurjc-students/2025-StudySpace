@@ -141,6 +141,45 @@
         Reservation History
       </h4>
 
+      <div class="card bg-light border-0 shadow-sm mb-4">
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-5">
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Search by room name or reason..."
+                [(ngModel)]="searchText"
+                (keyup.enter)="onSearch()"
+              />
+            </div>
+            <div class="col-md-4">
+              <input
+                type="date"
+                class="form-control text-muted"
+                [(ngModel)]="filterDate"
+                (change)="onSearch()"
+              />
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+              <button
+                class="btn btn-primary w-100 shadow-sm"
+                (click)="onSearch()"
+              >
+                Search
+              </button>
+              <button
+                class="btn btn-outline-secondary"
+                *ngIf="isSearching"
+                (click)="clearSearch()"
+              >
+                ✖
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="list-group list-group-flush">
         <div
           *ngFor="let res of reservations"

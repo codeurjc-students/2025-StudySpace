@@ -22,6 +22,7 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GenericField
     private Long id;
     @FullTextField(analyzer = "standard")
     private String email; // Primary key

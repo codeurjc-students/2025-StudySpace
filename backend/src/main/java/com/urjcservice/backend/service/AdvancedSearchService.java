@@ -1,5 +1,6 @@
 package com.urjcservice.backend.service;
 
+import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.entities.User;
 import com.urjcservice.backend.entities.Software;
@@ -106,6 +107,34 @@ public class AdvancedSearchService {
                     }
                     if (minVersion != null)
                         b.must(f.range().field("version").atLeast(minVersion));
+                })).fetch(page * size, size);
+
+        return new PageImpl<>(result.hits(), PageRequest.of(page, size), result.total().hitCount());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Reservation> searchReservations(Long userId, String text, LocalDate date, int page, int size) {
+        SearchSession searchSession = Search.session(entityManager);
+        SearchResult<Reservation> result = searchSession.search(Reservation.class)
+                .where(f -> f.bool(b -> {
+                    b.must(f.match().field("user.id").matching(userId)); // only of that user
+
+                    if (text != null && !text.isBlank()) {
+                        String cleanText = text.toLowerCase().trim();
+                        b.must(f.bool(sub -> {
+                            sub.should(f.match().fields("room.name", "reason").matching(cleanText).fuzzy(1));
+                            sub.should(f.wildcard().fields("room.name", "reason").matching("*" + cleanText + "*"));
+                        }));
+                    }
+
+                    if (date != null) {
+                        Date startOfDay = Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant());
+                        Date endOfDay = Date.from(date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+                        b.must(f.bool(sub -> {
+                            sub.must(f.range().field("startDate").lessThan(endOfDay));
+                            sub.must(f.range().field("endDate").greaterThan(startOfDay));
+                        }));
+                    }
                 })).fetch(page * size, size);
 
         return new PageImpl<>(result.hits(), PageRequest.of(page, size), result.total().hitCount());

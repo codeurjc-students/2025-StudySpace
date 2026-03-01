@@ -26,6 +26,11 @@ export class ReservationFormComponent implements OnInit {
 
   occupiedSlots: any[] = [];
 
+  public roomSearchText: string = '';
+  public selectedCampus: string = '';
+  public minCapacity: number | null = null;
+  public visibleRooms: RoomDTO[] = [];
+
   constructor(
     private router: Router,
     private reservationService: ReservationService,
@@ -37,15 +42,7 @@ export class ReservationFormComponent implements OnInit {
     const today = new Date();
     this.minDate = today.toISOString().split('T')[0];
 
-    this.roomsService.getRooms(0, 1000).subscribe({
-      next: (data) => {
-        this.rooms = data.content.filter((r: RoomDTO) => r.active);
-        if (this.rooms.length > 0) {
-          this.roomId = this.rooms[0].id;
-        }
-      },
-      error: (err) => console.error('Error loading rooms', err),
-    });
+    this.searchRooms();
   }
 
   onConfigChange() {
@@ -106,7 +103,9 @@ export class ReservationFormComponent implements OnInit {
         .createReservation(this.roomId, start, end, this.reason)
         .subscribe({
           next: () => {
-            alert('Reservation successfully created!');
+            alert(
+              'Reservation successfully created! Now its time to verify it or it will be automatically cancelled 1 hour before the start time',
+            );
             this.router.navigate(['/']);
           },
           error: (err) => {
@@ -115,5 +114,41 @@ export class ReservationFormComponent implements OnInit {
           },
         });
     }
+  }
+
+  selectRoom(room: RoomDTO) {
+    this.roomId = room.id;
+    this.onConfigChange();
+  }
+
+  searchRooms() {
+    this.roomsService
+      .searchRooms(
+        this.roomSearchText,
+        this.minCapacity || undefined,
+        this.selectedCampus || undefined,
+        true,
+        0,
+        100,
+      )
+      .subscribe({
+        next: (data) => {
+          this.visibleRooms = data.content;
+          if (
+            this.roomId &&
+            !this.visibleRooms.find((r) => r.id === this.roomId)
+          ) {
+            // falta rellenar
+          }
+        },
+        error: (e) => console.error(e),
+      });
+  }
+
+  clearRoomSearch() {
+    this.roomSearchText = '';
+    this.selectedCampus = '';
+    this.minCapacity = null;
+    this.searchRooms();
   }
 }
