@@ -76,7 +76,7 @@ export class ReservationFormComponent implements OnInit {
     const rawStartTimes = ReservationLogic.generateStartTimes(
       this.occupiedSlots,
     );
-    const now = new Date(); //actual hour
+    const now = new Date(); // current hour
 
     this.startTimes = rawStartTimes.filter((time) => {
       const slotDateTime = new Date(`${this.selectedDate}T${time}:00`);
@@ -146,7 +146,7 @@ export class ReservationFormComponent implements OnInit {
             this.roomId &&
             !this.visibleRooms.find((r) => r.id === this.roomId)
           ) {
-            // falta rellenar
+            // TODO: handle missing room selection
           }
         },
         error: (e) => console.error(e),

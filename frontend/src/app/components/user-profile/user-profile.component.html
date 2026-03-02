@@ -142,120 +142,120 @@
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="col-md-8 ps-md-5">
-    <h4 class="mb-4 fw-bold text-primary border-bottom pb-2">
-      Reservation History
-    </h4>
+    <div class="col-md-8 ps-md-5">
+      <h4 class="mb-4 fw-bold text-primary border-bottom pb-2">
+        Reservation History
+      </h4>
 
-    <div class="card bg-light border-0 shadow-sm mb-4">
-      <div class="card-body">
-        <div class="row g-2">
-          <div class="col-md-5">
-            <input
-              type="text"
-              class="form-control"
-              placeholder="Search by room name or reason..."
-              [(ngModel)]="searchText"
-              (keyup.enter)="onSearch()"
-            />
-          </div>
-          <div class="col-md-4">
-            <input
-              type="date"
-              class="form-control text-muted"
-              [(ngModel)]="filterDate"
-              (change)="onSearch()"
-            />
-          </div>
-          <div class="col-md-3 d-flex gap-2">
-            <button
-              class="btn btn-primary w-100 shadow-sm"
-              (click)="onSearch()"
-            >
-              Search
-            </button>
-            <button
-              class="btn btn-outline-secondary"
-              *ngIf="isSearching"
-              (click)="clearSearch()"
-            >
-              ✖
-            </button>
+      <div class="card bg-light border-0 shadow-sm mb-4">
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-5">
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Search by room name or reason..."
+                [(ngModel)]="searchText"
+                (keyup.enter)="onSearch()"
+              />
+            </div>
+            <div class="col-md-4">
+              <input
+                type="date"
+                class="form-control text-muted"
+                [(ngModel)]="filterDate"
+                (change)="onSearch()"
+              />
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+              <button
+                class="btn btn-primary w-100 shadow-sm"
+                (click)="onSearch()"
+              >
+                Search
+              </button>
+              <button
+                class="btn btn-outline-secondary"
+                *ngIf="isSearching"
+                (click)="clearSearch()"
+              >
+                ✖
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="list-group list-group-flush">
-      <div
-        *ngFor="let res of reservations"
-        class="list-group-item p-3 border-bottom"
-      >
-        <div class="d-flex w-100 justify-content-between align-items-center">
-          <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
-              <h5 class="mb-0 fw-bold text-dark">
-                {{ res.room?.name || "Room #" + res.roomId }}
-              </h5>
-              <span *ngIf="res.cancelled" class="badge bg-secondary"
-                >CANCELLED</span
-              >
-              <span
-                *ngIf="!res.cancelled && isReservationActive(res)"
-                class="badge bg-success"
-                >ACTIVE</span
-              >
-              <span
-                *ngIf="!res.cancelled && !isReservationActive(res)"
-                class="badge bg-light text-dark border"
-                >COMPLETED</span
+      <div class="list-group list-group-flush">
+        <div
+          *ngFor="let res of reservations"
+          class="list-group-item p-3 border-bottom"
+        >
+          <div class="d-flex w-100 justify-content-between align-items-center">
+            <div>
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <h5 class="mb-0 fw-bold text-dark">
+                  {{ res.room?.name || "Room #" + res.roomId }}
+                </h5>
+                <span *ngIf="res.cancelled" class="badge bg-secondary"
+                  >CANCELLED</span
+                >
+                <span
+                  *ngIf="!res.cancelled && isReservationActive(res)"
+                  class="badge bg-success"
+                  >ACTIVE</span
+                >
+                <span
+                  *ngIf="!res.cancelled && !isReservationActive(res)"
+                  class="badge bg-light text-dark border"
+                  >COMPLETED</span
+                >
+              </div>
+              <p class="mb-1 text-muted small">
+                <i class="fa fa-calendar me-1"></i>
+                {{ res.startDate | date: "mediumDate" }}
+                <span class="mx-1">|</span> <i class="fa fa-clock-o me-1"></i>
+                {{ res.startDate | date: "shortTime" }} -
+                {{ res.endDate | date: "shortTime" }}
+              </p>
+              <small *ngIf="res.reason" class="text-secondary fst-italic"
+                >"{{ res.reason }}"</small
               >
             </div>
-            <p class="mb-1 text-muted small">
-              <i class="fa fa-calendar me-1"></i>
-              {{ res.startDate | date: "mediumDate" }}
-              <span class="mx-1">|</span> <i class="fa fa-clock-o me-1"></i>
-              {{ res.startDate | date: "shortTime" }} -
-              {{ res.endDate | date: "shortTime" }}
-            </p>
-            <small *ngIf="res.reason" class="text-secondary fst-italic"
-              >"{{ res.reason }}"</small
-            >
-          </div>
-          <div class="d-flex align-items-center gap-2">
-            <button
-              *ngIf="isReservationActive(res) && !res.cancelled"
-              class="btn btn-outline-danger btn-sm"
-              (click)="performCancel(res.id)"
-            >
-              🚫 Cancel
-            </button>
-            <button
-              *ngIf="loginService.isAdmin()"
-              class="btn btn-link text-danger btn-sm text-decoration-none"
-              (click)="cancelReservation(res.id)"
-              title="Admin Force Delete"
-            >
-              🗑️
-            </button>
+            <div class="d-flex align-items-center gap-2">
+              <button
+                *ngIf="isReservationActive(res) && !res.cancelled"
+                class="btn btn-outline-danger btn-sm"
+                (click)="performCancel(res.id)"
+              >
+                🚫 Cancel
+              </button>
+              <button
+                *ngIf="loginService.isAdmin()"
+                class="btn btn-link text-danger btn-sm text-decoration-none"
+                (click)="cancelReservation(res.id)"
+                title="Admin Force Delete"
+              >
+                🗑️
+              </button>
+            </div>
           </div>
         </div>
+        <div
+          *ngIf="reservations.length === 0"
+          class="text-center py-5 text-muted bg-light rounded mt-3"
+        >
+          <p class="mb-0">No reservations found in this page.</p>
+        </div>
       </div>
-      <div
-        *ngIf="reservations.length === 0"
-        class="text-center py-5 text-muted bg-light rounded mt-3"
-      >
-        <p class="mb-0">No reservations found in this page.</p>
-      </div>
-    </div>
 
-    <app-pagination
-      [pageData]="pageData"
-      [currentPage]="currentPage"
-      (pageChange)="loadReservations($event)"
-    >
-    </app-pagination>
+      <app-pagination
+        [pageData]="pageData"
+        [currentPage]="currentPage"
+        (pageChange)="loadReservations($event)"
+      >
+      </app-pagination>
+    </div>
   </div>
 </div>

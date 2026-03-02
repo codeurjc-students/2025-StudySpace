@@ -94,6 +94,7 @@
                       ? 'https://localhost:8443/api/users/' + user.id + '/image'
                       : 'assets/user_placeholder.png'
                   "
+                  alt="Avatar of {{ user.name }}"
                   class="rounded-circle me-2 avatar-img"
                   (error)="user.imageName = undefined"
                 />

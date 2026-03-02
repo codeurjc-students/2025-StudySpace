@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { RoomsService } from '../../services/rooms.service';
 import { SoftwareService, SoftwareDTO } from '../../services/software.service';
-import { Page } from '../../dtos/page.model';
 import { handleSaveRequest } from '../../utils/form-helpers.util';
 
 @Component({
@@ -16,10 +15,10 @@ export class RoomFormComponent implements OnInit {
   selectedFile: File | null = null;
   currentImageUrl: string | null = null;
 
-  public softwareSearchText: string = '';
-  public softwareMinVersion: number | null = null;
-  public availableSoftwares: SoftwareDTO[] = [];
-  public selectedSoftwares: SoftwareDTO[] = [];
+  softwareSearchText: string = '';
+  softwareMinVersion: number | null = null;
+  availableSoftwares: SoftwareDTO[] = [];
+  selectedSoftwares: SoftwareDTO[] = [];
 
   room = {
     //defect values
@@ -87,7 +86,7 @@ export class RoomFormComponent implements OnInit {
         this.room.place = data.place;
         this.room.coordenades = data.coordenades;
 
-        this.room.active = data.active !== undefined ? data.active : true; //if undefined we asume true
+        this.room.active = data.active ?? true; //if undefined we asume true
 
         // Load associated software IDs
         if (data.software) {

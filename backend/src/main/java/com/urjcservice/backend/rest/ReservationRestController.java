@@ -5,19 +5,15 @@ import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.service.ReservationService;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.data.web.SortDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.data.domain.Sort;
 
 import java.net.URI;
 import java.util.Date;
@@ -80,15 +76,63 @@ public class ReservationRestController {
     }
 
     public static class AdminReservationUpdateRequest {
-        public Long roomId;
-        public LocalDate date;
-        public LocalTime startTime;
-        public LocalTime endTime;
-        public String adminReason;
+        private Long roomId;
+        private LocalDate date;
+        private LocalTime startTime;
+        private LocalTime endTime;
+        private String adminReason;
+
+        public Long getRoomId() {
+            return roomId;
+        }
+
+        public void setRoomId(Long roomId) {
+            this.roomId = roomId;
+        }
+
+        public LocalDate getDate() {
+            return date;
+        }
+
+        public void setDate(LocalDate date) {
+            this.date = date;
+        }
+
+        public LocalTime getStartTime() {
+            return startTime;
+        }
+
+        public void setStartTime(LocalTime startTime) {
+            this.startTime = startTime;
+        }
+
+        public LocalTime getEndTime() {
+            return endTime;
+        }
+
+        public void setEndTime(LocalTime endTime) {
+            this.endTime = endTime;
+        }
+
+        public String getAdminReason() {
+            return adminReason;
+        }
+
+        public void setAdminReason(String adminReason) {
+            this.adminReason = adminReason;
+        }
     }
 
     public static class AdminCancellationRequest {
-        public String reason;
+        private String reason;
+
+        public String getReason() {
+            return reason;
+        }
+
+        public void setReason(String reason) {
+            this.reason = reason;
+        }
     }
 
     @GetMapping
@@ -210,16 +254,16 @@ public class ReservationRestController {
     public ResponseEntity<Reservation> updateReservationAsAdmin(@PathVariable Long id,
             @RequestBody AdminReservationUpdateRequest request) {
 
-        String reason = (request.adminReason != null && !request.adminReason.isBlank())
-                ? request.adminReason
+        String reason = (request.getAdminReason() != null && !request.getAdminReason().isBlank())
+                ? request.getAdminReason()
                 : null;// null if empty
 
         return reservationService.adminUpdateReservation(
                 id,
-                request.roomId,
-                request.date,
-                request.startTime,
-                request.endTime,
+                request.getRoomId(),
+                request.getDate(),
+                request.getStartTime(),
+                request.getEndTime(),
                 reason)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -229,8 +273,8 @@ public class ReservationRestController {
     public ResponseEntity<Reservation> cancelReservationAsAdmin(@PathVariable Long id,
             @RequestBody AdminCancellationRequest request) {
 
-        String reason = (request.reason != null && !request.reason.isBlank())
-                ? request.reason
+        String reason = (request.getReason() != null && !request.getReason().isBlank())
+                ? request.getReason()
                 : "Administrative cancellation without specified reason.";
 
         return reservationService.adminCancelReservation(id, reason)

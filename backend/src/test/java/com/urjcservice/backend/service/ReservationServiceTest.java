@@ -7,8 +7,6 @@ import com.urjcservice.backend.entities.User;
 import com.urjcservice.backend.repositories.ReservationRepository;
 import com.urjcservice.backend.repositories.RoomRepository;
 import com.urjcservice.backend.repositories.UserRepository;
-import com.urjcservice.backend.service.EmailService;
-import com.urjcservice.backend.service.FileStorageService;
 import com.urjcservice.backend.dtos.SmartSuggestionDTO;
 
 import org.junit.jupiter.api.DisplayName;
@@ -23,7 +21,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.PageImpl;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -33,7 +30,6 @@ import java.time.LocalDate;
 import java.util.Optional;
 import java.util.Date;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Collections;
 

@@ -51,7 +51,7 @@ export class UserProfileComponent implements OnInit {
       error: (err: any) => console.error('Error loading profile', err),
     });
   }
-  // AUXILIAR METHOD
+  // AUXILIARY METHOD
   loadReservations(page: number) {
     if (this.isSearching) {
       this.reservationService

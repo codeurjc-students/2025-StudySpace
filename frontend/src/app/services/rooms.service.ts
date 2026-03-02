@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable } from 'rxjs';
 import { RoomDTO } from '../dtos/room.dto';
 import { Page } from '../dtos/page.model';
 import { RoomCalendarDTO } from '../dtos/calendar-data.dto';
@@ -27,17 +27,13 @@ export class RoomsService {
   }
 
   public createRoom(room: any): Observable<any> {
-    // Sin auth headers manuales
+    // no manual auth headers required
     return this.http.post(BASE_URL, room);
   }
 
   public updateRoom(id: number, roomData: any): Observable<any> {
     return this.http.put(`${BASE_URL}/${id}`, roomData);
   }
-
-  /*public deleteRoom(id: number): Observable<any> {
-    return this.http.delete(`${BASE_URL}/${id}`);
-  }*/
 
   public getRoomStats(id: number, date: string): Observable<any> {
     return this.http.get<any>(`${BASE_URL}/${id}/stats?date=${date}`);

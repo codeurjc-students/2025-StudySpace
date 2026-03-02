@@ -3,7 +3,6 @@ import { RoomsService } from '../services/rooms.service';
 import { RoomDTO } from '../dtos/room.dto';
 import { LoginService } from '../login/login.service';
 import { Page } from '../dtos/page.model';
-import { PaginationUtil } from '../utils/pagination.util';
 
 @Component({
   selector: 'app-home',

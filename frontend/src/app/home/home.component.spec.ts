@@ -4,7 +4,6 @@ import { RoomsService } from '../services/rooms.service';
 import { LoginService } from '../login/login.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { of, throwError } from 'rxjs';
-import { By } from '@angular/platform-browser';
 import { PaginationComponent } from '../components/pagination/pagination.component';
 import { FormsModule } from '@angular/forms';
 
@@ -98,18 +97,18 @@ describe('HomeComponent', () => {
     component.searchText = '';
     component.selectedCampus = '';
     component.minCapacity = null;
-    
+
     component.onSearch();
-    
+
     expect(component.clearSearch).toHaveBeenCalled();
   });
 
   it('onSearch: should set isSearching to true and call loadPage if fields have data', () => {
     spyOn(component, 'loadPage');
     component.searchText = 'Aula';
-    
+
     component.onSearch();
-    
+
     expect(component.isSearching).toBeTrue();
     expect(component.loadPage).toHaveBeenCalledWith(0);
   });
@@ -133,10 +132,16 @@ describe('HomeComponent', () => {
   it('loadPage: should call searchRooms if isSearching is true', () => {
     component.isSearching = true;
     component.searchText = 'Lab';
-    
+
     component.loadPage(0);
 
-    expect(mockRoomsService.searchRooms).toHaveBeenCalledWith('Lab', undefined, undefined, true, 0);
+    expect(mockRoomsService.searchRooms).toHaveBeenCalledWith(
+      'Lab',
+      undefined,
+      undefined,
+      true,
+      0,
+    );
     expect(component.rooms.length).toBeGreaterThan(0);
   });
 });

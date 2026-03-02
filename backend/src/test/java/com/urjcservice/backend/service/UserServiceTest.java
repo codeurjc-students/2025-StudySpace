@@ -1,9 +1,8 @@
 package com.urjcservice.backend.service;
 
-import com.urjcservice.backend.controller.NoSuchElementExceptionCA;
+
 import com.urjcservice.backend.entities.User;
 import com.urjcservice.backend.repositories.UserRepository;
-import com.urjcservice.backend.controller.NoSuchElementExceptionCA;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

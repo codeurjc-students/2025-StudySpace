@@ -1,6 +1,5 @@
 package com.urjcservice.backend.service;
 
-import com.urjcservice.backend.service.EmailService;
 import com.urjcservice.backend.dtos.SmartSuggestionDTO;
 import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.entities.User;

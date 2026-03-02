@@ -3,7 +3,6 @@ package com.urjcservice.backend.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
-import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDateTime;

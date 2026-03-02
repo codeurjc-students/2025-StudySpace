@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap, of } from 'rxjs';
 import { UserDTO } from '../dtos/user.dto';
 import { Router } from '@angular/router';
-import { catchError, map } from 'rxjs/operators';
+import { catchError} from 'rxjs/operators';
 
 const BASE_URL = '/api/auth';
 

@@ -38,6 +38,7 @@
                 ? 'https://localhost:8443/api/rooms/' + room.id + '/image'
                 : 'assets/default_image.png'
             "
+            alt="Appearance of the room {{ room.name }}"
             class="img-fluid shadow-sm mb-3 room-detail-img"
             (error)="room.imageName = undefined"
           />

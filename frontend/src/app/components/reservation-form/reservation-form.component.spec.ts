@@ -10,7 +10,6 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { FormsModule } from '@angular/forms'; // for [(ngModel)]
 import { ReservationService } from '../../services/reservation.service';
 import { RoomsService } from '../../services/rooms.service';
-import { LoginService } from '../../login/login.service';
 import { of, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 

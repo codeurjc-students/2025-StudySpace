@@ -3,15 +3,12 @@ package com.urjcservice.backend.rest;
 import com.urjcservice.backend.entities.Software;
 import com.urjcservice.backend.service.SoftwareService;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 
 import java.net.URI;
-import java.util.List;
 import java.util.Optional;
 
 import static org.springframework.web.servlet.support.ServletUriComponentsBuilder.fromCurrentRequest;

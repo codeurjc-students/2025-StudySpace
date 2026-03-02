@@ -7,8 +7,6 @@ import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.repositories.ReservationRepository;
 import com.urjcservice.backend.repositories.RoomRepository;
 import com.urjcservice.backend.repositories.SoftwareRepository;
-import com.urjcservice.backend.rest.RoomRestController.RoomRequest; // Internal DTO 
-import com.urjcservice.backend.rest.RoomRestController;
 import com.urjcservice.backend.dtos.RoomCalendarDTO;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -18,8 +16,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;

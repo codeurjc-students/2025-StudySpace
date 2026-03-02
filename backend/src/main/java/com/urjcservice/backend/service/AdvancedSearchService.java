@@ -17,7 +17,6 @@ import org.springframework.data.domain.PageRequest;
 import java.time.LocalDate;
 import java.util.Date;
 import java.time.ZoneId;
-import java.util.List;
 
 @Service
 public class AdvancedSearchService {
