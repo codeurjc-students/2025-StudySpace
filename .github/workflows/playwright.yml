@@ -120,7 +120,7 @@ jobs:
       - name: Wait for Backend to start
         run: |
           echo "Waiting for the backend on port 8443..."
-          timeout 600 bash -c 'until curl --insecure --fail --silent https://localhost:8443/actuator/health > /dev/null; do sleep 5; done'
+          timeout 300 bash -c 'until curl --insecure --fail --silent https://localhost:8443/actuator/health > /dev/null; do sleep 5; done'
           echo "Backend operational!"
 
       # Frontend and test

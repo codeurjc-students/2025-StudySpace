@@ -21,7 +21,6 @@ import java.util.UUID;
 import jakarta.annotation.PostConstruct;
 
 @Service
-@Profile("!test")
 public class FileStorageService {
 
     private static final Logger logger = LoggerFactory.getLogger(FileStorageService.class);
