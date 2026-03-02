@@ -103,15 +103,17 @@ test.describe('Administrator Management', () => {
     await page.getByLabel('Campus').selectOption({ value: 'MOSTOLES' });
     await page.getByLabel('Location').fill('Edificio Test');
 
-    const selectSoftware = page.getByLabel('Installed Software');
-    const targetOption = selectSoftware
-      .locator('option')
-      .filter({ hasText: softwareName });
-    await expect(targetOption).toHaveCount(1);
-    const optionText = await targetOption.textContent();
-    if (optionText) {
-      await selectSoftware.selectOption({ label: optionText.trim() });
-    }
+    await page.getByPlaceholder('Search software to add').fill(softwareName);
+
+    await page.waitForTimeout(500);
+
+    const softwareRow = page
+      .locator('li.list-group-item')
+      .filter({ hasText: softwareName })
+      .first();
+    await expect(softwareRow).toBeVisible();
+
+    await softwareRow.getByRole('button', { name: 'Add' }).click();
 
     await page.waitForTimeout(500);
 

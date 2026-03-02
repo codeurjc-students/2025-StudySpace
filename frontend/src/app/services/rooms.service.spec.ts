@@ -127,4 +127,24 @@ describe('RoomsService', () => {
     expect(req.request.method).toBe('GET');
     req.flush(mockResponse);
   });
+
+  it('should search rooms with all parameters', () => {
+    service.searchRooms('Lab', 20, 'MOSTOLES', true, 0, 10).subscribe();
+    const req = httpMock.expectOne(
+      `/api/search/rooms?page=0&size=10&text=Lab&minCapacity=20&campus=MOSTOLES&active=true`,
+    );
+    expect(req.request.method).toBe('GET');
+    req.flush({});
+  });
+
+  it('should search rooms with partial parameters', () => {
+    service
+      .searchRooms(undefined, undefined, undefined, false, 1, 5)
+      .subscribe();
+    const req = httpMock.expectOne(
+      `/api/search/rooms?page=1&size=5&active=false`,
+    );
+    expect(req.request.method).toBe('GET');
+    req.flush({});
+  });
 });

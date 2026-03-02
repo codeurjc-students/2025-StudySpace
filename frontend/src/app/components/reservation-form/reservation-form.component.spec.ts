@@ -1,4 +1,9 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {
+  ComponentFixture,
+  TestBed,
+  fakeAsync,
+  tick,
+} from '@angular/core/testing';
 import { ReservationFormComponent } from './reservation-form.component';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -61,44 +66,43 @@ describe('ReservationFormComponent UI Test', () => {
   };
 
   beforeEach(async () => {
-    const resSpy = jasmine.createSpyObj('ReservationService', [
-      'createReservation',
+    reservationServiceSpy = jasmine.createSpyObj('ReservationService', [
       'checkAvailability',
+      'createReservation',
+      'smartSearch',
     ]);
-    const roomsSpy = jasmine.createSpyObj('RoomsService', ['getRooms']);
+    roomsServiceSpy = jasmine.createSpyObj('RoomsService', [
+      'getRooms',
+      'checkAvailability',
+      'searchRooms',
+    ]);
+
+    roomsServiceSpy.searchRooms.and.returnValue(
+      of({
+        content: mockRoomsResponse.content,
+        number: 0,
+        totalPages: 1,
+      } as any),
+    );
 
     await TestBed.configureTestingModule({
       declarations: [ReservationFormComponent],
       imports: [HttpClientTestingModule, RouterTestingModule, FormsModule],
       providers: [
-        { provide: ReservationService, useValue: resSpy },
-        { provide: RoomsService, useValue: roomsSpy },
+        { provide: ReservationService, useValue: reservationServiceSpy },
+        { provide: RoomsService, useValue: roomsServiceSpy },
       ],
     }).compileComponents();
 
-    roomsServiceSpy = TestBed.inject(
-      RoomsService,
-    ) as jasmine.SpyObj<RoomsService>;
-    reservationServiceSpy = TestBed.inject(
-      ReservationService,
-    ) as jasmine.SpyObj<ReservationService>;
-    router = TestBed.inject(Router);
-
     fixture = TestBed.createComponent(ReservationFormComponent);
     component = fixture.componentInstance;
+    router = TestBed.inject(Router);
 
-    reservationServiceSpy.checkAvailability.and.returnValue(of([]));
-    roomsServiceSpy.getRooms.and.returnValue(of(mockRoomsResponse));
-
-    fixture.detectChanges();
+    fixture.detectChanges(); //ngOnInit
   });
 
   it('You must create the component', () => {
     expect(component).toBeTruthy();
-  });
-
-  it('You must upload the list of classrooms', () => {
-    expect(component.rooms.length).toBe(2);
   });
 
   it('The "Confirm Reservation" button should be disabled at startup', async () => {
@@ -115,12 +119,6 @@ describe('ReservationFormComponent UI Test', () => {
     expect(button.disabled).toBeTrue();
   });
 
-  it('should filter only active rooms and select the first one', () => {
-    expect(component.rooms.length).toBe(2);
-    expect(component.rooms[0].id).toBe(1);
-    expect(component.roomId).toBe(1);
-  });
-
   it('should handle no available rooms', () => {
     component.rooms = [];
     component.roomId = null;
@@ -134,7 +132,6 @@ describe('ReservationFormComponent UI Test', () => {
     component.selectedStartTime = '';
     component.selectedEndTime = '';
     component.onSubmit();
-    //expect(window.alert).toHaveBeenCalledWith('Please fill in the dates.');
     expect(reservationServiceSpy.createReservation).not.toHaveBeenCalled();
   });
 
@@ -231,27 +228,27 @@ describe('ReservationFormComponent UI Test', () => {
   });
 
   it('onConfigChange: should call checkAvailability', () => {
-    component.roomId = 5;
-    component.selectedDate = '2026-01-01';
+    reservationServiceSpy.checkAvailability.and.returnValue(of([]));
 
+    component.roomId = 1;
+    component.selectedDate = '2026-05-05';
     component.onConfigChange();
 
     expect(reservationServiceSpy.checkAvailability).toHaveBeenCalledWith(
-      5,
-      '2026-01-01',
+      1,
+      '2026-05-05',
     );
   });
 
   it('ngOnInit: should handle error when loading rooms', () => {
     spyOn(console, 'error');
-    roomsServiceSpy.getRooms.and.returnValue(
-      throwError(() => new Error('API Error')),
+    roomsServiceSpy.searchRooms.and.returnValue(
+      throwError(() => new Error('Load error')),
     );
-    component.rooms = [];
+
     component.ngOnInit();
 
     expect(console.error).toHaveBeenCalled();
-    expect(component.rooms).toEqual([]);
   });
 
   it('onSubmit: should call service and navigate on success', () => {
@@ -314,4 +311,133 @@ describe('ReservationFormComponent UI Test', () => {
       jasmine.any(Error),
     );
   });
+
+  it('You must upload the list of classrooms', () => {
+    component.searchRooms();
+    fixture.detectChanges();
+
+    expect(component.visibleRooms.length).toBe(3);
+    expect(component.roomId).toBeNull();
+  });
+
+  it('should clear room search and trigger searchRooms', () => {
+    spyOn(component, 'searchRooms');
+    component.roomSearchText = 'Java';
+    component.selectedCampus = 'MOSTOLES';
+    component.minCapacity = 20;
+
+    component.clearRoomSearch();
+
+    expect(component.roomSearchText).toBe('');
+    expect(component.selectedCampus).toBe('');
+    expect(component.minCapacity).toBeNull();
+    expect(component.searchRooms).toHaveBeenCalled();
+  });
+
+  it('generateAllPossibleTimes: should populate allPossibleTimes with 30-min intervals', () => {
+    component.allPossibleTimes = [];
+    component.generateAllPossibleTimes();
+
+    expect(component.allPossibleTimes.length).toBeGreaterThan(0);
+    expect(component.allPossibleTimes).toContain('08:00');
+    expect(component.allPossibleTimes).toContain('14:30');
+    expect(component.allPossibleTimes).toContain('21:00');
+  });
+
+  it('triggerSmartSearch: should return early if dates/times are missing', () => {
+    component.selectedDate = '';
+    component.triggerSmartSearch();
+    expect(reservationServiceSpy.smartSearch).not.toHaveBeenCalled();
+  });
+
+  it('triggerSmartSearch: should call service and populate suggestions on success', () => {
+    component.selectedDate = '2026-05-05';
+    component.desiredStartTime = '10:00';
+    component.desiredEndTime = '11:00';
+    component.roomId = 1;
+    component.visibleRooms = [{ id: 1, camp: 'MOSTOLES' } as any];
+
+    const mockSuggestions = [
+      {
+        room: { id: 2, name: 'Room 2' },
+        suggestedStart: '2026-05-05T10:30:00',
+        suggestedEnd: '2026-05-05T11:30:00',
+        reason: 'ALTERNATIVE_TIME',
+      },
+    ];
+    reservationServiceSpy.smartSearch.and.returnValue(of(mockSuggestions));
+
+    component.triggerSmartSearch();
+
+    expect(reservationServiceSpy.smartSearch).toHaveBeenCalled();
+    expect(component.smartSuggestions).toEqual(mockSuggestions);
+    expect(component.smartSearchLoading).toBeFalse();
+  });
+
+  it('triggerSmartSearch: should show alert if no suggestions found', () => {
+    spyOn(window, 'alert');
+    component.selectedDate = '2026-05-05';
+    component.desiredStartTime = '10:00';
+    component.desiredEndTime = '11:00';
+
+    reservationServiceSpy.smartSearch.and.returnValue(of([]));
+
+    component.triggerSmartSearch();
+
+    expect(window.alert).toHaveBeenCalledWith(
+      jasmine.stringMatching(/No alternatives found/i),
+    );
+    expect(component.smartSearchLoading).toBeFalse();
+  });
+
+  it('triggerSmartSearch: should handle error from service', () => {
+    spyOn(console, 'error');
+    component.selectedDate = '2026-05-05';
+    component.desiredStartTime = '10:00';
+    component.desiredEndTime = '11:00';
+
+    reservationServiceSpy.smartSearch.and.returnValue(
+      throwError(() => new Error('Search failed')),
+    );
+
+    component.triggerSmartSearch();
+
+    expect(console.error).toHaveBeenCalled();
+    expect(component.smartSearchLoading).toBeFalse();
+  });
+
+  it('applySuggestion: should auto-fill form and clear search panel', fakeAsync(() => {
+    spyOn(component, 'onConfigChange');
+    spyOn(component, 'onStartTimeChange');
+
+    const startObj = new Date();
+    startObj.setFullYear(2026, 4, 5);
+    startObj.setHours(10, 30, 0, 0);
+
+    const endObj = new Date();
+    endObj.setFullYear(2026, 4, 5);
+    endObj.setHours(12, 0, 0, 0);
+
+    const suggestion = {
+      room: { id: 5 },
+      suggestedStart: startObj.toISOString(),
+      suggestedEnd: endObj.toISOString(),
+    };
+
+    component.applySuggestion(suggestion);
+
+    expect(component.roomId).toBe(5);
+    expect(component.selectedDate).toBe(startObj.toISOString().split('T')[0]);
+    expect(component.onConfigChange).toHaveBeenCalled();
+
+    tick(400);
+
+    expect(component.selectedStartTime).toBe('10:30');
+    expect(component.onStartTimeChange).toHaveBeenCalled();
+    expect(component.selectedEndTime).toBe('12:00');
+
+    expect(component.smartSuggestions.length).toBe(0);
+    expect(component.desiredStartTime).toBe('');
+    expect(component.desiredEndTime).toBe('');
+  }));
 });

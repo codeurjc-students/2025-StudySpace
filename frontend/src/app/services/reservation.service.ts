@@ -100,4 +100,22 @@ export class ReservationService {
       `/api/search/reservations/me?${queryParams.join('&')}`,
     );
   }
+
+  smartSearch(
+    start: Date,
+    end: Date,
+    minCapacity?: number,
+    campus?: string,
+  ): Observable<any[]> {
+    let url = `${BASE_URL}/smart-search?start=${start.toISOString()}&end=${end.toISOString()}`;
+
+    if (minCapacity) {
+      url += `&minCapacity=${minCapacity}`;
+    }
+    if (campus) {
+      url += `&campus=${campus}`;
+    }
+
+    return this.http.get<any[]>(url);
+  }
 }

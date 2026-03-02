@@ -43,18 +43,36 @@
         </div>
       </div>
 
-      <div class="mb-3">
-        <label for="place" class="form-label fw-bold"
-          >Location (Building / Floor)</label
-        >
-        <input
-          id="place"
-          type="text"
-          name="place"
-          [(ngModel)]="room.place"
-          class="form-control"
-          required
-        />
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="place" class="form-label fw-bold"
+            >Location (Building / Floor)</label
+          >
+          <input
+            id="place"
+            type="text"
+            name="place"
+            [(ngModel)]="room.place"
+            class="form-control"
+            placeholder="e.g., Departamental II"
+            required
+          />
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label for="coordenades" class="form-label fw-bold">
+            Coordinates
+            <span class="text-muted fw-normal fs-6">(Optional)</span>
+          </label>
+          <input
+            id="coordenades"
+            type="text"
+            name="coordenades"
+            [(ngModel)]="room.coordenades"
+            class="form-control"
+            placeholder="e.g., 40.333, -3.877"
+          />
+        </div>
       </div>
 
       <div class="card bg-light mb-4 border-0 shadow-sm mt-3">

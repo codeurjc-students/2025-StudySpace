@@ -58,9 +58,11 @@ test.describe('Statistics and Reservations Flow', () => {
         }
       });
 
-      const roomSelect = page.locator('select[name="roomId"]');
-      await expect(roomSelect).not.toBeDisabled();
-      await roomSelect.selectOption({ index: 1 });
+      const firstRoomCard = page
+        .locator('div.list-group button.list-group-item')
+        .first();
+      await expect(firstRoomCard).toBeVisible();
+      await firstRoomCard.click();
       await page.waitForTimeout(1000);
 
       const dateInput = page.getByLabel('2. Select Date');

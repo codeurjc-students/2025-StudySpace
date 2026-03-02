@@ -34,6 +34,8 @@ import com.urjcservice.backend.rest.ReservationRestController.ReservationRequest
 @Service
 public class ReservationService {
 
+    private final AdvancedSearchService advancedSearchService;
+
     private static final String USER_NOT_FOUND_MSG = "User not found";
 
     private final ReservationRepository reservationRepository;
@@ -45,11 +47,12 @@ public class ReservationService {
     public ReservationService(ReservationRepository reservationRepository,
             UserRepository userRepository,
             RoomRepository roomRepository,
-            EmailService emailService) {
+            EmailService emailService, AdvancedSearchService advancedSearchService) {
         this.reservationRepository = reservationRepository;
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
         this.emailService = emailService;
+        this.advancedSearchService = advancedSearchService;
     }
 
     public Page<Reservation> findAll(Pageable pageable) {
@@ -471,50 +474,91 @@ public class ReservationService {
             Room.CampusType campus) {
 
         List<SmartSuggestionDTO> suggestions = new ArrayList<>();
-
         List<Room> candidateRooms = roomRepository.findAll().stream()
                 .filter(Room::isActive)
                 .filter(r -> minCapacity == null || r.getCapacity() >= minCapacity)
-                .filter(r -> campus == null || r.getCamp() == campus)
                 .toList();
 
         long durationMillis = requestedEnd.getTime() - requestedStart.getTime();
 
         for (Room room : candidateRooms) {
+
+            int penalty = calculateCampusPenalty(campus, room.getCamp());
+
             List<Reservation> overlaps = reservationRepository.findActiveReservationsByRoomIdAndDateRange(
                     room.getId(), requestedStart, requestedEnd);
 
             if (overlaps.isEmpty()) {
-                suggestions.add(new SmartSuggestionDTO(room, requestedStart, requestedEnd, "EXACT_MATCH", 100));
+                int score = 100 - penalty;
+
+                // decent score then we suggest it
+                if (score > 30) {
+                    // not same campus but close = "SIMILAR_ROOM", same campus = "EXACT_MATCH"
+                    String reason = (campus != null && campus != room.getCamp()) ? "SIMILAR_ROOM" : "EXACT_MATCH";
+                    suggestions.add(new SmartSuggestionDTO(room, requestedStart, requestedEnd, reason, score));
+                }
             } else {
-                Date plus30Start = new Date(requestedStart.getTime() + (30 * 60000)); // 30 minutes later
+                Date plus30Start = new Date(requestedStart.getTime() + (30 * 60000)); // 30 minuttes later
                 Date plus30End = new Date(plus30Start.getTime() + durationMillis);
                 if (reservationRepository
                         .findActiveReservationsByRoomIdAndDateRange(room.getId(), plus30Start, plus30End).isEmpty()) {
-                    suggestions.add(new SmartSuggestionDTO(room, plus30Start, plus30End, "ALTERNATIVE_TIME", 80));
+                    int score = 80 - penalty;
+                    if (score > 30)
+                        suggestions
+                                .add(new SmartSuggestionDTO(room, plus30Start, plus30End, "ALTERNATIVE_TIME", score));
                 }
 
-                Date minus30Start = new Date(requestedStart.getTime() - (30 * 60000)); // - 30 minutes later
+                Date minus30Start = new Date(requestedStart.getTime() - (30 * 60000)); // 30 minuttes earlier
                 Date minus30End = new Date(minus30Start.getTime() + durationMillis);
                 if (reservationRepository
                         .findActiveReservationsByRoomIdAndDateRange(room.getId(), minus30Start, minus30End).isEmpty()) {
-                    suggestions.add(new SmartSuggestionDTO(room, minus30Start, minus30End, "ALTERNATIVE_TIME", 80));
+                    int score = 80 - penalty;
+                    if (score > 30)
+                        suggestions
+                                .add(new SmartSuggestionDTO(room, minus30Start, minus30End, "ALTERNATIVE_TIME", score));
                 }
 
                 Date plus60Start = new Date(requestedStart.getTime() + (60 * 60000)); // 60 minutes later
                 Date plus60End = new Date(plus60Start.getTime() + durationMillis);
                 if (reservationRepository
                         .findActiveReservationsByRoomIdAndDateRange(room.getId(), plus60Start, plus60End).isEmpty()) {
-                    suggestions.add(new SmartSuggestionDTO(room, plus60Start, plus60End, "ALTERNATIVE_TIME", 60));
+                    int score = 60 - penalty;
+                    if (score > 30)
+                        suggestions
+                                .add(new SmartSuggestionDTO(room, plus60Start, plus60End, "ALTERNATIVE_TIME", score));
                 }
             }
         }
 
-        // order from best to worst
+        // from best to worst
         suggestions.sort((a, b) -> Integer.compare(b.getScore(), a.getScore()));
 
-        // only 10 better suggestions
+        // only the top 10 suggestions
         return suggestions.stream().limit(10).toList();
+    }
+
+    private int calculateCampusPenalty(Room.CampusType requested, Room.CampusType alternative) {
+        if (requested == null || alternative == null || requested == alternative) {
+            return 0; // Same campus no penalization
+        }
+
+        boolean reqIsSur = (requested == Room.CampusType.MOSTOLES ||
+                requested == Room.CampusType.ALCORCON ||
+                requested == Room.CampusType.FUENLABRADA);
+
+        boolean altIsSur = (alternative == Room.CampusType.MOSTOLES ||
+                alternative == Room.CampusType.ALCORCON ||
+                alternative == Room.CampusType.FUENLABRADA);
+
+        if (reqIsSur && altIsSur) {
+            return 20; // low penalization
+        }
+
+        if (!reqIsSur && !altIsSur) {
+            return 20; // low penalization
+        }
+
+        return 50; // high penalization
     }
 
 }

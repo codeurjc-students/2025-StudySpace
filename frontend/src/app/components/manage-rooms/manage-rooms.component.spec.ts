@@ -35,6 +35,7 @@ describe('ManageRoomsComponent', () => {
     roomsServiceSpy = jasmine.createSpyObj('RoomsService', [
       'getRooms',
       'deleteRoom',
+      'searchRooms',
     ]);
 
     await TestBed.configureTestingModule({
@@ -108,5 +109,64 @@ describe('ManageRoomsComponent', () => {
 
     component.pageData = undefined;
     expect(component.getVisiblePages()).toEqual([]);
+  });
+
+  it('onSearch: should call clearSearch if all fields are empty', () => {
+    spyOn(component, 'clearSearch');
+    component.searchText = '';
+    component.selectedCampus = '';
+    component.minCapacity = null;
+    component.filterActive = '';
+
+    component.onSearch();
+
+    expect(component.clearSearch).toHaveBeenCalled();
+  });
+
+  it('onSearch: should activate search mode and load first page', () => {
+    spyOn(component, 'loadRooms');
+    component.searchText = 'Lab';
+
+    component.onSearch();
+
+    expect(component.isSearching).toBeTrue();
+    expect(component.loadRooms).toHaveBeenCalledWith(0);
+  });
+
+  it('clearSearch: should reset fields and reload normal data', () => {
+    spyOn(component, 'loadRooms');
+    component.searchText = 'Java';
+    component.selectedCampus = 'MOSTOLES';
+    component.minCapacity = 20;
+    component.filterActive = 'true';
+    component.isSearching = true;
+
+    component.clearSearch();
+
+    expect(component.searchText).toBe('');
+    expect(component.selectedCampus).toBe('');
+    expect(component.minCapacity).toBeNull();
+    expect(component.filterActive).toBe('');
+    expect(component.isSearching).toBeFalse();
+    expect(component.loadRooms).toHaveBeenCalledWith(0);
+  });
+
+  it('loadRooms: should use searchRooms with correct filters when isSearching is true', () => {
+    component.isSearching = true;
+    component.searchText = 'Lab';
+    component.filterActive = 'true';
+
+    roomsServiceSpy.searchRooms.and.returnValue(of(mockPage as any));
+
+    component.loadRooms(0);
+
+    expect(roomsServiceSpy.searchRooms).toHaveBeenCalledWith(
+      'Lab',
+      undefined,
+      undefined,
+      true,
+      0,
+    );
+    expect(component.rooms.length).toBeGreaterThan(0);
   });
 });

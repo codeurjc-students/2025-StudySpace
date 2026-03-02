@@ -9,6 +9,7 @@ import com.urjcservice.backend.repositories.RoomRepository;
 import com.urjcservice.backend.repositories.UserRepository;
 import com.urjcservice.backend.service.EmailService;
 import com.urjcservice.backend.service.FileStorageService;
+import com.urjcservice.backend.dtos.SmartSuggestionDTO;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.Date;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Collections;
@@ -1045,6 +1047,159 @@ public class ReservationServiceTest {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> reservationService.createReservation(request, "user@test.com"));
         assertEquals("Reservations are not allowed on weekends.", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("Smart Search - Exact Match in Same Campus (Score 100)")
+    void testSmartFindAvailableRooms_ExactMatch() {
+        Date start = new Date();
+        Date end = new Date(start.getTime() + 3600000);
+
+        Room room = new Room();
+        room.setId(1L);
+        room.setCamp(Room.CampusType.MOSTOLES);
+        room.setCapacity(30);
+        room.setActive(true);
+
+        when(roomRepository.findAll()).thenReturn(List.of(room));
+        when(reservationRepository.findActiveReservationsByRoomIdAndDateRange(1L, start, end))
+                .thenReturn(Collections.emptyList());
+
+        List<SmartSuggestionDTO> suggestions = reservationService.smartFindAvailableRooms(start, end, 20,
+                Room.CampusType.MOSTOLES);
+
+        assertEquals(1, suggestions.size());
+        assertEquals("EXACT_MATCH", suggestions.get(0).getMatchType());
+        assertEquals(100, suggestions.get(0).getScore());
+    }
+
+    @Test
+    @DisplayName("Smart Search - Same Zone (Sur) Penalty (Score 80)")
+    void testSmartFindAvailableRooms_SimilarRoom_SameZone() {
+        Date start = new Date();
+        Date end = new Date(start.getTime() + 3600000);
+
+        Room room = new Room();
+        room.setId(1L);
+        room.setCamp(Room.CampusType.FUENLABRADA);
+        room.setCapacity(30);
+        room.setActive(true);
+
+        when(roomRepository.findAll()).thenReturn(List.of(room));
+        when(reservationRepository.findActiveReservationsByRoomIdAndDateRange(1L, start, end))
+                .thenReturn(Collections.emptyList());
+
+        List<SmartSuggestionDTO> suggestions = reservationService.smartFindAvailableRooms(start, end, 20,
+                Room.CampusType.MOSTOLES);
+
+        assertEquals(1, suggestions.size());
+        assertEquals("SIMILAR_ROOM", suggestions.get(0).getMatchType());
+        assertEquals(80, suggestions.get(0).getScore());
+    }
+
+    @Test
+    @DisplayName("Smart Search - Different Zone Penalty (Score 50)")
+    void testSmartFindAvailableRooms_DifferentZone() {
+        Date start = new Date();
+        Date end = new Date(start.getTime() + 3600000);
+
+        Room room = new Room();
+        room.setId(1L);
+        room.setCamp(Room.CampusType.VICALVARO);
+        room.setCapacity(30);
+        room.setActive(true);
+
+        when(roomRepository.findAll()).thenReturn(List.of(room));
+        when(reservationRepository.findActiveReservationsByRoomIdAndDateRange(1L, start, end))
+                .thenReturn(Collections.emptyList());
+
+        List<SmartSuggestionDTO> suggestions = reservationService.smartFindAvailableRooms(start, end, 20,
+                Room.CampusType.MOSTOLES);
+
+        assertEquals(1, suggestions.size());
+        assertEquals(50, suggestions.get(0).getScore());
+    }
+
+    @Test
+    @DisplayName("Smart Search - Occupied Exact Time, Free +30 mins (Score 80)")
+    void testSmartFindAvailableRooms_AlternativeTime_Plus30() {
+        Date start = new Date();
+        Date end = new Date(start.getTime() + 3600000);
+
+        Room room = new Room();
+        room.setId(1L);
+        room.setCamp(Room.CampusType.MOSTOLES);
+        room.setCapacity(30);
+        room.setActive(true);
+
+        when(roomRepository.findAll()).thenReturn(List.of(room));
+
+        when(reservationRepository.findActiveReservationsByRoomIdAndDateRange(eq(1L), any(Date.class), any(Date.class)))
+                .thenAnswer(invocation -> {
+                    Date reqStart = invocation.getArgument(1);
+                    if (reqStart.equals(start)) {
+                        return List.of(new Reservation());
+                    }
+                    return Collections.emptyList();
+                });
+
+        List<SmartSuggestionDTO> suggestions = reservationService.smartFindAvailableRooms(start, end, 20,
+                Room.CampusType.MOSTOLES);
+
+        assertEquals(3, suggestions.size());
+        assertEquals("ALTERNATIVE_TIME", suggestions.get(0).getMatchType());
+        assertEquals(80, suggestions.get(0).getScore());
+    }
+
+    @Test
+    @DisplayName("Smart Search - Filter inactive and low capacity rooms")
+    void testSmartFindAvailableRooms_FiltersCapacityAndInactive() {
+        Date start = new Date();
+        Date end = new Date(start.getTime() + 3600000);
+
+        Room inactiveRoom = new Room();
+        inactiveRoom.setId(1L);
+        inactiveRoom.setActive(false);
+        inactiveRoom.setCapacity(50);
+
+        Room smallRoom = new Room();
+        smallRoom.setId(2L);
+        smallRoom.setActive(true);
+        smallRoom.setCapacity(10);
+
+        when(roomRepository.findAll()).thenReturn(List.of(inactiveRoom, smallRoom));
+
+        List<SmartSuggestionDTO> suggestions = reservationService.smartFindAvailableRooms(start, end, 20,
+                Room.CampusType.MOSTOLES);
+
+        assertEquals(0, suggestions.size());
+    }
+
+    @Test
+    @DisplayName("Smart Search - Sorts properly and limits to 10 results")
+    void testSmartFindAvailableRooms_SortingAndLimit() {
+        Date start = new Date();
+        Date end = new Date(start.getTime() + 3600000);
+
+        List<Room> rooms = new ArrayList<>();
+        for (long i = 1; i <= 15; i++) {
+            Room r = new Room();
+            r.setId(i);
+            r.setCamp(Room.CampusType.MOSTOLES);
+            r.setCapacity(30);
+            r.setActive(true);
+            rooms.add(r);
+        }
+
+        when(roomRepository.findAll()).thenReturn(rooms);
+        when(reservationRepository.findActiveReservationsByRoomIdAndDateRange(anyLong(), any(), any()))
+                .thenReturn(Collections.emptyList());
+
+        List<SmartSuggestionDTO> suggestions = reservationService.smartFindAvailableRooms(start, end, 20,
+                Room.CampusType.MOSTOLES);
+
+        assertEquals(10, suggestions.size());
+        assertEquals(100, suggestions.get(0).getScore());
     }
 
 }

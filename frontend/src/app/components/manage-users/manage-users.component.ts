@@ -116,6 +116,7 @@ export class ManageUsersComponent implements OnInit {
           this.users = data.content.filter((user) => user.id !== currentUserId);
           this.currentPage = data.number;
         },
+        error: (err) => console.error(err) 
       });
     }
   }

@@ -35,6 +35,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -498,6 +499,36 @@ public class ReservationRestControllerTest {
                 doThrow(new RuntimeException("Invalid token")).when(reservationService).verifyReservation(token);
 
                 mockMvc.perform(get("/api/reservations/verify").param("token", token))
+                                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("GET /smart-search - Success with all parameters")
+        @WithMockUser(username = "user", roles = "USER")
+        public void testSmartSearch_Success() throws Exception {
+                String startStr = "2026-05-05T10:00:00.000Z";
+                String endStr = "2026-05-05T12:00:00.000Z";
+
+                when(reservationService.smartFindAvailableRooms(any(), any(), eq(20), eq(Room.CampusType.MOSTOLES)))
+                                .thenReturn(Collections.emptyList());
+
+                mockMvc.perform(get("/api/reservations/smart-search")
+                                .param("start", startStr)
+                                .param("end", endStr)
+                                .param("minCapacity", "20")
+                                .param("campus", "MOSTOLES"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$").isArray());
+        }
+
+        @Test
+        @DisplayName("GET /smart-search - Missing required dates (Returns 400)")
+        @WithMockUser(username = "user", roles = "USER")
+        public void testSmartSearch_MissingParams_Returns400() throws Exception {
+
+                mockMvc.perform(get("/api/reservations/smart-search")
+                                .param("minCapacity", "20")
+                                .param("campus", "MOSTOLES"))
                                 .andExpect(status().isBadRequest());
         }
 

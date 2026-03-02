@@ -31,6 +31,12 @@ describe('RoomFormComponent', () => {
         number: 0,
         size: 1,
       }),
+
+    searchSoftwares: jasmine
+      .createSpy('searchSoftwares')
+      .and.returnValue(
+        of({ content: [{ id: 1, name: 'Java', version: 17 }] } as any),
+      ),
   };
 
   const mockRouter = { navigate: jasmine.createSpy('navigate') };
@@ -79,10 +85,6 @@ describe('RoomFormComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should load available software', () => {
-    expect(component.availableSoftware.length).toBe(1);
-    expect(component.availableSoftware[0].name).toBe('Java');
-  });
   it('should load room data including active status', () => {
     // ngOnInit calls loadRoomData
     expect(component.room.name).toBe('Test Room');
@@ -229,5 +231,66 @@ describe('RoomFormComponent', () => {
       jasmine.stringMatching(/upload failed/i),
     );
     expect(mockRouter.navigate).toHaveBeenCalledWith(['/admin/rooms']);
+  });
+
+  it('searchSoftwareForDropdown: should clear availableSoftwares if inputs are empty', () => {
+    component.softwareSearchText = '';
+    component.softwareMinVersion = null;
+    component.availableSoftwares = [
+      { id: 1, name: 'Java', version: 17 } as any,
+    ];
+
+    component.searchSoftwareForDropdown();
+
+    expect(component.availableSoftwares.length).toBe(0);
+  });
+
+  it('searchSoftwareForDropdown: should call searchSoftwares and filter out already selected ones', () => {
+    component.softwareSearchText = 'Java';
+    component.selectedSoftwares = [
+      { id: 1, name: 'Java 11', version: 11 } as any,
+    ];
+
+    const mockSearchResponse = {
+      content: [
+        { id: 1, name: 'Java 11', version: 11 },
+        { id: 2, name: 'Java 17', version: 17 },
+      ],
+    };
+    mockSoftwareService.searchSoftwares.and.returnValue(
+      of(mockSearchResponse as any),
+    );
+
+    component.searchSoftwareForDropdown();
+
+    expect(mockSoftwareService.searchSoftwares).toHaveBeenCalledWith(
+      'Java',
+      undefined,
+    );
+    expect(component.availableSoftwares.length).toBe(1);
+    expect(component.availableSoftwares[0].id).toBe(2); // Solo debe quedar el ID 2
+  });
+
+  it('addSoftwareToRoom: should push to selected array and remove from available', () => {
+    const swToAdd = { id: 10, name: 'Matlab', version: 1 } as any;
+    component.availableSoftwares = [swToAdd];
+    component.room.softwareIds = [];
+    component.selectedSoftwares = [];
+
+    component.addSoftwareToRoom(swToAdd);
+
+    expect(component.room.softwareIds).toContain(10);
+    expect(component.selectedSoftwares).toContain(swToAdd);
+    expect(component.availableSoftwares.length).toBe(0);
+  });
+
+  it('removeSoftwareFromRoom: should remove software id from room.softwareIds', () => {
+    component.room.softwareIds = [1, 2, 3];
+    component.selectedSoftwares = [{ id: 1 }, { id: 2 }, { id: 3 }] as any;
+
+    component.removeSoftwareFromRoom(2);
+
+    expect(component.room.softwareIds).not.toContain(2);
+    expect(component.selectedSoftwares.length).toBe(2);
   });
 });

@@ -98,6 +98,8 @@ export class ManageRoomsComponent implements OnInit {
     this.searchText = '';
     this.selectedCampus = '';
     this.minCapacity = null;
+    this.filterActive = ''; 
+    
     this.isSearching = false;
     this.loadRooms(0);
   }

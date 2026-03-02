@@ -61,4 +61,20 @@ describe('SoftwareService', () => {
     expect(req.request.method).toBe('DELETE');
     req.flush({});
   });
+
+  it('should search softwares with parameters', () => {
+    service.searchSoftwares('Java', 11.5, 0, 10).subscribe();
+    const req = httpMock.expectOne(
+      `/api/search/softwares?page=0&size=10&text=Java&minVersion=11.5`,
+    );
+    expect(req.request.method).toBe('GET');
+    req.flush({});
+  });
+
+  it('should search softwares with partial parameters', () => {
+    service.searchSoftwares(undefined, undefined, 2, 5).subscribe();
+    const req = httpMock.expectOne(`/api/search/softwares?page=2&size=5`);
+    expect(req.request.method).toBe('GET');
+    req.flush({});
+  });
 });
