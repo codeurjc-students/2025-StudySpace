@@ -574,8 +574,8 @@ public class ReservationServiceTest {
 
     @Test
     void testValidateRules_BadIntervals() {
-        // GIVEN: Hora termina en :15 (inválido, debe ser :00 o :30)
-        // Usamos el helper corregido que garantiza Lunes-Viernes
+        // GIVEN: end hour is :15 (invalid, must be :00 or :30)
+        // We use the corrected helper that ensures Monday–Friday
         LocalDateTime start = getFutureDate(1, 10, 15);
         LocalDateTime end = getFutureDate(1, 11, 15);
 

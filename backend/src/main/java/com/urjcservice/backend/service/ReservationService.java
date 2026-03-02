@@ -127,7 +127,7 @@ public class ReservationService {
         });
     }
 
-    // auxiliar methods
+    // auxiliary methods
     private void updateReservationUser(Reservation reservation, Long newUserId) {
         if (newUserId != null) {
             userRepository.findById(newUserId).ifPresent(reservation::setUser);
@@ -159,7 +159,7 @@ public class ReservationService {
 
         return reservationRepository.findById(id).map(reservation -> {
             Room newRoom = roomRepository.findById(newRoomId)
-                    .orElseThrow(() -> new RuntimeException("Room not found with ID: " + newRoomId));
+                    .orElseThrow(() -> new IllegalArgumentException("Room not found with ID: " + newRoomId));
 
             LocalDateTime startDateTime = LocalDateTime.of(newDate, newStart);
             LocalDateTime endDateTime = LocalDateTime.of(newDate, newEnd);
@@ -214,7 +214,7 @@ public class ReservationService {
             reservation.setAdminModificationReason(reason);
 
             Reservation savedReservation = reservationRepository.saveAndFlush(reservation);
-            log.info("Reservation ID {} ​​cancelled in BD.", id);
+            log.info("Reservation ID {} cancelled in BD.", id);
 
             // send email
             User user = savedReservation.getUser();
@@ -258,13 +258,14 @@ public class ReservationService {
 
     public Reservation createReservation(ReservationRequest request, String userEmail) {
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MSG));
 
         Room room = roomRepository.findById(request.getRoomId())
-                .orElseThrow(() -> new RuntimeException("Room not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Room not found"));
 
         if (!room.isActive()) {
-            throw new RuntimeException("Reservations are not possible: The classroom is temporarily unavailable.");
+            throw new IllegalArgumentException(
+                    "Reservations are not possible: The classroom is temporarily unavailable.");
         }
 
         List<Reservation> userConflicts = reservationRepository.findUserOverlappingReservations(
@@ -291,7 +292,7 @@ public class ReservationService {
                 request.getRoomId(), request.getStartDate(), request.getEndDate(), PageRequest.of(0, 1));
 
         if (overlaps.hasContent()) {
-            throw new RuntimeException("The room is already reserved for this time.");
+            throw new IllegalStateException("The room is already reserved for this time.");
         }
 
         // all day hours reserved
@@ -322,7 +323,7 @@ public class ReservationService {
                     user.getName(),
                     savedReservation.getVerificationToken());
         } catch (Exception e) {
-            System.err.println("Error sending verification email: " + e.getMessage());
+            log.error("Error sending verification email: {}", e.getMessage(), e);
         }
 
         return savedReservation;
@@ -330,11 +331,11 @@ public class ReservationService {
 
     public void verifyReservation(String token) {
         Reservation reservation = reservationRepository.findByVerificationToken(token)
-                .orElseThrow(() -> new RuntimeException("Invalid verification token."));
+                .orElseThrow(() -> new IllegalArgumentException("Invalid verification token."));
 
         // is verified?
         if (reservation.isVerified()) {
-            throw new RuntimeException("Reservation is already verified.");
+            throw new IllegalStateException("Reservation is already verified.");
         }
 
         // token expired?
@@ -344,7 +345,7 @@ public class ReservationService {
             // if expired delete the reservation
             reservationRepository.delete(reservation);
 
-            throw new RuntimeException(
+            throw new IllegalStateException(
                     "Verification link has expired. The reservation has been cancelled. Please book again.");
         }
 
@@ -368,7 +369,7 @@ public class ReservationService {
                     savedReservation.getStartDate(),
                     savedReservation.getEndDate());
         } catch (Exception e) {
-            System.err.println("Error sending confirmation email: " + e.getMessage());
+            log.error("Error sending confirmation email: {}", e.getMessage(), e);
         }
     }
 
@@ -383,14 +384,14 @@ public class ReservationService {
 
     public Page<Reservation> getReservationsByUserEmail(String email, Pageable pageable) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MSG));
 
         return reservationRepository.findByUserWithActivePriority(user, pageable);
     }
 
     public Page<Reservation> getReservationsByUserId(Long userId, Pageable pageable) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MSG));
 
         return reservationRepository.findByUserWithActivePriority(user, pageable);
     }
@@ -463,7 +464,7 @@ public class ReservationService {
 
     public List<Reservation> getActiveReservationsForUserAndDate(String email, LocalDate date) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MSG));
         return reservationRepository.findActiveByUserIdAndDate(user.getId(), date);
     }
 

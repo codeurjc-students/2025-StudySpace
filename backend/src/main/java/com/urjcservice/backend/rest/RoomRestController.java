@@ -169,7 +169,7 @@ public class RoomRestController {
         return ResponseEntity.ok(roomService.getRoomDailyStats(id, date));
     }
 
-    // auxiliar method to dto to entity
+    // auxiliary method to map DTO to entity
     private Room mapRequestToEntity(Room room, RoomRequest request) {
         if (request.name != null)
             room.setName(request.name);
@@ -213,7 +213,6 @@ public class RoomRestController {
 
         String filename = fileStorageService.store(file);
         room.setImageName(filename);
-        // roomService.save(room);
 
         return roomService.updateRoom(id, room)
                 .map(ResponseEntity::ok)

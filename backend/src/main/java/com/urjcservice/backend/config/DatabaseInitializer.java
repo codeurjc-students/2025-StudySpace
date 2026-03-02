@@ -26,7 +26,6 @@ import java.util.Date;
 
 @Component
 @ConditionalOnProperty(name = "app.db.init.enabled", havingValue = "true", matchIfMissing = true)
-// @Profile("!e2e")
 public class DatabaseInitializer implements CommandLineRunner {
 
         private static final Logger logger = LoggerFactory.getLogger(DatabaseInitializer.class);

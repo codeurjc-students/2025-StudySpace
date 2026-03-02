@@ -171,7 +171,7 @@ export class UserProfileComponent implements OnInit {
 
   //active only if not canceled and endDate is in the future
   isReservationActive(res: any): boolean {
-    if (!res || !res.endDate) return false;
+    if (!res?.endDate) return false;
 
     const now = new Date();
     const end = new Date(res.endDate);

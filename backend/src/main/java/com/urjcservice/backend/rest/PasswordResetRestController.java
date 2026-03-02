@@ -20,7 +20,7 @@ public class PasswordResetRestController {
         this.passwordResetService = passwordResetService;
     }
 
-    // DTOs internos para mantener tu estilo
+    // Internal DTOs to maintain your style
     public static class ForgotPasswordRequest {
         @NotBlank(message = "Email cannot be empty")
         private String email;

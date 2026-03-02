@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class SpaController {
 
     // captures all routes except those containing a period (.) or /api
-    // @RequestMapping(value = "/{path:[^\\.]*}")
     @GetMapping(value = "/**/{path:[^\\.]*}")
     public String forward(@PathVariable("path") String path) {
         // redirect to index.html so that Angular can handle the routing

@@ -397,11 +397,11 @@ public class ReservationRestControllerTest {
                 mockRes.setCancelled(true);
                 mockRes.setAdminModificationReason(reason);
 
-                // Mockeamos la llamada al servicio
+                // We mock the service call
                 given(reservationService.adminCancelReservation(eq(reservationId), eq(reason)))
                                 .willReturn(Optional.of(mockRes));
 
-                // Objeto JSON para el body
+                // JSON object for the request body
                 String jsonBody = "{\"reason\": \"" + reason + "\"}";
 
                 // WHEN & THEN

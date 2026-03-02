@@ -11,7 +11,6 @@ import { Router, ActivatedRoute } from '@angular/router';
 export class LoginComponent {
   @ViewChild('loginErrorModal') loginErrorModal!: TemplateRef<any>;
   loginData = { user: '', password: '' };
-  //public passwordVisible: boolean = false;
 
   //put the loginService in the constructor, router and modalService too
   constructor(
@@ -27,14 +26,10 @@ export class LoginComponent {
       .subscribe({
         next: (response: any) => {
           console.log('Correct login:', response);
-          // Optional: Redirect to home or another page after successful login
-          // this.router.navigate(['/home']);
           const returnUrl = this.route.snapshot.queryParams['returnUrl'];
           if (returnUrl) {
             this.router.navigateByUrl(returnUrl);
           } else {
-            //Instead of going to '/profile', let's go to '/reservations/create'
-            //this.router.navigate(['/reservations/create']);
             this.router.navigate(['/']);
           }
         },

@@ -97,8 +97,7 @@ public class RoomServiceTest {
         roomService.updateRoom(1L, updatedData);
 
         // THEN
-        // verify(reservationRepository, times(1)).cancelByRoomIdAndEndDateAfter(eq(1L),
-        // any(Date.class)); REVISARRRRRRRRRRRRRRRRRRRRRRRRRRRRRRr
+
         verify(roomRepository).save(argThat(room -> !room.isActive()));
     }
 
@@ -172,7 +171,7 @@ public class RoomServiceTest {
         when(softwareRepository.findById(20L)).thenReturn(Optional.of(softB));
         when(roomRepository.save(any(Room.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        // Ejecución
+        // Execution
         Optional<Room> result = roomService.updateRoom(roomId, updateData);
 
         // Verify

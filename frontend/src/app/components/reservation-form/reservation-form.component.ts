@@ -39,9 +39,9 @@ export class ReservationFormComponent implements OnInit {
   allPossibleTimes: string[] = [];
 
   constructor(
-    private router: Router,
-    private reservationService: ReservationService,
-    private roomsService: RoomsService,
+    private readonly router: Router,
+    private readonly reservationService: ReservationService,
+    private readonly roomsService: RoomsService,
   ) {}
 
   ngOnInit(): void {

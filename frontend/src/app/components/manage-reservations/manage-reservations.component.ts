@@ -161,7 +161,8 @@ export class ManageReservationsComponent implements OnInit {
   }
 
   isReservationActive(res: any): boolean {
-    if (!res || !res.endDate) return false;
+    if (!res?.endDate) return false;
+
     const now = new Date();
     const end = new Date(res.endDate);
     return !res.cancelled && end > now;

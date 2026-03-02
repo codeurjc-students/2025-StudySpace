@@ -11,17 +11,15 @@ const BASE_URL = '/api/auth';
   providedIn: 'root',
 })
 export class LoginService {
-  /*private readonly SESSION_TIME_MINUTES = 20; 
-  private sessionWarningTimeout: any;
-  private sessionExpiredTimeout: any;*/
-
   //BehaviorSubject to update also components when user logs in/out
-  private currentUserSubject = new BehaviorSubject<UserDTO | null>(null);
+  private readonly currentUserSubject = new BehaviorSubject<UserDTO | null>(
+    null,
+  );
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(
-    private http: HttpClient,
-    private router: Router,
+    private readonly http: HttpClient,
+    private readonly router: Router,
   ) {
     this.checkAuth();
   }
@@ -45,7 +43,6 @@ export class LoginService {
         if (user) {
           console.log('Active session found:', user.name);
           this.currentUserSubject.next(user);
-          //this.startSessionTimers();
         } else {
           this.currentUserSubject.next(null);
         }
@@ -136,7 +133,6 @@ export class LoginService {
   }
 
   private finalizeLogout() {
-    //this.clearTimers();
     localStorage.removeItem('is_logged_in');
     this.currentUserSubject.next(null);
     this.router.navigate(['/']);
@@ -153,25 +149,4 @@ export class LoginService {
   refreshToken(): Observable<any> {
     return this.http.post(`${BASE_URL}/refresh`, {}, { withCredentials: true });
   }
-
-  /*private startSessionTimers() {
-    this.clearTimers();
-
-    const warningTimeMs = (this.SESSION_TIME_MINUTES - 5) * 60 * 1000; // notify 5 minutes before expiration
-    const expiredTimeMs = this.SESSION_TIME_MINUTES * 60 * 1000; // actual real expiration of token
-
-    this.sessionWarningTimeout = setTimeout(() => {
-        alert('⏳ Your session will expire in 5 minutes.');
-    }, warningTimeMs);
-
-    this.sessionExpiredTimeout = setTimeout(() => {
-        alert('🔒 Your session has expired for security reasons. Redirecting to login...');
-        this.finalizeLogout();
-    }, expiredTimeMs);
-  }
-
-  private clearTimers() {
-    if (this.sessionWarningTimeout) clearTimeout(this.sessionWarningTimeout);
-    if (this.sessionExpiredTimeout) clearTimeout(this.sessionExpiredTimeout);
-  }*/
 }

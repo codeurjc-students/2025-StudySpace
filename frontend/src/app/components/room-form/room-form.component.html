@@ -165,7 +165,7 @@
       </div>
 
       <div class="mb-3 border p-3 rounded bg-light">
-        <label class="form-label fw-bold">Room Image</label>
+        <label for="roomImage" class="form-label fw-bold">Room Image</label>
 
         <div *ngIf="currentImageUrl" class="mb-3 text-center">
           <img
@@ -178,6 +178,7 @@
         </div>
 
         <input
+          id="roomImage"
           type="file"
           (change)="onFileSelected($event)"
           class="form-control"

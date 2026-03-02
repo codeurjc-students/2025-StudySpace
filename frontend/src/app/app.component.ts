@@ -19,7 +19,7 @@ export class AppComponent {
   }
   getUserImageUrl(): string {
     const user = this.loginService.currentUser;
-    if (user && user.imageName) {
+    if (user?.imageName) {
       return `https://localhost:8443/api/users/${user.id}/image`;
     }
 

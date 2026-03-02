@@ -27,7 +27,7 @@ public class PasswordResetService {
 
     public void processForgotPassword(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
 
         String token = UUID.randomUUID().toString();
 
@@ -42,10 +42,10 @@ public class PasswordResetService {
 
     public void processResetPassword(String token, String newPassword) {
         User user = userRepository.findByResetPasswordToken(token)
-                .orElseThrow(() -> new RuntimeException("Invalid reset token"));
+                .orElseThrow(() -> new IllegalArgumentException("Invalid reset token"));
 
         if (user.getResetPasswordTokenExpiry().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("The reset link has expired");
+            throw new IllegalStateException("The reset link has expired");
         }
 
         user.setEncodedPassword(passwordEncoder.encode(newPassword));

@@ -287,7 +287,7 @@ public class UserServiceTest {
         Long userId = 1L;
         User user = new User();
         user.setId(userId);
-        user.setImageName("profile_pic_uuid.jpg"); // Usuario con foto
+        user.setImageName("profile_pic_uuid.jpg"); // User with photo
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
@@ -295,10 +295,10 @@ public class UserServiceTest {
         userService.deleteById(userId);
 
         // Assert
-        // 1. Verificamos que se llamó al servicio de ficheros con el nombre correcto
+        // 1. We verify that the file service was called with the correct name
         verify(fileStorageService, times(1)).delete("profile_pic_uuid.jpg");
 
-        // 2. Verificamos que se borró el usuario de la BD
+        // 2. We verify that the user was deleted from the DB
         verify(userRepository, times(1)).delete(user);
     }
 
