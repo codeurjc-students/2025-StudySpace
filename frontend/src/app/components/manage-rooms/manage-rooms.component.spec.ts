@@ -7,6 +7,7 @@ import { of, throwError } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { RoomDTO } from '../../dtos/room.dto';
 import { PaginationComponent } from '../pagination/pagination.component';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 describe('ManageRoomsComponent', () => {
   let component: ManageRoomsComponent;
@@ -42,6 +43,7 @@ describe('ManageRoomsComponent', () => {
       declarations: [ManageRoomsComponent, PaginationComponent],
       imports: [HttpClientTestingModule, FormsModule, RouterTestingModule],
       providers: [{ provide: RoomsService, useValue: roomsServiceSpy }],
+      schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ManageRoomsComponent);

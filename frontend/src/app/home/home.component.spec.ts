@@ -6,6 +6,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { of, throwError } from 'rxjs';
 import { PaginationComponent } from '../components/pagination/pagination.component';
 import { FormsModule } from '@angular/forms';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 describe('HomeComponent', () => {
   let component: HomeComponent;
@@ -61,6 +62,7 @@ describe('HomeComponent', () => {
         { provide: RoomsService, useValue: mockRoomsService },
         { provide: LoginService, useValue: mockLoginService },
       ],
+      schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(HomeComponent);

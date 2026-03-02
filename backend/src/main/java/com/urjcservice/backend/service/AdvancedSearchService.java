@@ -5,6 +5,9 @@ import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.entities.User;
 import com.urjcservice.backend.entities.Software;
 import jakarta.persistence.EntityManager;
+
+import org.hibernate.search.engine.search.predicate.dsl.BooleanPredicateClausesStep;
+import org.hibernate.search.engine.search.predicate.dsl.SearchPredicateFactory;
 import org.hibernate.search.engine.search.query.SearchResult;
 import org.hibernate.search.mapper.orm.Search;
 import org.hibernate.search.mapper.orm.session.SearchSession;
@@ -35,14 +38,7 @@ public class AdvancedSearchService {
                 .where(f -> f.bool(b -> {
                     if (active != null)
                         b.must(f.match().field("active").matching(active));
-                    if (text != null && !text.isBlank()) {
-                        String cleanText = text.toLowerCase().trim();
-                        b.must(f.bool(sub -> {
-                            sub.should(f.match().fields("name", "place", "software.name").matching(cleanText).fuzzy(1));
-                            sub.should(f.wildcard().fields("name", "place", "software.name")
-                                    .matching("*" + cleanText + "*"));
-                        }));
-                    }
+                    applyTextSearch(f, b, text, "name", "place", "software.name");
                     if (minCapacity != null)
                         b.must(f.range().field("capacity").atLeast(minCapacity));
                     if (campus != null)
@@ -58,35 +54,13 @@ public class AdvancedSearchService {
         SearchSession searchSession = Search.session(entityManager);
         SearchResult<User> result = searchSession.search(User.class)
                 .where(f -> f.bool(b -> {
-                    if (text != null && !text.isBlank()) {
-                        String cleanText = text.toLowerCase().trim();
-                        b.must(f.bool(sub -> {
-                            sub.should(f.match().fields("name", "email").matching(cleanText).fuzzy(1));
-                            sub.should(f.wildcard().fields("name", "email").matching("*" + cleanText + "*"));
-                        }));
-                    }
+                    applyTextSearch(f, b, text, "name", "email");
                     if (isBlocked != null)
                         b.must(f.match().field("blocked").matching(isBlocked));
                     if (role != null && !role.isBlank())
                         b.must(f.match().field("roles").matching(role));
-
-                    if (roomName != null && !roomName.isBlank()) {
-                        String cleanRoom = roomName.toLowerCase().trim();
-                        b.must(f.bool(sub -> {
-                            sub.should(f.match().field("reservations.room.name").matching(cleanRoom).fuzzy(1));
-                            sub.should(f.wildcard().field("reservations.room.name").matching("*" + cleanRoom + "*"));
-                        }));
-                    }
-
-                    if (date != null) {
-                        Date startOfDay = Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant());
-                        Date endOfDay = Date.from(date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
-
-                        b.must(f.bool(sub -> {
-                            sub.must(f.range().field("reservations.startDate").lessThan(endOfDay));
-                            sub.must(f.range().field("reservations.endDate").greaterThan(startOfDay));
-                        }));
-                    }
+                    applyTextSearch(f, b, roomName, "reservations.room.name");
+                    applyDateFilter(f, b, date, "reservations.startDate", "reservations.endDate");
                 })).fetch(page * size, size);
 
         return new PageImpl<>(result.hits(), PageRequest.of(page, size), result.total().hitCount());
@@ -97,13 +71,7 @@ public class AdvancedSearchService {
         SearchSession searchSession = Search.session(entityManager);
         SearchResult<Software> result = searchSession.search(Software.class)
                 .where(f -> f.bool(b -> {
-                    if (text != null && !text.isBlank()) {
-                        String cleanText = text.toLowerCase().trim();
-                        b.must(f.bool(sub -> {
-                            sub.should(f.match().fields("name", "description").matching(cleanText).fuzzy(1));
-                            sub.should(f.wildcard().fields("name", "description").matching("*" + cleanText + "*"));
-                        }));
-                    }
+                    applyTextSearch(f, b, text, "name", "description");
                     if (minVersion != null)
                         b.must(f.range().field("version").atLeast(minVersion));
                 })).fetch(page * size, size);
@@ -116,26 +84,34 @@ public class AdvancedSearchService {
         SearchSession searchSession = Search.session(entityManager);
         SearchResult<Reservation> result = searchSession.search(Reservation.class)
                 .where(f -> f.bool(b -> {
-                    b.must(f.match().field("user.id").matching(userId)); // only of that user
-
-                    if (text != null && !text.isBlank()) {
-                        String cleanText = text.toLowerCase().trim();
-                        b.must(f.bool(sub -> {
-                            sub.should(f.match().fields("room.name", "reason").matching(cleanText).fuzzy(1));
-                            sub.should(f.wildcard().fields("room.name", "reason").matching("*" + cleanText + "*"));
-                        }));
-                    }
-
-                    if (date != null) {
-                        Date startOfDay = Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant());
-                        Date endOfDay = Date.from(date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
-                        b.must(f.bool(sub -> {
-                            sub.must(f.range().field("startDate").lessThan(endOfDay));
-                            sub.must(f.range().field("endDate").greaterThan(startOfDay));
-                        }));
-                    }
+                    b.must(f.match().field("user.id").matching(userId));
+                    applyTextSearch(f, b, text, "room.name", "reason");
+                    applyDateFilter(f, b, date, "startDate", "endDate");
                 })).fetch(page * size, size);
 
         return new PageImpl<>(result.hits(), PageRequest.of(page, size), result.total().hitCount());
+    }
+
+    private void applyTextSearch(SearchPredicateFactory f, BooleanPredicateClausesStep<?> b, String text,
+            String... fields) {
+        if (text != null && !text.isBlank()) {
+            String cleanText = text.toLowerCase().trim();
+            b.must(f.bool(sub -> {
+                sub.should(f.match().fields(fields).matching(cleanText).fuzzy(1));
+                sub.should(f.wildcard().fields(fields).matching("*" + cleanText + "*"));
+            }));
+        }
+    }
+
+    private void applyDateFilter(SearchPredicateFactory f, BooleanPredicateClausesStep<?> b, LocalDate date,
+            String startField, String endField) {
+        if (date != null) {
+            Date startOfDay = Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            Date endOfDay = Date.from(date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
+            b.must(f.bool(sub -> {
+                sub.must(f.range().field(startField).lessThan(endOfDay));
+                sub.must(f.range().field(endField).greaterThan(startOfDay));
+            }));
+        }
     }
 }

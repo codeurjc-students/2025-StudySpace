@@ -10,65 +10,15 @@
 <div class="container">
   <div class="card shadow-sm mt-4 mb-4 border-primary border-opacity-25">
     <div class="card-body bg-light">
-      <form (ngSubmit)="onSearch()" class="row g-3 align-items-end">
-        <div class="col-md-5">
-          <label for="searchText" class="form-label fw-bold text-secondary"
-            >Intelligent Search</label
-          >
-          <input
-            type="text"
-            class="form-control"
-            id="searchText"
-            name="searchText"
-            [(ngModel)]="searchText"
-            placeholder="Room name, software (e.g., Java), place..."
-          />
-        </div>
-        <div class="col-md-3">
-          <label for="campus" class="form-label fw-bold text-secondary"
-            >Campus</label
-          >
-          <select
-            class="form-select"
-            id="campus"
-            name="campus"
-            [(ngModel)]="selectedCampus"
-          >
-            <option value="">All</option>
-            <option value="ALCORCON">Alcorcón</option>
-            <option value="MOSTOLES">Móstoles</option>
-            <option value="VICALVARO">Vicálvaro</option>
-            <option value="FUENLABRADA">Fuenlabrada</option>
-            <option value="QUINTANA">Quintana</option>
-          </select>
-        </div>
-        <div class="col-md-2">
-          <label for="capacity" class="form-label fw-bold text-secondary"
-            >Min. Capacity</label
-          >
-          <input
-            type="number"
-            class="form-control"
-            id="capacity"
-            name="capacity"
-            [(ngModel)]="minCapacity"
-            placeholder="e.g., 20"
-          />
-        </div>
-        <div class="col-md-2 d-flex gap-2">
-          <button type="submit" class="btn btn-primary w-100 shadow-sm">
-            Search
-          </button>
-          <button
-            *ngIf="isSearching"
-            type="button"
-            class="btn btn-outline-secondary"
-            (click)="clearSearch()"
-          >
-            ✖
-          </button>
-        </div>
-      </form>
+      <app-room-search-form
+        [(searchText)]="searchText"
+        [(campus)]="selectedCampus"
+        [(capacity)]="minCapacity"
+        [isSearching]="isSearching"
+        (onSearch)="onSearch()"
+        (onClear)="clearSearch()"
+      >
+      </app-room-search-form>
     </div>
   </div>
 
