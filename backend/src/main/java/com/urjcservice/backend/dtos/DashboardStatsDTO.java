@@ -3,15 +3,15 @@ package com.urjcservice.backend.dtos;
 import java.util.Map;
 
 public class DashboardStatsDTO {
-    // Gráfico 1: Ocupación (% ocupado vs % libre hoy)
+    // Chart 1: Occupancy (% occupied vs % free today)
     private long totalRooms;
     private double occupiedPercentage;
     private double freePercentage;
 
-    // Gráfico 2: Afluencia(Mapa Hora -> Cantidad Reservas)
+    // Chart 2: Traffic (hour map -> reservation count)
     private Map<String, Long> hourlyOccupancy;
 
-    // Gráfico 3: Software (% con software vs % sin software)
+    // Chart 3: Software (% with software vs % without software)
     private double roomsWithSoftwarePercentage;
     private double roomsWithoutSoftwarePercentage;
 

@@ -12,7 +12,7 @@ export class ForgotPasswordComponent {
   error: string = '';
   isLoading: boolean = false;
 
-  constructor(private loginService: LoginService) {}
+  constructor(private readonly loginService: LoginService) {}
 
   onSubmit() {
     if (!this.email) return;

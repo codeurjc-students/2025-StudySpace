@@ -72,4 +72,35 @@ describe('UserService', () => {
     expect(req.request.body instanceof FormData).toBeTrue();
     req.flush({});
   });
+
+  it('should upload user image', () => {
+    const file = new File([''], 'avatar.png', { type: 'image/png' });
+    service.uploadUserImage(1, file).subscribe();
+
+    const req = httpMock.expectOne(`${BASE_URL}/1/image`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body instanceof FormData).toBeTrue();
+    expect(req.request.body.get('file')).toEqual(file);
+    req.flush({});
+  });
+
+  it('should search users with all parameters', () => {
+    service
+      .searchUsers('Admin', 'true', 'ADMIN', 'Lab 1', '2026-05-05', 0, 10)
+      .subscribe();
+    const req = httpMock.expectOne(
+      `/api/search/users?page=0&size=10&text=Admin&blocked=true&role=ADMIN&roomName=Lab%201&date=2026-05-05`,
+    );
+    expect(req.request.method).toBe('GET');
+    req.flush({});
+  });
+
+  it('should search users with partial parameters', () => {
+    service
+      .searchUsers(undefined, undefined, undefined, undefined, undefined, 1, 5)
+      .subscribe();
+    const req = httpMock.expectOne(`/api/search/users?page=1&size=5`);
+    expect(req.request.method).toBe('GET');
+    req.flush({});
+  });
 });

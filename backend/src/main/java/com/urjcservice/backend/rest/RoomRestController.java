@@ -8,7 +8,6 @@ import com.urjcservice.backend.service.RoomService;
 import com.urjcservice.backend.service.SoftwareService;
 
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -169,7 +168,7 @@ public class RoomRestController {
         return ResponseEntity.ok(roomService.getRoomDailyStats(id, date));
     }
 
-    // auxiliar method to dto to entity
+    // auxiliary method to map DTO to entity
     private Room mapRequestToEntity(Room room, RoomRequest request) {
         if (request.name != null)
             room.setName(request.name);
@@ -213,7 +212,6 @@ public class RoomRestController {
 
         String filename = fileStorageService.store(file);
         room.setImageName(filename);
-        // roomService.save(room);
 
         return roomService.updateRoom(id, room)
                 .map(ResponseEntity::ok)

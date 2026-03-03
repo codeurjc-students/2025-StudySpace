@@ -26,10 +26,22 @@ export class ReservationFormComponent implements OnInit {
 
   occupiedSlots: any[] = [];
 
+  roomSearchText: string = '';
+  selectedCampus: string = '';
+  minCapacity: number | null = null;
+  visibleRooms: RoomDTO[] = [];
+
+  desiredStartTime: string = '';
+  desiredEndTime: string = '';
+  smartSuggestions: any[] = [];
+  smartSearchLoading: boolean = false;
+
+  allPossibleTimes: string[] = [];
+
   constructor(
-    private router: Router,
-    private reservationService: ReservationService,
-    private roomsService: RoomsService,
+    private readonly router: Router,
+    private readonly reservationService: ReservationService,
+    private readonly roomsService: RoomsService,
   ) {}
 
   ngOnInit(): void {
@@ -37,15 +49,8 @@ export class ReservationFormComponent implements OnInit {
     const today = new Date();
     this.minDate = today.toISOString().split('T')[0];
 
-    this.roomsService.getRooms(0, 1000).subscribe({
-      next: (data) => {
-        this.rooms = data.content.filter((r: RoomDTO) => r.active);
-        if (this.rooms.length > 0) {
-          this.roomId = this.rooms[0].id;
-        }
-      },
-      error: (err) => console.error('Error loading rooms', err),
-    });
+    this.searchRooms();
+    this.generateAllPossibleTimes();
   }
 
   onConfigChange() {
@@ -71,7 +76,7 @@ export class ReservationFormComponent implements OnInit {
     const rawStartTimes = ReservationLogic.generateStartTimes(
       this.occupiedSlots,
     );
-    const now = new Date(); //actual hour
+    const now = new Date(); // current hour
 
     this.startTimes = rawStartTimes.filter((time) => {
       const slotDateTime = new Date(`${this.selectedDate}T${time}:00`);
@@ -106,7 +111,9 @@ export class ReservationFormComponent implements OnInit {
         .createReservation(this.roomId, start, end, this.reason)
         .subscribe({
           next: () => {
-            alert('Reservation successfully created!');
+            alert(
+              'Reservation successfully created! Now its time to verify it or it will be automatically cancelled 1 hour before the start time',
+            );
             this.router.navigate(['/']);
           },
           error: (err) => {
@@ -115,5 +122,110 @@ export class ReservationFormComponent implements OnInit {
           },
         });
     }
+  }
+
+  selectRoom(room: RoomDTO) {
+    this.roomId = room.id;
+    this.onConfigChange();
+  }
+
+  searchRooms() {
+    this.roomsService
+      .searchRooms(
+        this.roomSearchText,
+        this.minCapacity || undefined,
+        this.selectedCampus || undefined,
+        true,
+        0,
+        100,
+      )
+      .subscribe({
+        next: (data) => {
+          this.visibleRooms = data.content;
+          if (
+            this.roomId &&
+            !this.visibleRooms.find((r) => r.id === this.roomId)
+          ) {
+            // TODO: handle missing room selection
+          }
+        },
+        error: (e) => console.error(e),
+      });
+  }
+
+  clearRoomSearch() {
+    this.roomSearchText = '';
+    this.selectedCampus = '';
+    this.minCapacity = null;
+    this.searchRooms();
+  }
+
+  triggerSmartSearch() {
+    if (!this.selectedDate || !this.desiredStartTime || !this.desiredEndTime)
+      return;
+    this.smartSearchLoading = true;
+    this.smartSuggestions = [];
+
+    const start = new Date(`${this.selectedDate}T${this.desiredStartTime}:00`);
+    const end = new Date(`${this.selectedDate}T${this.desiredEndTime}:00`);
+
+    const targetRoom = this.visibleRooms.find((r) => r.id === this.roomId);
+    const targetCampus = targetRoom
+      ? targetRoom.camp
+      : this.selectedCampus || undefined;
+
+    this.reservationService
+      .smartSearch(start, end, this.minCapacity || undefined, targetCampus)
+      .subscribe({
+        next: (data) => {
+          this.smartSuggestions = data;
+          this.smartSearchLoading = false;
+          if (data.length === 0) {
+            alert(
+              'No alternatives found. Try changing the date or your filters.',
+            );
+          }
+        },
+        error: (err) => {
+          console.error(err);
+          this.smartSearchLoading = false;
+        },
+      });
+  }
+
+  applySuggestion(sug: any) {
+    this.roomId = sug.room.id;
+
+    const suggestedStartDate = new Date(sug.suggestedStart);
+    const suggestedEndDate = new Date(sug.suggestedEnd);
+
+    this.selectedDate = suggestedStartDate.toISOString().split('T')[0];
+    this.onConfigChange();
+
+    const startHH = String(suggestedStartDate.getHours()).padStart(2, '0');
+    const startMM = String(suggestedStartDate.getMinutes()).padStart(2, '0');
+    const endHH = String(suggestedEndDate.getHours()).padStart(2, '0');
+    const endMM = String(suggestedEndDate.getMinutes()).padStart(2, '0');
+
+    setTimeout(() => {
+      this.selectedStartTime = `${startHH}:${startMM}`;
+      this.onStartTimeChange();
+      this.selectedEndTime = `${endHH}:${endMM}`;
+
+      this.smartSuggestions = [];
+      this.desiredStartTime = '';
+      this.desiredEndTime = '';
+    }, 400);
+  }
+
+  generateAllPossibleTimes() {
+    const times = [];
+    for (let h = 8; h <= 20; h++) {
+      const hour = h.toString().padStart(2, '0');
+      times.push(`${hour}:00`);
+      times.push(`${hour}:30`);
+    }
+    times.push('21:00');
+    this.allPossibleTimes = times;
   }
 }

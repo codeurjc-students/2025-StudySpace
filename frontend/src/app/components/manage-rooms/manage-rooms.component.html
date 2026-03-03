@@ -7,6 +7,22 @@
     </button>
   </div>
 
+  <div class="card bg-light border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <app-room-search-form
+        [(searchText)]="searchText"
+        [(campus)]="selectedCampus"
+        [(capacity)]="minCapacity"
+        [(filterActive)]="filterActive"
+        [showActiveFilter]="true"
+        [isSearching]="isSearching"
+        (onSearch)="onSearch()"
+        (onClear)="clearSearch()"
+      >
+      </app-room-search-form>
+    </div>
+  </div>
+
   <div class="card shadow-sm">
     <div class="card-body p-0">
       <table class="table table-hover mb-0">
@@ -67,6 +83,7 @@
   </div>
 
   <app-pagination
+    *ngIf="pageData"
     [pageData]="pageData"
     [currentPage]="currentPage"
     (pageChange)="loadRooms($event)"

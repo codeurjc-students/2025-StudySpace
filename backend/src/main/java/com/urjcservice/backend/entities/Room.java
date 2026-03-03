@@ -4,8 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 
 @Entity
+@Indexed
 @Table(name = "rooms")
 public class Room {
 
@@ -20,19 +22,26 @@ public class Room {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @FullTextField(analyzer = "standard")
     @Column(unique = true)
     private String name; // primary key
+    @GenericField // exact filter
     private Integer capacity;
+    @GenericField
     private CampusType Camp;
+    @FullTextField(analyzer = "standard")
     private String place;
+    @GenericField
     private String coordenades;
 
     @Column(name = "image_name")
     private String imageName;
 
+    @GenericField
     @Column(nullable = false)
     private boolean active = true;
 
+    @IndexedEmbedded
     @ManyToMany
     @JoinTable(name = "room_software", joinColumns = @JoinColumn(name = "room_id"), inverseJoinColumns = @JoinColumn(name = "software_id"))
     private List<Software> software = new ArrayList<>();

@@ -23,6 +23,10 @@ export class UserProfileComponent implements OnInit {
   passwordData = { oldPassword: '', newPassword: '' };
   selectedFile: File | null = null;
 
+  public searchText: string = '';
+  public filterDate: string = '';
+  public isSearching: boolean = false;
+
   constructor(
     public readonly loginService: LoginService,
     private readonly reservationService: ReservationService,
@@ -47,16 +51,33 @@ export class UserProfileComponent implements OnInit {
       error: (err: any) => console.error('Error loading profile', err),
     });
   }
-  // AUXILIAR METHOD
+  // AUXILIARY METHOD
   loadReservations(page: number) {
-    this.reservationService.getMyReservations(page).subscribe({
-      next: (data) => {
-        this.pageData = data;
-        this.reservations = data.content;
-        this.currentPage = data.number;
-      },
-      error: (err) => console.error('Error loading reservations', err),
-    });
+    if (this.isSearching) {
+      this.reservationService
+        .searchMyReservations(
+          this.searchText,
+          this.filterDate || undefined,
+          page,
+        )
+        .subscribe({
+          next: (data) => {
+            this.pageData = data;
+            this.reservations = data.content;
+            this.currentPage = data.number;
+          },
+          error: (err) => console.error(err),
+        });
+    } else {
+      this.reservationService.getMyReservations(page).subscribe({
+        next: (data) => {
+          this.pageData = data;
+          this.reservations = data.content;
+          this.currentPage = data.number;
+        },
+        error: (err) => console.error(err),
+      });
+    }
   }
 
   getVisiblePages(): number[] {
@@ -150,7 +171,7 @@ export class UserProfileComponent implements OnInit {
 
   //active only if not canceled and endDate is in the future
   isReservationActive(res: any): boolean {
-    if (!res || !res.endDate) return false;
+    if (!res?.endDate) return false;
 
     const now = new Date();
     const end = new Date(res.endDate);
@@ -200,5 +221,21 @@ export class UserProfileComponent implements OnInit {
 
   onFileSelected(event: any) {
     this.selectedFile = event.target.files[0];
+  }
+
+  onSearch() {
+    if (!this.searchText && !this.filterDate) {
+      this.clearSearch();
+      return;
+    }
+    this.isSearching = true;
+    this.loadReservations(0);
+  }
+
+  clearSearch() {
+    this.searchText = '';
+    this.filterDate = '';
+    this.isSearching = false;
+    this.loadReservations(0);
   }
 }

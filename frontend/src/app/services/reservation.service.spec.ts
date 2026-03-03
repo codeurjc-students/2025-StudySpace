@@ -108,4 +108,42 @@ describe('ReservationService', () => {
     expect(req.request.body).toEqual({ reason });
     req.flush({});
   });
+
+  it('should cancel reservation as admin', () => {
+    service.cancelReservationAdmin(1, 'Maintenance').subscribe();
+    const req = httpMock.expectOne(`${BASE_URL}/admin/1/cancel`);
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({ reason: 'Maintenance' });
+    req.flush({});
+  });
+
+  it('should search reservations admin with filters', () => {
+    service.searchReservationsAdmin(1, 'Exam', '2026-05-05', 0, 10).subscribe();
+    const req = httpMock.expectOne(
+      `/api/search/reservations/user/1?page=0&size=10&text=Exam&date=2026-05-05`,
+    );
+    expect(req.request.method).toBe('GET');
+    req.flush({});
+  });
+
+  it('should search my reservations with filters', () => {
+    service.searchMyReservations('Lab', '2026-10-10', 1, 5).subscribe();
+    const req = httpMock.expectOne(
+      `/api/search/reservations/me?page=1&size=5&text=Lab&date=2026-10-10`,
+    );
+    expect(req.request.method).toBe('GET');
+    req.flush({});
+  });
+
+  it('should perform smart search', () => {
+    const start = new Date('2026-05-05T10:00:00Z');
+    const end = new Date('2026-05-05T12:00:00Z');
+    service.smartSearch(start, end, 20, 'MOSTOLES').subscribe();
+
+    const req = httpMock.expectOne(
+      `${BASE_URL}/smart-search?start=${start.toISOString()}&end=${end.toISOString()}&minCapacity=20&campus=MOSTOLES`,
+    );
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+  });
 });

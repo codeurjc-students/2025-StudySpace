@@ -30,6 +30,10 @@ export class ManageReservationsComponent implements OnInit {
   minDate: string = '';
   adminModificationReason: string = '';
 
+  public searchText: string = '';
+  public filterDate: string = '';
+  public isSearching: boolean = false;
+
   constructor(
     private readonly route: ActivatedRoute,
     private readonly reservationService: ReservationService,
@@ -51,7 +55,25 @@ export class ManageReservationsComponent implements OnInit {
   }
 
   loadReservations(page: number) {
-    if (this.userId) {
+    if (!this.userId) return;
+
+    if (this.isSearching) {
+      this.reservationService
+        .searchReservationsAdmin(
+          this.userId,
+          this.searchText,
+          this.filterDate || undefined,
+          page,
+        )
+        .subscribe({
+          next: (data) => {
+            this.pageData = data;
+            this.reservations = data.content;
+            this.currentPage = data.number;
+          },
+          error: (e) => console.error(e),
+        });
+    } else {
       this.reservationService
         .getReservationsByUser(this.userId, page)
         .subscribe({
@@ -139,7 +161,8 @@ export class ManageReservationsComponent implements OnInit {
   }
 
   isReservationActive(res: any): boolean {
-    if (!res || !res.endDate) return false;
+    if (!res?.endDate) return false;
+
     const now = new Date();
     const end = new Date(res.endDate);
     return !res.cancelled && end > now;
@@ -215,5 +238,21 @@ export class ManageReservationsComponent implements OnInit {
     } else {
       this.editEndTime = '';
     }
+  }
+
+  onSearch() {
+    if (!this.searchText && !this.filterDate) {
+      this.clearSearch();
+      return;
+    }
+    this.isSearching = true;
+    this.loadReservations(0);
+  }
+
+  clearSearch() {
+    this.searchText = '';
+    this.filterDate = '';
+    this.isSearching = false;
+    this.loadReservations(0);
   }
 }

@@ -8,8 +8,6 @@ import jakarta.validation.constraints.Pattern;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/auth")
 public class PasswordResetRestController {
@@ -20,7 +18,7 @@ public class PasswordResetRestController {
         this.passwordResetService = passwordResetService;
     }
 
-    // DTOs internos para mantener tu estilo
+    // Internal DTOs to maintain your style
     public static class ForgotPasswordRequest {
         @NotBlank(message = "Email cannot be empty")
         private String email;

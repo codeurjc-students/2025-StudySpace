@@ -9,10 +9,8 @@ import com.urjcservice.backend.repositories.RoomRepository;
 import com.urjcservice.backend.repositories.SoftwareRepository;
 import com.urjcservice.backend.repositories.UserRepository;
 
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Profile;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -21,10 +19,9 @@ import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.Date;
 
 @Component
-// @Profile("!e2e")
+@ConditionalOnProperty(name = "app.db.init.enabled", havingValue = "true", matchIfMissing = true)
 public class DatabaseInitializer implements CommandLineRunner {
 
         private static final Logger logger = LoggerFactory.getLogger(DatabaseInitializer.class);
@@ -393,28 +390,60 @@ public class DatabaseInitializer implements CommandLineRunner {
                         // red monaday 12 hours occupied
                         Reservation resRed1 = new Reservation();
                         resRed1.setStartDate(java.sql.Timestamp.valueOf(nextMonday.atTime(8, 0)));
-                        resRed1.setEndDate(java.sql.Timestamp.valueOf(nextMonday.atTime(14, 0)));
+                        resRed1.setEndDate(java.sql.Timestamp.valueOf(nextMonday.atTime(11, 0)));
                         resRed1.setReason("Hackathon Urjc (Parte 1)");
                         resRed1.setUser(student1);
                         resRed1.setRoom(lab1);
                         resRed1.setVerified(true);
 
+                        Reservation resRed3 = new Reservation();
+                        resRed3.setStartDate(java.sql.Timestamp.valueOf(nextMonday.atTime(12, 0)));
+                        resRed3.setEndDate(java.sql.Timestamp.valueOf(nextMonday.atTime(15, 0)));
+                        resRed3.setReason("Hackathon Urjc (Parte 2)");
+                        resRed3.setUser(userExtra1);
+                        resRed3.setRoom(lab1);
+                        resRed3.setVerified(true);
+
+                        Reservation resRed4 = new Reservation();
+                        resRed4.setStartDate(java.sql.Timestamp.valueOf(nextMonday.atTime(15, 0)));
+                        resRed4.setEndDate(java.sql.Timestamp.valueOf(nextMonday.atTime(18, 0)));
+                        resRed4.setReason("Hackathon Urjc (Parte 3)");
+                        resRed4.setUser(student6);
+                        resRed4.setRoom(lab1);
+                        resRed4.setVerified(true);
+
                         Reservation resRed2 = new Reservation();
-                        resRed2.setStartDate(java.sql.Timestamp.valueOf(nextMonday.atTime(15, 0)));
+                        resRed2.setStartDate(java.sql.Timestamp.valueOf(nextMonday.atTime(18, 0)));
                         resRed2.setEndDate(java.sql.Timestamp.valueOf(nextMonday.atTime(21, 0)));
-                        resRed2.setReason("Hackathon Urjc (Parte 2)");
-                        resRed2.setUser(student2);
+                        resRed2.setReason("Hackathon Urjc (Parte 4)");
+                        resRed2.setUser(student7);
                         resRed2.setRoom(lab1);
                         resRed2.setVerified(true);
 
                         // Yellow tuesday 7 hours occupied
-                        Reservation resYellow = new Reservation();
-                        resYellow.setStartDate(java.sql.Timestamp.valueOf(nextTuesday.atTime(9, 0)));
-                        resYellow.setEndDate(java.sql.Timestamp.valueOf(nextTuesday.atTime(16, 0)));
-                        resYellow.setReason("Curso Intensivo Java");
-                        resYellow.setUser(student3);
-                        resYellow.setRoom(lab1);
-                        resYellow.setVerified(true);
+                        Reservation resYellow1 = new Reservation();
+                        resYellow1.setStartDate(java.sql.Timestamp.valueOf(nextTuesday.atTime(9, 0)));
+                        resYellow1.setEndDate(java.sql.Timestamp.valueOf(nextTuesday.atTime(12, 0)));
+                        resYellow1.setReason("Curso Intensivo Java");
+                        resYellow1.setUser(userExtra1);
+                        resYellow1.setRoom(lab1);
+                        resYellow1.setVerified(true);
+
+                        Reservation resYellow2 = new Reservation();
+                        resYellow2.setStartDate(java.sql.Timestamp.valueOf(nextTuesday.atTime(12, 0)));
+                        resYellow2.setEndDate(java.sql.Timestamp.valueOf(nextTuesday.atTime(15, 0)));
+                        resYellow2.setReason("Curso Intensivo Java");
+                        resYellow2.setUser(userExtra2);
+                        resYellow2.setRoom(lab1);
+                        resYellow2.setVerified(true);
+
+                        Reservation resYellow3 = new Reservation();
+                        resYellow3.setStartDate(java.sql.Timestamp.valueOf(nextTuesday.atTime(15, 0)));
+                        resYellow3.setEndDate(java.sql.Timestamp.valueOf(nextTuesday.atTime(16, 0)));
+                        resYellow3.setReason("Curso Intensivo Java");
+                        resYellow3.setUser(student7);
+                        resYellow3.setRoom(lab1);
+                        resYellow3.setVerified(true);
 
                         // green wenesday 2 hous occupied
                         Reservation resGreen = new Reservation();
@@ -545,7 +574,8 @@ public class DatabaseInitializer implements CommandLineRunner {
                         student4Res.setVerified(true);
 
                         reservationRepository.saveAll(Arrays.asList(
-                                        resRed1, resRed2, resYellow, resGreen,
+                                        resRed1, resRed2, resRed3, resRed4, resYellow1, resYellow2, resYellow3,
+                                        resGreen,
                                         adminAct1, adminAct2, adminAct3, adminAct4,
                                         adminPast1, adminPast2, adminPast3, adminPast4, adminPast5,
                                         adminCanc1, adminCanc2, adminCanc3,

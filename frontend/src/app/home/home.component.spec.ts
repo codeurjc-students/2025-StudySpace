@@ -4,8 +4,9 @@ import { RoomsService } from '../services/rooms.service';
 import { LoginService } from '../login/login.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { of, throwError } from 'rxjs';
-import { By } from '@angular/platform-browser';
 import { PaginationComponent } from '../components/pagination/pagination.component';
+import { FormsModule } from '@angular/forms';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 describe('HomeComponent', () => {
   let component: HomeComponent;
@@ -45,6 +46,9 @@ describe('HomeComponent', () => {
       getRooms: jasmine
         .createSpy('getRooms')
         .and.returnValue(of(mockRoomsPage)),
+      searchRooms: jasmine
+        .createSpy('searchRooms')
+        .and.returnValue(of(mockRoomsPage)),
     };
     mockLoginService = {
       isLogged: () => true,
@@ -53,11 +57,12 @@ describe('HomeComponent', () => {
 
     await TestBed.configureTestingModule({
       declarations: [HomeComponent, PaginationComponent],
-      imports: [RouterTestingModule],
+      imports: [RouterTestingModule, FormsModule],
       providers: [
         { provide: RoomsService, useValue: mockRoomsService },
         { provide: LoginService, useValue: mockLoginService },
       ],
+      schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(HomeComponent);
@@ -87,5 +92,58 @@ describe('HomeComponent', () => {
     component.loadPage(1);
 
     expect(console.error).toHaveBeenCalled();
+  });
+
+  it('onSearch: should call clearSearch if all search fields are empty', () => {
+    spyOn(component, 'clearSearch');
+    component.searchText = '';
+    component.selectedCampus = '';
+    component.minCapacity = null;
+
+    component.onSearch();
+
+    expect(component.clearSearch).toHaveBeenCalled();
+  });
+
+  it('onSearch: should set isSearching to true and call loadPage if fields have data', () => {
+    spyOn(component, 'loadPage');
+    component.searchText = 'Aula';
+
+    component.onSearch();
+
+    expect(component.isSearching).toBeTrue();
+    expect(component.loadPage).toHaveBeenCalledWith(0);
+  });
+
+  it('clearSearch: should reset search fields and reload page', () => {
+    spyOn(component, 'loadPage');
+    component.searchText = 'Lab';
+    component.selectedCampus = 'ALCORCON';
+    component.minCapacity = 30;
+    component.isSearching = true;
+
+    component.clearSearch();
+
+    expect(component.searchText).toBe('');
+    expect(component.selectedCampus).toBe('');
+    expect(component.minCapacity).toBeNull();
+    expect(component.isSearching).toBeFalse();
+    expect(component.loadPage).toHaveBeenCalledWith(0);
+  });
+
+  it('loadPage: should call searchRooms if isSearching is true', () => {
+    component.isSearching = true;
+    component.searchText = 'Lab';
+
+    component.loadPage(0);
+
+    expect(mockRoomsService.searchRooms).toHaveBeenCalledWith(
+      'Lab',
+      undefined,
+      undefined,
+      true,
+      0,
+    );
+    expect(component.rooms.length).toBeGreaterThan(0);
   });
 });

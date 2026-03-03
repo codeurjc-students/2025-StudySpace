@@ -32,8 +32,9 @@
       </div>
 
       <div class="mb-3">
-        <label class="form-label">Password</label>
+        <label for="registerPassword" class="form-label">Password</label>
         <app-password-input
+          id="registerPassword"
           [(ngModel)]="registerData.password"
           name="password"
           placeholder="Create a password"

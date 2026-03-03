@@ -12,6 +12,11 @@ export class ManageSoftwaresComponent implements OnInit {
   pageData?: Page<SoftwareDTO>;
   currentPage: number = 0;
 
+  //for search filter
+  public searchText: string = '';
+  public minVersion: number | null = null;
+  public isSearching: boolean = false;
+
   constructor(private readonly softwareService: SoftwareService) {}
 
   ngOnInit(): void {
@@ -19,14 +24,24 @@ export class ManageSoftwaresComponent implements OnInit {
   }
 
   loadSoftwares(page: number) {
-    this.softwareService.getAllSoftwares(page).subscribe({
-      next: (data) => {
-        this.pageData = data;
-        this.softwares = data.content;
-        this.currentPage = data.number;
-      },
-      error: (e) => console.error(e),
-    });
+    if (this.isSearching) {
+      this.softwareService.searchSoftwares(this.searchText, this.minVersion || undefined, page).subscribe({
+          next: (data) => {
+            this.pageData = data;
+            this.softwares = data.content;
+            this.currentPage = data.number;
+          }
+        });
+    } else {
+      this.softwareService.getAllSoftwares(page).subscribe({
+        next: (data) => {
+          this.pageData = data;
+          this.softwares = data.content;
+          this.currentPage = data.number;
+        },
+        error: (e) => console.error(e),
+      });
+    }
   }
   getVisiblePages(): number[] {
     return PaginationUtil.getVisiblePages(this.pageData, this.currentPage);
@@ -42,5 +57,21 @@ export class ManageSoftwaresComponent implements OnInit {
         error: () => alert('Error deleting software.'),
       });
     }
+  }
+
+  onSearch() {
+    if (!this.searchText && !this.minVersion) {
+      this.clearSearch();
+      return;
+    }
+    this.isSearching = true;
+    this.loadSoftwares(0);
+  }
+
+  clearSearch() {
+    this.searchText = '';
+    this.minVersion = null;
+    this.isSearching = false;
+    this.loadSoftwares(0);
   }
 }

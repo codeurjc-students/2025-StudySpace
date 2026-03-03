@@ -62,7 +62,7 @@ export class RoomDetailComponent implements OnInit {
     allDaySlot: false,
     height: 'auto',
     locale: 'es',
-    dayMaxEvents: true,
+    dayMaxEvents: false, //antes true
     displayEventTime: true,
 
     datesSet: (arg) => this.handleDatesSet(arg),
@@ -116,6 +116,7 @@ export class RoomDetailComponent implements OnInit {
   }
 
   //load data from backend
+
   loadCalendarData(start: string, end: string) {
     if (!this.roomId) return;
 
@@ -123,7 +124,6 @@ export class RoomDetailComponent implements OnInit {
       next: (data) => {
         const processedEvents: any[] = [];
 
-        // reservations/events
         if (data.events) {
           data.events.forEach((evt) => {
             processedEvents.push({
@@ -138,10 +138,9 @@ export class RoomDetailComponent implements OnInit {
           });
         }
 
-        //HEATMAP
         if (data.dailyOccupancy) {
           data.dailyOccupancy.forEach((day) => {
-            let pastelColor = '#ffffff';
+            let pastelColor = 'transparent';
 
             // RED
             if (day.status === 'High' || day.color === '#dc3545') {
@@ -156,16 +155,17 @@ export class RoomDetailComponent implements OnInit {
               pastelColor = '#d1e7dd'; // soft green
             }
 
-            processedEvents.push({
-              start: day.date,
-              display: 'background',
-              backgroundColor: pastelColor,
-              allDay: true,
-            });
+            if (pastelColor !== 'transparent') {
+              processedEvents.push({
+                start: day.date,
+                allDay: true,
+                display: 'background',
+                color: pastelColor,
+              });
+            }
           });
         }
 
-        //update calendar
         this.calendarOptions = {
           ...this.calendarOptions,
           events: processedEvents,

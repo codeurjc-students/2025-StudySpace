@@ -4,7 +4,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.multipart.MultipartFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,6 +23,8 @@ import jakarta.annotation.PostConstruct;
 @Service
 public class FileStorageService {
 
+    private static final Logger logger = LoggerFactory.getLogger(FileStorageService.class);
+
     @Value("${storage.location}")
     private String storageLocation;
 
@@ -31,14 +36,14 @@ public class FileStorageService {
             this.rootLocation = Paths.get(storageLocation);
             Files.createDirectories(this.rootLocation);
         } catch (IOException e) {
-            throw new RuntimeException("The storage folder could not be initialized", e);
+            throw new IllegalStateException("The storage folder could not be initialized", e);
         }
     }
 
     public String store(MultipartFile file) {
         try {
             if (file.isEmpty()) {
-                throw new RuntimeException("Error: empty file.");
+                throw new IllegalArgumentException("Error: empty file.");
             }
             // unique name to avoid conflicts
             String filename = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
@@ -50,7 +55,7 @@ public class FileStorageService {
             }
             return filename;
         } catch (IOException e) {
-            throw new RuntimeException("Failed to save file.", e);
+            throw new IllegalStateException("Failed to save file.", e);
         }
     }
 
@@ -61,10 +66,10 @@ public class FileStorageService {
             if (resource.exists() || resource.isReadable()) {
                 return resource;
             } else {
-                throw new RuntimeException("The file cannot be read: " + filename);
+                throw new IllegalArgumentException("The file cannot be read: " + filename);
             }
         } catch (MalformedURLException e) {
-            throw new RuntimeException("The file cannot be read: " + filename, e);
+            throw new IllegalArgumentException("The file cannot be read: " + filename, e);
         }
     }
 
@@ -73,7 +78,7 @@ public class FileStorageService {
             Path file = rootLocation.resolve(filename);
             Files.deleteIfExists(file);
         } catch (IOException e) {
-            System.err.println("<Error deleting file>: " + filename);
+            logger.error("Error deleting file: {}", filename, e);
         }
     }
 }

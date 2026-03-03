@@ -25,9 +25,9 @@ export class OccupancyStatsComponent implements OnInit, AfterViewInit {
   private hourlyChartInstance: Chart | undefined;
 
   selectedDate: string = '';
-  private statsUrl = '/api/stats';
+  private readonly statsUrl = '/api/stats';
 
-  constructor(private http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {}
 
   ngOnInit(): void {
     //YYYY-MM-DD

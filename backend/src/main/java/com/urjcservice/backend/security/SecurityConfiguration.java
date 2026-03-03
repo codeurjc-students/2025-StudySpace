@@ -9,14 +9,10 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.config.Customizer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -24,9 +20,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.urjcservice.backend.security.jwt.JwtRequestFilter;
 import com.urjcservice.backend.security.jwt.UnauthorizedHandlerJwt;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -64,33 +58,29 @@ public class SecurityConfiguration {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(authorize -> authorize
                         // Public
-                        .requestMatchers("/").permitAll()
-                        .requestMatchers("/error").permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // CORS pre-flight
-
-                        // Auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/", "/error").permitAll()
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh").permitAll()
                         .requestMatchers("/api/auth/forgot-password", "/api/auth/reset-password").permitAll()
-
-                        // Public GET endpoints
-                        .requestMatchers(new AntPathRequestMatcher("/api/rooms/**", "GET")).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/rooms/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/softwares/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/stats/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users/*/image").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/search/rooms").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reservations/check-availability").permitAll()
-                        .requestMatchers("/api/reservations/verify").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/reservations/verify").permitAll()
 
                         // User
                         .requestMatchers("/api/auth/me", "/api/auth/change-password", "/api/auth/logout")
                         .authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/users/*/image").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/users/*/image").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/reservations").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/reservations/smart-search").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/reservations/my-reservations").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/reservations/*").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/search/reservations/me").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/api/reservations/*/cancel").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/reservations").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/reservations/*").authenticated()
 
-                        // Admin
                         .anyRequest().hasRole("ADMIN"))
 
                 .exceptionHandling(exception -> exception

@@ -2,32 +2,41 @@ package com.urjcservice.backend.entities;
 
 import jakarta.persistence.*;
 import java.util.Date;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
+@Indexed
 @Table(name = "reservations")
 public class Reservation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // Primary key
+    @GenericField
     private Date startDate;
+    @GenericField
     private Date endDate;
 
+    @IndexedEmbedded
     @ManyToOne
     @JoinColumn(name = "user_id")
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties("reservations") // to avoid infinite recursion during
-                                                                           // serialization
+    @JsonIgnoreProperties("reservations") // to avoid infinite recursion during
+                                          // serialization
     private User user; // one user can have many bookings
 
+    @IndexedEmbedded
     @ManyToOne
     @JoinColumn(name = "room_id")
     private Room room; // one room can have many bookings
 
+    @FullTextField(analyzer = "standard")
     private String reason;
 
     @Column(name = "admin_modification_reason")
     private String adminModificationReason;
 
+    @GenericField
     private boolean cancelled = false;
 
     @Column(name = "reminder_sent")

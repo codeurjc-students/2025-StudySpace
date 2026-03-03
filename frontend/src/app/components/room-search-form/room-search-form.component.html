@@ -1,0 +1,78 @@
+<form (ngSubmit)="triggerSearch()" class="row g-3 align-items-end">
+  <div [class]="showActiveFilter ? 'col-md-3' : 'col-md-5'">
+    <label for="searchText" class="form-label fw-bold text-secondary"
+      >Intelligent Search</label
+    >
+    <input
+      type="text"
+      class="form-control"
+      id="searchText"
+      name="searchText"
+      [ngModel]="searchText"
+      (ngModelChange)="onTextChange($event)"
+      placeholder="Room name, software, place..."
+    />
+  </div>
+
+  <div class="col-md-3">
+    <label for="campus" class="form-label fw-bold text-secondary">Campus</label>
+    <select
+      class="form-select"
+      id="campus"
+      name="campus"
+      [ngModel]="campus"
+      (ngModelChange)="onCampusChange($event)"
+    >
+      <option value="">All</option>
+      <option value="ALCORCON">Alcorcón</option>
+      <option value="MOSTOLES">Móstoles</option>
+      <option value="VICALVARO">Vicálvaro</option>
+      <option value="FUENLABRADA">Fuenlabrada</option>
+      <option value="QUINTANA">Quintana</option>
+    </select>
+  </div>
+
+  <div *ngIf="showActiveFilter" class="col-md-2">
+    <label for="activeFilter" class="form-label fw-bold text-secondary"
+      >Status</label
+    >
+    <select
+      class="form-select"
+      id="activeFilter"
+      name="activeFilter"
+      [ngModel]="filterActive"
+      (ngModelChange)="onActiveChange($event)"
+    >
+      <option value="">All Status</option>
+      <option value="true">Active</option>
+      <option value="false">Disabled</option>
+    </select>
+  </div>
+
+  <div class="col-md-2">
+    <label for="capacity" class="form-label fw-bold text-secondary"
+      >Min. Capacity</label
+    >
+    <input
+      type="number"
+      class="form-control"
+      id="capacity"
+      name="capacity"
+      [ngModel]="capacity"
+      (ngModelChange)="onCapacityChange($event)"
+      placeholder="e.g. 20"
+    />
+  </div>
+
+  <div class="col-md-2 d-flex gap-2">
+    <button type="submit" class="btn btn-primary w-100">Search</button>
+    <button
+      type="button"
+      class="btn btn-outline-secondary"
+      *ngIf="isSearching"
+      (click)="triggerClear()"
+    >
+      ✖
+    </button>
+  </div>
+</form>

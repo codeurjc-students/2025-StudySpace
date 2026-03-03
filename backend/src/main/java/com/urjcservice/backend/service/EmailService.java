@@ -10,6 +10,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -20,11 +22,14 @@ import java.util.UUID;
 @Service
 public class EmailService {
 
+    private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
+
     @Autowired
     private JavaMailSender mailSender;
 
     @Value("${spring.mail.username}")
     private String fromEmail;
+    private static final String GREETING_DEAR = "Dear ";
 
     public void sendResetPasswordEmail(String to, String resetUrl) {
         SimpleMailMessage message = new SimpleMailMessage();
@@ -41,7 +46,7 @@ public class EmailService {
         message.setFrom(fromEmail);
         message.setTo(to);
         message.setSubject("Reminder: Your reservation starts in 15 minutes");
-        message.setText("Dear " + userName + ",\n\n" +
+        message.setText(GREETING_DEAR + userName + ",\n\n" +
                 "We remind you that your reservation in the room " + roomName +
                 " Is about to begin (Start time: " + startTime + ").\n\n" +
                 "Have a good study session!");
@@ -54,7 +59,7 @@ public class EmailService {
         message.setFrom(fromEmail);
         message.setTo(to);
         message.setSubject("Notice: Your reservation has been modified by an administrator");
-        message.setText("Dear " + userName + ",\n\n" +
+        message.setText(GREETING_DEAR + userName + ",\n\n" +
                 "We inform you that an administrator has modified your reservation.\n\n" +
                 "REASON: " + reason + "\n\n" +
                 "--- NEW DETAILS ---\n" +
@@ -73,7 +78,7 @@ public class EmailService {
         message.setFrom(fromEmail);
         message.setTo(to);
         message.setSubject("Notice: Your reservation has been CANCELLED by an administrator");
-        message.setText("Dear " + userName + ",\n\n" +
+        message.setText(GREETING_DEAR + userName + ",\n\n" +
                 "We regret to inform you that an administrator has cancelled your reservation.\n\n" +
                 "REASON FOR CANCELLATION: " + reason + "\n\n" +
                 "--- DETAILS OF THE CANCELLED RESERVATION ---\n" +
@@ -101,10 +106,16 @@ public class EmailService {
             String startStr = printFormat.format(startRaw);
             String endStr = printFormat.format(endRaw);
 
-            String locationText = (coordinates != null && !coordinates.isEmpty()) ? "See map (Coordinates)"
-                    : (place != null ? place : "Campus");
+            String locationText;
+            if (coordinates != null && !coordinates.isEmpty()) {
+                locationText = "See map (Coordinates)";
+            } else if (place != null) {
+                locationText = place;
+            } else {
+                locationText = "Campus";
+            }
 
-            String body = "Dear " + userName + ",\n\n" +
+            String body = GREETING_DEAR + userName + ",\n\n" +
                     "Your reservation has been confirmed.\n" +
                     "Room: " + roomName + "\n" +
                     "Location: " + locationText + "\n" +
@@ -121,7 +132,7 @@ public class EmailService {
             mailSender.send(message);
 
         } catch (MessagingException e) {
-            System.err.println("Error sending email with attachment: " + e.getMessage());
+            logger.error("Error sending email with attachment: {}", e.getMessage(), e);
         }
     }
 
@@ -130,13 +141,9 @@ public class EmailService {
         message.setFrom(fromEmail);
         message.setTo(to);
         message.setSubject("Action Required: Confirm your StudySpace Reservation");
-        // local npm start/ng serve
-        // String verificationLink = "https://localhost:4200/verify-reservation?token="
-        // + token;
-        // docker
         String verificationLink = "https://localhost/verify-reservation?token=" + token;
 
-        message.setText("Dear " + userName + ",\n\n" +
+        message.setText(GREETING_DEAR + userName + ",\n\n" +
                 "You have requested a reservation on StudySpace.\n" +
                 "Please click the link below to confirm your booking and receive the calendar event:\n\n" +
                 verificationLink + "\n\n" +
@@ -157,7 +164,7 @@ public class EmailService {
         String summary = escapeIcs("Reservation: " + roomName);
         String description = escapeIcs("Confirmed reservation at " + roomName + " via StudySpace.");
 
-        // ubication
+        // location
         String locationVal = "";
         String geoVal = null;
 
@@ -165,7 +172,7 @@ public class EmailService {
             String cleanCoords = coordinates.replaceAll("\\s+", "");
             geoVal = cleanCoords.replace(",", ";");
 
-            // visual coordenades
+            // display coordinates
             locationVal = escapeIcs(coordinates);
         } else if (place != null && !place.isEmpty()) {
             locationVal = escapeIcs(place);

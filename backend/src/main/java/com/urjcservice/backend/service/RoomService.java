@@ -7,13 +7,13 @@ import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.repositories.ReservationRepository;
 import com.urjcservice.backend.repositories.RoomRepository;
 import com.urjcservice.backend.repositories.SoftwareRepository;
-import com.urjcservice.backend.service.EmailService;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
-import java.time.temporal.ChronoUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +29,8 @@ import java.text.SimpleDateFormat;
 
 @Service
 public class RoomService {
+
+    private static final Logger logger = LoggerFactory.getLogger(RoomService.class);
 
     private final RoomRepository roomRepository;
     private final SoftwareRepository softwareRepository;
@@ -131,7 +133,7 @@ public class RoomService {
         });
     }
 
-    // auxiliar methods
+    // auxiliary methods
     private void updateRoomBasicInfo(Room existing, Room updated) {
         existing.setName(updated.getName());
         existing.setCapacity(updated.getCapacity());
@@ -277,7 +279,7 @@ public class RoomService {
             }
             reservationRepository.deleteByRoomIdAndEndDateAfter(id, new Date());
 
-            // if image, delte first image
+            // if there's an image, delete it first
             if (room.getImageName() != null && !room.getImageName().isEmpty()) {
                 fileStorageService.delete(room.getImageName());
             }
@@ -285,7 +287,8 @@ public class RoomService {
         }
     }
 
-    // auxiliar method to send cancelation emails to users with the reason you want
+    // auxiliary method to send cancellation emails to users with the provided
+    // reason
     private void notifyUserCancellation(Reservation res, String reason) {
         if (res.getUser() != null) {
             try {
@@ -307,7 +310,7 @@ public class RoomService {
                         endStr,
                         reason);
             } catch (Exception e) {
-                System.err.println("Error sending email to user " + res.getUser().getEmail());
+                logger.error("Error sending email to user {}", res.getUser().getEmail(), e);
             }
         }
     }
@@ -355,12 +358,9 @@ public class RoomService {
                         LocalDate rDate = r.getStartDate().toInstant().atZone(zone).toLocalDate();
                         return rDate.equals(thisDay);
                     })
-                    .mapToLong(r -> {
-                        long duration = java.time.Duration.between(
-                                r.getStartDate().toInstant(),
-                                r.getEndDate().toInstant()).toMinutes();
-                        return duration;
-                    })
+                    .mapToLong(r -> java.time.Duration.between(
+                            r.getStartDate().toInstant(),
+                            r.getEndDate().toInstant()).toMinutes())
                     .sum();
 
             double hoursOccupied = minutesOccupied / 60.0;

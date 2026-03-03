@@ -1251,7 +1251,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"username\": \"carlos@urjc.es\",\r\n  \"password\": \"1234aA..\"\r\n}",
+              "raw": "{\r\n  \"username\": \"ana@alumnos.urjc.es\",\r\n  \"password\": \"1234aA..\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1408,6 +1408,198 @@
                 {
                   "key": "date",
                   "value": "2026-03-01"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "item": [
+        {
+          "name": "Search room",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://localhost:8443/api/search/rooms?text=microsot ofi&minCapacity=5&campus=FUENLABRADA",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "8443",
+              "path": [
+                "api",
+                "search",
+                "rooms"
+              ],
+              "query": [
+                {
+                  "key": "text",
+                  "value": "microsot ofi"
+                },
+                {
+                  "key": "minCapacity",
+                  "value": "5"
+                },
+                {
+                  "key": "campus",
+                  "value": "FUENLABRADA"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "User search reservations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://localhost:8443/api/reservations/smart-search?start=2026-03-05T08:00:00Z&end=2026-03-05T10:00:00Z",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "8443",
+              "path": [
+                "api",
+                "reservations",
+                "smart-search"
+              ],
+              "query": [
+                {
+                  "key": "start",
+                  "value": "2026-03-05T08:00:00Z",
+                  "type": "text"
+                },
+                {
+                  "key": "end",
+                  "value": "2026-03-05T10:00:00Z",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "User search own reservations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://localhost:8443/api/search/reservations/me?text=laboratorio",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "8443",
+              "path": [
+                "api",
+                "search",
+                "reservations",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": "text",
+                  "value": "laboratorio",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin search users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://localhost:8443/api/search/users?text=gmail.con&blocked=true",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "8443",
+              "path": [
+                "api",
+                "search",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "text",
+                  "value": "gmail.con"
+                },
+                {
+                  "key": "blocked",
+                  "value": "true",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin softwares search",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://localhost:8443/api/search/softwares?minVersion=11",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "8443",
+              "path": [
+                "api",
+                "search",
+                "softwares"
+              ],
+              "query": [
+                {
+                  "key": "minVersion",
+                  "value": "11",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin search Reservations of a specific user",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://localhost:8443/api/search/reservations/user/2?text=laboratorio",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "port": "8443",
+              "path": [
+                "api",
+                "search",
+                "reservations",
+                "user",
+                "2"
+              ],
+              "query": [
+                {
+                  "key": "text",
+                  "value": "laboratorio",
+                  "type": "text"
                 }
               ]
             }

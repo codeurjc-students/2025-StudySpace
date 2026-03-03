@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Arrays;
 
@@ -17,6 +16,9 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final FileStorageService fileStorageService;
+
+    private static final String SUPER_ADMIN_EMAIL = "studyspacetfg@gmail.com";
+    private static final String ROLE_ADMIN = "ADMIN";
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,
             FileStorageService fileStorageService) {
@@ -41,8 +43,8 @@ public class UserService {
         Optional<User> existing = userRepository.findById(id);
 
         existing.ifPresent(user -> {
-            if ("studyspacetfg@gmail.com".equals(user.getEmail())) {
-                throw new RuntimeException("Cannot delete the Super Administrator.");
+            if (SUPER_ADMIN_EMAIL.equals(user.getEmail())) {
+                throw new IllegalStateException("Cannot delete the Super Administrator.");
             }
             // if picture, first delete picture
             if (user.getImageName() != null && !user.getImageName().isEmpty()) {
@@ -77,14 +79,14 @@ public class UserService {
     // to upgrade or downgrade permisions
     public Optional<User> changeRole(Long id, String role) {
         return userRepository.findById(id).map(user -> {
-            if ("studyspacetfg@gmail.com".equals(user.getEmail()) && !"ADMIN".equals(role)) {
-                throw new RuntimeException("Cannot remove the ADMIN role from the Super Administrator.");
+            if (SUPER_ADMIN_EMAIL.equals(user.getEmail()) && !ROLE_ADMIN.equals(role)) {
+                throw new IllegalStateException("Cannot remove the ADMIN role from the Super Administrator.");
             }
             // to avoid duplicities and conflicts
             user.getRoles().clear();
 
-            if ("ADMIN".equals(role)) {
-                user.getRoles().addAll(Arrays.asList("USER", "ADMIN"));
+            if (ROLE_ADMIN.equals(role)) {
+                user.getRoles().addAll(Arrays.asList("USER", ROLE_ADMIN));
                 user.setType(User.UserType.ADMIN);
             } else {
                 user.getRoles().add("USER");
@@ -97,8 +99,8 @@ public class UserService {
     // to block or unblock a user
     public Optional<User> toggleBlock(Long id) {
         return userRepository.findById(id).map(user -> {
-            if ("studyspacetfg@gmail.com".equals(user.getEmail())) {
-                throw new RuntimeException("Cannot block the Super Administrator.");
+            if (SUPER_ADMIN_EMAIL.equals(user.getEmail())) {
+                throw new IllegalStateException("Cannot block the Super Administrator.");
             }
             user.setBlocked(!user.isBlocked()); // inverts the value
             return userRepository.save(user);

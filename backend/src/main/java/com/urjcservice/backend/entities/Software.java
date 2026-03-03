@@ -4,8 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 
 @Entity
+@Indexed
 @Table(name = "softwares", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "name", "version" })
 })
@@ -14,8 +16,11 @@ public class Software {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // Primary key
+    @FullTextField(analyzer = "standard") // text search tolerates little variations
     private String name;
+    @GenericField // for exact filters
     private Float version;
+    @FullTextField(analyzer = "standard")
     private String description;
 
     @ManyToMany(mappedBy = "software")

@@ -1,7 +1,6 @@
 package com.urjcservice.backend.service;
 
-import com.urjcservice.backend.service.EmailService;
-
+import com.urjcservice.backend.dtos.SmartSuggestionDTO;
 import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.entities.User;
 import com.urjcservice.backend.entities.Room;
@@ -25,6 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +32,8 @@ import com.urjcservice.backend.rest.ReservationRestController.ReservationRequest
 
 @Service
 public class ReservationService {
+
+    private final AdvancedSearchService advancedSearchService;
 
     private static final String USER_NOT_FOUND_MSG = "User not found";
 
@@ -44,11 +46,12 @@ public class ReservationService {
     public ReservationService(ReservationRepository reservationRepository,
             UserRepository userRepository,
             RoomRepository roomRepository,
-            EmailService emailService) {
+            EmailService emailService, AdvancedSearchService advancedSearchService) {
         this.reservationRepository = reservationRepository;
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
         this.emailService = emailService;
+        this.advancedSearchService = advancedSearchService;
     }
 
     public Page<Reservation> findAll(Pageable pageable) {
@@ -123,7 +126,7 @@ public class ReservationService {
         });
     }
 
-    // auxiliar methods
+    // auxiliary methods
     private void updateReservationUser(Reservation reservation, Long newUserId) {
         if (newUserId != null) {
             userRepository.findById(newUserId).ifPresent(reservation::setUser);
@@ -155,7 +158,7 @@ public class ReservationService {
 
         return reservationRepository.findById(id).map(reservation -> {
             Room newRoom = roomRepository.findById(newRoomId)
-                    .orElseThrow(() -> new RuntimeException("Room not found with ID: " + newRoomId));
+                    .orElseThrow(() -> new IllegalArgumentException("Room not found with ID: " + newRoomId));
 
             LocalDateTime startDateTime = LocalDateTime.of(newDate, newStart);
             LocalDateTime endDateTime = LocalDateTime.of(newDate, newEnd);
@@ -210,7 +213,7 @@ public class ReservationService {
             reservation.setAdminModificationReason(reason);
 
             Reservation savedReservation = reservationRepository.saveAndFlush(reservation);
-            log.info("Reservation ID {} ​​cancelled in BD.", id);
+            log.info("Reservation ID {} cancelled in BD.", id);
 
             // send email
             User user = savedReservation.getUser();
@@ -254,13 +257,14 @@ public class ReservationService {
 
     public Reservation createReservation(ReservationRequest request, String userEmail) {
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MSG));
 
         Room room = roomRepository.findById(request.getRoomId())
-                .orElseThrow(() -> new RuntimeException("Room not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Room not found"));
 
         if (!room.isActive()) {
-            throw new RuntimeException("Reservations are not possible: The classroom is temporarily unavailable.");
+            throw new IllegalArgumentException(
+                    "Reservations are not possible: The classroom is temporarily unavailable.");
         }
 
         List<Reservation> userConflicts = reservationRepository.findUserOverlappingReservations(
@@ -287,7 +291,7 @@ public class ReservationService {
                 request.getRoomId(), request.getStartDate(), request.getEndDate(), PageRequest.of(0, 1));
 
         if (overlaps.hasContent()) {
-            throw new RuntimeException("The room is already reserved for this time.");
+            throw new IllegalStateException("The room is already reserved for this time.");
         }
 
         // all day hours reserved
@@ -305,7 +309,7 @@ public class ReservationService {
         reservation.setVerificationToken(java.util.UUID.randomUUID().toString());
 
         Date now = new Date();
-        Date expiration = new Date(now.getTime() + 3600000);
+        Date expiration = new Date(now.getTime() + 3600000); // 1 hour
         reservation.setTokenExpirationDate(expiration);
 
         // first save reservation
@@ -318,7 +322,7 @@ public class ReservationService {
                     user.getName(),
                     savedReservation.getVerificationToken());
         } catch (Exception e) {
-            System.err.println("Error sending verification email: " + e.getMessage());
+            log.error("Error sending verification email: {}", e.getMessage(), e);
         }
 
         return savedReservation;
@@ -326,11 +330,11 @@ public class ReservationService {
 
     public void verifyReservation(String token) {
         Reservation reservation = reservationRepository.findByVerificationToken(token)
-                .orElseThrow(() -> new RuntimeException("Invalid verification token."));
+                .orElseThrow(() -> new IllegalArgumentException("Invalid verification token."));
 
         // is verified?
         if (reservation.isVerified()) {
-            throw new RuntimeException("Reservation is already verified.");
+            throw new IllegalStateException("Reservation is already verified.");
         }
 
         // token expired?
@@ -340,7 +344,7 @@ public class ReservationService {
             // if expired delete the reservation
             reservationRepository.delete(reservation);
 
-            throw new RuntimeException(
+            throw new IllegalStateException(
                     "Verification link has expired. The reservation has been cancelled. Please book again.");
         }
 
@@ -364,7 +368,7 @@ public class ReservationService {
                     savedReservation.getStartDate(),
                     savedReservation.getEndDate());
         } catch (Exception e) {
-            System.err.println("Error sending confirmation email: " + e.getMessage());
+            log.error("Error sending confirmation email: {}", e.getMessage(), e);
         }
     }
 
@@ -379,14 +383,14 @@ public class ReservationService {
 
     public Page<Reservation> getReservationsByUserEmail(String email, Pageable pageable) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MSG));
 
         return reservationRepository.findByUserWithActivePriority(user, pageable);
     }
 
     public Page<Reservation> getReservationsByUserId(Long userId, Pageable pageable) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MSG));
 
         return reservationRepository.findByUserWithActivePriority(user, pageable);
     }
@@ -459,8 +463,102 @@ public class ReservationService {
 
     public List<Reservation> getActiveReservationsForUserAndDate(String email, LocalDate date) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MSG));
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MSG));
         return reservationRepository.findActiveByUserIdAndDate(user.getId(), date);
+    }
+
+    public List<SmartSuggestionDTO> smartFindAvailableRooms(
+            Date requestedStart,
+            Date requestedEnd,
+            Integer minCapacity,
+            Room.CampusType campus) {
+
+        List<SmartSuggestionDTO> suggestions = new ArrayList<>();
+        List<Room> candidateRooms = roomRepository.findAll().stream()
+                .filter(Room::isActive)
+                .filter(r -> minCapacity == null || r.getCapacity() >= minCapacity)
+                .toList();
+
+        long durationMillis = requestedEnd.getTime() - requestedStart.getTime();
+
+        for (Room room : candidateRooms) {
+
+            int penalty = calculateCampusPenalty(campus, room.getCamp());
+
+            List<Reservation> overlaps = reservationRepository.findActiveReservationsByRoomIdAndDateRange(
+                    room.getId(), requestedStart, requestedEnd);
+
+            if (overlaps.isEmpty()) {
+                int score = 100 - penalty;
+
+                // decent score then we suggest it
+                if (score > 30) {
+                    // not same campus but close = "SIMILAR_ROOM", same campus = "EXACT_MATCH"
+                    String reason = (campus != null && campus != room.getCamp()) ? "SIMILAR_ROOM" : "EXACT_MATCH";
+                    suggestions.add(new SmartSuggestionDTO(room, requestedStart, requestedEnd, reason, score));
+                }
+            } else {
+                Date plus30Start = new Date(requestedStart.getTime() + (30 * 60000)); // 30 minuttes later
+                Date plus30End = new Date(plus30Start.getTime() + durationMillis);
+                if (reservationRepository
+                        .findActiveReservationsByRoomIdAndDateRange(room.getId(), plus30Start, plus30End).isEmpty()) {
+                    int score = 80 - penalty;
+                    if (score > 30)
+                        suggestions
+                                .add(new SmartSuggestionDTO(room, plus30Start, plus30End, "ALTERNATIVE_TIME", score));
+                }
+
+                Date minus30Start = new Date(requestedStart.getTime() - (30 * 60000)); // 30 minuttes earlier
+                Date minus30End = new Date(minus30Start.getTime() + durationMillis);
+                if (reservationRepository
+                        .findActiveReservationsByRoomIdAndDateRange(room.getId(), minus30Start, minus30End).isEmpty()) {
+                    int score = 80 - penalty;
+                    if (score > 30)
+                        suggestions
+                                .add(new SmartSuggestionDTO(room, minus30Start, minus30End, "ALTERNATIVE_TIME", score));
+                }
+
+                Date plus60Start = new Date(requestedStart.getTime() + (60 * 60000)); // 60 minutes later
+                Date plus60End = new Date(plus60Start.getTime() + durationMillis);
+                if (reservationRepository
+                        .findActiveReservationsByRoomIdAndDateRange(room.getId(), plus60Start, plus60End).isEmpty()) {
+                    int score = 60 - penalty;
+                    if (score > 30)
+                        suggestions
+                                .add(new SmartSuggestionDTO(room, plus60Start, plus60End, "ALTERNATIVE_TIME", score));
+                }
+            }
+        }
+
+        // from best to worst
+        suggestions.sort((a, b) -> Integer.compare(b.getScore(), a.getScore()));
+
+        // only the top 10 suggestions
+        return suggestions.stream().limit(10).toList();
+    }
+
+    private int calculateCampusPenalty(Room.CampusType requested, Room.CampusType alternative) {
+        if (requested == null || alternative == null || requested == alternative) {
+            return 0; // Same campus no penalization
+        }
+
+        boolean reqIsSur = (requested == Room.CampusType.MOSTOLES ||
+                requested == Room.CampusType.ALCORCON ||
+                requested == Room.CampusType.FUENLABRADA);
+
+        boolean altIsSur = (alternative == Room.CampusType.MOSTOLES ||
+                alternative == Room.CampusType.ALCORCON ||
+                alternative == Room.CampusType.FUENLABRADA);
+
+        if (reqIsSur && altIsSur) {
+            return 20; // low penalization
+        }
+
+        if (!reqIsSur && !altIsSur) {
+            return 20; // low penalization
+        }
+
+        return 50; // high penalization
     }
 
 }

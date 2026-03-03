@@ -6,23 +6,141 @@
     </p>
 
     <form (ngSubmit)="onSubmit()">
-      <div class="mb-3">
-        <label for="roomSelect" class="form-label fw-bold"
-          >1. Select Room</label
+      <div class="mb-4">
+        <label
+          class="form-label fw-bold fs-5 text-dark border-bottom pb-2 w-100"
         >
-        <select
-          id="roomSelect"
-          name="roomId"
-          [(ngModel)]="roomId"
-          (change)="onConfigChange()"
-          class="form-select"
-          required
+          <i class="fa fa-map-marker text-primary me-2"></i>1. Find and Select a
+          Room
+        </label>
+
+        <div class="card bg-light border-0 shadow-sm mb-3">
+          <div class="card-body py-2 px-3">
+            <div class="row g-2 align-items-end">
+              <div class="col-md-4">
+                <label class="form-label small fw-bold text-secondary mb-1"
+                  >Search</label
+                >
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-white"
+                    ><i class="fa fa-search text-muted"></i
+                  ></span>
+                  <input
+                    type="text"
+                    class="form-control border-start-0"
+                    placeholder="Name, software..."
+                    [(ngModel)]="roomSearchText"
+                    name="roomSearch"
+                    (ngModelChange)="searchRooms()"
+                    (keydown.enter)="$event.preventDefault(); searchRooms()"
+                  />
+                </div>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small fw-bold text-secondary mb-1"
+                  >Campus</label
+                >
+                <select
+                  class="form-select form-select-sm"
+                  name="campusSearch"
+                  [(ngModel)]="selectedCampus"
+                  (change)="searchRooms()"
+                >
+                  <option value="">All</option>
+                  <option value="ALCORCON">Alcorcón</option>
+                  <option value="MOSTOLES">Móstoles</option>
+                  <option value="VICALVARO">Vicálvaro</option>
+                  <option value="FUENLABRADA">Fuenlabrada</option>
+                  <option value="QUINTANA">Quintana</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small fw-bold text-secondary mb-1"
+                  >Min. Cap.</label
+                >
+                <input
+                  type="number"
+                  class="form-control form-control-sm"
+                  name="capSearch"
+                  [(ngModel)]="minCapacity"
+                  placeholder="e.g. 20"
+                  (keydown.enter)="$event.preventDefault(); searchRooms()"
+                />
+              </div>
+              <div class="col-md-3 d-flex gap-1">
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm w-100 shadow-sm"
+                  (click)="searchRooms()"
+                >
+                  Filter
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  *ngIf="roomSearchText || selectedCampus || minCapacity"
+                  (click)="clearRoomSearch()"
+                >
+                  ✖
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="text-muted small mb-2">
+          <i class="fa fa-info-circle text-primary"></i>
+          Showing <strong>{{ visibleRooms.length }}</strong> available rooms.
+          Click on a room to select it.
+        </p>
+
+        <div
+          class="list-group shadow-sm border border-primary border-opacity-25"
+          style="max-height: 250px; overflow-y: auto"
         >
-          <option [ngValue]="null" disabled>-- Choose a room --</option>
-          <option *ngFor="let room of rooms" [value]="room.id">
-            {{ room.name }} (Capacity: {{ room.capacity }})
-          </option>
-        </select>
+          <button
+            *ngFor="let r of visibleRooms"
+            type="button"
+            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+            [class.active]="roomId === r.id"
+            [class.bg-primary]="roomId === r.id"
+            (click)="selectRoom(r)"
+          >
+            <div [class.text-white]="roomId === r.id">
+              <strong class="fs-5">{{ r.name }}</strong>
+              <span
+                class="badge ms-2"
+                [class.bg-light]="roomId === r.id"
+                [class.text-primary]="roomId === r.id"
+                [class.bg-info]="roomId !== r.id"
+                [class.text-dark]="roomId !== r.id"
+              >
+                {{ r.camp }}
+              </span>
+              <br />
+              <small
+                [class.text-white-50]="roomId === r.id"
+                [class.text-muted]="roomId !== r.id"
+              >
+                <i class="fa fa-users me-1"></i> Capacity: {{ r.capacity }} |
+                <i class="fa fa-map-marker ms-2 me-1"></i> {{ r.place }}
+              </small>
+            </div>
+
+            <i
+              *ngIf="roomId === r.id"
+              class="fa fa-check-circle fs-2 text-white shadow-sm rounded-circle"
+            ></i>
+          </button>
+
+          <div
+            *ngIf="visibleRooms.length === 0"
+            class="list-group-item text-muted text-center py-4 bg-light"
+          >
+            <i class="fa fa-frown-o fs-3 mb-2 d-block text-secondary"></i>
+            No rooms found matching your search filters.
+          </div>
+        </div>
       </div>
 
       <div class="mb-3">
@@ -79,6 +197,104 @@
             <option value="" disabled>-- Select End --</option>
             <option *ngFor="let t of endTimes" [value]="t">{{ t }}</option>
           </select>
+        </div>
+      </div>
+
+      <div class="row mt-3 mb-4" *ngIf="roomId && selectedDate">
+        <div class="col-12">
+          <div class="card border-primary border-opacity-25 bg-light shadow-sm">
+            <div class="card-body py-3">
+              <h6 class="card-title text-primary fw-bold mb-2">
+                Is your desired time occupied?
+              </h6>
+              <p class="small text-muted mb-3">
+                Enter the exact time you need and our Smart Search will find
+                alternatives (same room at different times, or similar rooms
+                nearby).
+              </p>
+
+              <div class="row g-2 align-items-end">
+                <div class="col-md-4">
+                  <label class="small fw-bold text-secondary"
+                    >Desired Start</label
+                  >
+                  <select
+                    class="form-select form-select-sm"
+                    [(ngModel)]="desiredStartTime"
+                    name="dst"
+                  >
+                    <option value="" disabled selected>-- Start --</option>
+                    <option *ngFor="let t of allPossibleTimes" [value]="t">
+                      {{ t }}
+                    </option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="small fw-bold text-secondary"
+                    >Desired End</label
+                  >
+                  <select
+                    class="form-select form-select-sm"
+                    [(ngModel)]="desiredEndTime"
+                    name="det"
+                  >
+                    <option value="" disabled selected>-- End --</option>
+                    <option *ngFor="let t of allPossibleTimes" [value]="t">
+                      {{ t }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="col-md-4">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-primary w-100"
+                    (click)="triggerSmartSearch()"
+                    [disabled]="
+                      !desiredStartTime || !desiredEndTime || smartSearchLoading
+                    "
+                  >
+                    <span
+                      *ngIf="smartSearchLoading"
+                      class="spinner-border spinner-border-sm me-1"
+                    ></span>
+                    Find Alternatives
+                  </button>
+                </div>
+              </div>
+
+              <div class="mt-3 list-group" *ngIf="smartSuggestions.length > 0">
+                <button
+                  type="button"
+                  class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                  *ngFor="let sug of smartSuggestions"
+                  (click)="applySuggestion(sug)"
+                >
+                  <div>
+                    <strong>{{ sug.room.name }}</strong>
+                    <span class="badge bg-secondary ms-1">{{
+                      sug.room.camp
+                    }}</span>
+                    <br />
+                    <small class="text-muted">
+                      Suggested time: {{ sug.suggestedStart | date: "HH:mm" }} -
+                      {{ sug.suggestedEnd | date: "HH:mm" }}
+                    </small>
+                  </div>
+                  <span
+                    class="badge bg-success"
+                    *ngIf="sug.reason === 'EXACT_MATCH'"
+                    >Exact Match</span
+                  >
+                  <span
+                    class="badge bg-warning text-dark"
+                    *ngIf="sug.reason !== 'EXACT_MATCH'"
+                    >Alternative</span
+                  >
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -1,6 +1,78 @@
 <div class="container mt-5">
   <h2 class="mb-4">Manage Users</h2>
 
+  <div class="card bg-light border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row g-2 mb-3">
+        <div class="col-md-5">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Search by name, email..."
+            [(ngModel)]="searchText"
+            (keyup.enter)="onSearch()"
+          />
+        </div>
+        <div class="col-md-3">
+          <select class="form-select" [(ngModel)]="filterType">
+            <option value="">All Roles</option>
+            <option value="ADMIN">Admins Only</option>
+            <option value="USER">Normal Users</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select class="form-select" [(ngModel)]="filterBlocked">
+            <option value="">All Status</option>
+            <option value="true">Blocked</option>
+            <option value="false">Active</option>
+          </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+          <button class="btn btn-primary w-100" (click)="onSearch()">
+            Search
+          </button>
+          <button
+            class="btn btn-outline-secondary"
+            *ngIf="isSearching"
+            (click)="clearSearch()"
+          >
+            ✖
+          </button>
+        </div>
+      </div>
+
+      <div class="row g-2 align-items-center">
+        <div class="col-md-3 text-secondary text-md-end pe-2">
+          <small class="fw-bold"
+            ><i class="fa fa-calendar-check-o"></i> Find by Reservations:</small
+          >
+        </div>
+        <div class="col-md-5">
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            placeholder="Any booked room name (e.g. Lab A1)..."
+            [(ngModel)]="filterRoom"
+            (ngModelChange)="onRoomSearchChange()"
+            (keyup.enter)="onSearch()"
+            list="roomSuggestions"
+          />
+          <datalist id="roomSuggestions">
+            <option *ngFor="let r of availableRooms" [value]="r.name"></option>
+          </datalist>
+        </div>
+        <div class="col-md-4">
+          <input
+            type="date"
+            class="form-control form-control-sm text-muted"
+            [(ngModel)]="filterDate"
+            (change)="onSearch()"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="card shadow-sm">
     <div class="card-body p-0">
       <table class="table table-align-middle mb-0 table-hover">
@@ -22,6 +94,7 @@
                       ? 'https://localhost:8443/api/users/' + user.id + '/image'
                       : 'assets/user_placeholder.png'
                   "
+                  alt="Avatar of {{ user.name }}"
                   class="rounded-circle me-2 avatar-img"
                   (error)="user.imageName = undefined"
                 />
@@ -38,25 +111,25 @@
               <span *ngIf="user.blocked" class="badge bg-danger">Blocked</span>
               <span *ngIf="!user.blocked" class="badge bg-success">Active</span>
             </td>
-            <td class="text-center">
-              <div class="btn-group" role="group">
+            <td>
+              <div class="d-flex justify-content-center gap-2">
                 <button
                   class="btn btn-sm btn-outline-info"
-                  [routerLink]="['/admin/users', user.id, 'reservations']"
-                  title="View Books"
+                  (click)="viewReservations(user)"
+                  title="View User Reservations"
                 >
-                  📅 User Reservations
+                  📅 Bookings
                 </button>
 
                 <button
                   *ngIf="user.email !== 'studyspacetfg@gmail.com'"
                   class="btn btn-sm btn-outline-primary"
                   (click)="toggleAdmin(user)"
-                  title="Toggle Admin Role"
+                  title="Toggle Admin"
                 >
                   {{
                     user.roles.includes("ADMIN")
-                      ? "⬇️ Remove Admin"
+                      ? "⬇️ Revoke Admin"
                       : "⬆️ Make Admin"
                   }}
                 </button>
@@ -93,15 +166,16 @@
     </div>
   </div>
   <app-pagination
+    *ngIf="pageData"
     [pageData]="pageData"
     [currentPage]="currentPage"
     (pageChange)="loadUsers($event)"
   >
   </app-pagination>
 
-  <div class="d-flex justify-content-start mb-5">
+  <div class="d-flex justify-content-start mb-5 mt-4">
     <button class="btn btn-outline-secondary" routerLink="/admin">
-      <i class="bi bi-arrow-left me-2"></i> Back to Admin menu
+      &laquo; Back to Admin Menu
     </button>
   </div>
 </div>

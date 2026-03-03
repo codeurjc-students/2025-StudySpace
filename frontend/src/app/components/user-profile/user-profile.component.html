@@ -38,10 +38,13 @@
         </div>
 
         <div *ngIf="isEditing" class="mt-2 w-100 px-4 animate-fade-in">
-          <label class="form-label small fw-bold text-muted text-start w-100"
+          <label
+            for="photoInput"
+            class="form-label small fw-bold text-muted text-start w-100"
             >Change Photo</label
           >
           <input
+            id="photoInput"
             type="file"
             (change)="onFileSelected($event)"
             accept="image/*"
@@ -99,38 +102,42 @@
           *ngIf="isChangingPassword"
           class="card bg-light border-0 animate-fade-in mb-3"
         >
-          <div class="card-body text-start">
-            <div class="mb-2">
-              <label class="form-label small">Current Password</label>
-              <app-password-input
-                [(ngModel)]="passwordData.oldPassword"
-                name="oldPass"
-                placeholder="Current password"
-              >
-              </app-password-input>
-            </div>
+          <div class="mb-2">
+            <label for="oldPassInput" class="form-label small"
+              >Current Password</label
+            >
+            <app-password-input
+              id="oldPassInput"
+              [(ngModel)]="passwordData.oldPassword"
+              name="oldPass"
+              placeholder="Current password"
+            >
+            </app-password-input>
+          </div>
 
-            <div class="mb-3">
-              <label class="form-label small">New Password</label>
-              <app-password-input
-                [(ngModel)]="passwordData.newPassword"
-                name="newPass"
-                placeholder="New password"
-              >
-              </app-password-input>
-            </div>
+          <div class="mb-3">
+            <label for="newPassInput" class="form-label small"
+              >New Password</label
+            >
+            <app-password-input
+              id="newPassInput"
+              [(ngModel)]="passwordData.newPassword"
+              name="newPass"
+              placeholder="New password"
+            >
+            </app-password-input>
+          </div>
 
-            <div class="d-grid gap-2">
-              <button class="btn btn-dark btn-sm" (click)="changePassword()">
-                Update
-              </button>
-              <button
-                class="btn btn-link btn-sm text-decoration-none text-muted"
-                (click)="toggleChangePassword()"
-              >
-                Cancel
-              </button>
-            </div>
+          <div class="d-grid gap-2">
+            <button class="btn btn-dark btn-sm" (click)="changePassword()">
+              Update
+            </button>
+            <button
+              class="btn btn-link btn-sm text-decoration-none text-muted"
+              (click)="toggleChangePassword()"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       </div>
@@ -140,6 +147,45 @@
       <h4 class="mb-4 fw-bold text-primary border-bottom pb-2">
         Reservation History
       </h4>
+
+      <div class="card bg-light border-0 shadow-sm mb-4">
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-5">
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Search by room name or reason..."
+                [(ngModel)]="searchText"
+                (keyup.enter)="onSearch()"
+              />
+            </div>
+            <div class="col-md-4">
+              <input
+                type="date"
+                class="form-control text-muted"
+                [(ngModel)]="filterDate"
+                (change)="onSearch()"
+              />
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+              <button
+                class="btn btn-primary w-100 shadow-sm"
+                (click)="onSearch()"
+              >
+                Search
+              </button>
+              <button
+                class="btn btn-outline-secondary"
+                *ngIf="isSearching"
+                (click)="clearSearch()"
+              >
+                ✖
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div class="list-group list-group-flush">
         <div

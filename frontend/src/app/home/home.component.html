@@ -8,10 +8,25 @@
 </div>
 
 <div class="container">
-  <h3 class="mb-4 mt-5 pt-3">Available Rooms</h3>
+  <div class="card shadow-sm mt-4 mb-4 border-primary border-opacity-25">
+    <div class="card-body bg-light">
+      <app-room-search-form
+        [(searchText)]="searchText"
+        [(campus)]="selectedCampus"
+        [(capacity)]="minCapacity"
+        [isSearching]="isSearching"
+        (onSearch)="onSearch()"
+        (onClear)="clearSearch()"
+      >
+      </app-room-search-form>
+    </div>
+  </div>
+
+  <h3 class="mb-4 pt-2" *ngIf="!isSearching">Available Rooms</h3>
+  <h3 class="mb-4 pt-2 text-primary" *ngIf="isSearching">Search Results</h3>
 
   <div *ngIf="rooms.length === 0" class="alert alert-info">
-    There are no available rooms in this moment.
+    No rooms match your search criteria.
   </div>
 
   <div class="row row-cols-1 row-cols-md-3 g-4">
@@ -58,6 +73,7 @@
   </div>
 
   <app-pagination
+    *ngIf="pageData"
     [pageData]="pageData"
     [currentPage]="currentPage"
     (pageChange)="loadPage($event)"

@@ -21,6 +21,7 @@ describe('ManageReservationsComponent', () => {
       'deleteReservation',
       'cancelReservationAdmin',
       'updateReservationAdmin',
+      'searchReservationsAdmin',
     ]);
     roomsServiceMock = jasmine.createSpyObj('RoomsService', ['getRooms']);
 
@@ -185,5 +186,63 @@ describe('ManageReservationsComponent', () => {
     );
     component.loadReservations(0);
     expect(console.error).toHaveBeenCalled();
+  });
+
+  it('onSearch: should clear search if no text or date provided', () => {
+    spyOn(component, 'clearSearch');
+    component.searchText = '';
+    component.filterDate = '';
+
+    component.onSearch();
+
+    expect(component.clearSearch).toHaveBeenCalled();
+  });
+
+  it('onSearch: should set search mode and reload if filters exist', () => {
+    spyOn(component, 'loadReservations');
+    component.searchText = 'Lab';
+
+    component.onSearch();
+
+    expect(component.isSearching).toBeTrue();
+    expect(component.loadReservations).toHaveBeenCalledWith(0);
+  });
+
+  it('clearSearch: should reset variables and reload normally', () => {
+    spyOn(component, 'loadReservations');
+    component.searchText = 'Meeting';
+    component.filterDate = '2026-05-05';
+    component.isSearching = true;
+
+    component.clearSearch();
+
+    expect(component.searchText).toBe('');
+    expect(component.filterDate).toBe('');
+    expect(component.isSearching).toBeFalse();
+    expect(component.loadReservations).toHaveBeenCalledWith(0);
+  });
+
+  it('loadReservations: should call searchReservationsAdmin if searching', () => {
+    component.userId = 1;
+    component.isSearching = true;
+    component.searchText = 'Exam';
+
+    reservationServiceMock.searchReservationsAdmin.and.returnValue(
+      of({
+        content: [{ id: 10, reason: 'Exam' }],
+        number: 0,
+        totalPages: 1,
+      } as any),
+    );
+
+    component.loadReservations(0);
+
+    expect(reservationServiceMock.searchReservationsAdmin).toHaveBeenCalledWith(
+      1,
+      'Exam',
+      undefined,
+      0,
+    );
+    expect(component.reservations.length).toBe(1);
   });
 });

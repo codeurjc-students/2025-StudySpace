@@ -3,12 +3,13 @@ package com.urjcservice.backend.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
-import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDateTime;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 
 @Entity
+@Indexed
 @Table(name = "users")
 public class User {
 
@@ -20,22 +21,29 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GenericField
     private Long id;
+    @FullTextField(analyzer = "standard")
     private String email; // Primary key
     private String encodedPassword;
+    @FullTextField(analyzer = "standard")
     private String name;
-    private UserType type; // admin, user not-registered and registered
+    @GenericField
+    private UserType type; // admin and registered
+    @GenericField
     private boolean blocked = false;// in order to block users
 
     private String resetPasswordToken;// to recover password
     private LocalDateTime resetPasswordTokenExpiry;
 
+    @GenericField
     @ElementCollection(fetch = FetchType.EAGER) // for later autentication
     private List<String> roles;
 
     @Column(name = "image_name")
     private String imageName;
 
+    @IndexedEmbedded(includePaths = { "startDate", "endDate", "room.name" })
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Reservation> reservations = new ArrayList<>();

@@ -4,7 +4,6 @@ import { Observable } from 'rxjs';
 import { UserDTO } from '../dtos/user.dto';
 import { Page } from '../dtos/page.model';
 
-//const BASE_URL = 'https://localhost:8443/api/users';
 const BASE_URL = '/api/users';
 
 @Injectable({ providedIn: 'root' })
@@ -34,5 +33,26 @@ export class UserService {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post(`${BASE_URL}/${id}/image`, formData);
+  }
+
+  searchUsers(
+    text?: string,
+    blocked?: string,
+    role?: string,
+    roomName?: string,
+    date?: string,
+    page: number = 0,
+    size: number = 10,
+  ): Observable<Page<UserDTO>> {
+    let queryParams = [`page=${page}&size=${size}`];
+    if (text) queryParams.push(`text=${encodeURIComponent(text)}`);
+    if (blocked === 'true' || blocked === 'false')
+      queryParams.push(`blocked=${blocked}`);
+    if (role) queryParams.push(`role=${role}`);
+    if (roomName) queryParams.push(`roomName=${encodeURIComponent(roomName)}`);
+    if (date) queryParams.push(`date=${date}`);
+
+    const queryString = `?${queryParams.join('&')}`;
+    return this.http.get<Page<UserDTO>>(`/api/search/users${queryString}`);
   }
 }

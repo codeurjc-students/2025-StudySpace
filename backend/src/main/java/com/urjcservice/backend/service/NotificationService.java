@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -13,6 +15,8 @@ import java.util.List;
 
 @Service
 public class NotificationService {
+
+    private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
 
     @Autowired
     private ReservationRepository reservationRepository;
@@ -28,10 +32,8 @@ public class NotificationService {
         Date now = new Date();
         // start on the next 15/20 min (5 of margin)
 
-        long fifteenMinutesInMillis = 15 * ONE_MINUTE_IN_MILLIS;
         long twentyMinutesInMillis = 20 * ONE_MINUTE_IN_MILLIS;
 
-        Date limitStart = new Date(now.getTime() + fifteenMinutesInMillis);
         Date limitEnd = new Date(now.getTime() + twentyMinutesInMillis);
 
         List<Reservation> upcomingReservations = reservationRepository.findPendingReminders(now, limitEnd);
@@ -53,7 +55,7 @@ public class NotificationService {
                 reservation.setReminderSent(true);
                 reservationRepository.save(reservation);
 
-                System.out.println("Reminder sent to: " + to);
+                logger.info("Reminder sent to: {}", to);
             }
         }
     }

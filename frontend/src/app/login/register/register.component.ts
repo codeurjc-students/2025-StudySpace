@@ -17,10 +17,6 @@ export class RegisterComponent {
     private readonly router: Router,
   ) {}
 
-  /*togglePasswordVisibility() {
-    this.passwordVisible = !this.passwordVisible;
-  }*/
-
   onRegister() {
     const { name, email, password } = this.registerData;
     if (!name || !email || !password) {

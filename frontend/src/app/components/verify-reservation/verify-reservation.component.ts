@@ -13,8 +13,8 @@ export class VerifyReservationComponent implements OnInit {
   errorMessage = '';
 
   constructor(
-    private route: ActivatedRoute,
-    private http: HttpClient,
+    private readonly route: ActivatedRoute,
+    private readonly http: HttpClient,
   ) {}
 
   ngOnInit() {

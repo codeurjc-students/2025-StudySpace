@@ -29,6 +29,7 @@ import { ResetPasswordComponent } from './login/reset-password/reset-password.co
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { VerifyReservationComponent } from './components/verify-reservation/verify-reservation.component';
 import { RouterModule } from '@angular/router';
+import { RoomSearchFormComponent } from './components/room-search-form/room-search-form.component';
 
 @NgModule({
   declarations: [
@@ -52,6 +53,7 @@ import { RouterModule } from '@angular/router';
     ForgotPasswordComponent,
     ResetPasswordComponent,
     VerifyReservationComponent,
+    RoomSearchFormComponent,
   ],
   imports: [
     BrowserModule,

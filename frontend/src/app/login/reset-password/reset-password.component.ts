@@ -15,9 +15,9 @@ export class ResetPasswordComponent implements OnInit {
   isLoading: boolean = false;
 
   constructor(
-    private route: ActivatedRoute,
-    private loginService: LoginService,
-    private router: Router,
+    private readonly route: ActivatedRoute,
+    private readonly loginService: LoginService,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
