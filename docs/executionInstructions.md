@@ -13,16 +13,31 @@ Para poder levantar el entorno y ejecutar las pruebas, es necesario tener instal
 
 ### Levantar el entorno con Docker
 
-En la raíz del proyecto, ejecutar el siguiente comando para levantar el entorno con Docker, asegurandonos de que Docker Desktop/Engine está arrancado:
+En la raíz del proyecto, ejecutar los siguientes comandos para levantar el entorno con Docker, asegurandonos de que Docker Desktop/Engine está arrancado:
 
 ```bash
-docker-compose up -d --build
+docker-compose pull
+docker-compose up -d
 ```
 
 Para detener el entorno, ejecutar:
 
 ```bash
 docker-compose down
+```
+
+---
+
+Si quieres levantar el entorno de desarrollo:
+
+```bash
+docker-compose -f docker-compose-dev.yml up -d --build
+```
+
+Para detener el entorno, ejecutar:
+
+```bash
+docker-compose -f docker-compose-dev.yml down
 ```
 
 ---

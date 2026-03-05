@@ -1,4 +1,4 @@
-# Etapa 1: Compilar la aplicación Angular
+# Compile Angular app
 FROM node:18-alpine as build
 WORKDIR /app
 COPY package*.json ./
@@ -6,10 +6,10 @@ RUN npm ci
 COPY . .
 RUN npm run build -- --configuration production
 
-# Etapa 2: Servir con Nginx (Servidor web ligero)
+# Nginx (light web server)
 FROM nginx:alpine
-# Copiamos el build de Angular a la carpeta de Nginx
+# Angular build to Nginx
 COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
-# Copiamos una configuración básica de Nginx (la crearemos abajo)
+# Basic Nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+EXPOSE 443
