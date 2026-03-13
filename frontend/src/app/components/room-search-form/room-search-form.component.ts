@@ -20,15 +20,15 @@ export class RoomSearchFormComponent {
   @Input() showActiveFilter: boolean = false;
   @Input() isSearching: boolean = false;
 
-  @Output() onSearch = new EventEmitter<void>();
-  @Output() onClear = new EventEmitter<void>();
+  @Output() search = new EventEmitter<void>();
+  @Output() clear = new EventEmitter<void>();
 
   triggerSearch() {
-    this.onSearch.emit();
+    this.search.emit();
   }
 
   triggerClear() {
-    this.onClear.emit();
+    this.clear.emit();
   }
 
   onTextChange(val: string) {

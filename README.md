@@ -10,13 +10,6 @@ StudySpace es una aplicación web diseñada para gestionar de manera eficiente l
 
 ---
 
-## 👨‍💻 Autores
-
-- **Alumno:** Guilermo Arenal Estebaranz
-- **Tutor:** Michel Maes Bermejo
-
----
-
 ## 📚 Documentación
 
 En los siguientes documentos se detalla toda la información relevante sobre el proyecto:
@@ -26,6 +19,17 @@ En los siguientes documentos se detalla toda la información relevante sobre el 
 | [**executionInstructions.md**](docs/executionInstructions.md) | Instrucciones para la ejecucion de la aplicación.                   |
 | [**F01_analysis.md**](docs/F01_analysis.md)                   | Prototipos de pantallas (UI), Diagramas de Navegación y Modelo E/R. |
 | [**F01_requirements.md**](docs/F01_requirements.md)           | Objetivos, Actores y Tabla de funcionalidades detallada.            |
+| [**detailed_functionalities.md**](docs/detailed_functionalities.md)             | Fucionalidades detalladas mediante casos de uso.      |
 | [**F01_methodology.md**](docs/F01_methodology.md)             | Metodología de desarrollo y Planificación (Diagrama de Gantt).      |
+| [**deployment_architecture.md**](docs/deployment_architecture.md)     | Arquitectura de despliegue con contenedores.      |
+| [**domain_model.md**](docs/domain_model.md)     | Modelo de dominio.      |
+
+---
+
+
+## 👨‍💻 Autores
+
+- **Alumno:** Guilermo Arenal Estebaranz
+- **Tutor:** Michel Maes Bermejo
 
 ---

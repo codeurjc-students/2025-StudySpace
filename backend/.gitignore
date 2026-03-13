@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+#Index from Apache Lucene
+/lucene-indexes/
+/Reservation/
+/Room/
+/Software/
+/User/

@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  # Data Base MySQL
+  #MySQL
   mysql:
     image: mysql:8.0
     container_name: study_space_mysql
@@ -9,7 +9,6 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: toor
       MYSQL_DATABASE: study_space_db
-
       TZ: Europe/Madrid
     ports:
       - "3306:3306"
@@ -20,17 +19,9 @@ services:
       timeout: 20s
       retries: 10
 
-  #mailhog:
-  #   image: mailhog/mailhog
-  #  container_name: study_space_mailhog
-  # restart: always
-  #ports:
-  # - "1025:1025" # SMTP (backend send)
-  #- "8025:8025" # Web port(for emails)
-
   # Backend (Spring Boot)
   backend:
-    build: ./backend
+    image: ${DOCKER_USERNAME}/studyspace-backend:${TAG:-latest}
     container_name: study_space_backend
     restart: always
     ports:
@@ -38,25 +29,17 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-      #mailhog:
-      # condition: service_started
     environment:
-      #SPRING_MAIL_HOST: mailhog
-      #SPRING_MAIL_PORT: 1025
-      #SPRING_MAIL_USERNAME: test
-      #SPRING_MAIL_PASSWORD: test
-      #SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: false
-      #SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: false
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/study_space_db
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: toor
-      MAIL_PASSWORD: "kwkantkojczxobql"
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
 
       SERVER_PORT: 8443
       SERVER_SSL_ENABLED: "true"
       SERVER_SSL_KEY_STORE: "file:/app/keystore.jks"
       SERVER_SSL_KEY_STORE_PASSWORD: "password"
-      SERVER_SSL_KEY_STORE_TYPE: "JKS"
+      SERVER_SSL_KEY_STORE_TYPE: "PKCS12"
 
       TZ: Europe/Madrid
       JAVA_TOOL_OPTIONS: "-Duser.timezone=Europe/Madrid"
@@ -64,14 +47,13 @@ services:
     volumes:
       - ./backend/uploads:/app/uploads
 
-  # 3. Frontend (Angular)
+  # Frontend (Angular)
   frontend:
-    build: ./frontend
+    image: ${DOCKER_USERNAME}/studyspace-frontend:${TAG:-latest}
     container_name: study_space_frontend
     restart: always
     ports:
-      - "443:443" #
-      #- "80:80" #  HTTPS
+      - "443:443"
     volumes:
       - ./frontend/certs:/etc/nginx/certs
       - ./backend/uploads:/usr/share/nginx/html/uploads
@@ -80,8 +62,3 @@ services:
 
 volumes:
   mysql_data:
-
-  #docker-compose up -d --build
-  #for restart:      docker-compose down -v
-
-  #debug      docker logs study_space_backend

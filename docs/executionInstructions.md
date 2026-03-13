@@ -2,7 +2,7 @@
 
 ### Prerrequisitos
 
-Para poder levantar el entorno y ejecutar las pruebas, es necesario tener instaladas y configuradas las siguientes herramientas en el sistema:
+Para poder levantar el entorno de desarrollo y ejecutar las pruebas, es necesario tener instaladas y configuradas las siguientes herramientas en el sistema:
 
 - Docker Desktop (en ejecución).
 - Java 17 o superior y Maven (accesible mediante el comando mvn).
@@ -11,18 +11,53 @@ Para poder levantar el entorno y ejecutar las pruebas, es necesario tener instal
 
 ---
 
-### Levantar el entorno con Docker
+### Clonado del repositorio
 
-En la raíz del proyecto, ejecutar el siguiente comando para levantar el entorno con Docker, asegurandonos de que Docker Desktop/Engine está arrancado:
+El primer paso antes de levantar cualquier entorno es obtener el código fuente desde el repositorio oficial y acceder al directorio del proyecto. En una terminal, ejecuta:
 
 ```bash
-docker-compose up -d --build
+git clone https://github.com/codeurjc-students/2025-StudySpace
+cd 2025-StudySpace
+```
+---
+
+> **Nota importante: Certificado SSL y Visualización de Imágenes**
+>
+> Debido a que la aplicación utiliza un **certificado SSL auto-firmado**, el navegador bloqueará por defecto las peticiones al backend, lo que impedirá la correcta visualización de las imágenes.
+>
+> **Antes de proceder con el despliegue**, es necesario autorizar el certificado en el navegador:
+> 1. Una vez levantado el entorno (paso siguiente), acceda a: [https://localhost:8443/api/users/1/image](https://localhost:8443/api/users/1/image) o a [https://localhost:8443/api/rooms/1/image](https://localhost:8443/api/rooms/1/image).
+> 2. En la pantalla de advertencia, haga clic en **"Configuración avanzada"** y seleccione **"Acceder a localhost (sitio no seguro)"**.
+>
+> Este paso es fundamental para que el frontend pueda mostrar las imágenes de la aplicación, al no confiar en el certificado por ser auto-firmado.
+
+### Levantar el entorno con Docker
+
+En la raíz del proyecto, ejecutar los siguientes comandos para levantar el entorno con Docker, asegurandonos de que Docker Desktop/Engine está arrancado:
+
+```bash
+docker-compose pull
+docker-compose up -d
 ```
 
 Para detener el entorno, ejecutar:
 
 ```bash
 docker-compose down
+```
+
+---
+
+Si quieres levantar el entorno de desarrollo:
+
+```bash
+docker-compose -f docker-compose-dev.yml up -d --build
+```
+
+Para detener el entorno, ejecutar:
+
+```bash
+docker-compose -f docker-compose-dev.yml down
 ```
 
 ---
