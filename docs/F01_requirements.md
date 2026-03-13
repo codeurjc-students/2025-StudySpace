@@ -41,11 +41,14 @@ La aplicación sera capaz de realizar y cumplir los siguientes objetivos:
 | ----------------------------------------------------- | :-------------: | :----------------: | :-------------------: |
 | Vista de calendario (día / semana / mes)              |       ✅        |         ✅         |          ✅           |
 | Estadísticas del uso de un aula en concreto           |       ✅        |         ✅         |          ✅           |
+| Algoritmo avanzado para filtrar aulas                  |       ✅        |         ✅         |          ✅           |
 | Desactivar temporalmente aulas (mantenimiento, obras) |                 |                    |          ✅           |
 | Estadísticas del uso global de las aulas              |                 |                    |          ✅           |
 
+
 | Funcionalidades avanzadas                              | Usuario Anónimo | Usuario Registrado | Usuario Administrador |
 | ------------------------------------------------------ | :-------------: | :----------------: | :-------------------: |
-| Algoritmo avanzado para filtrar aulas                  |       ✅        |         ✅         |          ✅           |
+| Algoritmo avanzado para sugerir aulas alternativas     |               |         ✅         |          ✅           | 
+| Algoritmo avanzado para filtrar usuarios, aulas, softwares y reservas     |               |                  |          ✅           | 
 | Integración con calendarios externos (Google, Outlook) |                 |         ✅         |          ✅           |
 | Sistema de notificaciones por correo electrónico       |                 |         ✅         |          ✅           |

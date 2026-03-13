@@ -10,7 +10,9 @@ El desarrollo seguirá un enfoque iterativo y secuencial, con entregas periódic
 
 - **Fase 4:** Versión 0.1 - Funcionalidad completa y Docker (Finalización: 4 marzo)
 
-- **Fase 5:** Memoria (Finalización: 18 marzo)
+- **Fase 5:** Memoria (Finalización: 18 marzo-estimado)
+
+- **Fase 6:** Defensa y finalización 1º TFG (Finalización: 26 marzo-estimado)
 
 Diagrama de Gantt:
 
