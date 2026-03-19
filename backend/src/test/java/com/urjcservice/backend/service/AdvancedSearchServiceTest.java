@@ -9,8 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.Assertions;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -79,41 +81,54 @@ public class AdvancedSearchServiceTest {
 
     @Test
     public void testSearchUsers_StrictRoomAndDate_Coverage() {
-        // fake user
         User user = new User();
-        user.setEmail("55@test.com");
-        user.setName("Test Strict");
-        user.setEncodedPassword("Password12.");
-        user.setType(User.UserType.USER_REGISTERED);
-        entityManager.persist(user);
+        user.setEmail("memoria@test.com");
 
         Room room = new Room();
         room.setName("Aula 55");
-        room.setCamp(Room.CampusType.MOSTOLES);
-        room.setCapacity(30);
-        room.setActive(true);
-        entityManager.persist(room);
 
         Reservation res = new Reservation();
-        res.setUser(user);
-        res.setRoom(room);
         res.setStartDate(Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()));
         res.setEndDate(Date.from(LocalDate.now().plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant()));
-        entityManager.persist(res);
 
-        entityManager.flush();
+        user.addReservation(res);
+        room.addReservation(res);
 
-        try {
-            Page<User> result = advancedSearchService.searchUsers(null, null, null, "Aula 55", LocalDate.now(), 0, 10);
+        // room and date match
+        Boolean perfectMatch = ReflectionTestUtils.invokeMethod(
+                advancedSearchService,
+                "matchesStrictRoomAndDate",
+                user, "Aula 55", LocalDate.now());
+        Assertions.assertTrue(perfectMatch, "The classroom and date must match");
 
-            assertNotNull(result, "The result of strict search cannot be null");
-        } finally {
-            // for delete data
-            entityManager.remove(res);
-            entityManager.remove(room);
-            entityManager.remove(user);
+        // diferent room
+        Boolean falseRoomMatch = ReflectionTestUtils.invokeMethod(
+                advancedSearchService,
+                "matchesStrictRoomAndDate",
+                user, "Aula Equivocada", LocalDate.now());
+        Assertions.assertFalse(falseRoomMatch, "It should not match if the classroom is different.");
 
-            entityManager.flush();
-        }
+        // diferent date
+        Boolean falseDateMatch = ReflectionTestUtils.invokeMethod(
+                advancedSearchService,
+                "matchesStrictRoomAndDate",
+                user, "Aula 55", LocalDate.now().plusDays(2));
+        Assertions.assertFalse(falseDateMatch, "It should not match if the date is different.");
+
+        // null room name
+        Boolean nullMatch = ReflectionTestUtils.invokeMethod(
+                advancedSearchService,
+                "matchesStrictRoomAndDate",
+                user, null, LocalDate.now());
+        Assertions.assertTrue(nullMatch, "If roomName is null, it should return true by default");
+
+        // null pointer no room asigned
+        Reservation emptyRes = new Reservation();
+        user.addReservation(emptyRes);
+        Boolean emptyResMatch = ReflectionTestUtils.invokeMethod(
+                advancedSearchService,
+                "matchesStrictRoomAndDate",
+                user, "Aula Fantasma", LocalDate.now());
+        Assertions.assertFalse(emptyResMatch, "Should safely handle reservations without rooms/dates");
     }
 }
