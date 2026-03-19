@@ -7,18 +7,18 @@
 
     <form (ngSubmit)="onSubmit()">
       <div class="mb-4">
-        <label
-          class="form-label fw-bold fs-5 text-dark border-bottom pb-2 w-100"
-        >
+        <h4 class="form-label fw-bold fs-5 text-dark border-bottom pb-2 w-100">
           <i class="fa fa-map-marker text-primary me-2"></i>1. Find and Select a
           Room
-        </label>
+        </h4>
 
         <div class="card bg-light border-0 shadow-sm mb-3">
           <div class="card-body py-2 px-3">
             <div class="row g-2 align-items-end">
               <div class="col-md-4">
-                <label class="form-label small fw-bold text-secondary mb-1"
+                <label
+                  for="roomSearchInput"
+                  class="form-label small fw-bold text-secondary mb-1"
                   >Search</label
                 >
                 <div class="input-group input-group-sm">
@@ -26,6 +26,7 @@
                     ><i class="fa fa-search text-muted"></i
                   ></span>
                   <input
+                    id="roomSearchInput"
                     type="text"
                     class="form-control border-start-0"
                     placeholder="Name, software..."
@@ -37,10 +38,13 @@
                 </div>
               </div>
               <div class="col-md-3">
-                <label class="form-label small fw-bold text-secondary mb-1"
+                <label
+                  for="campusSearchSelect"
+                  class="form-label small fw-bold text-secondary mb-1"
                   >Campus</label
                 >
                 <select
+                  id="campusSearchSelect"
                   class="form-select form-select-sm"
                   name="campusSearch"
                   [(ngModel)]="selectedCampus"
@@ -55,10 +59,13 @@
                 </select>
               </div>
               <div class="col-md-2">
-                <label class="form-label small fw-bold text-secondary mb-1"
+                <label
+                  for="capacitySearchInput"
+                  class="form-label small fw-bold text-secondary mb-1"
                   >Min. Cap.</label
                 >
                 <input
+                  id="capacitySearchInput"
                   type="number"
                   class="form-control form-control-sm"
                   name="capSearch"
@@ -215,10 +222,13 @@
 
               <div class="row g-2 align-items-end">
                 <div class="col-md-4">
-                  <label class="small fw-bold text-secondary"
+                  <label
+                    for="desiredStartSelect"
+                    class="small fw-bold text-secondary"
                     >Desired Start</label
                   >
                   <select
+                    id="desiredStartSelect"
                     class="form-select form-select-sm"
                     [(ngModel)]="desiredStartTime"
                     name="dst"
@@ -230,10 +240,13 @@
                   </select>
                 </div>
                 <div class="col-md-4">
-                  <label class="small fw-bold text-secondary"
+                  <label
+                    for="desiredEndSelect"
+                    class="small fw-bold text-secondary"
                     >Desired End</label
                   >
                   <select
+                    id="desiredEndSelect"
                     class="form-select form-select-sm"
                     [(ngModel)]="desiredEndTime"
                     name="det"

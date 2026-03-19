@@ -144,9 +144,10 @@ export class ReservationFormComponent implements OnInit {
           this.visibleRooms = data.content;
           if (
             this.roomId &&
-            !this.visibleRooms.find((r) => r.id === this.roomId)
+            !this.visibleRooms.some((r) => r.id === this.roomId)
           ) {
-            // TODO: handle missing room selection
+            this.roomId = null;
+            this.onConfigChange();
           }
         },
         error: (e) => console.error(e),
@@ -222,8 +223,7 @@ export class ReservationFormComponent implements OnInit {
     const times = [];
     for (let h = 8; h <= 20; h++) {
       const hour = h.toString().padStart(2, '0');
-      times.push(`${hour}:00`);
-      times.push(`${hour}:30`);
+      times.push(`${hour}:00`, `${hour}:30`);
     }
     times.push('21:00');
     this.allPossibleTimes = times;

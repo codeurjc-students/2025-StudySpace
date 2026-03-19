@@ -152,9 +152,9 @@ export class RoomFormComponent implements OnInit {
       )
       .subscribe({
         next: (data) => {
-          const selectedIds = this.selectedSoftwares.map((s) => s.id);
+          const selectedIds = new Set(this.selectedSoftwares.map((s) => s.id));
           this.availableSoftwares = data.content.filter(
-            (s) => !selectedIds.includes(s.id),
+            (s) => !selectedIds.has(s.id),
           );
         },
         error: (e) => console.error(e),

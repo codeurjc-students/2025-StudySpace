@@ -4,7 +4,7 @@ import { RoomsService } from '../../services/rooms.service';
 import { RoomDTO } from '../../dtos/room.dto';
 import { Chart, registerables } from 'chart.js';
 
-import { CalendarOptions, EventInput } from '@fullcalendar/core';
+import { CalendarOptions } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';

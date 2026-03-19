@@ -10,8 +10,6 @@ import { LoginService } from '../login.service';
 export class RegisterComponent {
   registerData = { name: '', email: '', password: '' };
 
-  //public passwordVisible: boolean = false;
-
   constructor(
     private readonly loginService: LoginService,
     private readonly router: Router,
@@ -36,7 +34,7 @@ export class RegisterComponent {
 
     //for the password
     const passwordPattern =
-      /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&.])(?=\S+$).{8,}$/;
+      /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&.])(?=\S+$).{8,}$/;
     if (!passwordPattern.test(password)) {
       alert(
         'Password must contain:\n- At least 8 characters\n- One uppercase letter\n- One lowercase letter\n- One number\n- One special character (@$!%*?&.)',
