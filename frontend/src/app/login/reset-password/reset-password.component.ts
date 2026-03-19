@@ -32,7 +32,7 @@ export class ResetPasswordComponent implements OnInit {
     if (!this.token || !this.password) return;
 
     const passwordPattern =
-      /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&.])(?=\S+$).{8,}$/;
+      /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&.])(?=\S+$).{8,}$/;
     if (!passwordPattern.test(this.password)) {
       this.error =
         'Password must have 8+ chars, uppercase, lowercase, number and special char.';

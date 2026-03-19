@@ -16,8 +16,8 @@
         [(filterActive)]="filterActive"
         [showActiveFilter]="true"
         [isSearching]="isSearching"
-        (onSearch)="onSearch()"
-        (onClear)="clearSearch()"
+        (searchTriggered)="onSearch()"
+        (clearTriggered)="clearSearch()"
       >
       </app-room-search-form>
     </div>

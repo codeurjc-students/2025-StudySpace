@@ -33,8 +33,6 @@ import com.urjcservice.backend.rest.ReservationRestController.ReservationRequest
 @Service
 public class ReservationService {
 
-    private final AdvancedSearchService advancedSearchService;
-
     private static final String USER_NOT_FOUND_MSG = "User not found";
 
     private final ReservationRepository reservationRepository;
@@ -46,12 +44,11 @@ public class ReservationService {
     public ReservationService(ReservationRepository reservationRepository,
             UserRepository userRepository,
             RoomRepository roomRepository,
-            EmailService emailService, AdvancedSearchService advancedSearchService) {
+            EmailService emailService) {
         this.reservationRepository = reservationRepository;
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
         this.emailService = emailService;
-        this.advancedSearchService = advancedSearchService;
     }
 
     public Page<Reservation> findAll(Pageable pageable) {
@@ -489,44 +486,17 @@ public class ReservationService {
                     room.getId(), requestedStart, requestedEnd);
 
             if (overlaps.isEmpty()) {
-                int score = 100 - penalty;
-
-                // decent score then we suggest it
-                if (score > 30) {
-                    // not same campus but close = "SIMILAR_ROOM", same campus = "EXACT_MATCH"
-                    String reason = (campus != null && campus != room.getCamp()) ? "SIMILAR_ROOM" : "EXACT_MATCH";
-                    suggestions.add(new SmartSuggestionDTO(room, requestedStart, requestedEnd, reason, score));
-                }
+                addExactOrSimilarSuggestion(room, requestedStart, requestedEnd, campus, penalty, suggestions);
             } else {
-                Date plus30Start = new Date(requestedStart.getTime() + (30 * 60000)); // 30 minuttes later
-                Date plus30End = new Date(plus30Start.getTime() + durationMillis);
-                if (reservationRepository
-                        .findActiveReservationsByRoomIdAndDateRange(room.getId(), plus30Start, plus30End).isEmpty()) {
-                    int score = 80 - penalty;
-                    if (score > 30)
-                        suggestions
-                                .add(new SmartSuggestionDTO(room, plus30Start, plus30End, "ALTERNATIVE_TIME", score));
-                }
-
-                Date minus30Start = new Date(requestedStart.getTime() - (30 * 60000)); // 30 minuttes earlier
-                Date minus30End = new Date(minus30Start.getTime() + durationMillis);
-                if (reservationRepository
-                        .findActiveReservationsByRoomIdAndDateRange(room.getId(), minus30Start, minus30End).isEmpty()) {
-                    int score = 80 - penalty;
-                    if (score > 30)
-                        suggestions
-                                .add(new SmartSuggestionDTO(room, minus30Start, minus30End, "ALTERNATIVE_TIME", score));
-                }
-
-                Date plus60Start = new Date(requestedStart.getTime() + (60 * 60000)); // 60 minutes later
-                Date plus60End = new Date(plus60Start.getTime() + durationMillis);
-                if (reservationRepository
-                        .findActiveReservationsByRoomIdAndDateRange(room.getId(), plus60Start, plus60End).isEmpty()) {
-                    int score = 60 - penalty;
-                    if (score > 30)
-                        suggestions
-                                .add(new SmartSuggestionDTO(room, plus60Start, plus60End, "ALTERNATIVE_TIME", score));
-                }
+                // +30 minutes
+                checkAndAddAlternativeTime(room, requestedStart, durationMillis, 30 * 60000L, 80 - penalty,
+                        suggestions);
+                // -30 minutes
+                checkAndAddAlternativeTime(room, requestedStart, durationMillis, -30 * 60000L, 80 - penalty,
+                        suggestions);
+                // +60 minutes
+                checkAndAddAlternativeTime(room, requestedStart, durationMillis, 60 * 60000L, 60 - penalty,
+                        suggestions);
             }
         }
 
@@ -559,6 +529,31 @@ public class ReservationService {
         }
 
         return 50; // high penalization
+    }
+
+    private void addExactOrSimilarSuggestion(Room room, Date start, Date end, Room.CampusType requestedCampus,
+            int penalty, List<SmartSuggestionDTO> suggestions) {
+        int score = 100 - penalty;
+        if (score > 30) {
+            String reason = (requestedCampus != null && requestedCampus != room.getCamp()) ? "SIMILAR_ROOM"
+                    : "EXACT_MATCH";
+            suggestions.add(new SmartSuggestionDTO(room, start, end, reason, score));
+        }
+    }
+
+    private void checkAndAddAlternativeTime(Room room, Date originalStart, long durationMillis, long offsetMillis,
+            int score, List<SmartSuggestionDTO> suggestions) {
+        if (score <= 30) {
+            return;
+        }
+
+        Date altStart = new Date(originalStart.getTime() + offsetMillis);
+        Date altEnd = new Date(altStart.getTime() + durationMillis);
+
+        if (reservationRepository.findActiveReservationsByRoomIdAndDateRange(room.getId(), altStart, altEnd)
+                .isEmpty()) {
+            suggestions.add(new SmartSuggestionDTO(room, altStart, altEnd, "ALTERNATIVE_TIME", score));
+        }
     }
 
 }

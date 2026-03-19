@@ -14,7 +14,7 @@ export class SoftwareFormComponent implements OnInit {
 
   software = {
     name: '',
-    version: 1.0,
+    version: 1,
     description: '',
   };
 

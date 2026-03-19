@@ -26,7 +26,7 @@ public class AdvancedSearchServiceTest {
     @Test
     public void testSearchRooms() {
         Page<Room> resultFull = advancedSearchService.searchRooms("Lab", 20, Room.CampusType.MOSTOLES, true, 0, 10);
-        assertNotNull(resultFull, "La página no debe ser nula");
+        assertNotNull(resultFull, "The page must not be null");
 
         Page<Room> resultEmpty = advancedSearchService.searchRooms(null, null, null, null, 0, 10);
         assertNotNull(resultEmpty);

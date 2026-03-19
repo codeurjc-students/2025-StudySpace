@@ -5,6 +5,7 @@ import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.entities.User;
 import com.urjcservice.backend.entities.Software;
 import jakarta.persistence.EntityManager;
+import java.util.List;
 
 import org.hibernate.search.engine.search.predicate.dsl.BooleanPredicateClausesStep;
 import org.hibernate.search.engine.search.predicate.dsl.SearchPredicateFactory;
@@ -59,11 +60,46 @@ public class AdvancedSearchService {
                         b.must(f.match().field("blocked").matching(isBlocked));
                     if (role != null && !role.isBlank())
                         b.must(f.match().field("roles").matching(role));
-                    applyTextSearch(f, b, roomName, "reservations.room.name");
-                    applyDateFilter(f, b, date, "reservations.startDate", "reservations.endDate");
+
+                    // if we search with both data it sould match both
+                    if (roomName != null && !roomName.isBlank() && date != null) {
+                        b.must(f.bool(nested -> {
+                            applyTextSearch(f, nested, roomName, "reservations.room.name");
+                            applyDateFilter(f, nested, date, "reservations.startDate", "reservations.endDate");
+                        }));
+                    } else {
+                        // only searching by one parameter
+                        applyTextSearch(f, b, roomName, "reservations.room.name");
+                        applyDateFilter(f, b, date, "reservations.startDate", "reservations.endDate");
+                    }
                 })).fetch(page * size, size);
 
-        return new PageImpl<>(result.hits(), PageRequest.of(page, size), result.total().hitCount());
+        // to filter
+        List<User> strictUsers = result.hits().stream().filter(user -> {
+            boolean matchesRoomAndDate = true;
+
+            if (roomName != null && !roomName.isBlank() && date != null) {
+                // at least one reservation match
+                matchesRoomAndDate = user.getReservations().stream().anyMatch(res -> {
+                    boolean sameRoom = res.getRoom() != null &&
+                            res.getRoom().getName().toLowerCase().contains(roomName.toLowerCase().trim());
+
+                    if (!sameRoom)
+                        return false;
+
+                    LocalDate resDate = res.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                    return resDate.equals(date);
+                });
+            }
+            return matchesRoomAndDate;
+        }).toList();
+
+        // recalculate the page
+        int start = Math.min(page * size, strictUsers.size());
+        int end = Math.min(start + size, strictUsers.size());
+        List<User> paginatedUsers = strictUsers.subList(start, end);
+
+        return new PageImpl<>(paginatedUsers, PageRequest.of(page, size), strictUsers.size());
     }
 
     @Transactional(readOnly = true)
