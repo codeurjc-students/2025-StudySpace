@@ -439,4 +439,18 @@ describe('ReservationFormComponent UI Test', () => {
     expect(component.desiredStartTime).toBe('');
     expect(component.desiredEndTime).toBe('');
   }));
+
+  it('searchRooms: should clear roomId if selected room is no longer in visibleRooms', () => {
+    component.roomId = 99;
+
+    roomsServiceSpy.searchRooms.and.returnValue(
+      of({ content: [{ id: 1, name: 'Aula 1', camp: 'MOSTOLES' }] } as any),
+    );
+    spyOn(component, 'onConfigChange');
+
+    component.searchRooms();
+
+    expect(component.roomId).toBeNull();
+    expect(component.onConfigChange).toHaveBeenCalled();
+  });
 });

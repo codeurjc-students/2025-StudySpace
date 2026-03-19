@@ -74,25 +74,9 @@ public class AdvancedSearchService {
                     }
                 })).fetch(page * size, size);
 
-        // to filter
-        List<User> strictUsers = result.hits().stream().filter(user -> {
-            boolean matchesRoomAndDate = true;
-
-            if (roomName != null && !roomName.isBlank() && date != null) {
-                // at least one reservation match
-                matchesRoomAndDate = user.getReservations().stream().anyMatch(res -> {
-                    boolean sameRoom = res.getRoom() != null &&
-                            res.getRoom().getName().toLowerCase().contains(roomName.toLowerCase().trim());
-
-                    if (!sameRoom)
-                        return false;
-
-                    LocalDate resDate = res.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-                    return resDate.equals(date);
-                });
-            }
-            return matchesRoomAndDate;
-        }).toList();
+        List<User> strictUsers = result.hits().stream()
+                .filter(user -> matchesStrictRoomAndDate(user, roomName, date))
+                .toList();
 
         // recalculate the page
         int start = Math.min(page * size, strictUsers.size());
@@ -100,6 +84,28 @@ public class AdvancedSearchService {
         List<User> paginatedUsers = strictUsers.subList(start, end);
 
         return new PageImpl<>(paginatedUsers, PageRequest.of(page, size), strictUsers.size());
+    }
+
+    private boolean matchesStrictRoomAndDate(User user, String roomName, LocalDate date) {
+        if (roomName == null || roomName.isBlank() || date == null) {
+            return true;
+        }
+
+        String searchRoom = roomName.toLowerCase().trim();
+
+        return user.getReservations().stream().anyMatch(res -> {
+            if (res.getRoom() == null || res.getRoom().getName() == null || res.getStartDate() == null) {
+                return false;
+            }
+
+            boolean sameRoom = res.getRoom().getName().toLowerCase().contains(searchRoom);
+            if (!sameRoom) {
+                return false;
+            }
+
+            LocalDate resDate = res.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            return resDate.equals(date);
+        });
     }
 
     @Transactional(readOnly = true)
