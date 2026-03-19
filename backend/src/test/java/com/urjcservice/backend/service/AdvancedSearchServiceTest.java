@@ -79,11 +79,11 @@ public class AdvancedSearchServiceTest {
 
     @Test
     public void testSearchUsers_StrictRoomAndDate_Coverage() {
-        //fake user
+        // fake user
         User user = new User();
         user.setEmail("55@test.com");
         user.setName("Test Strict");
-        user.setEncodedPassword("1234aA..");
+        user.setEncodedPassword("Password12.");
         user.setType(User.UserType.USER_REGISTERED);
         entityManager.persist(user);
 
@@ -104,15 +104,15 @@ public class AdvancedSearchServiceTest {
         entityManager.flush();
 
         try {
-            Page<User> result = advancedSearchService.searchUsers(null, null, null, "Aula Coverage", LocalDate.now(), 0, 10);
-            
+            Page<User> result = advancedSearchService.searchUsers(null, null, null, "Aula 55", LocalDate.now(), 0, 10);
+
             assertNotNull(result, "The result of strict search cannot be null");
         } finally {
-            //for delete data
+            // for delete data
             entityManager.remove(res);
             entityManager.remove(room);
             entityManager.remove(user);
-            
+
             entityManager.flush();
         }
     }
