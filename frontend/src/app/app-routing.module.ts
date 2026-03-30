@@ -7,7 +7,6 @@ import { RegisterComponent } from './login/register/register.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { authGuard } from './security/auth.guard';
 import { ReservationFormComponent } from './components/reservation-form/reservation-form.component';
-import { AdminMenuComponent } from './components/admin-menu/admin-menu.component';
 import { ManageRoomsComponent } from './components/manage-rooms/manage-rooms.component';
 import { ManageUsersComponent } from './components/manage-users/manage-users.component';
 import { OccupancyStatsComponent } from './components/occupancy-stats/occupancy-stats.component';
@@ -40,7 +39,7 @@ const routes: Routes = [
   },
   { path: 'verify-reservation', component: VerifyReservationComponent }, //email of verification of reservation
   //admin routes
-  { path: 'admin', component: AdminMenuComponent, canActivate: [adminGuard] },
+
   {
     path: 'admin/rooms',
     component: ManageRoomsComponent,
