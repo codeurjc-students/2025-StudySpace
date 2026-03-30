@@ -6,6 +6,7 @@ import { Location } from '@angular/common';
 import { Page } from '../../dtos/page.model';
 import { PaginationUtil } from '../../utils/pagination.util';
 import { UserService } from '../../services/user.service';
+import { DialogService } from '../../services/dialog.service';
 
 @Component({
   selector: 'app-user-profile',
@@ -32,6 +33,7 @@ export class UserProfileComponent implements OnInit {
     private readonly reservationService: ReservationService,
     private readonly userService: UserService,
     private readonly location: Location,
+    private readonly dialogService: DialogService,
   ) {}
 
   ngOnInit(): void {
@@ -99,7 +101,10 @@ export class UserProfileComponent implements OnInit {
               .uploadUserImage(this.user.id, this.selectedFile)
               .subscribe({
                 next: (userWithImage) => {
-                  alert('Profile and image updated successfully.');
+                  this.dialogService.alert(
+                    'Success',
+                    'Profile and image updated successfully.'
+                  );
                   if (this.user) {
                     this.user = userWithImage;
                     this.loginService.currentUser = this.user;
@@ -107,11 +112,11 @@ export class UserProfileComponent implements OnInit {
                   this.isEditing = false;
                   this.selectedFile = null;
                 },
-                error: () => alert('Profile updated, but image upload failed.'),
+                error: () => this.dialogService.alert('Error', 'Profile updated, but image upload failed.'),
               });
           } else {
             //no new picture
-            alert('Profile updated successfully.');
+            this.dialogService.alert('Success', 'Profile updated successfully.');
             if (this.user) {
               this.user.name = updatedUser.name;
               this.loginService.currentUser = this.user;
@@ -119,7 +124,7 @@ export class UserProfileComponent implements OnInit {
             this.isEditing = false;
           }
         },
-        error: (err: any) => alert('Error updating profile'),
+        error: (err: any) => this.dialogService.alert('Error', 'Error updating profile'),
       });
   }
 
@@ -142,14 +147,14 @@ export class UserProfileComponent implements OnInit {
     if (confirm('Are you sure you want to cancel this reservation?')) {
       this.reservationService.deleteReservation(id).subscribe({
         next: () => {
-          alert('Reservation cancelled.');
+          this.dialogService.alert('Success', 'Reservation cancelled.');
           if (this.user?.reservations) {
             this.user.reservations = this.user.reservations.filter(
               (r) => r.id !== id,
             );
           }
         },
-        error: (e: any) => alert('Cancellation failed.'),
+        error: (e: any) => this.dialogService.alert('Error', 'Cancellation failed.'),
       });
     }
   }
@@ -158,12 +163,12 @@ export class UserProfileComponent implements OnInit {
     if (confirm('Are you sure you want to cancel this reservation?')) {
       this.reservationService.cancelReservation(id).subscribe({
         next: () => {
-          alert('Reservation successfully cancelled.');
+          this.dialogService.alert('Success', 'Reservation successfully cancelled.');
           this.loadReservations(this.currentPage);
         },
         error: (err) => {
           console.error(err);
-          alert('Cancellation error:');
+          this.dialogService.alert('Error', 'Cancellation error:');
         },
       });
     }
@@ -181,15 +186,13 @@ export class UserProfileComponent implements OnInit {
 
   changePassword() {
     if (!this.passwordData.oldPassword || !this.passwordData.newPassword) {
-      alert('Please fill in both password fields.');
+      this.dialogService.alert('Error', 'Please fill in both password fields.');
       return;
     }
     const passwordPattern =
       /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&.])(?=\S+$).{8,}$/;
     if (!passwordPattern.test(this.passwordData.newPassword)) {
-      alert(
-        'Password must contain:\n- At least 8 characters\n- One uppercase letter\n- One lowercase letter\n- One number\n- One special character (@$!%*?&.)',
-      );
+      this.dialogService.alert('Error', 'Password must contain:\n- At least 8 characters\n- One uppercase letter\n- One lowercase letter\n- One number\n- One special character (@$!%*?&.)');
       return;
     }
     this.loginService
@@ -199,7 +202,7 @@ export class UserProfileComponent implements OnInit {
       )
       .subscribe({
         next: (response) => {
-          alert('Password updated successfully!');
+          this.dialogService.alert('Success', 'Password updated successfully!');
           this.toggleChangePassword(); //clean data
         },
         error: (err) => {
@@ -208,7 +211,7 @@ export class UserProfileComponent implements OnInit {
           const msg =
             err.error?.message ||
             'Failed to update password. Check your current password.';
-          alert(msg);
+          this.dialogService.alert('Error', msg);
         },
       });
   }

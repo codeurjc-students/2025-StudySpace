@@ -4,6 +4,7 @@ import { ReservationService } from '../../services/reservation.service';
 import { RoomsService } from '../../services/rooms.service';
 import { RoomDTO } from '../../dtos/room.dto';
 import { ReservationLogic } from '../../utils/reservation-logic.util';
+import { DialogService } from '../../services/dialog.service';
 
 @Component({
   selector: 'app-reservation-form',
@@ -42,6 +43,7 @@ export class ReservationFormComponent implements OnInit {
     private readonly router: Router,
     private readonly reservationService: ReservationService,
     private readonly roomsService: RoomsService,
+    private readonly dialogService: DialogService,
   ) {}
 
   ngOnInit(): void {
@@ -111,14 +113,18 @@ export class ReservationFormComponent implements OnInit {
         .createReservation(this.roomId, start, end, this.reason)
         .subscribe({
           next: () => {
-            alert(
+            this.dialogService.alert(
+              'Success',
               'Reservation successfully created! Now its time to verify it or it will be automatically cancelled 1 hour before the start time',
             );
             this.router.navigate(['/']);
           },
           error: (err) => {
             console.error(err);
-            alert(err.error || 'Error creating reservation');
+            this.dialogService.alert(
+              'Error',
+              err.error || 'Error creating reservation',
+            );
           },
         });
     }
@@ -182,7 +188,8 @@ export class ReservationFormComponent implements OnInit {
           this.smartSuggestions = data;
           this.smartSearchLoading = false;
           if (data.length === 0) {
-            alert(
+            this.dialogService.alert(
+              'Error',
               'No alternatives found. Try changing the date or your filters.',
             );
           }

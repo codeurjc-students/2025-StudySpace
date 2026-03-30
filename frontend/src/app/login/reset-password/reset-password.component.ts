@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LoginService } from '../login.service';
+import { DialogService } from '../../services/dialog.service';
 
 @Component({
   selector: 'app-reset-password',
@@ -18,6 +19,7 @@ export class ResetPasswordComponent implements OnInit {
     private readonly route: ActivatedRoute,
     private readonly loginService: LoginService,
     private readonly router: Router,
+    private readonly dialogService: DialogService,
   ) {}
 
   ngOnInit(): void {
@@ -43,7 +45,10 @@ export class ResetPasswordComponent implements OnInit {
     this.loginService.resetPassword(this.token, this.password).subscribe({
       next: (res: any) => {
         this.isLoading = false;
-        alert('Password successfully updated! Please log in.');
+        this.dialogService.alert(
+          'Success',
+          'Password successfully updated! Please log in.',
+        );
         this.router.navigate(['/login']);
       },
       error: (err) => {

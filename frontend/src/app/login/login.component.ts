@@ -2,6 +2,7 @@ import { Component, ViewChild, TemplateRef } from '@angular/core';
 import { LoginService } from './login.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Router, ActivatedRoute } from '@angular/router';
+import { DialogService } from '../services/dialog.service';
 
 @Component({
   selector: 'app-login',
@@ -18,6 +19,7 @@ export class LoginComponent {
     private readonly modalService: NgbModal,
     private readonly router: Router,
     private readonly route: ActivatedRoute,
+    private readonly dialogService: DialogService,
   ) {}
 
   logIn() {
@@ -41,8 +43,9 @@ export class LoginComponent {
             const errorMsg = err.error?.message || err.error?.error || '';
 
             if (errorMsg.toLowerCase().includes('locked')) {
-              alert(
-                '⛔ ACCESS DENIED\n\n Your account has been LOCKED by an administrator.\n Contact support.',
+              this.dialogService.alert(
+                '⛔ ACCESS DENIED ⛔\n\n',
+                ' Your account has been LOCKED by an administrator.\n Contact support.',
               );
               this.loginService.logOut();
               this.router.navigate(['/']);

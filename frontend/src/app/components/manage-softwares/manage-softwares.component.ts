@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { SoftwareService, SoftwareDTO } from '../../services/software.service';
 import { Page } from '../../dtos/page.model';
 import { PaginationUtil } from '../../utils/pagination.util';
+import { DialogService } from '../../services/dialog.service';
 
 @Component({
   selector: 'app-manage-softwares',
@@ -17,7 +18,10 @@ export class ManageSoftwaresComponent implements OnInit {
   public minVersion: number | null = null;
   public isSearching: boolean = false;
 
-  constructor(private readonly softwareService: SoftwareService) {}
+  constructor(
+    private readonly softwareService: SoftwareService,
+    private readonly dialogService: DialogService,
+  ) {}
 
   ngOnInit(): void {
     this.loadSoftwares(0);
@@ -25,12 +29,14 @@ export class ManageSoftwaresComponent implements OnInit {
 
   loadSoftwares(page: number) {
     if (this.isSearching) {
-      this.softwareService.searchSoftwares(this.searchText, this.minVersion || undefined, page).subscribe({
+      this.softwareService
+        .searchSoftwares(this.searchText, this.minVersion || undefined, page)
+        .subscribe({
           next: (data) => {
             this.pageData = data;
             this.softwares = data.content;
             this.currentPage = data.number;
-          }
+          },
         });
     } else {
       this.softwareService.getAllSoftwares(page).subscribe({
@@ -48,15 +54,23 @@ export class ManageSoftwaresComponent implements OnInit {
   }
 
   deleteSoftware(id: number) {
-    if (confirm('Are you sure you want to delete this software?')) {
-      this.softwareService.deleteSoftware(id).subscribe({
-        next: () => {
-          this.softwares = this.softwares.filter((s) => s.id !== id);
-          alert('Software deleted!');
-        },
-        error: () => alert('Error deleting software.'),
+    this.dialogService
+      .confirm(
+        'Delete Software',
+        'Are you sure you want to delete this software?',
+      )
+      .then((confirmed) => {
+        if (confirmed) {
+          this.softwareService.deleteSoftware(id).subscribe({
+            next: () => {
+              this.softwares = this.softwares.filter((s) => s.id !== id);
+              this.dialogService.alert('Success', 'Software deleted!');
+            },
+            error: () =>
+              this.dialogService.alert('Error', 'Error deleting software.'),
+          });
+        }
       });
-    }
   }
 
   onSearch() {

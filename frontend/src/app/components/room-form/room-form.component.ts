@@ -3,6 +3,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { RoomsService } from '../../services/rooms.service';
 import { SoftwareService, SoftwareDTO } from '../../services/software.service';
 import { handleSaveRequest } from '../../utils/form-helpers.util';
+import { DialogService } from '../../services/dialog.service';
 
 @Component({
   selector: 'app-room-form',
@@ -45,6 +46,7 @@ export class RoomFormComponent implements OnInit {
     private readonly softwareService: SoftwareService,
     private readonly router: Router,
     private readonly route: ActivatedRoute,
+    private readonly dialogService: DialogService,
   ) {}
 
   ngOnInit(): void {
@@ -113,7 +115,7 @@ export class RoomFormComponent implements OnInit {
           this.uploadImageAndNavigate(response.id);
         } else {
           const action = this.isEditMode ? 'updated' : 'created';
-          alert(`Classroom ${action} correctly!`);
+          this.dialogService.alert(`Classroom ${action} correctly!`, '');
           this.router.navigate(['/admin/rooms']);
         }
       },
@@ -129,11 +131,14 @@ export class RoomFormComponent implements OnInit {
   uploadImageAndNavigate(id: number) {
     this.roomsService.uploadRoomImage(id, this.selectedFile!).subscribe({
       next: () => {
-        alert('Room and image saved correctly!');
+        this.dialogService.alert('Success', 'Room and image saved correctly!');
         this.router.navigate(['/admin/rooms']);
       },
       error: () => {
-        alert('Room saved but image upload failed.');
+        this.dialogService.alert(
+          'Error',
+          'Room saved but image upload failed.',
+        );
         this.router.navigate(['/admin/rooms']);
       },
     });

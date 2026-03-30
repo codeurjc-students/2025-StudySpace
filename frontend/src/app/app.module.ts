@@ -29,6 +29,7 @@ import { FullCalendarModule } from '@fullcalendar/angular';
 import { VerifyReservationComponent } from './components/verify-reservation/verify-reservation.component';
 import { RouterModule } from '@angular/router';
 import { RoomSearchFormComponent } from './components/room-search-form/room-search-form.component';
+import { SharedModalComponent } from './components/shared-modal/shared-modal.component';
 
 @NgModule({
   declarations: [
@@ -52,6 +53,7 @@ import { RoomSearchFormComponent } from './components/room-search-form/room-sear
     ResetPasswordComponent,
     VerifyReservationComponent,
     RoomSearchFormComponent,
+    SharedModalComponent,
   ],
   imports: [
     BrowserModule,
