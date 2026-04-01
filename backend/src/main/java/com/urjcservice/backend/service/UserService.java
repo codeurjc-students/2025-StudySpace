@@ -6,8 +6,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 
 @Service
@@ -125,6 +128,24 @@ public class UserService {
 
     public boolean existsByEmail(String email) {
         return userRepository.findByEmail(email).isPresent();
+    }
+
+    public Optional<User> findByVerificationToken(String token) {
+        return userRepository.findByVerificationToken(token);
+    }
+
+    @Scheduled(fixedRate = 3600000) // Every hour
+    @Transactional
+    public void deleteUnverifiedUsers() {
+        userRepository.findAll().forEach(user -> {
+            if (!user.isEmailVerified()
+                    && user.getVerificationTokenExpiry() != null
+                    && user.getVerificationTokenExpiry().isBefore(LocalDateTime.now())) {
+
+                userRepository.delete(user);
+                System.out.println("Deleted unverified user: " + user.getEmail());
+            }
+        });
     }
 
 }

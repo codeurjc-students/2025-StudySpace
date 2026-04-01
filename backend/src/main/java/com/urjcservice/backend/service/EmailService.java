@@ -152,6 +152,23 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    public void sendUserVerificationEmail(String to, String userName, String token) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromEmail);
+        message.setTo(to);
+        message.setSubject("Action Required: Verify your StudySpace Account");
+
+        String verificationLink = "https://localhost/verify-email?token=" + token;
+
+        message.setText(GREETING_DEAR + userName + ",\n\n" +
+                "Thank you for registering on StudySpace.\n" +
+                "Please click the link below to verify your email address and activate your account:\n\n" +
+                verificationLink + "\n\n" +
+                "If you did not request this, please ignore this email.");
+
+        mailSender.send(message);
+    }
+
     private String generateIcsContent(String roomName, String place, String coordinates, Date start, Date end) {
         SimpleDateFormat icsFormat = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
         icsFormat.setTimeZone(TimeZone.getTimeZone("UTC"));

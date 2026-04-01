@@ -18,6 +18,7 @@ import { ManageReservationsComponent } from './components/manage-reservations/ma
 import { ResetPasswordComponent } from './login/reset-password/reset-password.component';
 import { ForgotPasswordComponent } from './login/forgot-password/forgot-password.component';
 import { VerifyReservationComponent } from './components/verify-reservation/verify-reservation.component';
+import { VerifyEmailComponent } from './login/verify-email/verify-email.component';
 
 const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -27,6 +28,7 @@ const routes: Routes = [
   { path: 'profile', component: UserProfileComponent },
   { path: 'forgot-password', component: ForgotPasswordComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
+  { path: 'verify-email', component: VerifyEmailComponent },
   {
     path: 'profile',
     component: UserProfileComponent,

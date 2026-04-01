@@ -61,6 +61,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         // we give him the ADMIN role and USER role
                         admin.setRoles(Arrays.asList("USER", "ADMIN"));
                         admin.setType(User.UserType.ADMIN);
+                        admin.setEmailVerified(true);
 
                         userRepository.save(admin);
 
@@ -277,6 +278,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         student1.setEncodedPassword(passwordEncoder.encode("1234aA.."));
                         student1.setRoles(Arrays.asList("USER"));
                         student1.setType(User.UserType.USER_REGISTERED);
+                        student1.setEmailVerified(true);
 
                         User student2 = new User();
                         student2.setName("Carlos Profesor");
@@ -284,6 +286,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         student2.setEncodedPassword(passwordEncoder.encode("1234aA.."));
                         student2.setRoles(Arrays.asList("USER"));
                         student2.setType(User.UserType.USER_REGISTERED);
+                        student2.setEmailVerified(true);
 
                         // ADMIN user
                         User student3 = new User();
@@ -292,6 +295,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         student3.setEncodedPassword(passwordEncoder.encode("1234aA.."));
                         student3.setRoles(Arrays.asList("USER", "ADMIN"));
                         student3.setType(User.UserType.USER_REGISTERED);
+                        student3.setEmailVerified(true);
 
                         student3.setImageName("fran_perfil.jpg");
 
@@ -302,6 +306,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         miAdmin.setEncodedPassword(passwordEncoder.encode("1234aA.."));
                         miAdmin.setRoles(Arrays.asList("USER", "ADMIN"));
                         miAdmin.setType(User.UserType.ADMIN);
+                        miAdmin.setEmailVerified(true);
 
                         miAdmin.setImageName("guillermo_perfil.jpg");
 
@@ -313,12 +318,14 @@ public class DatabaseInitializer implements CommandLineRunner {
                         blockedUser.setRoles(Arrays.asList("USER"));
                         blockedUser.setType(User.UserType.USER_REGISTERED);
                         blockedUser.setBlocked(true);
+                        blockedUser.setEmailVerified(true);
 
                         User student4 = new User();
                         student4.setName("Lucía Gómez");
                         student4.setEmail("lucia.gomez@alumnos.urjc.es");
                         student4.setEncodedPassword(passwordEncoder.encode("1234aA.."));
                         student4.setRoles(Arrays.asList("USER"));
+                        student4.setEmailVerified(true);
                         student4.setType(User.UserType.USER_REGISTERED);
 
                         User student5 = new User();
@@ -326,6 +333,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         student5.setEmail("m.lopez@urjc.es");
                         student5.setEncodedPassword(passwordEncoder.encode("1234aA.."));
                         student5.setRoles(Arrays.asList("USER"));
+                        student5.setEmailVerified(true);
                         student5.setType(User.UserType.USER_REGISTERED);
 
                         User student6 = new User();
@@ -333,6 +341,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         student6.setEmail("elena.r@gmail.com");
                         student6.setEncodedPassword(passwordEncoder.encode("1234aA.."));
                         student6.setRoles(Arrays.asList("USER"));
+                        student6.setEmailVerified(true);
                         student6.setType(User.UserType.USER_REGISTERED);
 
                         User student7 = new User();
@@ -340,6 +349,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         student7.setEmail("david.s@alumnos.urjc.es");
                         student7.setEncodedPassword(passwordEncoder.encode("1234aA.."));
                         student7.setRoles(Arrays.asList("USER"));
+                        student7.setEmailVerified(true);
                         student7.setType(User.UserType.USER_REGISTERED);
 
                         User userImg = new User();
@@ -347,6 +357,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         userImg.setEmail("laura@urjc.es");
                         userImg.setEncodedPassword(passwordEncoder.encode("1234aA.."));
                         userImg.setRoles(Arrays.asList("USER"));
+                        userImg.setEmailVerified(true);
                         userImg.setType(User.UserType.USER_REGISTERED);
 
                         // image
@@ -357,6 +368,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         userExtra1.setEmail("pedro@gmail.com");
                         userExtra1.setEncodedPassword(passwordEncoder.encode("1234aA.."));
                         userExtra1.setRoles(Arrays.asList("USER"));
+                        userExtra1.setEmailVerified(true);
                         userExtra1.setType(User.UserType.USER_REGISTERED);
 
                         User userExtra2 = new User();
@@ -364,6 +376,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         userExtra2.setEmail("sofia@alumnos.urjc.es");
                         userExtra2.setEncodedPassword(passwordEncoder.encode("1234aA.."));
                         userExtra2.setRoles(Arrays.asList("USER"));
+                        userExtra2.setEmailVerified(true);
                         userExtra2.setType(User.UserType.USER_REGISTERED);
 
                         userRepository.saveAll(Arrays.asList(

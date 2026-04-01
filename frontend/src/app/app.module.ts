@@ -30,6 +30,7 @@ import { VerifyReservationComponent } from './components/verify-reservation/veri
 import { RouterModule } from '@angular/router';
 import { RoomSearchFormComponent } from './components/room-search-form/room-search-form.component';
 import { SharedModalComponent } from './components/shared-modal/shared-modal.component';
+import { VerifyEmailComponent } from './login/verify-email/verify-email.component';
 
 @NgModule({
   declarations: [
@@ -54,6 +55,7 @@ import { SharedModalComponent } from './components/shared-modal/shared-modal.com
     VerifyReservationComponent,
     RoomSearchFormComponent,
     SharedModalComponent,
+    VerifyEmailComponent,
   ],
   imports: [
     BrowserModule,

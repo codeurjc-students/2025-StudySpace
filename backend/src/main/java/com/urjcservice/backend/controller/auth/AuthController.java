@@ -2,8 +2,10 @@ package com.urjcservice.backend.controller.auth;
 
 import com.urjcservice.backend.entities.User;
 import com.urjcservice.backend.security.jwt.AuthResponse;
+import com.urjcservice.backend.service.EmailService;
 import com.urjcservice.backend.service.UserService;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,6 +17,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -26,10 +29,13 @@ public class AuthController {
 
     private final PasswordEncoder passwordEncoder;
 
-    public AuthController(PasswordEncoder passwordEncoder, UserService userService) {
+    private final EmailService emailService;
+
+    public AuthController(PasswordEncoder passwordEncoder, UserService userService, EmailService emailService) {
 
         this.passwordEncoder = passwordEncoder;
         this.userService = userService;
+        this.emailService = emailService;
     }
 
     // for JSON data
@@ -125,10 +131,36 @@ public class AuthController {
         newUser.setType(User.UserType.USER_REGISTERED);
         newUser.setRoles(Arrays.asList("USER"));
 
+        String token = java.util.UUID.randomUUID().toString();
+        newUser.setVerificationToken(token);
+        newUser.setEmailVerified(false);
+        newUser.setVerificationTokenExpiry(LocalDateTime.now().plusHours(24));
         // Save on the repository
         userService.save(newUser);
 
+        // Send verification email
+        emailService.sendUserVerificationEmail(newUser.getEmail(), newUser.getName(), token);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
+    }
+
+    @GetMapping("/verify-email")
+    public ResponseEntity<AuthResponse> verifyEmail(@RequestParam String token) {
+        Optional<User> userOpt = userService.findByVerificationToken(token);
+
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            if (user.isEmailVerified()) {
+                return ResponseEntity.ok(new AuthResponse(AuthResponse.Status.SUCCESS, "Email is already verified."));
+            }
+            user.setEmailVerified(true);
+            user.setVerificationToken(null); // clean verify token
+            userService.save(user);
+            return ResponseEntity.ok(
+                    new AuthResponse(AuthResponse.Status.SUCCESS, "Email successfully verified. You can now log in."));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new AuthResponse(AuthResponse.Status.FAILURE, "Invalid verification token."));
     }
 
     @PutMapping("/me")

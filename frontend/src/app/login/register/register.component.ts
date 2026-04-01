@@ -48,11 +48,14 @@ export class RegisterComponent {
 
     this.loginService.register(name, email, password).subscribe({
       next: (response) => {
-        this.dialogService.alert(
-          'Success',
-          'User successfully registered. You can now log in.',
-        );
-        this.router.navigate(['/login']); // Redirect to login page
+        this.dialogService
+          .alert(
+            'Registration Successful',
+            'User successfully registered, now you have 1 day to verify your email. Please check your email inbox to verify your account before logging in.',
+          )
+          .then(() => {
+            this.router.navigate(['/login']);
+          });
       },
       error: (err) => {
         console.error(err);
