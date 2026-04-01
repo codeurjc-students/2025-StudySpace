@@ -907,9 +907,6 @@ public class ReservationServiceTest {
 
         // Assert
         assertNotNull(result);
-        assertFalse(result.isVerified(), "The reservation must be born unverified");
-        assertNotNull(result.getVerificationToken(), "You must have a generated token");
-        assertNotNull(result.getTokenExpirationDate(), "It must have an expiration date.");
 
         // verification email, no confirmation yet
         verify(emailService, times(1)).sendVerificationEmail(
@@ -918,7 +915,8 @@ public class ReservationServiceTest {
                 anyString() // token
         );
 
-        verify(emailService, never()).sendReservationConfirmationEmail(any(), any(), any(), any(), any(), any(), any());
+        verify(emailService, times(1)).sendReservationConfirmationEmail(any(), any(), any(), any(), any(), any(),
+                any());
     }
 
     @Test
@@ -941,84 +939,6 @@ public class ReservationServiceTest {
         // Act & Assert
         // we expect IllegalArgumentException
         assertThrows(RuntimeException.class, () -> reservationService.createReservation(request, "user@test.com"));
-    }
-
-    @Test
-    @DisplayName("Verify Reservation - Success: Should verify and send ICS")
-    void testVerifyReservation_Success() {
-        // Arrange
-        String token = "valid-uuid-token";
-
-        User user = new User();
-        user.setEmail("u@test.com");
-        user.setName("User");
-        Room room = new Room();
-        room.setName("Lab 1");
-        room.setPlace("Campus");
-        room.setCoordenades("40,-3");
-
-        Reservation pendingRes = new Reservation();
-        pendingRes.setId(100L);
-        pendingRes.setVerified(false);
-        pendingRes.setVerificationToken(token);
-        pendingRes.setTokenExpirationDate(new Date(System.currentTimeMillis() + 3600000)); // last just 1 hour
-        pendingRes.setUser(user);
-        pendingRes.setRoom(room);
-        pendingRes.setStartDate(new Date());
-        pendingRes.setEndDate(new Date());
-
-        when(reservationRepository.findByVerificationToken(token)).thenReturn(Optional.of(pendingRes));
-        when(reservationRepository.save(any(Reservation.class))).thenAnswer(i -> i.getArgument(0));
-
-        // Act
-        reservationService.verifyReservation(token);
-
-        // Assert
-        assertTrue(pendingRes.isVerified());
-        assertNull(pendingRes.getVerificationToken()); // Token errased
-
-        // confirmation email with ICS
-        verify(emailService).sendReservationConfirmationEmail(
-                eq("u@test.com"),
-                eq("User"),
-                eq("Lab 1"),
-                eq("Campus"),
-                eq("40,-3"),
-                any(),
-                any());
-    }
-
-    @Test
-    @DisplayName("Verify Reservation - Expired: Should delete reservation and throw exception")
-    void testVerifyReservation_Expired() {
-        // Arrange
-        String token = "expired-token";
-        Reservation expiredRes = new Reservation();
-        expiredRes.setVerified(false);
-        // - 1 hour expired
-        expiredRes.setTokenExpirationDate(new Date(System.currentTimeMillis() - 3600000));
-
-        when(reservationRepository.findByVerificationToken(token)).thenReturn(Optional.of(expiredRes));
-
-        // Act & Assert
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> reservationService.verifyReservation(token));
-
-        assertTrue(ex.getMessage().contains("expired"));
-
-        // reservation deleted
-        verify(reservationRepository, times(1)).delete(expiredRes);
-        // do not send email
-        verify(emailService, never()).sendReservationConfirmationEmail(any(), any(), any(), any(), any(), any(), any());
-    }
-
-    @Test
-    @DisplayName("Cron Job - Should call deleteExpiredReservations")
-    void testDeleteExpiredUnverifiedReservations() {
-        // Act
-        reservationService.deleteExpiredUnverifiedReservations();
-
-        // Assert
-        verify(reservationRepository, times(1)).deleteExpiredReservations(any(Date.class));
     }
 
     @Test

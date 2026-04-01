@@ -88,13 +88,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                         @Param("start") Date start,
                         @Param("end") Date end);
 
-        Optional<Reservation> findByVerificationToken(String verificationToken);
-
-        @Modifying
-        @Transactional
-        @Query("DELETE FROM Reservation r WHERE r.verified = false AND r.tokenExpirationDate < :now")
-        void deleteExpiredReservations(@Param("now") Date now);
-
         @Query("SELECT r FROM Reservation r WHERE r.user = :user " +
                         "ORDER BY CASE WHEN (r.cancelled = false AND r.endDate > CURRENT_TIMESTAMP) THEN 0 ELSE 1 END ASC, "
                         +

@@ -479,30 +479,6 @@ public class ReservationRestControllerTest {
         }
 
         @Test
-        @DisplayName("GET /verify - Success")
-        @WithMockUser(username = "user", roles = "USER") // for not 401 unautorized
-        public void testVerifyReservation_Success() throws Exception {
-                String token = "valid-token";
-                doNothing().when(reservationService).verifyReservation(token);
-
-                mockMvc.perform(get("/api/reservations/verify").param("token", token))
-                                .andExpect(status().isOk())
-                                .andExpect(content().string(
-                                                org.hamcrest.Matchers.containsString("confirmed successfully")));
-        }
-
-        @Test
-        @DisplayName("GET /verify - Failure")
-        @WithMockUser(username = "user", roles = "USER") // for not 401 unautorized
-        public void testVerifyReservation_Failure() throws Exception {
-                String token = "invalid";
-                doThrow(new RuntimeException("Invalid token")).when(reservationService).verifyReservation(token);
-
-                mockMvc.perform(get("/api/reservations/verify").param("token", token))
-                                .andExpect(status().isBadRequest());
-        }
-
-        @Test
         @DisplayName("GET /smart-search - Success with all parameters")
         @WithMockUser(username = "user", roles = "USER")
         public void testSmartSearch_Success() throws Exception {

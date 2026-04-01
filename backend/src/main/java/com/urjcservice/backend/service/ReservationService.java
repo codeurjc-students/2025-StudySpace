@@ -302,60 +302,11 @@ public class ReservationService {
         reservation.setRoom(room);
         reservation.setCancelled(false);
 
-        reservation.setVerified(false);
-        reservation.setVerificationToken(java.util.UUID.randomUUID().toString());
-
-        Date now = new Date();
-        Date expiration = new Date(now.getTime() + 3600000); // 1 hour
-        reservation.setTokenExpirationDate(expiration);
-
         // first save reservation
         Reservation savedReservation = reservationRepository.save(reservation);
 
         // try confirmation email
         try {
-            emailService.sendVerificationEmail(
-                    user.getEmail(),
-                    user.getName(),
-                    savedReservation.getVerificationToken());
-        } catch (Exception e) {
-            log.error("Error sending verification email: {}", e.getMessage(), e);
-        }
-
-        return savedReservation;
-    }
-
-    public void verifyReservation(String token) {
-        Reservation reservation = reservationRepository.findByVerificationToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid verification token."));
-
-        // is verified?
-        if (reservation.isVerified()) {
-            throw new IllegalStateException("Reservation is already verified.");
-        }
-
-        // token expired?
-        if (reservation.getTokenExpirationDate() != null &&
-                reservation.getTokenExpirationDate().before(new Date())) {
-
-            // if expired delete the reservation
-            reservationRepository.delete(reservation);
-
-            throw new IllegalStateException(
-                    "Verification link has expired. The reservation has been cancelled. Please book again.");
-        }
-
-        reservation.setVerified(true);
-        reservation.setVerificationToken(null); // delete token
-        reservation.setTokenExpirationDate(null); // delete token date
-
-        Reservation savedReservation = reservationRepository.save(reservation);
-
-        // send email with calendar event
-        try {
-            User user = savedReservation.getUser();
-            Room room = savedReservation.getRoom();
-
             emailService.sendReservationConfirmationEmail(
                     user.getEmail(),
                     user.getName(),
@@ -367,15 +318,8 @@ public class ReservationService {
         } catch (Exception e) {
             log.error("Error sending confirmation email: {}", e.getMessage(), e);
         }
-    }
 
-    @Scheduled(fixedRate = 60000) // every minute we search for new reservations that are not verified and have
-                                  // expired token
-    @Transactional
-    public void deleteExpiredUnverifiedReservations() {
-        Date now = new Date();
-
-        reservationRepository.deleteExpiredReservations(now);
+        return savedReservation;
     }
 
     public Page<Reservation> getReservationsByUserEmail(String email, Pageable pageable) {

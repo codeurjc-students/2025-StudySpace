@@ -115,9 +115,10 @@ export class ReservationFormComponent implements OnInit {
           next: () => {
             this.dialogService.alert(
               'Success',
-              'Reservation successfully created! Now its time to verify it or it will be automatically cancelled 1 hour before the start time',
-            );
-            this.router.navigate(['/']);
+              'Reservation successfully created! We have sent a confirmation email with the calendar details attached.'
+            ).then(() => {
+              this.router.navigate(['/']);
+            });
           },
           error: (err) => {
             console.error(err);

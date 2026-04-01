@@ -17,7 +17,6 @@ import { SoftwareFormComponent } from './components/software-form/software-form.
 import { ManageReservationsComponent } from './components/manage-reservations/manage-reservations.component';
 import { ResetPasswordComponent } from './login/reset-password/reset-password.component';
 import { ForgotPasswordComponent } from './login/forgot-password/forgot-password.component';
-import { VerifyReservationComponent } from './components/verify-reservation/verify-reservation.component';
 import { VerifyEmailComponent } from './login/verify-email/verify-email.component';
 
 const routes: Routes = [
@@ -39,7 +38,7 @@ const routes: Routes = [
     component: ReservationFormComponent,
     canActivate: [authGuard], // only authenticated users can access
   },
-  { path: 'verify-reservation', component: VerifyReservationComponent }, //email of verification of reservation
+
   //admin routes
 
   {

@@ -407,7 +407,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         resRed1.setReason("Hackathon Urjc (Parte 1)");
                         resRed1.setUser(student1);
                         resRed1.setRoom(lab1);
-                        resRed1.setVerified(true);
 
                         Reservation resRed3 = new Reservation();
                         resRed3.setStartDate(java.sql.Timestamp.valueOf(nextMonday.atTime(12, 0)));
@@ -415,7 +414,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         resRed3.setReason("Hackathon Urjc (Parte 2)");
                         resRed3.setUser(userExtra1);
                         resRed3.setRoom(lab1);
-                        resRed3.setVerified(true);
 
                         Reservation resRed4 = new Reservation();
                         resRed4.setStartDate(java.sql.Timestamp.valueOf(nextMonday.atTime(15, 0)));
@@ -423,7 +421,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         resRed4.setReason("Hackathon Urjc (Parte 3)");
                         resRed4.setUser(student6);
                         resRed4.setRoom(lab1);
-                        resRed4.setVerified(true);
 
                         Reservation resRed2 = new Reservation();
                         resRed2.setStartDate(java.sql.Timestamp.valueOf(nextMonday.atTime(18, 0)));
@@ -431,7 +428,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         resRed2.setReason("Hackathon Urjc (Parte 4)");
                         resRed2.setUser(student7);
                         resRed2.setRoom(lab1);
-                        resRed2.setVerified(true);
 
                         // Yellow tuesday 7 hours occupied
                         Reservation resYellow1 = new Reservation();
@@ -440,7 +436,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         resYellow1.setReason("Curso Intensivo Java");
                         resYellow1.setUser(userExtra1);
                         resYellow1.setRoom(lab1);
-                        resYellow1.setVerified(true);
 
                         Reservation resYellow2 = new Reservation();
                         resYellow2.setStartDate(java.sql.Timestamp.valueOf(nextTuesday.atTime(12, 0)));
@@ -448,7 +443,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         resYellow2.setReason("Curso Intensivo Java");
                         resYellow2.setUser(userExtra2);
                         resYellow2.setRoom(lab1);
-                        resYellow2.setVerified(true);
 
                         Reservation resYellow3 = new Reservation();
                         resYellow3.setStartDate(java.sql.Timestamp.valueOf(nextTuesday.atTime(15, 0)));
@@ -456,7 +450,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         resYellow3.setReason("Curso Intensivo Java");
                         resYellow3.setUser(student7);
                         resYellow3.setRoom(lab1);
-                        resYellow3.setVerified(true);
 
                         // green wenesday 2 hous occupied
                         Reservation resGreen = new Reservation();
@@ -465,7 +458,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         resGreen.setReason("Tutoría");
                         resGreen.setUser(student1);
                         resGreen.setRoom(lab1);
-                        resGreen.setVerified(true);
 
                         // Active and Verified
                         Reservation adminAct1 = new Reservation();
@@ -474,7 +466,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         adminAct1.setReason("Reunión de Departamento");
                         adminAct1.setUser(student3);
                         adminAct1.setRoom(salaReuniones);
-                        adminAct1.setVerified(true);
 
                         Reservation adminAct2 = new Reservation();
                         adminAct2.setStartDate(java.sql.Timestamp.valueOf(nextFriday.atTime(9, 0)));
@@ -482,7 +473,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         adminAct2.setReason("Supervisión Aula Magna");
                         adminAct2.setUser(student3);
                         adminAct2.setRoom(aulaMagna);
-                        adminAct2.setVerified(true);
 
                         Reservation adminAct3 = new Reservation();
                         adminAct3.setStartDate(java.sql.Timestamp.valueOf(nextFriday.atTime(16, 0)));
@@ -490,7 +480,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         adminAct3.setReason("Mantenimiento Servidores");
                         adminAct3.setUser(student3);
                         adminAct3.setRoom(estudioGrupal);
-                        adminAct3.setVerified(true);
 
                         Reservation adminAct4 = new Reservation();
                         adminAct4.setStartDate(java.sql.Timestamp.valueOf(nextMonday.plusDays(7).atTime(10, 0)));
@@ -498,7 +487,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         adminAct4.setReason("Pruebas de Software");
                         adminAct4.setUser(student3);
                         adminAct4.setRoom(labBio);
-                        adminAct4.setVerified(true);
 
                         // Completed
                         Reservation adminPast1 = new Reservation();
@@ -507,7 +495,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         adminPast1.setReason("Reunión Rectorado");
                         adminPast1.setUser(student3);
                         adminPast1.setRoom(salaReuniones);
-                        adminPast1.setVerified(true);
 
                         Reservation adminPast2 = new Reservation();
                         adminPast2.setStartDate(java.sql.Timestamp.valueOf(today.minusDays(2).atTime(10, 0)));
@@ -515,7 +502,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         adminPast2.setReason("Revisión Inventario");
                         adminPast2.setUser(student3);
                         adminPast2.setRoom(tallerArqui);
-                        adminPast2.setVerified(true);
 
                         Reservation adminPast3 = new Reservation();
                         adminPast3.setStartDate(java.sql.Timestamp.valueOf(today.minusDays(3).atTime(11, 0)));
@@ -523,7 +509,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         adminPast3.setReason("Control de Acceso");
                         adminPast3.setUser(student3);
                         adminPast3.setRoom(zonaSilencio);
-                        adminPast3.setVerified(true);
 
                         Reservation adminPast4 = new Reservation();
                         adminPast4.setStartDate(java.sql.Timestamp.valueOf(today.minusDays(4).atTime(12, 0)));
@@ -531,7 +516,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         adminPast4.setReason("Configuración Redes");
                         adminPast4.setUser(student3);
                         adminPast4.setRoom(aula204);
-                        adminPast4.setVerified(true);
 
                         Reservation adminPast5 = new Reservation();
                         adminPast5.setStartDate(java.sql.Timestamp.valueOf(today.minusDays(5).atTime(16, 0)));
@@ -539,7 +523,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         adminPast5.setReason("Reunión Seguridad");
                         adminPast5.setUser(student3);
                         adminPast5.setRoom(salaReuniones);
-                        adminPast5.setVerified(true);
 
                         // Canceled
                         Reservation adminCanc1 = new Reservation();
@@ -549,7 +532,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         adminCanc1.setUser(student3);
                         adminCanc1.setRoom(zonaSilencio);
                         adminCanc1.setCancelled(true);
-                        adminCanc1.setVerified(true);
 
                         Reservation adminCanc2 = new Reservation();
                         adminCanc2.setStartDate(java.sql.Timestamp.valueOf(today.minusDays(6).atTime(9, 0)));
@@ -558,7 +540,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         adminCanc2.setUser(student3);
                         adminCanc2.setRoom(aula204);
                         adminCanc2.setCancelled(true);
-                        adminCanc2.setVerified(true);
 
                         Reservation adminCanc3 = new Reservation();
                         adminCanc3.setStartDate(java.sql.Timestamp.valueOf(today.minusDays(7).atTime(14, 0)));
@@ -567,7 +548,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         adminCanc3.setUser(student3);
                         adminCanc3.setRoom(lab1);
                         adminCanc3.setCancelled(true);
-                        adminCanc3.setVerified(true);
 
                         // --- User Blocked ---
                         Reservation blockedRes = new Reservation();
@@ -576,7 +556,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         blockedRes.setReason("Uso indebido del material");
                         blockedRes.setUser(blockedUser);
                         blockedRes.setRoom(aulaDiseno);
-                        blockedRes.setVerified(true);
 
                         Reservation student4Res = new Reservation();
                         student4Res.setStartDate(java.sql.Timestamp.valueOf(nextThursday.atTime(18, 0)));
@@ -584,7 +563,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         student4Res.setReason("Trabajo en Grupo");
                         student4Res.setUser(student4);
                         student4Res.setRoom(estudioGrupal);
-                        student4Res.setVerified(true);
 
                         reservationRepository.saveAll(Arrays.asList(
                                         resRed1, resRed2, resRed3, resRed4, resYellow1, resYellow2, resYellow3,
