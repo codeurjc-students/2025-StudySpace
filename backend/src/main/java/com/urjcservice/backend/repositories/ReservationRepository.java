@@ -9,6 +9,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Lock;
+import jakarta.persistence.LockModeType;
 
 import java.util.List;
 import java.util.Optional;
@@ -94,4 +96,12 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                         "r.startDate DESC")
         Page<Reservation> findByUserWithActivePriority(@Param("user") User user, Pageable pageable);
 
+        @Lock(LockModeType.PESSIMISTIC_WRITE)
+        @Query("SELECT r FROM Reservation r WHERE r.room.id = :roomId " +
+                        "AND r.cancelled = false " +
+                        "AND r.startDate < :endDate AND r.endDate > :startDate")
+        List<Reservation> findOverlappingReservationsForUpdate(
+                        @Param("roomId") Long roomId,
+                        @Param("startDate") Date startDate,
+                        @Param("endDate") Date endDate);
 }

@@ -19,6 +19,7 @@ El primer paso antes de levantar cualquier entorno es obtener el código fuente 
 git clone https://github.com/codeurjc-students/2025-StudySpace
 cd 2025-StudySpace
 ```
+
 ---
 
 > **Nota importante: Certificado SSL y Visualización de Imágenes**
@@ -26,6 +27,7 @@ cd 2025-StudySpace
 > Debido a que la aplicación utiliza un **certificado SSL auto-firmado**, el navegador bloqueará por defecto las peticiones al backend, lo que impedirá la correcta visualización de las imágenes.
 >
 > **Antes de proceder con el despliegue**, es necesario autorizar el certificado en el navegador:
+>
 > 1. Una vez levantado el entorno (paso siguiente), acceda a: [https://localhost:8443/api/users/1/image](https://localhost:8443/api/users/1/image) o a [https://localhost:8443/api/rooms/1/image](https://localhost:8443/api/rooms/1/image).
 > 2. En la pantalla de advertencia, haga clic en **"Configuración avanzada"** y seleccione **"Acceder a localhost (sitio no seguro)"**.
 >
@@ -139,6 +141,42 @@ $env:BASE_URL="https://localhost:4200"; npx playwright test --ui
 Si lo ejecutas en PowerShell.
 
 Para cerrar Playwright una vez acabadas las pruebas, ejecutamos:
+
+```bash
+docker-compose -f docker-compose.e2e.yml down
+```
+
+#### Pruebas de Carga y Estrés (con Artillery)
+
+Para realizar pruebas de concurrencia y estrés sobre el servidor, utilizamos Artillery atacando el entorno E2E.
+
+Desde la raíz del proyecto, asegúrate de apagar cualquier contenedor previo por si acaso:
+
+```bash
+docker-compose down
+```
+
+Levanta la infraestructura E2E (Base de datos de pruebas H2 y MailHog):
+
+```bash
+docker-compose -f docker-compose.e2e.yml up -d
+```
+
+Dentro de la carpeta `backend`, ejecutamos:
+
+```bash
+mvn spring-boot:run -Dspring-boot.run.profiles=e2e
+```
+
+No es necesario ejecutar el frontend para estas pruebas, ya que se centran en el backend.
+
+Abre otra terminal, dirígete a la carpeta donde están los tests de carga (dentro de `backend/src/test`) y ejecuta Artillery con:
+
+```bash
+artillery run load-test-phase-0.yml
+```
+
+Al finalizar, puedes apagar el backend (con Ctrl+C). Luego apaga la infraestructura:
 
 ```bash
 docker-compose -f docker-compose.e2e.yml down

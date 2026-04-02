@@ -12,7 +12,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.slf4j.Logger;
@@ -252,11 +252,12 @@ public class ReservationService {
         return updateReservation(id, partialReservation);
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Reservation createReservation(ReservationRequest request, String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MSG));
 
-        Room room = roomRepository.findById(request.getRoomId())
+        Room room = roomRepository.findByIdForUpdate(request.getRoomId())
                 .orElseThrow(() -> new IllegalArgumentException("Room not found"));
 
         if (!room.isActive()) {
@@ -284,10 +285,10 @@ public class ReservationService {
             throw new IllegalArgumentException("A single reservation cannot exceed 3 hours.");
         }
 
-        Page<Reservation> overlaps = reservationRepository.findOverlappingReservations(
-                request.getRoomId(), request.getStartDate(), request.getEndDate(), PageRequest.of(0, 1));
+        List<Reservation> overlaps = reservationRepository.findOverlappingReservationsForUpdate(
+                request.getRoomId(), request.getStartDate(), request.getEndDate());
 
-        if (overlaps.hasContent()) {
+        if (!overlaps.isEmpty()) {
             throw new IllegalStateException("The room is already reserved for this time.");
         }
 
