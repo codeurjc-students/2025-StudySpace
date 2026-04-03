@@ -47,15 +47,13 @@
                   id="campusSearchSelect"
                   class="form-select form-select-sm"
                   name="campusSearch"
-                  [(ngModel)]="selectedCampus"
-                  (change)="searchRooms()"
+                  [ngModel]="selectedCampusId"
+                  (ngModelChange)="selectedCampusId = $event; searchRooms()"
                 >
-                  <option value="">All</option>
-                  <option value="ALCORCON">Alcorcón</option>
-                  <option value="MOSTOLES">Móstoles</option>
-                  <option value="VICALVARO">Vicálvaro</option>
-                  <option value="FUENLABRADA">Fuenlabrada</option>
-                  <option value="QUINTANA">Quintana</option>
+                  <option [ngValue]="null">All</option>
+                  <option *ngFor="let c of campus" [ngValue]="c.id">
+                    {{ c.name }}
+                  </option>
                 </select>
               </div>
               <div class="col-md-2">
@@ -85,7 +83,7 @@
                 <button
                   type="button"
                   class="btn btn-outline-secondary btn-sm"
-                  *ngIf="roomSearchText || selectedCampus || minCapacity"
+                  *ngIf="roomSearchText || selectedCampusId || minCapacity"
                   (click)="clearRoomSearch()"
                 >
                   ✖
@@ -122,7 +120,7 @@
                 [class.bg-info]="roomId !== r.id"
                 [class.text-dark]="roomId !== r.id"
               >
-                {{ r.camp }}
+                {{ r.campus?.name }}
               </span>
               <br />
               <small

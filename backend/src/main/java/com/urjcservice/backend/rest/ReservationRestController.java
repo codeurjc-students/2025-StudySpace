@@ -14,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import com.urjcservice.backend.service.CampusService;
 
 import java.net.URI;
 import java.util.Date;
@@ -30,9 +31,11 @@ import static org.springframework.web.servlet.support.ServletUriComponentsBuilde
 public class ReservationRestController {
 
     private final ReservationService reservationService;
+    private final CampusService campusService;
 
-    public ReservationRestController(ReservationService reservationService) {
+    public ReservationRestController(ReservationService reservationService, CampusService campusService) {
         this.reservationService = reservationService;
+        this.campusService = campusService;
     }
 
     public static class ReservationRequest {
@@ -287,10 +290,10 @@ public class ReservationRestController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date end,
             @RequestParam(required = false) Integer minCapacity,
-            @RequestParam(required = false) Room.CampusType campus) {
+            @RequestParam(required = false) Long campusId) {
 
         List<SmartSuggestionDTO> suggestions = reservationService.smartFindAvailableRooms(start, end, minCapacity,
-                campus);
+                campusId != null ? campusService.findById(campusId).orElse(null) : null);
         return ResponseEntity.ok(suggestions);
     }
 

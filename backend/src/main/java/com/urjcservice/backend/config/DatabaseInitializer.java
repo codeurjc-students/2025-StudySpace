@@ -1,5 +1,6 @@
 package com.urjcservice.backend.config;
 
+import com.urjcservice.backend.entities.Campus;
 import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.entities.Software;
@@ -8,6 +9,7 @@ import com.urjcservice.backend.repositories.ReservationRepository;
 import com.urjcservice.backend.repositories.RoomRepository;
 import com.urjcservice.backend.repositories.SoftwareRepository;
 import com.urjcservice.backend.repositories.UserRepository;
+import com.urjcservice.backend.repositories.CampusRepository;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -31,17 +33,19 @@ public class DatabaseInitializer implements CommandLineRunner {
         private final SoftwareRepository softwareRepository;
         private final ReservationRepository reservationRepository;
         private final PasswordEncoder passwordEncoder;
+        private final CampusRepository campusRepository;
 
         public DatabaseInitializer(UserRepository userRepository,
                         RoomRepository roomRepository,
                         SoftwareRepository softwareRepository,
                         ReservationRepository reservationRepository,
-                        PasswordEncoder passwordEncoder) {
+                        PasswordEncoder passwordEncoder, CampusRepository campusRepository) {
                 this.userRepository = userRepository;
                 this.roomRepository = roomRepository;
                 this.softwareRepository = softwareRepository;
                 this.reservationRepository = reservationRepository;
                 this.passwordEncoder = passwordEncoder;
+                this.campusRepository = campusRepository;
         }
 
         @Override
@@ -141,11 +145,18 @@ public class DatabaseInitializer implements CommandLineRunner {
                                         eclipse, matlab, autocad, office, vscode,
                                         intellij, spss, solidworks, python, rstudio, docker, git, postman));
 
+                        // Campus
+                        Campus mostoles = new Campus("Móstoles", "40.335618, -3.877206");
+                        Campus alcorcon = new Campus("Alcorcón", "40.346632, -3.846051");
+                        Campus fuenlabrada = new Campus("Fuenlabrada", "40.281123, -3.818319");
+                        Campus vicalvaro = new Campus("Vicálvaro", "40.406149, -3.610711");
+                        campusRepository.saveAll(Arrays.asList(mostoles, alcorcon, fuenlabrada, vicalvaro));
+
                         // --- ROOMS ---
                         Room lab1 = new Room();
                         lab1.setName("Laboratorio A1");
                         lab1.setCapacity(30);
-                        lab1.setCamp(Room.CampusType.MOSTOLES);
+                        lab1.setCampus(mostoles);
                         lab1.setPlace("Aulario II");
                         lab1.setCoordenades("40.332, -3.885");
                         lab1.setSoftware(Arrays.asList(eclipse, matlab));
@@ -156,7 +167,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         Room aulaDiseno = new Room();
                         aulaDiseno.setName("Sala de Diseño");
                         aulaDiseno.setCapacity(15);
-                        aulaDiseno.setCamp(Room.CampusType.ALCORCON);
+                        aulaDiseno.setCampus(alcorcon);
                         aulaDiseno.setPlace("Edificio Principal");
                         aulaDiseno.setCoordenades("40.345, -3.820");
                         aulaDiseno.setSoftware(Arrays.asList(autocad));
@@ -165,7 +176,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         Room biblioteca = new Room();
                         biblioteca.setName("Sala de Estudio 3");
                         biblioteca.setCapacity(50);
-                        biblioteca.setCamp(Room.CampusType.VICALVARO);
+                        biblioteca.setCampus(vicalvaro);
                         biblioteca.setPlace("Biblioteca Central");
                         biblioteca.setCoordenades("40.405, -3.608");
                         biblioteca.setSoftware(Arrays.asList(office));
@@ -174,7 +185,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         Room aulaMagna = new Room();
                         aulaMagna.setName("Aula Magna");
                         aulaMagna.setCapacity(150);
-                        aulaMagna.setCamp(Room.CampusType.FUENLABRADA);
+                        aulaMagna.setCampus(fuenlabrada);
                         aulaMagna.setPlace("Edificio Principal Planta Baja");
                         aulaMagna.setCoordenades("40.283, -3.821");
                         aulaMagna.setSoftware(Arrays.asList()); // no software
@@ -183,7 +194,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         Room salaReuniones = new Room();
                         salaReuniones.setName("Sala de Reuniones 1");
                         salaReuniones.setCapacity(8);
-                        salaReuniones.setCamp(Room.CampusType.QUINTANA);
+                        salaReuniones.setCampus(vicalvaro);
                         salaReuniones.setPlace("Planta 3, Puerta B");
                         salaReuniones.setCoordenades("40.428, -3.716");
                         salaReuniones.setSoftware(Arrays.asList(office));
@@ -192,7 +203,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         Room labBio = new Room();
                         labBio.setName("Laboratorio Bioquímica");
                         labBio.setCapacity(25);
-                        labBio.setCamp(Room.CampusType.ALCORCON);
+                        labBio.setCampus(alcorcon);
                         labBio.setPlace("Edificio Lab III");
                         labBio.setCoordenades("40.344, -3.822");
                         labBio.setSoftware(Arrays.asList(matlab));
@@ -201,7 +212,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         Room tallerArqui = new Room();
                         tallerArqui.setName("Taller de Arquitectura");
                         tallerArqui.setCapacity(60);
-                        tallerArqui.setCamp(Room.CampusType.FUENLABRADA);
+                        tallerArqui.setCampus(fuenlabrada);
                         tallerArqui.setPlace("Pabellón A");
                         tallerArqui.setCoordenades("40.285, -3.823");
                         tallerArqui.setSoftware(Arrays.asList(autocad, office));
@@ -210,7 +221,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         Room zonaSilencio = new Room();
                         zonaSilencio.setName("Zona de Silencio Absoluto");
                         zonaSilencio.setCapacity(100);
-                        zonaSilencio.setCamp(Room.CampusType.VICALVARO);
+                        zonaSilencio.setCampus(vicalvaro);
                         zonaSilencio.setPlace("Biblioteca Planta 2");
                         zonaSilencio.setCoordenades("40.405, -3.608");
                         zonaSilencio.setSoftware(Arrays.asList()); // no software
@@ -219,7 +230,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         Room estudioGrupal = new Room();
                         estudioGrupal.setName("Cabina Estudio Grupal");
                         estudioGrupal.setCapacity(6);
-                        estudioGrupal.setCamp(Room.CampusType.MOSTOLES);
+                        estudioGrupal.setCampus(mostoles);
                         estudioGrupal.setPlace("Biblioteca Central");
                         estudioGrupal.setCoordenades("40.334, -3.881");
                         estudioGrupal.setSoftware(Arrays.asList(office));
@@ -228,7 +239,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         Room aula204 = new Room();
                         aula204.setName("Aula 204");
                         aula204.setCapacity(35);
-                        aula204.setCamp(Room.CampusType.QUINTANA);
+                        aula204.setCampus(vicalvaro);
                         aula204.setPlace("Planta 2");
                         aula204.setCoordenades("40.428, -3.716");
                         aula204.setSoftware(Arrays.asList());
@@ -238,7 +249,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         Room aulaMantenimiento = new Room();
                         aulaMantenimiento.setName("Aula en Reparación");
                         aulaMantenimiento.setCapacity(20);
-                        aulaMantenimiento.setCamp(Room.CampusType.QUINTANA);
+                        aulaMantenimiento.setCampus(vicalvaro);
                         aulaMantenimiento.setPlace("Planta Baja");
                         aulaMantenimiento.setCoordenades("40.428, -3.716");
                         aulaMantenimiento.setSoftware(Arrays.asList());
@@ -247,7 +258,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         Room labCerrado = new Room();
                         labCerrado.setName("Lab Informática (Cerrado)");
                         labCerrado.setCapacity(30);
-                        labCerrado.setCamp(Room.CampusType.MOSTOLES);
+                        labCerrado.setCampus(mostoles);
                         labCerrado.setPlace("Aulario I");
                         labCerrado.setCoordenades("40.330, -3.880");
                         labCerrado.setSoftware(Arrays.asList(eclipse));
@@ -256,7 +267,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                         Room aulaMultimedia = new Room();
                         aulaMultimedia.setName("Sala Multimedia");// room with image
                         aulaMultimedia.setCapacity(20);
-                        aulaMultimedia.setCamp(Room.CampusType.FUENLABRADA);
+                        aulaMultimedia.setCampus(fuenlabrada);
                         aulaMultimedia.setPlace("Edificio de Comunicación");
                         aulaMultimedia.setCoordenades("40.283, -3.821");
                         aulaMultimedia.setSoftware(Arrays.asList(docker, git));

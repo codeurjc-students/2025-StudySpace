@@ -105,15 +105,15 @@ export class ReservationService {
     start: Date,
     end: Date,
     minCapacity?: number,
-    campus?: string,
+    campusId?: number,
   ): Observable<any[]> {
     let url = `${BASE_URL}/smart-search?start=${start.toISOString()}&end=${end.toISOString()}`;
 
     if (minCapacity) {
       url += `&minCapacity=${minCapacity}`;
     }
-    if (campus) {
-      url += `&campus=${campus}`;
+    if (campusId) {
+      url += `&campusId=${campusId}`;
     }
 
     return this.http.get<any[]>(url);

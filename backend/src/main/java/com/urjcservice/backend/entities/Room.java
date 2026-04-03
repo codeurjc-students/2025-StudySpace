@@ -11,14 +11,6 @@ import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 @Table(name = "rooms")
 public class Room {
 
-    public enum CampusType {
-        ALCORCON,
-        MOSTOLES,
-        VICALVARO,
-        FUENLABRADA,
-        QUINTANA
-    }
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,8 +19,10 @@ public class Room {
     private String name; // primary key
     @GenericField // exact filter
     private Integer capacity;
-    @GenericField
-    private CampusType Camp;
+    @IndexedEmbedded(includePaths = { "id", "name" })
+    @ManyToOne
+    @JoinColumn(name = "campus_id")
+    private Campus campus;
     @FullTextField(analyzer = "standard")
     private String place;
     @GenericField
@@ -53,12 +47,12 @@ public class Room {
     public Room() {
     }
 
-    public Room(Long id, String name, Integer capacity, CampusType camp, String place, String coordenades,
+    public Room(Long id, String name, Integer capacity, Campus campus, String place, String coordenades,
             List<Software> software, boolean active) {
         this.id = id;
         this.name = name;
         this.capacity = capacity;
-        Camp = camp;
+        this.campus = campus;
         this.place = place;
         this.coordenades = coordenades;
         this.software = software;
@@ -89,12 +83,12 @@ public class Room {
         this.capacity = capacity;
     }
 
-    public CampusType getCamp() {
-        return Camp;
+    public Campus getCampus() {
+        return campus;
     }
 
-    public void setCamp(CampusType camp) {
-        Camp = camp;
+    public void setCampus(Campus campus) {
+        this.campus = campus;
     }
 
     public String getPlace() {

@@ -4,6 +4,8 @@ import { RoomsService } from '../../services/rooms.service';
 import { SoftwareService, SoftwareDTO } from '../../services/software.service';
 import { handleSaveRequest } from '../../utils/form-helpers.util';
 import { DialogService } from '../../services/dialog.service';
+import { CampusDTO } from '../../dtos/campus.dto';
+import { CampusService } from '../../services/campus.service';
 
 @Component({
   selector: 'app-room-form',
@@ -21,24 +23,21 @@ export class RoomFormComponent implements OnInit {
   availableSoftwares: SoftwareDTO[] = [];
   selectedSoftwares: SoftwareDTO[] = [];
 
+  campus: CampusDTO[] = [];
+  isCreatingCampus = false;
+  newCampus: CampusDTO = { id: 0, name: '', coordinates: '' };
+
   room = {
     //defect values
     name: '',
     capacity: 0,
-    camp: 'MOSTOLES',
+    campusId: null as number | null,
     place: '',
     coordenades: '',
     active: true,
     softwareIds: [] as number[], // Array to hold selected software IDs
   };
 
-  campusOptions = [
-    'ALCORCON',
-    'MOSTOLES',
-    'VICALVARO',
-    'FUENLABRADA',
-    'QUINTANA',
-  ];
   availableSoftware: SoftwareDTO[] = [];
 
   constructor(
@@ -47,9 +46,14 @@ export class RoomFormComponent implements OnInit {
     private readonly router: Router,
     private readonly route: ActivatedRoute,
     private readonly dialogService: DialogService,
+    private readonly campusService: CampusService,
   ) {}
 
   ngOnInit(): void {
+    this.campusService.getAllCampus().subscribe({
+      next: (data) => (this.campus = data),
+      error: (err) => console.error('Error loading campus', err),
+    });
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isEditMode = true;
@@ -59,7 +63,7 @@ export class RoomFormComponent implements OnInit {
           this.room = {
             name: data.name,
             capacity: data.capacity,
-            camp: data.camp,
+            campusId: data.campus ? data.campus.id : null,
             place: data.place,
             coordenades: data.coordenades,
             active: data.active,
@@ -79,12 +83,19 @@ export class RoomFormComponent implements OnInit {
     }
   }
 
+  onCampusSelectChange(val: number | null) {
+    if (val === -1) {
+      this.isCreatingCampus = true;
+      this.room.campusId = null;
+    }
+  }
+
   loadRoomData(id: number) {
     this.roomsService.getRoom(id).subscribe({
       next: (data) => {
         this.room.name = data.name;
         this.room.capacity = data.capacity;
-        this.room.camp = data.camp;
+        this.room.campusId = data.campus ? data.campus.id : null;
         this.room.place = data.place;
         this.room.coordenades = data.coordenades;
 
@@ -103,6 +114,26 @@ export class RoomFormComponent implements OnInit {
   }
 
   save() {
+    if (this.isCreatingCampus && this.newCampus.name) {
+      this.campusService.createCampus(this.newCampus).subscribe({
+        next: (createdCampus) => {
+          this.campus.push(createdCampus);
+          this.room.campusId = createdCampus.id; // Asignamos el nuevo a la sala
+          this.isCreatingCampus = false;
+          this.proceedWithSave();
+        },
+        error: () =>
+          this.dialogService.alert(
+            'Error',
+            'A campus with that name already exists.',
+          ),
+      });
+    } else {
+      this.proceedWithSave();
+    }
+  }
+
+  private proceedWithSave() {
     const request$ =
       this.isEditMode && this.roomId
         ? this.roomsService.updateRoom(this.roomId, this.room)
@@ -115,12 +146,15 @@ export class RoomFormComponent implements OnInit {
           this.uploadImageAndNavigate(response.id);
         } else {
           const action = this.isEditMode ? 'updated' : 'created';
-          this.dialogService.alert(`Classroom ${action} correctly!`, '');
-          this.router.navigate(['/admin/rooms']);
+          this.dialogService
+            .alert(`Classroom ${action} correctly!`, '')
+            .then(() => {
+              this.router.navigate(['/admin/rooms']);
+            });
         }
       },
       'Classroom',
-      'Error: A classroom with that name already exists. Please choose another.', // 409
+      'Error: A classroom with that name already exists.',
     );
   }
 

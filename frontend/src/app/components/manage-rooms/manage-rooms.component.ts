@@ -4,6 +4,8 @@ import { RoomDTO } from '../../dtos/room.dto';
 import { Page } from '../../dtos/page.model';
 import { PaginationUtil } from '../../utils/pagination.util';
 import { DialogService } from '../../services/dialog.service';
+import { CampusService } from '../../services/campus.service';
+import { CampusDTO } from '../../dtos/campus.dto';
 
 @Component({
   selector: 'app-manage-rooms',
@@ -16,7 +18,8 @@ export class ManageRoomsComponent implements OnInit {
 
   //for search filter algorithm
   public searchText: string = '';
-  public selectedCampus: string = '';
+  public campus: CampusDTO[] = [];
+  public selectedCampusId: number | null = null;
   public filterActive: string = '';
   public minCapacity: number | null = null;
   public isSearching: boolean = false;
@@ -24,9 +27,11 @@ export class ManageRoomsComponent implements OnInit {
   constructor(
     private readonly roomsService: RoomsService,
     private readonly dialogService: DialogService,
+    private readonly campusService: CampusService,
   ) {}
 
   ngOnInit(): void {
+    this.campusService.getAllCampus().subscribe((data) => (this.campus = data));
     this.loadRooms(0);
   }
 
@@ -40,7 +45,7 @@ export class ManageRoomsComponent implements OnInit {
         .searchRooms(
           this.searchText,
           this.minCapacity || undefined,
-          this.selectedCampus || undefined,
+          this.selectedCampusId || undefined,
           activeParam,
           page,
         )
@@ -93,7 +98,7 @@ export class ManageRoomsComponent implements OnInit {
   onSearch() {
     if (
       !this.searchText &&
-      !this.selectedCampus &&
+      !this.selectedCampusId &&
       !this.minCapacity &&
       !this.filterActive
     ) {
@@ -106,7 +111,7 @@ export class ManageRoomsComponent implements OnInit {
 
   clearSearch() {
     this.searchText = '';
-    this.selectedCampus = '';
+    this.selectedCampusId = null;
     this.minCapacity = null;
     this.filterActive = '';
 

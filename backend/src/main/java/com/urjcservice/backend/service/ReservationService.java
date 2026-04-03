@@ -1,6 +1,7 @@
 package com.urjcservice.backend.service;
 
 import com.urjcservice.backend.dtos.SmartSuggestionDTO;
+import com.urjcservice.backend.entities.Campus;
 import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.entities.User;
 import com.urjcservice.backend.entities.Room;
@@ -413,7 +414,7 @@ public class ReservationService {
             Date requestedStart,
             Date requestedEnd,
             Integer minCapacity,
-            Room.CampusType campus) {
+            Campus requestedCampus) {
 
         List<SmartSuggestionDTO> suggestions = new ArrayList<>();
         List<Room> candidateRooms = roomRepository.findAll().stream()
@@ -425,13 +426,13 @@ public class ReservationService {
 
         for (Room room : candidateRooms) {
 
-            int penalty = calculateCampusPenalty(campus, room.getCamp());
+            int penalty = calculateCampusPenalty(requestedCampus, room.getCampus());
 
             List<Reservation> overlaps = reservationRepository.findActiveReservationsByRoomIdAndDateRange(
                     room.getId(), requestedStart, requestedEnd);
 
             if (overlaps.isEmpty()) {
-                addExactOrSimilarSuggestion(room, requestedStart, requestedEnd, campus, penalty, suggestions);
+                addExactOrSimilarSuggestion(room, requestedStart, requestedEnd, requestedCampus, penalty, suggestions);
             } else {
                 // +30 minutes
                 checkAndAddAlternativeTime(room, requestedStart, durationMillis, 30 * 60000L, 80 - penalty,
@@ -452,35 +453,57 @@ public class ReservationService {
         return suggestions.stream().limit(10).toList();
     }
 
-    private int calculateCampusPenalty(Room.CampusType requested, Room.CampusType alternative) {
-        if (requested == null || alternative == null || requested == alternative) {
-            return 0; // Same campus no penalization
+    private int calculateCampusPenalty(Campus requested, Campus alternative) {
+        if (requested == null || alternative == null)
+            return 0;
+        if (requested.getId().equals(alternative.getId()))
+            return 0; // same campus
+
+        try {
+            double distanceKm = calculateDistanceInKm(requested.getCoordinates(), alternative.getCoordinates());
+
+            // each kilometer -2
+            // max penalty in 60 points
+            int penalty = (int) (distanceKm * 2.0);
+            return Math.min(penalty, 60);
+
+        } catch (Exception e) {
+            log.warn("Error calculating distance between campuses. Applying default penalty.", e);
+            return 30; // Penalization if coordenades fail
         }
-
-        boolean reqIsSur = (requested == Room.CampusType.MOSTOLES ||
-                requested == Room.CampusType.ALCORCON ||
-                requested == Room.CampusType.FUENLABRADA);
-
-        boolean altIsSur = (alternative == Room.CampusType.MOSTOLES ||
-                alternative == Room.CampusType.ALCORCON ||
-                alternative == Room.CampusType.FUENLABRADA);
-
-        if (reqIsSur && altIsSur) {
-            return 20; // low penalization
-        }
-
-        if (!reqIsSur && !altIsSur) {
-            return 20; // low penalization
-        }
-
-        return 50; // high penalization
     }
 
-    private void addExactOrSimilarSuggestion(Room room, Date start, Date end, Room.CampusType requestedCampus,
+    private double calculateDistanceInKm(String coord1, String coord2) {
+        if (coord1 == null || coord2 == null || coord1.isBlank() || coord2.isBlank())
+            return 0;
+
+        String[] c1 = coord1.split(",");
+        String[] c2 = coord2.split(",");
+
+        double lat1 = Double.parseDouble(c1[0].trim());
+        double lon1 = Double.parseDouble(c1[1].trim());
+        double lat2 = Double.parseDouble(c2[0].trim());
+        double lon2 = Double.parseDouble(c2[1].trim());
+
+        int earthRadius = 6371; // earth radius in km
+
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                        * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return earthRadius * c;
+    }
+
+    private void addExactOrSimilarSuggestion(Room room, Date start, Date end, Campus requestedCampus,
             int penalty, List<SmartSuggestionDTO> suggestions) {
         int score = 100 - penalty;
         if (score > 30) {
-            String reason = (requestedCampus != null && requestedCampus != room.getCamp()) ? "SIMILAR_ROOM"
+            String reason = (requestedCampus != null && requestedCampus != room.getCampus()) ? "SIMILAR_ROOM"
                     : "EXACT_MATCH";
             suggestions.add(new SmartSuggestionDTO(room, start, end, reason, score));
         }

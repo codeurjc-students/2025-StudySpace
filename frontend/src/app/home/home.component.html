@@ -12,7 +12,8 @@
     <div class="card-body bg-light">
       <app-room-search-form
         [(searchText)]="searchText"
-        [(campus)]="selectedCampus"
+        [campus]="campus"
+        [(campusId)]="selectedCampusId"
         [(capacity)]="minCapacity"
         [isSearching]="isSearching"
         (searchTriggered)="onSearch()"
@@ -38,7 +39,7 @@
 
         <div class="card-body">
           <p class="card-text">
-            <strong>Campus:</strong> {{ room.camp }}<br />
+            <strong>Campus:</strong> {{ room.campus?.name }}<br />
             <strong>Ubication:</strong> {{ room.place }}<br />
             <strong>Capacity:</strong> {{ room.capacity }} people
           </p>

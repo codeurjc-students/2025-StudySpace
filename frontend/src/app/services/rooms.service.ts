@@ -64,7 +64,7 @@ export class RoomsService {
   public searchRooms(
     text?: string,
     minCapacity?: number,
-    campus?: string,
+    campusId?: number,
     active?: boolean,
     page: number = 0,
     size: number = 10,
@@ -72,7 +72,7 @@ export class RoomsService {
     let queryParams = [`page=${page}&size=${size}`];
     if (text) queryParams.push(`text=${encodeURIComponent(text)}`);
     if (minCapacity) queryParams.push(`minCapacity=${minCapacity}`);
-    if (campus) queryParams.push(`campus=${campus}`);
+    if (campusId) queryParams.push(`campusId=${campusId}`);
     if (active !== undefined) queryParams.push(`active=${active}`);
     const queryString =
       queryParams.length > 0 ? `?${queryParams.join('&')}` : '';

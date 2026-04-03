@@ -3,6 +3,8 @@ import { RoomsService } from '../services/rooms.service';
 import { RoomDTO } from '../dtos/room.dto';
 import { LoginService } from '../login/login.service';
 import { Page } from '../dtos/page.model';
+import { CampusService } from '../services/campus.service';
+import { CampusDTO } from '../dtos/campus.dto';
 
 @Component({
   selector: 'app-home',
@@ -16,16 +18,19 @@ export class HomeComponent implements OnInit {
   public currentPage: number = 0;
   //for search filter
   public searchText: string = '';
-  public selectedCampus: string = '';
+  public campus: CampusDTO[] = [];
+  public selectedCampusId: number | null = null;
   public minCapacity: number | null = null;
   public isSearching: boolean = false;
 
   constructor(
     private readonly roomsService: RoomsService,
     public loginService: LoginService,
+    private readonly campusService: CampusService,
   ) {}
 
   ngOnInit(): void {
+    this.campusService.getAllCampus().subscribe((data) => (this.campus = data));
     this.loadPage(0);
   }
 
@@ -35,7 +40,7 @@ export class HomeComponent implements OnInit {
         .searchRooms(
           this.searchText,
           this.minCapacity || undefined,
-          this.selectedCampus || undefined,
+          this.selectedCampusId || undefined,
           true,
           page,
         )
@@ -60,7 +65,7 @@ export class HomeComponent implements OnInit {
   }
 
   onSearch(): void {
-    if (!this.searchText && !this.selectedCampus && !this.minCapacity) {
+    if (!this.searchText && !this.selectedCampusId && !this.minCapacity) {
       this.clearSearch();
       return;
     }
@@ -71,7 +76,7 @@ export class HomeComponent implements OnInit {
 
   clearSearch(): void {
     this.searchText = '';
-    this.selectedCampus = '';
+    this.selectedCampusId = null;
     this.minCapacity = null;
     this.isSearching = false;
     this.loadPage(0);

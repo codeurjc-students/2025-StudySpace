@@ -3,10 +3,12 @@ package com.urjcservice.backend.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.entities.Software;
+import com.urjcservice.backend.entities.Campus;
 import com.urjcservice.backend.service.EmailService;
 import com.urjcservice.backend.service.FileStorageService;
 import com.urjcservice.backend.service.RoomService;
 import com.urjcservice.backend.service.SoftwareService;
+import com.urjcservice.backend.service.CampusService;
 import com.urjcservice.backend.dtos.RoomCalendarDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -59,8 +61,12 @@ public class RoomRestControllerTest {
         @MockBean
         private EmailService emailService;
 
+        @MockBean
+        private CampusService campusService;
+
         private Room mockRoom;
         private Software mockSoftware;
+        private Campus mockCampus;
 
         @BeforeEach
         void setUp() {
@@ -69,11 +75,14 @@ public class RoomRestControllerTest {
                 mockSoftware.setName("Java JDK");
                 mockSoftware.setVersion(17.0f);
 
+                mockCampus = new Campus("Alcorcón", "40.345, -3.820");
+                mockCampus.setId(1L);
+
                 mockRoom = new Room();
                 mockRoom.setId(1L);
                 mockRoom.setName("Aula Magna");
                 mockRoom.setCapacity(50);
-                mockRoom.setCamp(Room.CampusType.ALCORCON);
+                mockRoom.setCampus(mockCampus);
                 mockRoom.setActive(true);
                 mockRoom.setSoftware(new ArrayList<>(List.of(mockSoftware)));
         }
@@ -126,7 +135,7 @@ public class RoomRestControllerTest {
                 RoomRestController.RoomRequest request = new RoomRestController.RoomRequest();
                 request.setName("Aula Nueva");
                 request.setCapacity(40);
-                request.setCamp(Room.CampusType.MOSTOLES);
+                request.setCampusId(1L);
                 request.setSoftwareIds(List.of(10L));
                 request.setActive(true);
 
@@ -135,6 +144,7 @@ public class RoomRestControllerTest {
                 Room savedRoom = new Room();
                 savedRoom.setId(2L);
                 savedRoom.setName("Aula Nueva");
+                savedRoom.setCampus(mockCampus);
                 savedRoom.setSoftware(List.of(mockSoftware));
 
                 given(roomService.save(any(Room.class))).willReturn(savedRoom);

@@ -6,6 +6,8 @@ import com.urjcservice.backend.service.FileStorageService;
 import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.entities.User;
+import com.urjcservice.backend.service.CampusService;
+import com.urjcservice.backend.entities.Campus;
 import com.urjcservice.backend.service.ReservationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,6 +51,9 @@ public class ReservationRestControllerTest {
 
         @MockBean
         private ReservationService reservationService;
+
+        @MockBean
+        private CampusService campusService;
 
         @Autowired
         private ObjectMapper objectMapper;
@@ -485,14 +490,19 @@ public class ReservationRestControllerTest {
                 String startStr = "2026-05-05T10:00:00.000Z";
                 String endStr = "2026-05-05T12:00:00.000Z";
 
-                when(reservationService.smartFindAvailableRooms(any(), any(), eq(20), eq(Room.CampusType.MOSTOLES)))
+                Campus mockCampus = new Campus("Móstoles", "40.332, -3.885");
+                mockCampus.setId(1L);
+
+                when(campusService.findById(1L)).thenReturn(Optional.of(mockCampus));
+
+                when(reservationService.smartFindAvailableRooms(any(), any(), eq(20), eq(mockCampus)))
                                 .thenReturn(Collections.emptyList());
 
                 mockMvc.perform(get("/api/reservations/smart-search")
                                 .param("start", startStr)
                                 .param("end", endStr)
                                 .param("minCapacity", "20")
-                                .param("campus", "MOSTOLES"))
+                                .param("campusId", "1"))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$").isArray());
         }
@@ -504,7 +514,7 @@ public class ReservationRestControllerTest {
 
                 mockMvc.perform(get("/api/reservations/smart-search")
                                 .param("minCapacity", "20")
-                                .param("campus", "MOSTOLES"))
+                                .param("campusId", "1"))
                                 .andExpect(status().isBadRequest());
         }
 

@@ -1,4 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { CampusDTO } from '../../dtos/campus.dto';
 
 @Component({
   selector: 'app-room-search-form',
@@ -8,8 +9,9 @@ export class RoomSearchFormComponent {
   @Input() searchText: string = '';
   @Output() searchTextChange = new EventEmitter<string>();
 
-  @Input() campus: string = '';
-  @Output() campusChange = new EventEmitter<string>();
+  @Input() campus: CampusDTO[] = [];
+  @Input() campusId: number | null = null;
+  @Output() campusIdChange = new EventEmitter<number | null>();
 
   @Input() capacity: number | null = null;
   @Output() capacityChange = new EventEmitter<number | null>();
@@ -35,9 +37,9 @@ export class RoomSearchFormComponent {
     this.searchText = val;
     this.searchTextChange.emit(val);
   }
-  onCampusChange(val: string) {
-    this.campus = val;
-    this.campusChange.emit(val);
+  onCampusChange(val: number | null) {
+    this.campusId = val;
+    this.campusIdChange.emit(val);
   }
   onCapacityChange(val: number | null) {
     this.capacity = val;
