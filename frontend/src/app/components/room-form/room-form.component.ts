@@ -115,10 +115,21 @@ export class RoomFormComponent implements OnInit {
 
   save() {
     if (this.isCreatingCampus && this.newCampus.name) {
+      const coordRegex = /^-?\d+(\.\d+)?,\s*-?\d+(\.\d+)?$/;
+      if (
+        !this.newCampus.coordinates ||
+        !coordRegex.test(this.newCampus.coordinates)
+      ) {
+        this.dialogService.alert(
+          'Error',
+          'Invalid coordinates format. Please use "Latitude, Longitude" (e.g. 40.28, -3.82)',
+        );
+        return;
+      }
       this.campusService.createCampus(this.newCampus).subscribe({
         next: (createdCampus) => {
           this.campus.push(createdCampus);
-          this.room.campusId = createdCampus.id; // Asignamos el nuevo a la sala
+          this.room.campusId = createdCampus.id;
           this.isCreatingCampus = false;
           this.proceedWithSave();
         },

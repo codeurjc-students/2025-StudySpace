@@ -18,4 +18,12 @@ export class CampusService {
   createCampus(campus: CampusDTO): Observable<CampusDTO> {
     return this.http.post<CampusDTO>(this.BASE_URL, campus);
   }
+
+  updateCampus(id: number, campus: CampusDTO): Observable<CampusDTO> {
+    return this.http.put<CampusDTO>(`${this.BASE_URL}/${id}`, campus);
+  }
+
+  deleteCampus(id: number): Observable<any> {
+    return this.http.delete(`${this.BASE_URL}/${id}`);
+  }
 }

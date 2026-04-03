@@ -27,4 +27,19 @@ public class CampusRestController {
     public ResponseEntity<Campus> createCampus(@RequestBody Campus campus) {
         return ResponseEntity.ok(campusService.save(campus));
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Campus> updateCampus(@PathVariable Long id, @RequestBody Campus campus) {
+        return campusService.update(id, campus)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCampus(@PathVariable Long id) {
+        if (campusService.delete(id)) {
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
 }
