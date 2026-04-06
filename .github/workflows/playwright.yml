@@ -156,5 +156,3 @@ jobs:
         if: failure()
         working-directory: ./backend
         run: cat backend.log
-
-        # npx playwright test --ui
