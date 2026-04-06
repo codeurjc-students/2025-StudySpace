@@ -38,6 +38,3 @@ build/
 /Room/
 /Software/
 /User/
-
-#for credencials
-.env
