@@ -39,4 +39,5 @@ build/
 /Software/
 /User/
 
-
+#for credencials
+.env
