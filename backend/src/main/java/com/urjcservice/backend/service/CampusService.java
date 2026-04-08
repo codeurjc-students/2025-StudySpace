@@ -60,7 +60,7 @@ public class CampusService {
         });
     }
 
-    public boolean delete(Long id) {
+    public Optional<Campus> delete(Long id) {
         Optional<Campus> campusOp = campusRepository.findById(id);
 
         if (campusOp.isPresent()) {
@@ -74,7 +74,6 @@ public class CampusService {
                 List<Reservation> affectedReservations = reservationRepository
                         .findActiveReservationsByRoomIdAndEndDateAfter(room.getId(), new Date());
 
-                // sen email to all affected users with the same reason
                 for (Reservation res : affectedReservations) {
                     notifyUserCancellation(res, reason);
                 }
@@ -83,9 +82,11 @@ public class CampusService {
             }
 
             campusRepository.delete(campus);
-            return true;
+
+            return Optional.of(campus);
         }
-        return false;
+
+        return Optional.empty();
     }
 
     private void notifyUserCancellation(Reservation res, String reason) {

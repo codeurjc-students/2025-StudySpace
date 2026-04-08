@@ -36,10 +36,9 @@ public class CampusRestController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCampus(@PathVariable Long id) {
-        if (campusService.delete(id)) {
-            return ResponseEntity.ok().build();
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<Campus> deleteCampus(@PathVariable Long id) {
+        return campusService.delete(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }

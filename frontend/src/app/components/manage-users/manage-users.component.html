@@ -91,7 +91,7 @@
                 <img
                   [src]="
                     user.imageName
-                      ? 'https://localhost:8443/api/users/' + user.id + '/image'
+                      ? '/api/users/' + user.id + '/image'
                       : 'assets/user_placeholder.png'
                   "
                   alt="Avatar of {{ user.name }}"

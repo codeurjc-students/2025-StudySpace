@@ -106,7 +106,7 @@ export class RoomFormComponent implements OnInit {
           this.room.softwareIds = data.software.map((s) => s.id);
         }
         if (data.imageName) {
-          this.currentImageUrl = `https://localhost:8443/api/rooms/${data.id}/image`;
+          this.currentImageUrl = `/api/rooms/${data.id}/image`;
         }
       },
       error: (err) => console.error('Error loading classroom', err),

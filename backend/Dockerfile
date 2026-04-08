@@ -15,9 +15,9 @@ FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 #copy .jar
 COPY --from=builder /project/target/*.jar app.jar
-COPY keystore.jks /app/keystore.jks
-# expose 8443 (SSL)
-EXPOSE 8443
+
+# expose 8080 (HTTP), the SSL on the Nginx
+EXPOSE 8080
 
 # execute
 ENTRYPOINT ["java", "-jar", "app.jar"]

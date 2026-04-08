@@ -103,7 +103,7 @@ export class UserProfileComponent implements OnInit {
                 next: (userWithImage) => {
                   this.dialogService.alert(
                     'Success',
-                    'Profile and image updated successfully.'
+                    'Profile and image updated successfully.',
                   );
                   if (this.user) {
                     this.user = userWithImage;
@@ -112,11 +112,18 @@ export class UserProfileComponent implements OnInit {
                   this.isEditing = false;
                   this.selectedFile = null;
                 },
-                error: () => this.dialogService.alert('Error', 'Profile updated, but image upload failed.'),
+                error: () =>
+                  this.dialogService.alert(
+                    'Error',
+                    'Profile updated, but image upload failed.',
+                  ),
               });
           } else {
             //no new picture
-            this.dialogService.alert('Success', 'Profile updated successfully.');
+            this.dialogService.alert(
+              'Success',
+              'Profile updated successfully.',
+            );
             if (this.user) {
               this.user.name = updatedUser.name;
               this.loginService.currentUser = this.user;
@@ -124,13 +131,14 @@ export class UserProfileComponent implements OnInit {
             this.isEditing = false;
           }
         },
-        error: (err: any) => this.dialogService.alert('Error', 'Error updating profile'),
+        error: (err: any) =>
+          this.dialogService.alert('Error', 'Error updating profile'),
       });
   }
 
   getUserImageUrl(user: UserDTO): string {
     if (user.imageName) {
-      return `https://localhost:8443/api/users/${user.id}/image`;
+      return `/api/users/${user.id}/image`;
     }
     return 'assets/user_placeholder.png'; // Default
   }
@@ -154,7 +162,8 @@ export class UserProfileComponent implements OnInit {
             );
           }
         },
-        error: (e: any) => this.dialogService.alert('Error', 'Cancellation failed.'),
+        error: (e: any) =>
+          this.dialogService.alert('Error', 'Cancellation failed.'),
       });
     }
   }
@@ -163,7 +172,10 @@ export class UserProfileComponent implements OnInit {
     if (confirm('Are you sure you want to cancel this reservation?')) {
       this.reservationService.cancelReservation(id).subscribe({
         next: () => {
-          this.dialogService.alert('Success', 'Reservation successfully cancelled.');
+          this.dialogService.alert(
+            'Success',
+            'Reservation successfully cancelled.',
+          );
           this.loadReservations(this.currentPage);
         },
         error: (err) => {
@@ -192,7 +204,10 @@ export class UserProfileComponent implements OnInit {
     const passwordPattern =
       /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&.])(?=\S+$).{8,}$/;
     if (!passwordPattern.test(this.passwordData.newPassword)) {
-      this.dialogService.alert('Error', 'Password must contain:\n- At least 8 characters\n- One uppercase letter\n- One lowercase letter\n- One number\n- One special character (@$!%*?&.)');
+      this.dialogService.alert(
+        'Error',
+        'Password must contain:\n- At least 8 characters\n- One uppercase letter\n- One lowercase letter\n- One number\n- One special character (@$!%*?&.)',
+      );
       return;
     }
     this.loginService

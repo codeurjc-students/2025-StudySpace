@@ -25,8 +25,6 @@ services:
     build: ./backend
     container_name: study_space_backend
     restart: always
-    ports:
-      - "8443:8443"
     depends_on:
       mysql:
         condition: service_healthy
@@ -39,11 +37,7 @@ services:
       NORMAL_PASSWORD: ${NORMAL_PASSWORD}
       SUPERADMIN_PASSWORD: ${SUPERADMIN_PASSWORD}
 
-      SERVER_PORT: 8443
-      SERVER_SSL_ENABLED: "true"
-      SERVER_SSL_KEY_STORE: "file:/app/keystore.jks"
-      SERVER_SSL_KEY_STORE_PASSWORD: "password"
-      SERVER_SSL_KEY_STORE_TYPE: "JKS"
+      SERVER_PORT: 8080
 
       TZ: Europe/Madrid
       JAVA_TOOL_OPTIONS: "-Duser.timezone=Europe/Madrid"

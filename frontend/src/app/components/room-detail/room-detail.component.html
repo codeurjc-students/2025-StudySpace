@@ -35,7 +35,7 @@
           <img
             [src]="
               room.imageName
-                ? 'https://localhost:8443/api/rooms/' + room.id + '/image'
+                ? '/api/rooms/' + room.id + '/image'
                 : 'assets/default_image.png'
             "
             alt="Appearance of the room {{ room.name }}"
