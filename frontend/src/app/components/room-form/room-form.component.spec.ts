@@ -9,6 +9,7 @@ import { LoginService } from '../../login/login.service';
 import { of, throwError } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DialogService } from '../../services/dialog.service';
+import { CampusService } from '../../services/campus.service';
 
 describe('RoomFormComponent', () => {
   let component: RoomFormComponent;
@@ -299,5 +300,47 @@ describe('RoomFormComponent', () => {
 
     expect(component.room.softwareIds).not.toContain(2);
     expect(component.selectedSoftwares.length).toBe(2);
+  });
+
+  it('onCampusSelectChange: should activate isCreatingCampus if value is -1', () => {
+    component.onCampusSelectChange(-1);
+    expect(component.isCreatingCampus).toBeTrue();
+    expect(component.room.campusId).toBeNull();
+  });
+
+  it('searchSoftwareForDropdown: should handle search error', () => {
+    mockSoftwareService.searchSoftwares.and.returnValue(
+      throwError(() => new Error('API Error')),
+    );
+
+    component.softwareSearchText = 'test';
+    component.searchSoftwareForDropdown();
+
+    expect(component.availableSoftwares.length).toBe(0);
+  });
+
+  it('save: should handle Campus Creation if isCreatingCampus is true', () => {
+    component.isCreatingCampus = true;
+    component.newCampus = { id: 0, name: 'New Campus', coordinates: '40, -3' };
+
+    const campusService = TestBed.inject(CampusService);
+    spyOn(campusService, 'createCampus').and.returnValue(
+      of({ id: 99, name: 'New Campus', coordinates: '40, -3' }),
+    );
+
+    component.save();
+
+    expect(campusService.createCampus).toHaveBeenCalled();
+    expect(component.room.campusId).toBe(99);
+  });
+
+  it('removeSoftwareFromRoom: should do nothing if ID does not exist', () => {
+    component.room.softwareIds = [1];
+    component.selectedSoftwares = [{ id: 1 }] as any;
+
+    component.removeSoftwareFromRoom(999);
+
+    expect(component.room.softwareIds.length).toBe(1);
+    expect(component.selectedSoftwares.length).toBe(1);
   });
 });

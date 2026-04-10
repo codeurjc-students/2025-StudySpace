@@ -204,4 +204,47 @@ describe('ManageRoomsComponent', () => {
     );
     expect(component.rooms.length).toBeGreaterThan(0);
   });
+
+  it('should open and close campus modal', () => {
+    component.openCampusModal();
+    expect(component.showCampusModal).toBeTrue();
+
+    component.closeCampusModal();
+    expect(component.showCampusModal).toBeFalse();
+  });
+
+  it('saveCampus: should alert error if coordinates are invalid', () => {
+    component.editingCampus = { id: 1, name: 'Test', coordinates: 'invalid' };
+    component.saveCampus();
+    expect(dialogServiceSpy.alert).toHaveBeenCalledWith(
+      'Error',
+      jasmine.any(String),
+    );
+  });
+
+  it('saveCampus: should update campus when editingCampus is set', () => {
+    const updatedCampus = {
+      id: 1,
+      name: 'New Name',
+      coordinates: '40.0, -3.0',
+    };
+    component.editingCampus = updatedCampus;
+    component.campus = [{ id: 1, name: 'Old Name', coordinates: '40.0, -3.0' }];
+
+    campusServiceSpy.updateCampus.and.returnValue(of(updatedCampus));
+
+    component.saveCampus();
+
+    expect(campusServiceSpy.updateCampus).toHaveBeenCalled();
+    expect(component.campus[0].name).toBe('New Name');
+  });
+
+  it('deleteCampusAction: should call service if user confirms', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    campusServiceSpy.deleteCampus.and.returnValue(of({}));
+
+    component.deleteCampusAction(1);
+
+    expect(campusServiceSpy.deleteCampus).toHaveBeenCalledWith(1);
+  });
 });
