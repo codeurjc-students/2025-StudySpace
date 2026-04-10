@@ -10,6 +10,7 @@ import { Location } from '@angular/common';
 import { of, throwError } from 'rxjs';
 import { UserDTO } from '../../dtos/user.dto';
 import { PaginationComponent } from '../pagination/pagination.component';
+import { DialogService } from '../../services/dialog.service';
 
 describe('UserProfileComponent', () => {
   let component: UserProfileComponent;
@@ -17,6 +18,7 @@ describe('UserProfileComponent', () => {
   let loginServiceSpy: jasmine.SpyObj<LoginService>;
   let reservationServiceSpy: jasmine.SpyObj<ReservationService>;
   let userServiceSpy: jasmine.SpyObj<UserService>;
+  let dialogServiceSpy: jasmine.SpyObj<DialogService>;
   let location: Location;
 
   let mockUser: UserDTO;
@@ -61,6 +63,14 @@ describe('UserProfileComponent', () => {
     ]);
 
     userServiceSpy = jasmine.createSpyObj('UserService', ['uploadUserImage']);
+    dialogServiceSpy = jasmine.createSpyObj('DialogService', [
+      'alert',
+      'prompt',
+      'confirm',
+    ]);
+
+    dialogServiceSpy.alert.and.returnValue(Promise.resolve());
+    dialogServiceSpy.confirm.and.returnValue(Promise.resolve(true));
 
     await TestBed.configureTestingModule({
       declarations: [UserProfileComponent, PaginationComponent],
@@ -69,6 +79,7 @@ describe('UserProfileComponent', () => {
         { provide: LoginService, useValue: loginServiceSpy },
         { provide: ReservationService, useValue: reservationServiceSpy },
         { provide: UserService, useValue: userServiceSpy },
+        { provide: DialogService, useValue: dialogServiceSpy },
       ],
     }).compileComponents();
 
@@ -118,56 +129,62 @@ describe('UserProfileComponent', () => {
     expect(console.error).toHaveBeenCalled();
   });
 
-  it('performCancel: should cancel reservation if confirmed', () => {
+  it('performCancel: should cancel reservation if confirmed', async () => {
     spyOn(window, 'confirm').and.returnValue(true);
-    spyOn(window, 'alert');
     reservationServiceSpy.cancelReservation.and.returnValue(of({}));
 
     if (component.performCancel) {
       component.performCancel(10);
+      await fixture.whenStable();
       expect(reservationServiceSpy.cancelReservation).toHaveBeenCalledWith(10);
-      expect(window.alert).toHaveBeenCalledWith(
-        jasmine.stringMatching(/success|cancelled/i),
+      expect(dialogServiceSpy.alert).toHaveBeenCalledWith(
+        'Success',
+        jasmine.stringMatching(/successfully cancelled/i),
       );
     }
   });
 
-  it('cancelReservation: should delete/cancel reservation if confirmed', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
-    spyOn(window, 'alert');
-
+  it('cancelReservation: should delete/cancel reservation if confirmed', async () => {
+    spyOn(window, 'confirm').and.returnValue(true); 
     reservationServiceSpy.deleteReservation.and.returnValue(of({}));
     reservationServiceSpy.cancelReservation.and.returnValue(of({}));
 
     component.cancelReservation(10);
+    await fixture.whenStable();
 
-    expect(window.alert).toHaveBeenCalledWith(
-      jasmine.stringMatching(/cancelled|deleted|success/i),
+    expect(dialogServiceSpy.alert).toHaveBeenCalledWith(
+      'Success',
+      jasmine.stringMatching(/Reservation cancelled/i),
     );
   });
 
-  it('should NOT action if confirmation rejected', () => {
+  it('should NOT action if confirmation rejected', async () => {
+    dialogServiceSpy.confirm.and.returnValue(Promise.resolve(false));
     spyOn(window, 'confirm').and.returnValue(false);
+
+    reservationServiceSpy.cancelReservation.and.returnValue(of({}));
+    reservationServiceSpy.deleteReservation.and.returnValue(of({}));
 
     if (component.performCancel) component.performCancel(10);
     component.cancelReservation(10);
+    await fixture.whenStable();
 
     expect(reservationServiceSpy.cancelReservation).not.toHaveBeenCalled();
     expect(reservationServiceSpy.deleteReservation).not.toHaveBeenCalled();
   });
 
-  it('should handle error on cancel/delete reservation', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
-    spyOn(window, 'alert');
-
+ it('should handle error on cancel/delete reservation', async () => {
+    spyOn(window, 'confirm').and.returnValue(true); 
     reservationServiceSpy.deleteReservation.and.returnValue(
       throwError(() => new Error('Fail')),
     );
 
     component.cancelReservation(10);
+    await fixture.whenStable();
 
-    expect(window.alert).toHaveBeenCalledWith(
-      jasmine.stringMatching(/Error|Failed/i),
+    expect(dialogServiceSpy.alert).toHaveBeenCalledWith(
+      'Error',
+      jasmine.stringMatching(/Cancellation failed/i),
     );
   });
 
@@ -184,14 +201,14 @@ describe('UserProfileComponent', () => {
     expect(component.editData.name).toBe('John Doe');
   });
 
-  it('saveProfile should update profile successfully', () => {
+  it('saveProfile should update profile successfully', async () => {
     const updatedUser = { ...mockUser, name: 'New Name' };
     loginServiceSpy.updateProfile.and.returnValue(of(updatedUser));
-    spyOn(window, 'alert');
 
     component.editData.name = 'New Name';
     component.editData.email = 'john@test.com';
     component.saveProfile();
+    await fixture.whenStable();
 
     expect(loginServiceSpy.updateProfile).toHaveBeenCalledWith(
       'New Name',
@@ -199,36 +216,40 @@ describe('UserProfileComponent', () => {
     );
     expect(component.user?.name).toBe('New Name');
     expect(component.isEditing).toBeFalse();
-    expect(window.alert).toHaveBeenCalledWith(
-      jasmine.stringMatching(/success|updated/i),
+    expect(dialogServiceSpy.alert).toHaveBeenCalledWith(
+      'Success',
+      jasmine.stringMatching(/updated successfully/i),
     );
   });
 
-  it('saveProfile should handle error from backend', () => {
+  it('saveProfile should handle error from backend', async () => {
     loginServiceSpy.updateProfile.and.returnValue(
       throwError(() => new Error('Update failed')),
     );
-    spyOn(window, 'alert');
 
     component.saveProfile();
+    await fixture.whenStable();
 
-    expect(window.alert).toHaveBeenCalledWith(
-      jasmine.stringMatching(/Error|Failed/i),
+    expect(dialogServiceSpy.alert).toHaveBeenCalledWith(
+      'Error',
+      jasmine.stringMatching(/Error updating profile/i),
     );
   });
 
   //Password
 
-  it('changePassword should validate empty fields', () => {
-    spyOn(window, 'alert');
+  it('changePassword should validate empty fields', async () => {
     component.passwordData = { oldPassword: '', newPassword: '' };
     component.changePassword();
-    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/fill/i));
+    await fixture.whenStable();
+    expect(dialogServiceSpy.alert).toHaveBeenCalledWith(
+      'Error',
+      jasmine.stringMatching(/fill/i),
+    );
   });
 
-  it('changePassword should call service and success', () => {
+  it('changePassword should call service and success', async () => {
     loginServiceSpy.changePassword.and.returnValue(of({ status: 'SUCCESS' }));
-    spyOn(window, 'alert');
     const toggleSpy = spyOn(component, 'toggleChangePassword');
 
     component.passwordData = {
@@ -236,41 +257,24 @@ describe('UserProfileComponent', () => {
       newPassword: 'StrongPass1!',
     };
     component.changePassword();
+    await fixture.whenStable();
 
     expect(loginServiceSpy.changePassword).toHaveBeenCalledWith(
       'old',
       'StrongPass1!',
     );
-    expect(window.alert).toHaveBeenCalledWith(
-      jasmine.stringMatching(/success/i),
+    expect(dialogServiceSpy.alert).toHaveBeenCalledWith(
+      'Success',
+      jasmine.stringMatching(/successfully/i),
     );
     expect(toggleSpy).toHaveBeenCalled();
   });
 
-  it('changePassword: should call service on valid input', () => {
-    spyOn(window, 'alert');
-    component.passwordData = {
-      oldPassword: 'old',
-      newPassword: 'StrongPass1!',
-    };
-
-    loginServiceSpy.changePassword.and.returnValue(of({}));
-
-    component.changePassword();
-
-    expect(loginServiceSpy.changePassword).toHaveBeenCalledWith(
-      'old',
-      'StrongPass1!',
-    );
-    expect(window.alert).toHaveBeenCalledWith('Password updated successfully!');
-  });
-
-  it('changePassword should handle backend error', () => {
+  it('changePassword: should call service on valid input', async () => {
     const errorResponse = { error: { message: 'Wrong password' } };
     loginServiceSpy.changePassword.and.returnValue(
       throwError(() => errorResponse),
     );
-    spyOn(window, 'alert');
     spyOn(console, 'error');
 
     component.passwordData = {
@@ -278,41 +282,68 @@ describe('UserProfileComponent', () => {
       newPassword: 'StrongPass1!',
     };
     component.changePassword();
+    await fixture.whenStable();
 
     expect(console.error).toHaveBeenCalled();
-    expect(window.alert).toHaveBeenCalledWith('Wrong password');
+    expect(dialogServiceSpy.alert).toHaveBeenCalledWith(
+      'Error',
+      'Wrong password',
+    );
   });
 
-  it('changePassword: should NOT call service if new password is weak', () => {
-    spyOn(window, 'alert');
+  it('changePassword should handle backend error', async () => {
+    const errorResponse = { error: { message: 'Wrong password' } };
+    loginServiceSpy.changePassword.and.returnValue(
+      throwError(() => errorResponse),
+    );
+    spyOn(console, 'error');
 
-    component.passwordData = { oldPassword: 'old', newPassword: 'weak' };
-
+    component.passwordData = {
+      oldPassword: 'wrong',
+      newPassword: 'StrongPass1!',
+    };
     component.changePassword();
+    await fixture.whenStable();
 
-    expect(window.alert).toHaveBeenCalledWith(
+    expect(console.error).toHaveBeenCalled();
+    expect(dialogServiceSpy.alert).toHaveBeenCalledWith(
+      'Error',
+      'Wrong password',
+    );
+  });
+
+  it('changePassword: should NOT call service if new password is weak', async () => {
+    component.passwordData = { oldPassword: 'old', newPassword: 'weak' };
+    component.changePassword();
+    await fixture.whenStable();
+
+    expect(dialogServiceSpy.alert).toHaveBeenCalledWith(
+      'Error',
       jasmine.stringMatching(/Password must contain/),
     );
     expect(loginServiceSpy.changePassword).not.toHaveBeenCalled();
   });
 
-  it('changePassword: should show error alert on failure', () => {
-    spyOn(window, 'alert');
+  it('changePassword: should show error alert on failure', async () => {
     spyOn(console, 'error');
 
     component.passwordData = {
       oldPassword: 'old',
       newPassword: 'StrongPass1!',
-    }; // Strong pass necesario para pasar el filtro
+    };
 
     loginServiceSpy.changePassword.and.returnValue(
-      throwError({ error: { message: 'Wrong password' } }),
+      throwError(() => ({ error: { message: 'Wrong password' } })),
     );
 
     component.changePassword();
+    await fixture.whenStable();
 
     expect(console.error).toHaveBeenCalled();
-    expect(window.alert).toHaveBeenCalledWith('Wrong password');
+    expect(dialogServiceSpy.alert).toHaveBeenCalledWith(
+      'Error',
+      'Wrong password',
+    );
   });
 
   //Pagination
@@ -374,7 +405,7 @@ describe('UserProfileComponent', () => {
       imageName: 'photo.jpg',
     };
     const url = component.getUserImageUrl(userWithImage);
-    expect(url).toBe('https://localhost:8443/api/users/99/image');
+    expect(url).toBe('/api/users/99/image');
   });
 
   it('getUserImageUrl should return placeholder if no image', () => {
@@ -392,8 +423,7 @@ describe('UserProfileComponent', () => {
     expect(component.selectedFile).toEqual(mockFile);
   });
 
-  it('saveProfile should call uploadUserImage if a file is selected', () => {
-    //Setup
+  it('saveProfile should call uploadUserImage if a file is selected', async () => {
     component.isEditing = true;
     component.editData.name = 'New Name';
     const fileToUpload = new File(['data'], 'avatar.png');
@@ -404,18 +434,18 @@ describe('UserProfileComponent', () => {
 
     loginServiceSpy.updateProfile.and.returnValue(of(updatedUser));
     userServiceSpy.uploadUserImage.and.returnValue(of(userWithImage));
-    spyOn(window, 'alert');
 
     component.saveProfile();
+    await fixture.whenStable();
 
     expect(loginServiceSpy.updateProfile).toHaveBeenCalled();
     expect(userServiceSpy.uploadUserImage).toHaveBeenCalledWith(
       1,
       fileToUpload,
     );
-
     expect(component.user?.imageName).toBe('new_uuid.png');
-    expect(window.alert).toHaveBeenCalledWith(
+    expect(dialogServiceSpy.alert).toHaveBeenCalledWith(
+      'Success',
       jasmine.stringMatching(/image updated/i),
     );
     expect(component.selectedFile).toBeNull();

@@ -1,4 +1,9 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {
+  ComponentFixture,
+  TestBed,
+  fakeAsync,
+  tick,
+} from '@angular/core/testing';
 import { ManageRoomsComponent } from './manage-rooms.component';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -8,17 +13,21 @@ import { FormsModule } from '@angular/forms';
 import { RoomDTO } from '../../dtos/room.dto';
 import { PaginationComponent } from '../pagination/pagination.component';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { DialogService } from '../../services/dialog.service';
+import { CampusService } from '../../services/campus.service';
 
 describe('ManageRoomsComponent', () => {
   let component: ManageRoomsComponent;
   let fixture: ComponentFixture<ManageRoomsComponent>;
   let roomsServiceSpy: jasmine.SpyObj<RoomsService>;
+  let dialogServiceSpy: jasmine.SpyObj<DialogService>;
+  let campusServiceSpy: jasmine.SpyObj<CampusService>;
 
   const mockRoom: RoomDTO = {
     id: 1,
     name: 'Lab 1',
     capacity: 20,
-    camp: 'Móstoles',
+    campus: { id: 1, name: 'Móstoles', coordinates: '0,0' },
     place: 'Edificio 1',
     coordenades: '',
     active: true,
@@ -38,20 +47,37 @@ describe('ManageRoomsComponent', () => {
       'deleteRoom',
       'searchRooms',
     ]);
+    campusServiceSpy = jasmine.createSpyObj('CampusService', [
+      'getAllCampus',
+      'createCampus',
+      'updateCampus',
+      'deleteCampus',
+    ]);
+    dialogServiceSpy = jasmine.createSpyObj('DialogService', [
+      'alert',
+      'prompt',
+    ]);
+
+    campusServiceSpy.getAllCampus.and.returnValue(of([]));
+    dialogServiceSpy.alert.and.returnValue(Promise.resolve());
+    dialogServiceSpy.prompt.and.returnValue(
+      Promise.resolve('Reason for deletion'),
+    );
 
     await TestBed.configureTestingModule({
       declarations: [ManageRoomsComponent, PaginationComponent],
       imports: [HttpClientTestingModule, FormsModule, RouterTestingModule],
-      providers: [{ provide: RoomsService, useValue: roomsServiceSpy }],
+      providers: [
+        { provide: RoomsService, useValue: roomsServiceSpy },
+        { provide: DialogService, useValue: dialogServiceSpy },
+        { provide: CampusService, useValue: campusServiceSpy },
+      ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ManageRoomsComponent);
     component = fixture.componentInstance;
 
-    // Espías globales para evitar errores de duplicidad
-    spyOn(window, 'alert');
-    spyOn(window, 'prompt');
     spyOn(console, 'error');
 
     roomsServiceSpy.getRooms.and.returnValue(of(mockPage as any));
@@ -73,34 +99,41 @@ describe('ManageRoomsComponent', () => {
     expect(console.error).toHaveBeenCalled();
   });
 
-  it('should delete room if reason is provided via prompt', () => {
+  it('should delete room if reason is provided via prompt', fakeAsync(() => {
     const reason = 'Reason for deletion';
-    (window.prompt as jasmine.Spy).and.returnValue(reason);
+    dialogServiceSpy.prompt.and.returnValue(Promise.resolve(reason));
     roomsServiceSpy.deleteRoom.and.returnValue(of({}));
     const loadSpy = spyOn(component, 'loadRooms');
 
     component.deleteRoom(1);
 
+    tick(); // prompt
+    tick(); //alert and delete
+    tick(); // alert and loadRooms
+
     expect(roomsServiceSpy.deleteRoom).toHaveBeenCalledWith(1, reason);
-    expect(window.alert).toHaveBeenCalledWith(
+    expect(dialogServiceSpy.alert).toHaveBeenCalledWith(
+      'Success',
       jasmine.stringMatching(/successfully/i),
     );
     expect(loadSpy).toHaveBeenCalled();
-  });
+  }));
 
-  it('should NOT delete room if prompt is cancelled (null)', () => {
-    (window.prompt as jasmine.Spy).and.returnValue(null);
+  it('should NOT delete room if prompt is cancelled (null)', async () => {
+    dialogServiceSpy.prompt.and.returnValue(Promise.resolve(null));
     component.deleteRoom(1);
+    await fixture.whenStable();
     expect(roomsServiceSpy.deleteRoom).not.toHaveBeenCalled();
   });
 
-  it('should handle error on delete', () => {
-    (window.prompt as jasmine.Spy).and.returnValue('Reason');
+  it('should handle error on delete', async () => {
+    dialogServiceSpy.prompt.and.returnValue(Promise.resolve('Reason'));
     roomsServiceSpy.deleteRoom.and.returnValue(
       throwError(() => new Error('Delete failed')),
     );
 
     component.deleteRoom(1);
+    await fixture.whenStable();
 
     expect(console.error).toHaveBeenCalled();
   });
@@ -116,7 +149,7 @@ describe('ManageRoomsComponent', () => {
   it('onSearch: should call clearSearch if all fields are empty', () => {
     spyOn(component, 'clearSearch');
     component.searchText = '';
-    component.selectedCampus = '';
+    component.selectedCampusId = null;
     component.minCapacity = null;
     component.filterActive = '';
 
@@ -138,7 +171,7 @@ describe('ManageRoomsComponent', () => {
   it('clearSearch: should reset fields and reload normal data', () => {
     spyOn(component, 'loadRooms');
     component.searchText = 'Java';
-    component.selectedCampus = 'MOSTOLES';
+    component.selectedCampusId = 1;
     component.minCapacity = 20;
     component.filterActive = 'true';
     component.isSearching = true;
@@ -146,7 +179,7 @@ describe('ManageRoomsComponent', () => {
     component.clearSearch();
 
     expect(component.searchText).toBe('');
-    expect(component.selectedCampus).toBe('');
+    expect(component.selectedCampusId).toBeNull();
     expect(component.minCapacity).toBeNull();
     expect(component.filterActive).toBe('');
     expect(component.isSearching).toBeFalse();

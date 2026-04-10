@@ -1,4 +1,9 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {
+  ComponentFixture,
+  TestBed,
+  fakeAsync,
+  tick,
+} from '@angular/core/testing';
 import { ManageReservationsComponent } from './manage-reservations.component';
 import { ReservationService } from '../../services/reservation.service';
 import { RoomsService } from '../../services/rooms.service';
@@ -7,12 +12,14 @@ import { of, throwError } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
 import { PaginationComponent } from '../pagination/pagination.component';
+import { DialogService } from '../../services/dialog.service';
 
 describe('ManageReservationsComponent', () => {
   let component: ManageReservationsComponent;
   let fixture: ComponentFixture<ManageReservationsComponent>;
   let reservationServiceMock: jasmine.SpyObj<ReservationService>;
   let roomsServiceMock: jasmine.SpyObj<RoomsService>;
+  let dialogServiceMock: jasmine.SpyObj<DialogService>;
 
   beforeEach(async () => {
     reservationServiceMock = jasmine.createSpyObj('ReservationService', [
@@ -25,6 +32,17 @@ describe('ManageReservationsComponent', () => {
     ]);
     roomsServiceMock = jasmine.createSpyObj('RoomsService', ['getRooms']);
 
+    dialogServiceMock = jasmine.createSpyObj('DialogService', [
+      'alert',
+      'prompt',
+      'confirm',
+    ]);
+    dialogServiceMock.alert.and.returnValue(Promise.resolve());
+    dialogServiceMock.prompt.and.returnValue(
+      Promise.resolve('Violation of rules'),
+    );
+    dialogServiceMock.confirm.and.returnValue(Promise.resolve(true));
+
     await TestBed.configureTestingModule({
       declarations: [ManageReservationsComponent, PaginationComponent],
       imports: [FormsModule, RouterTestingModule],
@@ -35,19 +53,15 @@ describe('ManageReservationsComponent', () => {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: { get: () => '123' } } },
         },
+        { provide: DialogService, useValue: dialogServiceMock },
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ManageReservationsComponent);
     component = fixture.componentInstance;
 
-    // Espías de ventana centralizados
-    spyOn(window, 'prompt');
-    spyOn(window, 'confirm');
-    spyOn(window, 'alert');
     spyOn(console, 'error');
 
-    // Mocks de datos iniciales
     const mockRes = {
       id: 1,
       roomId: 10,
@@ -114,7 +128,7 @@ describe('ManageReservationsComponent', () => {
     expect(component.occupiedSlots[0].id).toBe(100);
   });
 
-  it('saveEdit: should call updateReservationAdmin with correct data and notify success', () => {
+  it('saveEdit: should call updateReservationAdmin with correct data and notify success', async () => {
     component.editingReservation = { id: 50, roomId: 101 };
     component.editDateStr = '2026-05-20';
     component.editStartTime = '09:00';
@@ -124,39 +138,42 @@ describe('ManageReservationsComponent', () => {
     reservationServiceMock.updateReservationAdmin.and.returnValue(of({}));
     component.saveEdit();
 
+    await fixture.whenStable();
+
     expect(reservationServiceMock.updateReservationAdmin).toHaveBeenCalledWith(
       50,
       jasmine.objectContaining({
         adminReason: 'Test Reason',
       }),
     );
-    expect(window.alert).toHaveBeenCalledWith(
-      jasmine.stringMatching(/updated/i),
-    );
+    expect(dialogServiceMock.alert).toHaveBeenCalled();
   });
 
-  it('performCancel: should call cancelReservationAdmin with reason when confirmed', () => {
+  it('performCancel: should call cancelReservationAdmin with reason when confirmed', fakeAsync(() => {
     const reason = 'Violation of rules';
-    (window.prompt as jasmine.Spy).and.returnValue(reason);
-    (window.confirm as jasmine.Spy).and.returnValue(true);
     reservationServiceMock.cancelReservationAdmin.and.returnValue(of({}));
 
     component.performCancel(1);
+    tick(); //promt
+    tick(); //confirm
+    tick(); //alert
 
     expect(reservationServiceMock.cancelReservationAdmin).toHaveBeenCalledWith(
       1,
       reason,
     );
-    expect(window.alert).toHaveBeenCalledWith(
+    expect(dialogServiceMock.alert).toHaveBeenCalledWith(
+      'Success',
       jasmine.stringMatching(/cancelled/i),
     );
-  });
+  }));
 
-  it('deleteReservation: should call deleteReservation service if confirmed', () => {
-    (window.confirm as jasmine.Spy).and.returnValue(true);
+  it('deleteReservation: should call deleteReservation service if confirmed', async () => {
+    spyOn(window, 'confirm').and.returnValue(true);
     reservationServiceMock.deleteReservation.and.returnValue(of({}));
 
     component.deleteReservation(1);
+    await fixture.whenStable();
     expect(reservationServiceMock.deleteReservation).toHaveBeenCalledWith(1);
   });
 

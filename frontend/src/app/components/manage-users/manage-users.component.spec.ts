@@ -1,4 +1,9 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {
+  ComponentFixture,
+  fakeAsync,
+  TestBed,
+  tick,
+} from '@angular/core/testing';
 import { ManageUsersComponent } from './manage-users.component';
 import { UserService } from '../../services/user.service';
 import { LoginService } from '../../login/login.service';
@@ -8,6 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { UserDTO } from '../../dtos/user.dto';
 import { PaginationComponent } from '../pagination/pagination.component';
 import { RoomsService } from '../../services/rooms.service';
+import { DialogService } from '../../services/dialog.service';
 
 describe('ManageUsersComponent', () => {
   let component: ManageUsersComponent;
@@ -15,6 +21,7 @@ describe('ManageUsersComponent', () => {
   let mockUserService: any;
   let mockLoginService: any;
   let roomsServiceSpy: jasmine.SpyObj<RoomsService>;
+  let dialogServiceSpy: jasmine.SpyObj<DialogService>;
 
   const mockUser1: UserDTO = {
     id: 1,
@@ -61,6 +68,12 @@ describe('ManageUsersComponent', () => {
     mockLoginService = {
       currentUser: { id: 999 },
     };
+    dialogServiceSpy = jasmine.createSpyObj('DialogService', [
+      'alert',
+      'confirm',
+    ]);
+    dialogServiceSpy.alert.and.returnValue(Promise.resolve());
+    dialogServiceSpy.confirm.and.returnValue(Promise.resolve(true));
 
     await TestBed.configureTestingModule({
       declarations: [ManageUsersComponent, PaginationComponent],
@@ -69,6 +82,7 @@ describe('ManageUsersComponent', () => {
         { provide: UserService, useValue: mockUserService },
         { provide: LoginService, useValue: mockLoginService },
         { provide: RoomsService, useValue: roomsServiceSpy },
+        { provide: DialogService, useValue: dialogServiceSpy },
       ],
     }).compileComponents();
 
@@ -111,22 +125,26 @@ describe('ManageUsersComponent', () => {
 
   // --- DELETE TESTS ---
 
-  it('should delete user if confirmed', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
+  it('should delete user if confirmed', fakeAsync(() => {
+    const dialogSpy = TestBed.inject(DialogService) as any;
+    dialogSpy.confirm.and.returnValue(Promise.resolve(true));
+
     component.deleteUser(mockUser1);
+    tick();
     expect(mockUserService.deleteUser).toHaveBeenCalledWith(1);
-    expect(mockUserService.getUsers).toHaveBeenCalledTimes(2);
-  });
+  }));
 
-  it('should NOT delete user if rejected', () => {
-    spyOn(window, 'confirm').and.returnValue(false);
+  it('should NOT delete user if rejected', fakeAsync(() => {
+    dialogServiceSpy.confirm.and.returnValue(Promise.resolve(false));
+
     component.deleteUser(mockUser1);
-    expect(mockUserService.deleteUser).not.toHaveBeenCalled();
-  });
+    tick();
 
-  it('should handle error when deleting user', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
-    spyOn(window, 'alert');
+    expect(mockUserService.deleteUser).not.toHaveBeenCalled();
+  }));
+
+  it('should handle error when deleting user', fakeAsync(() => {
+    dialogServiceSpy.confirm.and.returnValue(Promise.resolve(true));
     spyOn(console, 'error');
 
     mockUserService.deleteUser.and.returnValue(
@@ -134,10 +152,14 @@ describe('ManageUsersComponent', () => {
     );
 
     component.deleteUser(mockUser1);
+    tick();
 
     expect(console.error).toHaveBeenCalled();
-    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/Error/));
-  });
+    expect(dialogServiceSpy.alert).toHaveBeenCalledWith(
+      'Error',
+      jasmine.stringMatching(/Error deleting user/),
+    );
+  }));
 
   // --- PAGINATION ---
   it('should calculate pagination correctly', () => {

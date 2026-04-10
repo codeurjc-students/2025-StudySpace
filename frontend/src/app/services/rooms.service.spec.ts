@@ -129,9 +129,9 @@ describe('RoomsService', () => {
   });
 
   it('should search rooms with all parameters', () => {
-    service.searchRooms('Lab', 20, 'MOSTOLES', true, 0, 10).subscribe();
+    service.searchRooms('Lab', 20, 1, true, 0, 10).subscribe();
     const req = httpMock.expectOne(
-      `/api/search/rooms?page=0&size=10&text=Lab&minCapacity=20&campus=MOSTOLES&active=true`,
+      `/api/search/rooms?page=0&size=10&text=Lab&minCapacity=20&campusId=1&active=true`,
     );
     expect(req.request.method).toBe('GET');
     req.flush({});

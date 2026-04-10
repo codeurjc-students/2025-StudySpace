@@ -5,12 +5,14 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { of, throwError } from 'rxjs';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { DialogService } from '../../services/dialog.service';
 
 describe('ResetPasswordComponent', () => {
   let component: ResetPasswordComponent;
   let fixture: ComponentFixture<ResetPasswordComponent>;
   let loginServiceSpy: jasmine.SpyObj<LoginService>;
   let routerSpy: jasmine.SpyObj<Router>;
+  let dialogServiceSpy: jasmine.SpyObj<DialogService>;
 
   const activatedRouteMock = {
     snapshot: {
@@ -21,6 +23,8 @@ describe('ResetPasswordComponent', () => {
   beforeEach(async () => {
     const lSpy = jasmine.createSpyObj('LoginService', ['resetPassword']);
     const rSpy = jasmine.createSpyObj('Router', ['navigate']);
+    const dSpy = jasmine.createSpyObj('DialogService', ['alert']);
+    dSpy.alert.and.returnValue(Promise.resolve());
 
     await TestBed.configureTestingModule({
       declarations: [ResetPasswordComponent],
@@ -30,6 +34,7 @@ describe('ResetPasswordComponent', () => {
         { provide: LoginService, useValue: lSpy },
         { provide: Router, useValue: rSpy },
         { provide: ActivatedRoute, useValue: activatedRouteMock },
+        { provide: DialogService, useValue: dSpy },
       ],
     }).compileComponents();
 
@@ -37,6 +42,9 @@ describe('ResetPasswordComponent', () => {
       LoginService,
     ) as jasmine.SpyObj<LoginService>;
     routerSpy = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    dialogServiceSpy = TestBed.inject(
+      DialogService,
+    ) as jasmine.SpyObj<DialogService>;
 
     fixture = TestBed.createComponent(ResetPasswordComponent);
     component = fixture.componentInstance;
@@ -59,7 +67,6 @@ describe('ResetPasswordComponent', () => {
 
   it('should call resetPassword and navigate on success', () => {
     loginServiceSpy.resetPassword.and.returnValue(of({ message: 'Success' }));
-    spyOn(window, 'alert');
 
     component.password = 'StrongPass1!';
     component.onSubmit();
@@ -68,7 +75,9 @@ describe('ResetPasswordComponent', () => {
       'valid-token-123',
       'StrongPass1!',
     );
-    expect(window.alert).toHaveBeenCalledWith(
+
+    expect(dialogServiceSpy.alert).toHaveBeenCalledWith(
+      'Success',
       'Password successfully updated! Please log in.',
     );
     expect(routerSpy.navigate).toHaveBeenCalledWith(['/login']);

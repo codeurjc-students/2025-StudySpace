@@ -6,11 +6,13 @@ import { SoftwareService } from '../../services/software.service';
 import { of, throwError } from 'rxjs';
 import { PaginationComponent } from '../pagination/pagination.component';
 import { FormsModule } from '@angular/forms';
+import { DialogService } from '../../services/dialog.service';
 
 describe('ManageSoftwaresComponent', () => {
   let component: ManageSoftwaresComponent;
   let fixture: ComponentFixture<ManageSoftwaresComponent>;
   let softwareServiceSpy: jasmine.SpyObj<SoftwareService>;
+  let dialogServiceSpy: jasmine.SpyObj<any>;
 
   const mockPage = {
     content: [{ id: 1, name: 'Java', version: '17', description: 'JDK' }],
@@ -23,13 +25,23 @@ describe('ManageSoftwaresComponent', () => {
     softwareServiceSpy = jasmine.createSpyObj('SoftwareService', [
       'getAllSoftwares',
       'deleteSoftware',
-      'searchSoftwares'
+      'searchSoftwares',
     ]);
+
+    dialogServiceSpy = jasmine.createSpyObj('DialogService', [
+      'alert',
+      'confirm',
+    ]);
+    dialogServiceSpy.alert.and.returnValue(Promise.resolve());
+    dialogServiceSpy.confirm.and.returnValue(Promise.resolve(true));
 
     await TestBed.configureTestingModule({
       declarations: [ManageSoftwaresComponent, PaginationComponent],
       imports: [HttpClientTestingModule, RouterTestingModule, FormsModule],
-      providers: [{ provide: SoftwareService, useValue: softwareServiceSpy }],
+      providers: [
+        { provide: SoftwareService, useValue: softwareServiceSpy },
+        { provide: DialogService, useValue: dialogServiceSpy },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ManageSoftwaresComponent);
@@ -55,16 +67,17 @@ describe('ManageSoftwaresComponent', () => {
     expect(console.error).toHaveBeenCalled();
   });
 
-  it('should delete software if confirmed', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
-    spyOn(window, 'alert');
+  it('should delete software if confirmed', async () => {
+    dialogServiceSpy.confirm.and.returnValue(Promise.resolve(true));
     softwareServiceSpy.deleteSoftware.and.returnValue(of({}));
 
     component.deleteSoftware(10);
+    await fixture.whenStable();
 
     expect(softwareServiceSpy.deleteSoftware).toHaveBeenCalledWith(10);
-    expect(window.alert).toHaveBeenCalledWith(
-      jasmine.stringMatching(/deleted/i),
+    expect(dialogServiceSpy.alert).toHaveBeenCalledWith(
+      'Success',
+      'Software deleted!',
     );
   });
 
@@ -74,14 +87,17 @@ describe('ManageSoftwaresComponent', () => {
     expect(softwareServiceSpy.deleteSoftware).not.toHaveBeenCalled();
   });
 
-  it('should handle error during deletion', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
-    spyOn(window, 'alert');
+  it('should handle error during deletion', async () => {
+    dialogServiceSpy.confirm.and.returnValue(Promise.resolve(true));
     softwareServiceSpy.deleteSoftware.and.returnValue(throwError(() => 'Fail'));
 
     component.deleteSoftware(1);
+    await fixture.whenStable();
 
-    expect(window.alert).toHaveBeenCalledWith(jasmine.stringMatching(/Error/i));
+    expect(dialogServiceSpy.alert).toHaveBeenCalledWith(
+      'Error',
+      'Error deleting software.',
+    );
   });
 
   it('pagination logic', () => {
@@ -89,23 +105,22 @@ describe('ManageSoftwaresComponent', () => {
     expect(component.getVisiblePages()).toEqual([0, 1]);
   });
 
-
   it('onSearch: should call clearSearch if all fields are empty', () => {
     spyOn(component, 'clearSearch');
     component.searchText = '';
     component.minVersion = null;
-    
+
     component.onSearch();
-    
+
     expect(component.clearSearch).toHaveBeenCalled();
   });
 
   it('onSearch: should activate search mode and load page 0', () => {
     spyOn(component, 'loadSoftwares');
     component.searchText = 'Java';
-    
+
     component.onSearch();
-    
+
     expect(component.isSearching).toBeTrue();
     expect(component.loadSoftwares).toHaveBeenCalledWith(0);
   });
@@ -131,7 +146,11 @@ describe('ManageSoftwaresComponent', () => {
 
     component.loadSoftwares(0);
 
-    expect(softwareServiceSpy.searchSoftwares).toHaveBeenCalledWith('Java', undefined, 0);
+    expect(softwareServiceSpy.searchSoftwares).toHaveBeenCalledWith(
+      'Java',
+      undefined,
+      0,
+    );
     expect(component.softwares.length).toBeGreaterThan(0);
   });
 });

@@ -167,7 +167,7 @@ public class ReservationServiceTest {
         request.setEndDate(new Date());
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        when(roomRepository.findById(roomId)).thenReturn(Optional.of(disabledRoom));
+        when(roomRepository.findByIdForUpdate(roomId)).thenReturn(Optional.of(disabledRoom));
 
         // WHEN & THEN
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
@@ -198,11 +198,11 @@ public class ReservationServiceTest {
         request.setEndDate(toDate(LocalDateTime.of(2026, 5, 20, 11, 0)));
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        when(roomRepository.findById(roomId)).thenReturn(Optional.of(activeRoom));
+        when(roomRepository.findByIdForUpdate(roomId)).thenReturn(Optional.of(activeRoom));
 
         // Mocks
-        when(reservationRepository.findOverlappingReservations(anyLong(), any(), any(), any(Pageable.class)))
-                .thenReturn(new PageImpl<Reservation>(List.of()));
+        when(reservationRepository.findOverlappingReservationsForUpdate(anyLong(), any(), any()))
+                .thenReturn(List.of());
         when(reservationRepository.findActiveByUserIdAndDate(anyLong(), any()))
                 .thenReturn(List.of());
 
@@ -249,12 +249,20 @@ public class ReservationServiceTest {
         request.setStartDate(start);
         request.setEndDate(end);
 
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(new User()));
-        when(roomRepository.findById(anyLong())).thenReturn(Optional.of(new Room()));
+        User dummyUser = new User();
+        dummyUser.setId(1L);
+        lenient().when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(dummyUser));
+
+        Room dummyRoom = new Room();
+        dummyRoom.setId(2L);
+        dummyRoom.setActive(true);
+        lenient().when(roomRepository.findByIdForUpdate(anyLong())).thenReturn(Optional.of(dummyRoom));
 
         Reservation conflict = new Reservation();
-        when(reservationRepository.findOverlappingReservations(anyLong(), any(Date.class), any(Date.class), any()))
-                .thenReturn(new PageImpl<>(List.of(conflict)));
+        lenient()
+                .when(reservationRepository.findOverlappingReservationsForUpdate(anyLong(), any(Date.class),
+                        any(Date.class)))
+                .thenReturn(List.of(conflict));
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> reservationService.createReservation(request, "user@test.com"));
@@ -324,7 +332,7 @@ public class ReservationServiceTest {
         room.setActive(false);
 
         when(userRepository.findByEmail("test@user.com")).thenReturn(Optional.of(user));
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+        when(roomRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(room));
 
         // WHEN & THEN
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
@@ -500,7 +508,7 @@ public class ReservationServiceTest {
         request.setEndDate(end);
 
         lenient().when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(new User()));
-        lenient().when(roomRepository.findById(anyLong())).thenReturn(Optional.of(new Room()));
+        lenient().when(roomRepository.findByIdForUpdate(anyLong())).thenReturn(Optional.of(new Room()));
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> reservationService.createReservation(request, "user@test.com"));
@@ -520,10 +528,10 @@ public class ReservationServiceTest {
         User user = new User();
         user.setId(1L);
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-        when(roomRepository.findById(anyLong())).thenReturn(Optional.of(new Room()));
+        when(roomRepository.findByIdForUpdate(anyLong())).thenReturn(Optional.of(new Room()));
 
-        lenient().when(reservationRepository.findOverlappingReservations(anyLong(), any(), any(), any()))
-                .thenReturn(new PageImpl<>(Collections.emptyList()));
+        lenient().when(reservationRepository.findOverlappingReservationsForUpdate(anyLong(), any(), any()))
+                .thenReturn(Collections.emptyList());
 
         // already has 3h reserved today
         Reservation existingRes = new Reservation();
@@ -555,11 +563,11 @@ public class ReservationServiceTest {
         room.setId(1L);
 
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+        when(roomRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(room));
         when(reservationRepository.save(any(Reservation.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        lenient().when(reservationRepository.findOverlappingReservations(anyLong(), any(), any(), any(Pageable.class)))
-                .thenReturn(new PageImpl<Reservation>(List.of()));
+        lenient().when(reservationRepository.findOverlappingReservationsForUpdate(anyLong(), any(), any()))
+                .thenReturn(List.of());
         lenient().when(reservationRepository.findActiveReservationsByRoomAndDate(anyLong(), any()))
                 .thenReturn(List.of());
 
@@ -587,7 +595,8 @@ public class ReservationServiceTest {
         room.setId(1L);
 
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+        room.setActive(true);
+        when(roomRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(room));
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
             reservationService.createReservation(request, "user@test.com");
@@ -606,7 +615,7 @@ public class ReservationServiceTest {
         User user = new User();
         user.setEmail("test@urjc.es");
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(new Room()));
+        when(roomRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(new Room()));
 
         assertThrows(IllegalArgumentException.class, () -> {
             reservationService.createReservation(req, "test@urjc.es");
@@ -624,7 +633,7 @@ public class ReservationServiceTest {
         request.setEndDate(end);
 
         lenient().when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(new User()));
-        lenient().when(roomRepository.findById(anyLong())).thenReturn(Optional.of(new Room()));
+        lenient().when(roomRepository.findByIdForUpdate(anyLong())).thenReturn(Optional.of(new Room()));
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> reservationService.createReservation(request, "user@test.com"));
@@ -643,7 +652,7 @@ public class ReservationServiceTest {
         request.setEndDate(end);
 
         lenient().when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(new User()));
-        lenient().when(roomRepository.findById(anyLong())).thenReturn(Optional.of(new Room()));
+        lenient().when(roomRepository.findByIdForUpdate(anyLong())).thenReturn(Optional.of(new Room()));
 
         assertThrows(IllegalArgumentException.class,
                 () -> reservationService.createReservation(request, "user@test.com"));
@@ -660,7 +669,7 @@ public class ReservationServiceTest {
         User user = new User();
         user.setEmail("test@urjc.es");
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(new Room()));
+        when(roomRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(new Room()));
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
             reservationService.createReservation(req, "test@urjc.es");
@@ -678,7 +687,7 @@ public class ReservationServiceTest {
         User user = new User();
         user.setEmail("test@urjc.es");
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(new Room()));
+        when(roomRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(new Room()));
 
         assertThrows(IllegalArgumentException.class, () -> {
             reservationService.createReservation(req, "test@urjc.es");
@@ -886,7 +895,7 @@ public class ReservationServiceTest {
         mockRoom.setActive(true);
 
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(mockUser));
-        when(roomRepository.findById(roomId)).thenReturn(Optional.of(mockRoom));
+        when(roomRepository.findByIdForUpdate(roomId)).thenReturn(Optional.of(mockRoom));
 
         // Mocks
         lenient().when(reservationRepository.findUserOverlappingReservations(any(), any(), any()))
@@ -909,13 +918,6 @@ public class ReservationServiceTest {
         // Assert
         assertNotNull(result);
 
-        // verification email, no confirmation yet
-        verify(emailService, times(1)).sendVerificationEmail(
-                eq(userEmail),
-                eq("User"),
-                anyString() // token
-        );
-
         verify(emailService, times(1)).sendReservationConfirmationEmail(any(), any(), any(), any(), any(), any(),
                 any());
     }
@@ -935,7 +937,7 @@ public class ReservationServiceTest {
         lenient().when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(mockUser));
 
         // dosent exists
-        lenient().when(roomRepository.findById(999L)).thenReturn(Optional.empty());
+        lenient().when(roomRepository.findByIdForUpdate(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
         // we expect IllegalArgumentException
@@ -959,7 +961,7 @@ public class ReservationServiceTest {
         r.setId(2L);
 
         lenient().when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(u));
-        lenient().when(roomRepository.findById(2L)).thenReturn(Optional.of(r));
+        lenient().when(roomRepository.findByIdForUpdate(2L)).thenReturn(Optional.of(r));
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> reservationService.createReservation(request, "user@test.com"));

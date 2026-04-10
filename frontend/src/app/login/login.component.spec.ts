@@ -1,4 +1,9 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {
+  ComponentFixture,
+  fakeAsync,
+  TestBed,
+  tick,
+} from '@angular/core/testing';
 import { LoginComponent } from './login.component';
 import { LoginService } from './login.service';
 import { FormsModule } from '@angular/forms';
@@ -7,6 +12,7 @@ import { of, throwError } from 'rxjs';
 import { NgbModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { DialogService } from '../services/dialog.service';
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
@@ -15,8 +21,12 @@ describe('LoginComponent', () => {
   let mockModalService: any;
   let router: Router;
   let activatedRoute: ActivatedRoute;
+  let mockDialogService: any;
 
   beforeEach(async () => {
+    mockDialogService = {
+      alert: jasmine.createSpy('alert').and.returnValue(Promise.resolve()),
+    };
     mockLoginService = {
       isLogged: () => false,
       logIn: jasmine.createSpy('logIn'),
@@ -31,6 +41,7 @@ describe('LoginComponent', () => {
       providers: [
         { provide: LoginService, useValue: mockLoginService },
         { provide: NgbModal, useValue: mockModalService },
+        { provide: DialogService, useValue: mockDialogService },
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { queryParams: {} } },
@@ -78,9 +89,8 @@ describe('LoginComponent', () => {
     expect(navigateByUrlSpy).toHaveBeenCalledWith('/admin/users');
   });
 
-  it('Login Error 401 (LOCKED): should show Access Denied alert', () => {
-    spyOn(window, 'alert');
-    spyOn(console, 'error'); // Silenciar log
+  it('Login Error 401 (LOCKED): should show Access Denied alert', async () => {
+    spyOn(console, 'error');
     const navigateSpy = spyOn(router, 'navigate');
 
     const errorResponse = {
@@ -93,14 +103,15 @@ describe('LoginComponent', () => {
     component.loginData.password = 'pass';
 
     component.logIn();
+    await fixture.whenStable();
 
-    expect(window.alert).toHaveBeenCalledWith(
-      jasmine.stringMatching(/ACCESS DENIED/),
+    expect(mockDialogService.alert).toHaveBeenCalledWith(
+      '⛔ ACCESS DENIED ⛔',
+      jasmine.stringMatching(/LOCKED/),
     );
     expect(mockLoginService.logOut).toHaveBeenCalled();
     expect(navigateSpy).toHaveBeenCalledWith(['/']);
   });
-
   it('Login Error 401 (Bad Credentials): should show Login Failed alert', () => {
     spyOn(window, 'alert');
     spyOn(console, 'error');
@@ -118,8 +129,9 @@ describe('LoginComponent', () => {
 
     component.logIn();
 
-    expect(mockModalService.open).toHaveBeenCalledWith(
-      component.loginErrorModal,
+    expect(mockDialogService.alert).toHaveBeenCalledWith(
+      'Login Error',
+      'Incorrect username or password. Please try again.',
     );
   });
 
@@ -136,8 +148,9 @@ describe('LoginComponent', () => {
     component.logIn();
 
     // Verify
-    expect(mockModalService.open).toHaveBeenCalledWith(
-      component.loginErrorModal,
+    expect(mockDialogService.alert).toHaveBeenCalledWith(
+      'Login Error',
+      'A server error occurred. Please try again later.',
     );
   });
 });
