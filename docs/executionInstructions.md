@@ -146,9 +146,11 @@ Para cerrar Playwright una vez acabadas las pruebas, ejecutamos:
 docker-compose -f docker-compose.e2e.yml down
 ```
 
+---
+
 #### Pruebas de Carga y Estrés (con Artillery)
 
-Para realizar pruebas de concurrencia y estrés sobre el servidor, utilizamos Artillery atacando el entorno E2E.
+Para realizar pruebas de concurrencia y estrés sobre el servidor y visualizar los resultados en un _dashboard_ interactivo, utilizamos Artillery conectado a **Artillery Cloud**, atacando el entorno E2E.
 
 Desde la raíz del proyecto, asegúrate de apagar cualquier contenedor previo por si acaso:
 
@@ -162,7 +164,7 @@ Levanta la infraestructura E2E (Base de datos de pruebas H2 y MailHog):
 docker-compose -f docker-compose.e2e.yml up -d
 ```
 
-Dentro de la carpeta `backend`, ejecutamos:
+Dentro de la carpeta `backend`, ejecutamos el servidor con el perfil de pruebas:
 
 ```bash
 mvn spring-boot:run -Dspring-boot.run.profiles=e2e
@@ -170,13 +172,37 @@ mvn spring-boot:run -Dspring-boot.run.profiles=e2e
 
 No es necesario ejecutar el frontend para estas pruebas, ya que se centran en el backend.
 
-Abre otra terminal, dirígete a la carpeta donde están los tests de carga (dentro de `backend/src/test`) y ejecuta Artillery con:
+Abre otra terminal, dirígete a la carpeta donde están los tests de carga (dentro de `backend/src/test`).
+
+Si no quieres usar la clave de Artillery Cloud, puedes ejecutar los tests sin ella y no ver reporte visual alguno con:
 
 ```bash
 artillery run load-test-phase-0.yml
 ```
 
-Al finalizar, puedes apagar el backend (con Ctrl+C). Luego apaga la infraestructura:
+Si quieres ver el reporte visual:
+Pasale la clave de Artillery Cloud como variable de entorno (por seguridad, esta clave se inyecta como variable de entorno).
+En PowerShell, ejecuta:
+
+```bash
+$env:ARTILLERY_CLOUD_API_KEY="LA_CLAVE_AQUI"
+```
+
+O si es en bash:
+
+```bash
+export ARTILLERY_CLOUD_API_KEY="LA_CLAVE_AQUI"
+```
+
+Una vez configurada la clave en la sesión actual de la terminal, ejecuta el test indicando que grabe los resultados con el flag --record:
+
+```bash
+artillery run --record load-test-phase-0.yml
+```
+
+Al finalizar la prueba, la consola imprimirá un Run URL (ej. https://app.artillery.io/...). Haz clic en ese enlace o cópialo en tu navegador para acceder al reporte interactivo, donde podrás analizar gráficas detalladas de latencia, distribución de códigos HTTP y rendimiento bajo estrés.
+
+Finalmente, puedes apagar el backend (con Ctrl+C). Luego apaga la infraestructura:
 
 ```bash
 docker-compose -f docker-compose.e2e.yml down

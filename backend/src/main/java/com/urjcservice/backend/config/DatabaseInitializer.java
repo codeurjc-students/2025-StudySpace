@@ -22,6 +22,8 @@ import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.List;
+import java.util.ArrayList;
 
 @Component
 @ConditionalOnProperty(name = "app.db.init.enabled", havingValue = "true", matchIfMissing = true)
@@ -401,6 +403,25 @@ public class DatabaseInitializer implements CommandLineRunner {
                                         student1, student2, student3,
                                         miAdmin, blockedUser,
                                         student4, student5, student6, student7, userImg, userExtra1, userExtra2));
+
+                        logger.info("Generating 100 additional test users for load testing...");
+                        List<User> extraUsers = new ArrayList<>();
+
+                        for (int i = 1; i <= 100; i++) {
+                                String email = "testuser" + i + "@urjc.es";
+                                if (userRepository.findByEmail(email).isEmpty()) {
+                                        User u = new User();
+                                        u.setName("Test User " + i);
+                                        u.setEmail(email);
+                                        u.setEncodedPassword(passwordEncoder.encode(normalPassword)); 
+                                        u.setRoles(Arrays.asList("USER"));
+                                        u.setType(User.UserType.USER_REGISTERED);
+                                        u.setEmailVerified(true);
+                                        u.setBlocked(false);
+                                        extraUsers.add(u);
+                                }
+                        }
+                        userRepository.saveAll(extraUsers);
 
                         // ==========================================
                         // 4. RESERVATIONS (Aprox 20 items)
