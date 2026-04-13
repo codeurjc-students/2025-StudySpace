@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Registration Flow and User Profile', () => {
   test('A new user should be able to register, log in, and view their profile.', async ({
     page,
+    request,
   }) => {
     const timestamp = Date.now();
     const newUser = {
@@ -24,12 +25,47 @@ test.describe('Registration Flow and User Profile', () => {
         .locator('input[placeholder="Create a password"]')
         .fill(newUser.password);
 
-      const dialogPromise = page.waitForEvent('dialog');
       await page.getByRole('button', { name: 'Sign Up' }).click();
-      const dialog = await dialogPromise;
-      await dialog.dismiss();
+      const dialog = page.getByRole('dialog');
+      await expect(dialog).toBeVisible();
+      await dialog.getByRole('button', { name: 'OK' }).click();
 
       await expect(page).toHaveURL('/login');
+    });
+
+    // ==========================================
+    // VERIFY EMAIL VIA MAILHOG
+    // ==========================================
+    await test.step('Verify email via MailHog', async () => {
+      let message = null;
+      for (let i = 0; i < 15; i++) {
+        try {
+          const response = await request.get(
+            'http://127.0.0.1:8025/api/v2/messages',
+          );
+          if (response.ok()) {
+            const emailData = await response.json();
+            const found = emailData.items.find(
+              (msg: any) =>
+                msg.Content.Headers.To &&
+                msg.Content.Headers.To[0].includes(newUser.email),
+            );
+            if (found) {
+              message = found;
+              break;
+            }
+          }
+        } catch (e) {}
+        await page.waitForTimeout(1000);
+      }
+      expect(message, 'The verification email was not found').toBeTruthy();
+      const cleanBody = message.Content.Body.replace(/=\r?\n/g, '');
+      const match = cleanBody.match(/token=([a-zA-Z0-9-]+)/);
+      expect(match).toBeTruthy();
+
+      await page.goto(`/verify-email?token=${match![1]}`);
+      await page.waitForTimeout(2000);
+      await page.goto('/login');
     });
 
     // ==========================================

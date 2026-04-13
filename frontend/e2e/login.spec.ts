@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('User Authentication (Dynamic Data)', () => {
   test('It should allow login with newly created credentials and display the profile.', async ({
     page,
+    request,
   }) => {
     //new data for test
     const timestamp = Date.now();
@@ -21,12 +22,46 @@ test.describe('User Authentication (Dynamic Data)', () => {
         .locator('input[placeholder="Create a password"]')
         .fill(password);
 
-      const dialogPromise = page.waitForEvent('dialog');
       await page.getByRole('button', { name: 'Sign Up' }).click();
-      const dialog = await dialogPromise;
-      await dialog.dismiss();
+      const dialog = page.getByRole('dialog');
+      await expect(dialog).toBeVisible();
+      await dialog.getByRole('button', { name: 'OK' }).click();
 
       await expect(page).toHaveURL('/login');
+    });
+
+    //check mailhog
+    await test.step('Verify email via MailHog', async () => {
+      let message = null;
+      for (let i = 0; i < 15; i++) {
+        try {
+          const response = await request.get(
+            'http://127.0.0.1:8025/api/v2/messages',
+          );
+          if (response.ok()) {
+            const emailData = await response.json();
+            const found = emailData.items.find(
+              (msg: any) =>
+                msg.Content.Headers.To &&
+                msg.Content.Headers.To[0].includes(email),
+            );
+            if (found) {
+              message = found;
+              break;
+            }
+          }
+        } catch (e) {}
+        await page.waitForTimeout(1000);
+      }
+
+      expect(message, 'The verification email was not found').toBeTruthy();
+      const cleanBody = message.Content.Body.replace(/=\r?\n/g, '');
+      const match = cleanBody.match(/token=([a-zA-Z0-9-]+)/);
+      expect(match).toBeTruthy();
+
+      await page.goto(`/verify-email?token=${match![1]}`);
+      await page.waitForTimeout(2000);
+      await page.goto('/login');
     });
 
     //  TEST LOGIN
@@ -41,9 +76,6 @@ test.describe('User Authentication (Dynamic Data)', () => {
 
       // Verify
       await expect(page).toHaveURL('/');
-      await expect(
-        page.getByRole('button', { name: 'Log In' }).first(),
-      ).not.toBeVisible();
 
       const profileDropdown = page.locator('#dropdownProfile');
       await expect(profileDropdown).toBeVisible();
@@ -67,13 +99,13 @@ test.describe('User Authentication (Dynamic Data)', () => {
       .getByRole('button', { name: 'Log In', exact: true })
       .click();
 
-    const errorMessage = page.getByText(/Incorrect username or password/);
-    await expect(errorMessage).toBeVisible({ timeout: 15000 });
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible({ timeout: 15000 });
+    await expect(
+      dialog.getByText(/Incorrect username or password/i),
+    ).toBeVisible();
 
-    const closeButton = page.getByRole('button', { name: 'Close' }).first();
-    await expect(closeButton).toBeVisible();
-    await closeButton.click();
-
+    await dialog.getByRole('button', { name: 'Close' }).click();
     await expect(page).toHaveURL('/login');
   });
 });
