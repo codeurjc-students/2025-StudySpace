@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  #MySQL
+  # Data Base MySQL
   mysql:
     image: mysql:8.0
     container_name: study_space_mysql
@@ -9,9 +9,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: study_space_db
+
       TZ: Europe/Madrid
-    ports:
-      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -21,11 +20,9 @@ services:
 
   # Backend (Spring Boot)
   backend:
-    image: ${DOCKER_USERNAME}/studyspace-backend:${TAG:-latest}
+    build: ../backend
     container_name: study_space_backend
     restart: always
-    ports:
-      - "8443:8443"
     depends_on:
       mysql:
         condition: service_healthy
@@ -44,18 +41,18 @@ services:
       JAVA_TOOL_OPTIONS: "-Duser.timezone=Europe/Madrid"
 
     volumes:
-      - ./backend/uploads:/app/uploads
+      - ../backend/uploads:/app/uploads
 
-  # Frontend (Angular)
+  # 3. Frontend (Angular)
   frontend:
-    image: ${DOCKER_USERNAME}/studyspace-frontend:${TAG:-latest}
+    build: ../frontend
     container_name: study_space_frontend
     restart: always
     ports:
       - "443:443"
     volumes:
-      - ./frontend/certs:/etc/nginx/certs
-      - ./backend/uploads:/usr/share/nginx/html/uploads
+      - ../frontend/certs:/etc/nginx/certs
+      - ../backend/uploads:/usr/share/nginx/html/uploads
     depends_on:
       - backend
 

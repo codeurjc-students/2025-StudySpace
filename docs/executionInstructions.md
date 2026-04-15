@@ -22,20 +22,15 @@ cd 2025-StudySpace
 
 ---
 
-> **Nota importante: Certificado SSL y Visualización de Imágenes**
+> **Nota importante: Certificado SSL**
 >
-> Debido a que la aplicación utiliza un **certificado SSL auto-firmado**, el navegador bloqueará por defecto las peticiones al backend, lo que impedirá la correcta visualización de las imágenes.
+> Debido a que la aplicación utiliza un **certificado SSL auto-firmado**, el navegador bloqueará por defecto la visualizacion y acceso a la aplicación, a menos que se acepte el riesgo inicialemnete.
 >
-> **Antes de proceder con el despliegue**, es necesario autorizar el certificado en el navegador:
->
-> 1. Una vez levantado el entorno (paso siguiente), acceda a: [https://localhost:8443/api/users/1/image](https://localhost:8443/api/users/1/image) o a [https://localhost:8443/api/rooms/1/image](https://localhost:8443/api/rooms/1/image).
-> 2. En la pantalla de advertencia, haga clic en **"Configuración avanzada"** y seleccione **"Acceder a localhost (sitio no seguro)"**.
->
-> Este paso es fundamental para que el frontend pueda mostrar las imágenes de la aplicación, al no confiar en el certificado por ser auto-firmado.
+> Este paso es fundamental para que se muestre la aplicación, al no confiar en el certificado por ser auto-firmado.
 
 ### Levantar el entorno con Docker
 
-En la raíz del proyecto, ejecutar los siguientes comandos para levantar el entorno con Docker, asegurandonos de que Docker Desktop/Engine está arrancado:
+En la carpeta docker del proyecto, ejecutar los siguientes comandos para levantar el entorno con Docker, asegurandonos de que Docker Desktop/Engine está arrancado:
 
 ```bash
 docker-compose pull
@@ -50,7 +45,7 @@ docker-compose down
 
 ---
 
-Si quieres levantar el entorno de desarrollo:
+Si quieres levantar el entorno de desarrollo, ejecuta en la carpeta docker:
 
 ```bash
 docker-compose -f docker-compose-dev.yml up -d --build
@@ -99,7 +94,7 @@ ng test
 
 Para levantar el entorno de pruebas E2E es necesario seguir estos pasos.
 
-Desde la raíz del proyecto, asegúrate de apagar cualquier contenedor previo por si acaso:
+Desde la carpeta docker del proyecto, asegúrate de apagar cualquier contenedor previo por si acaso:
 
 ```bash
 docker-compose down
@@ -152,7 +147,7 @@ docker-compose -f docker-compose.e2e.yml down
 
 Para realizar pruebas de concurrencia y estrés sobre el servidor y visualizar los resultados en un _dashboard_ interactivo, utilizamos Artillery conectado a **Artillery Cloud**, atacando el entorno E2E.
 
-Desde la raíz del proyecto, asegúrate de apagar cualquier contenedor previo por si acaso:
+Desde la carpeta docker del proyecto, asegúrate de apagar cualquier contenedor previo por si acaso:
 
 ```bash
 docker-compose down
