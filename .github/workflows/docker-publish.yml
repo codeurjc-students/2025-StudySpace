@@ -88,18 +88,18 @@ jobs:
 
       - name: Prepare Docker Compose for Artifact
         run: |
-          sed -i 's|build: ../backend|image: ${{ env.DOCKER_IMAGE_BACKEND }}:${{ env.TAG_OCI }}|g' docker-compose.yml
+          sed -i 's|build: ./backend|image: ${{ env.DOCKER_IMAGE_BACKEND }}:${{ env.TAG_OCI }}|g' docker/docker-compose.yml
 
-          sed -i 's|build: ../frontend|image: ${{ env.DOCKER_IMAGE_FRONTEND }}:${{ env.TAG_OCI }}|g' docker-compose.yml
+          sed -i 's|build: ./frontend|image: ${{ env.DOCKER_IMAGE_FRONTEND }}:${{ env.TAG_OCI }}|g' docker/docker-compose.yml
 
           #shows file for logs
-          cat docker-compose.yml
+          cat docker/docker-compose.yml
 
       - name: Package Docker Compose as OCI Artifact
         run: |
           # Empty image
           echo "FROM scratch" > Dockerfile.oci
-          echo "COPY docker-compose.yml /docker-compose.yml" >> Dockerfile.oci
+          echo "COPY docker/docker-compose.yml /docker-compose.yml" >> Dockerfile.oci
 
           # tag (dev, 0.1.0, etc)
           docker build -f Dockerfile.oci -t ${{ env.DOCKER_IMAGE_CONFIG }}:${{ env.TAG_OCI }} .
