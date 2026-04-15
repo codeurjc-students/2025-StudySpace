@@ -118,6 +118,12 @@ test.describe('Statistics and Reservations Flow', () => {
         await page.locator('#dropdownProfile').click();
       }
       await page.getByRole('button', { name: 'Log Out' }).click();
+
+      await page.context().clearCookies();
+      await page.evaluate(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+      });
     });
 
     // ADMIN VERIFICATION

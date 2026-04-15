@@ -252,7 +252,8 @@ test.describe('User Reservation Management by Admin', () => {
           });
 
         if (!page.url().includes('/admin/users')) {
-          await page.getByRole('button', { name: 'Manage Users' }).click();
+          await page.getByRole('button', { name: /Admin Panel/i }).click();
+          await page.getByRole('button', { name: /Manage Users/i }).click();
         }
 
         const foundAgain = await findUserRobustly(uniqueUserEmail);
