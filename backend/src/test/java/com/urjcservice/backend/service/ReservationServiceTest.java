@@ -1,6 +1,7 @@
 package com.urjcservice.backend.service;
 
 import com.urjcservice.backend.rest.ReservationRestController.ReservationRequest;
+import com.urjcservice.backend.entities.Campus;
 import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.entities.User;
@@ -166,7 +167,7 @@ public class ReservationServiceTest {
         request.setEndDate(new Date());
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        when(roomRepository.findById(roomId)).thenReturn(Optional.of(disabledRoom));
+        when(roomRepository.findByIdForUpdate(roomId)).thenReturn(Optional.of(disabledRoom));
 
         // WHEN & THEN
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
@@ -197,11 +198,11 @@ public class ReservationServiceTest {
         request.setEndDate(toDate(LocalDateTime.of(2026, 5, 20, 11, 0)));
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        when(roomRepository.findById(roomId)).thenReturn(Optional.of(activeRoom));
+        when(roomRepository.findByIdForUpdate(roomId)).thenReturn(Optional.of(activeRoom));
 
         // Mocks
-        when(reservationRepository.findOverlappingReservations(anyLong(), any(), any(), any(Pageable.class)))
-                .thenReturn(new PageImpl<Reservation>(List.of()));
+        when(reservationRepository.findOverlappingReservationsForUpdate(anyLong(), any(), any()))
+                .thenReturn(List.of());
         when(reservationRepository.findActiveByUserIdAndDate(anyLong(), any()))
                 .thenReturn(List.of());
 
@@ -248,12 +249,20 @@ public class ReservationServiceTest {
         request.setStartDate(start);
         request.setEndDate(end);
 
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(new User()));
-        when(roomRepository.findById(anyLong())).thenReturn(Optional.of(new Room()));
+        User dummyUser = new User();
+        dummyUser.setId(1L);
+        lenient().when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(dummyUser));
+
+        Room dummyRoom = new Room();
+        dummyRoom.setId(2L);
+        dummyRoom.setActive(true);
+        lenient().when(roomRepository.findByIdForUpdate(anyLong())).thenReturn(Optional.of(dummyRoom));
 
         Reservation conflict = new Reservation();
-        when(reservationRepository.findOverlappingReservations(anyLong(), any(Date.class), any(Date.class), any()))
-                .thenReturn(new PageImpl<>(List.of(conflict)));
+        lenient()
+                .when(reservationRepository.findOverlappingReservationsForUpdate(anyLong(), any(Date.class),
+                        any(Date.class)))
+                .thenReturn(List.of(conflict));
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> reservationService.createReservation(request, "user@test.com"));
@@ -323,7 +332,7 @@ public class ReservationServiceTest {
         room.setActive(false);
 
         when(userRepository.findByEmail("test@user.com")).thenReturn(Optional.of(user));
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+        when(roomRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(room));
 
         // WHEN & THEN
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
@@ -499,7 +508,7 @@ public class ReservationServiceTest {
         request.setEndDate(end);
 
         lenient().when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(new User()));
-        lenient().when(roomRepository.findById(anyLong())).thenReturn(Optional.of(new Room()));
+        lenient().when(roomRepository.findByIdForUpdate(anyLong())).thenReturn(Optional.of(new Room()));
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> reservationService.createReservation(request, "user@test.com"));
@@ -519,10 +528,10 @@ public class ReservationServiceTest {
         User user = new User();
         user.setId(1L);
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-        when(roomRepository.findById(anyLong())).thenReturn(Optional.of(new Room()));
+        when(roomRepository.findByIdForUpdate(anyLong())).thenReturn(Optional.of(new Room()));
 
-        lenient().when(reservationRepository.findOverlappingReservations(anyLong(), any(), any(), any()))
-                .thenReturn(new PageImpl<>(Collections.emptyList()));
+        lenient().when(reservationRepository.findOverlappingReservationsForUpdate(anyLong(), any(), any()))
+                .thenReturn(Collections.emptyList());
 
         // already has 3h reserved today
         Reservation existingRes = new Reservation();
@@ -554,11 +563,11 @@ public class ReservationServiceTest {
         room.setId(1L);
 
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+        when(roomRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(room));
         when(reservationRepository.save(any(Reservation.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        lenient().when(reservationRepository.findOverlappingReservations(anyLong(), any(), any(), any(Pageable.class)))
-                .thenReturn(new PageImpl<Reservation>(List.of()));
+        lenient().when(reservationRepository.findOverlappingReservationsForUpdate(anyLong(), any(), any()))
+                .thenReturn(List.of());
         lenient().when(reservationRepository.findActiveReservationsByRoomAndDate(anyLong(), any()))
                 .thenReturn(List.of());
 
@@ -586,7 +595,8 @@ public class ReservationServiceTest {
         room.setId(1L);
 
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(room));
+        room.setActive(true);
+        when(roomRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(room));
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
             reservationService.createReservation(request, "user@test.com");
@@ -605,7 +615,7 @@ public class ReservationServiceTest {
         User user = new User();
         user.setEmail("test@urjc.es");
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(new Room()));
+        when(roomRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(new Room()));
 
         assertThrows(IllegalArgumentException.class, () -> {
             reservationService.createReservation(req, "test@urjc.es");
@@ -623,7 +633,7 @@ public class ReservationServiceTest {
         request.setEndDate(end);
 
         lenient().when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(new User()));
-        lenient().when(roomRepository.findById(anyLong())).thenReturn(Optional.of(new Room()));
+        lenient().when(roomRepository.findByIdForUpdate(anyLong())).thenReturn(Optional.of(new Room()));
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> reservationService.createReservation(request, "user@test.com"));
@@ -642,7 +652,7 @@ public class ReservationServiceTest {
         request.setEndDate(end);
 
         lenient().when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(new User()));
-        lenient().when(roomRepository.findById(anyLong())).thenReturn(Optional.of(new Room()));
+        lenient().when(roomRepository.findByIdForUpdate(anyLong())).thenReturn(Optional.of(new Room()));
 
         assertThrows(IllegalArgumentException.class,
                 () -> reservationService.createReservation(request, "user@test.com"));
@@ -659,7 +669,7 @@ public class ReservationServiceTest {
         User user = new User();
         user.setEmail("test@urjc.es");
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(new Room()));
+        when(roomRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(new Room()));
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
             reservationService.createReservation(req, "test@urjc.es");
@@ -677,7 +687,7 @@ public class ReservationServiceTest {
         User user = new User();
         user.setEmail("test@urjc.es");
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(new Room()));
+        when(roomRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(new Room()));
 
         assertThrows(IllegalArgumentException.class, () -> {
             reservationService.createReservation(req, "test@urjc.es");
@@ -885,7 +895,7 @@ public class ReservationServiceTest {
         mockRoom.setActive(true);
 
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(mockUser));
-        when(roomRepository.findById(roomId)).thenReturn(Optional.of(mockRoom));
+        when(roomRepository.findByIdForUpdate(roomId)).thenReturn(Optional.of(mockRoom));
 
         // Mocks
         lenient().when(reservationRepository.findUserOverlappingReservations(any(), any(), any()))
@@ -907,18 +917,9 @@ public class ReservationServiceTest {
 
         // Assert
         assertNotNull(result);
-        assertFalse(result.isVerified(), "The reservation must be born unverified");
-        assertNotNull(result.getVerificationToken(), "You must have a generated token");
-        assertNotNull(result.getTokenExpirationDate(), "It must have an expiration date.");
 
-        // verification email, no confirmation yet
-        verify(emailService, times(1)).sendVerificationEmail(
-                eq(userEmail),
-                eq("User"),
-                anyString() // token
-        );
-
-        verify(emailService, never()).sendReservationConfirmationEmail(any(), any(), any(), any(), any(), any(), any());
+        verify(emailService, times(1)).sendReservationConfirmationEmail(any(), any(), any(), any(), any(), any(),
+                any());
     }
 
     @Test
@@ -936,89 +937,11 @@ public class ReservationServiceTest {
         lenient().when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(mockUser));
 
         // dosent exists
-        lenient().when(roomRepository.findById(999L)).thenReturn(Optional.empty());
+        lenient().when(roomRepository.findByIdForUpdate(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
         // we expect IllegalArgumentException
         assertThrows(RuntimeException.class, () -> reservationService.createReservation(request, "user@test.com"));
-    }
-
-    @Test
-    @DisplayName("Verify Reservation - Success: Should verify and send ICS")
-    void testVerifyReservation_Success() {
-        // Arrange
-        String token = "valid-uuid-token";
-
-        User user = new User();
-        user.setEmail("u@test.com");
-        user.setName("User");
-        Room room = new Room();
-        room.setName("Lab 1");
-        room.setPlace("Campus");
-        room.setCoordenades("40,-3");
-
-        Reservation pendingRes = new Reservation();
-        pendingRes.setId(100L);
-        pendingRes.setVerified(false);
-        pendingRes.setVerificationToken(token);
-        pendingRes.setTokenExpirationDate(new Date(System.currentTimeMillis() + 3600000)); // last just 1 hour
-        pendingRes.setUser(user);
-        pendingRes.setRoom(room);
-        pendingRes.setStartDate(new Date());
-        pendingRes.setEndDate(new Date());
-
-        when(reservationRepository.findByVerificationToken(token)).thenReturn(Optional.of(pendingRes));
-        when(reservationRepository.save(any(Reservation.class))).thenAnswer(i -> i.getArgument(0));
-
-        // Act
-        reservationService.verifyReservation(token);
-
-        // Assert
-        assertTrue(pendingRes.isVerified());
-        assertNull(pendingRes.getVerificationToken()); // Token errased
-
-        // confirmation email with ICS
-        verify(emailService).sendReservationConfirmationEmail(
-                eq("u@test.com"),
-                eq("User"),
-                eq("Lab 1"),
-                eq("Campus"),
-                eq("40,-3"),
-                any(),
-                any());
-    }
-
-    @Test
-    @DisplayName("Verify Reservation - Expired: Should delete reservation and throw exception")
-    void testVerifyReservation_Expired() {
-        // Arrange
-        String token = "expired-token";
-        Reservation expiredRes = new Reservation();
-        expiredRes.setVerified(false);
-        // - 1 hour expired
-        expiredRes.setTokenExpirationDate(new Date(System.currentTimeMillis() - 3600000));
-
-        when(reservationRepository.findByVerificationToken(token)).thenReturn(Optional.of(expiredRes));
-
-        // Act & Assert
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> reservationService.verifyReservation(token));
-
-        assertTrue(ex.getMessage().contains("expired"));
-
-        // reservation deleted
-        verify(reservationRepository, times(1)).delete(expiredRes);
-        // do not send email
-        verify(emailService, never()).sendReservationConfirmationEmail(any(), any(), any(), any(), any(), any(), any());
-    }
-
-    @Test
-    @DisplayName("Cron Job - Should call deleteExpiredReservations")
-    void testDeleteExpiredUnverifiedReservations() {
-        // Act
-        reservationService.deleteExpiredUnverifiedReservations();
-
-        // Assert
-        verify(reservationRepository, times(1)).deleteExpiredReservations(any(Date.class));
     }
 
     @Test
@@ -1038,7 +961,7 @@ public class ReservationServiceTest {
         r.setId(2L);
 
         lenient().when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(u));
-        lenient().when(roomRepository.findById(2L)).thenReturn(Optional.of(r));
+        lenient().when(roomRepository.findByIdForUpdate(2L)).thenReturn(Optional.of(r));
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> reservationService.createReservation(request, "user@test.com"));
@@ -1051,9 +974,12 @@ public class ReservationServiceTest {
         Date start = new Date();
         Date end = new Date(start.getTime() + 3600000);
 
+        Campus reqCampus = new Campus("Móstoles", "40.000, -3.000");
+        reqCampus.setId(1L);
+
         Room room = new Room();
         room.setId(1L);
-        room.setCamp(Room.CampusType.MOSTOLES);
+        room.setCampus(reqCampus);
         room.setCapacity(30);
         room.setActive(true);
 
@@ -1061,8 +987,7 @@ public class ReservationServiceTest {
         when(reservationRepository.findActiveReservationsByRoomIdAndDateRange(1L, start, end))
                 .thenReturn(Collections.emptyList());
 
-        List<SmartSuggestionDTO> suggestions = reservationService.smartFindAvailableRooms(start, end, 20,
-                Room.CampusType.MOSTOLES);
+        List<SmartSuggestionDTO> suggestions = reservationService.smartFindAvailableRooms(start, end, 20, reqCampus);
 
         assertEquals(1, suggestions.size());
         assertEquals("EXACT_MATCH", suggestions.get(0).getMatchType());
@@ -1070,14 +995,20 @@ public class ReservationServiceTest {
     }
 
     @Test
-    @DisplayName("Smart Search - Same Zone (Sur) Penalty (Score 80)")
-    void testSmartFindAvailableRooms_SimilarRoom_SameZone() {
+    @DisplayName("Smart Search - Similar Room Near Campus (Score ~80)")
+    void testSmartFindAvailableRooms_SimilarRoom_NearZone() {
         Date start = new Date();
         Date end = new Date(start.getTime() + 3600000);
 
+        Campus reqCampus = new Campus("Móstoles", "40.000, -3.000");
+        reqCampus.setId(1L);
+
+        Campus nearCampus = new Campus("Alcorcón", "40.090, -3.000");
+        nearCampus.setId(2L);
+
         Room room = new Room();
         room.setId(1L);
-        room.setCamp(Room.CampusType.FUENLABRADA);
+        room.setCampus(nearCampus);
         room.setCapacity(30);
         room.setActive(true);
 
@@ -1085,23 +1016,28 @@ public class ReservationServiceTest {
         when(reservationRepository.findActiveReservationsByRoomIdAndDateRange(1L, start, end))
                 .thenReturn(Collections.emptyList());
 
-        List<SmartSuggestionDTO> suggestions = reservationService.smartFindAvailableRooms(start, end, 20,
-                Room.CampusType.MOSTOLES);
+        List<SmartSuggestionDTO> suggestions = reservationService.smartFindAvailableRooms(start, end, 20, reqCampus);
 
         assertEquals(1, suggestions.size());
         assertEquals("SIMILAR_ROOM", suggestions.get(0).getMatchType());
-        assertEquals(80, suggestions.get(0).getScore());
+        assertTrue(suggestions.get(0).getScore() >= 79 && suggestions.get(0).getScore() <= 81);
     }
 
     @Test
-    @DisplayName("Smart Search - Different Zone Penalty (Score 50)")
+    @DisplayName("Smart Search - Different Far Zone Penalty (Capped at Score 40)")
     void testSmartFindAvailableRooms_DifferentZone() {
         Date start = new Date();
         Date end = new Date(start.getTime() + 3600000);
 
+        Campus reqCampus = new Campus("Móstoles", "40.000, -3.000");
+        reqCampus.setId(1L);
+
+        Campus farCampus = new Campus("Vicálvaro", "41.000, -3.000");
+        farCampus.setId(3L);
+
         Room room = new Room();
         room.setId(1L);
-        room.setCamp(Room.CampusType.VICALVARO);
+        room.setCampus(farCampus);
         room.setCapacity(30);
         room.setActive(true);
 
@@ -1109,11 +1045,10 @@ public class ReservationServiceTest {
         when(reservationRepository.findActiveReservationsByRoomIdAndDateRange(1L, start, end))
                 .thenReturn(Collections.emptyList());
 
-        List<SmartSuggestionDTO> suggestions = reservationService.smartFindAvailableRooms(start, end, 20,
-                Room.CampusType.MOSTOLES);
+        List<SmartSuggestionDTO> suggestions = reservationService.smartFindAvailableRooms(start, end, 20, reqCampus);
 
         assertEquals(1, suggestions.size());
-        assertEquals(50, suggestions.get(0).getScore());
+        assertEquals(40, suggestions.get(0).getScore());
     }
 
     @Test
@@ -1122,9 +1057,12 @@ public class ReservationServiceTest {
         Date start = new Date();
         Date end = new Date(start.getTime() + 3600000);
 
+        Campus reqCampus = new Campus("Móstoles", "40.000, -3.000");
+        reqCampus.setId(1L);
+
         Room room = new Room();
         room.setId(1L);
-        room.setCamp(Room.CampusType.MOSTOLES);
+        room.setCampus(reqCampus);
         room.setCapacity(30);
         room.setActive(true);
 
@@ -1139,8 +1077,7 @@ public class ReservationServiceTest {
                     return Collections.emptyList();
                 });
 
-        List<SmartSuggestionDTO> suggestions = reservationService.smartFindAvailableRooms(start, end, 20,
-                Room.CampusType.MOSTOLES);
+        List<SmartSuggestionDTO> suggestions = reservationService.smartFindAvailableRooms(start, end, 20, reqCampus);
 
         assertEquals(3, suggestions.size());
         assertEquals("ALTERNATIVE_TIME", suggestions.get(0).getMatchType());
@@ -1152,6 +1089,8 @@ public class ReservationServiceTest {
     void testSmartFindAvailableRooms_FiltersCapacityAndInactive() {
         Date start = new Date();
         Date end = new Date(start.getTime() + 3600000);
+        Campus reqCampus = new Campus("Móstoles", "40.000, -3.000");
+        reqCampus.setId(1L);
 
         Room inactiveRoom = new Room();
         inactiveRoom.setId(1L);
@@ -1165,8 +1104,7 @@ public class ReservationServiceTest {
 
         when(roomRepository.findAll()).thenReturn(List.of(inactiveRoom, smallRoom));
 
-        List<SmartSuggestionDTO> suggestions = reservationService.smartFindAvailableRooms(start, end, 20,
-                Room.CampusType.MOSTOLES);
+        List<SmartSuggestionDTO> suggestions = reservationService.smartFindAvailableRooms(start, end, 20, reqCampus);
 
         assertEquals(0, suggestions.size());
     }
@@ -1176,12 +1114,14 @@ public class ReservationServiceTest {
     void testSmartFindAvailableRooms_SortingAndLimit() {
         Date start = new Date();
         Date end = new Date(start.getTime() + 3600000);
+        Campus reqCampus = new Campus("Móstoles", "40.000, -3.000");
+        reqCampus.setId(1L);
 
         List<Room> rooms = new ArrayList<>();
         for (long i = 1; i <= 15; i++) {
             Room r = new Room();
             r.setId(i);
-            r.setCamp(Room.CampusType.MOSTOLES);
+            r.setCampus(reqCampus);
             r.setCapacity(30);
             r.setActive(true);
             rooms.add(r);
@@ -1191,8 +1131,7 @@ public class ReservationServiceTest {
         when(reservationRepository.findActiveReservationsByRoomIdAndDateRange(anyLong(), any(), any()))
                 .thenReturn(Collections.emptyList());
 
-        List<SmartSuggestionDTO> suggestions = reservationService.smartFindAvailableRooms(start, end, 20,
-                Room.CampusType.MOSTOLES);
+        List<SmartSuggestionDTO> suggestions = reservationService.smartFindAvailableRooms(start, end, 20, reqCampus);
 
         assertEquals(10, suggestions.size());
         assertEquals(100, suggestions.get(0).getScore());

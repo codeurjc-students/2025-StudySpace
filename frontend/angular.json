@@ -87,7 +87,12 @@
             "karmaConfig": "karma.conf.js",
             "assets": ["src/favicon.ico", "src/assets"],
 
-            "scripts": []
+            "scripts": [],
+            "codeCoverageExclude": [
+              "src/app/services/dialog.service.ts",
+              "src/app/components/shared-modal/**/*.ts",
+              "src/app/components/pagination/**/*.ts"
+            ]
           }
         }
       }

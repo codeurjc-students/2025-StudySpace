@@ -4,9 +4,9 @@ La arquitectura del proyecto se basa en la contenedorización integral de los se
 
 - **🗄️ Base de Datos (MySQL):** Ejecuta la imagen oficial de MySQL. Por seguridad, el puerto interno (3306) no se expone a la máquina anfitriona, permitiendo acceso únicamente desde la red de Docker. Utiliza volúmenes persistentes para evitar la pérdida de datos.
 
-- **⚙️ Servidor Backend (Spring Boot):** Ejecuta la API REST y procesa toda la lógica de negocio. Expone el puerto HTTPS (8443) y es el único autorizado para conectarse con la base de datos.
+- **⚙️ Servidor Backend (Spring Boot):** Ejecuta la API REST y procesa toda la lógica de negocio. No expone puertos al exterior y es el único autorizado para conectarse con la base de datos.
 
-- **💻 Cliente Frontend (Angular):** Sirve los archivos estáticos generados por Angular. Para soportar el enrutamiento interno de la *Single Page Application* (SPA), el backend implementa un `SpaController` que redirige las rutas no pertenecientes a la API al `index.html`.
+- **💻 Cliente Frontend (Angular):** Sirve los archivos estáticos generados por Angular. Se conecta con el backend mediante la API REST de este.
 
 
 ![Arquitectura de despliegue con contenedores Docker](../images/diagrams/diagramaArquitectura.png) 

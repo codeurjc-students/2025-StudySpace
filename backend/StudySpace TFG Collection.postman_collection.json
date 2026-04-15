@@ -15,12 +15,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://localhost:8443/api/rooms?page=1&size=10",
+              "raw": "https://localhost/api/rooms?page=1&size=10",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "rooms"
@@ -45,12 +44,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://localhost:8443/api/rooms/1",
+              "raw": "https://localhost/api/rooms/1",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "rooms",
@@ -107,7 +105,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n\t\"name\": \"Habitacion20\",\r\n    \"capacity\": 29,\r\n    \"camp\": \"ALCORCON\",\r\n    \"place\": \" Aulario I, Planta 2\",\r\n    \"coordenades\":\"41.344699, -5.174812\",\r\n    \"softwareIds\": [1,2,3,4]\r\n}",
+              "raw": "{\r\n\t\"name\": \"Habitacion26\",\r\n    \"capacity\": 29,\r\n    \"campusId\": 1,\r\n    \"place\": \" Aulario I, Planta 2\",\r\n    \"coordenades\":\"41.344699, -5.174812\",\r\n    \"softwareIds\": [1,2,3,4]\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -115,12 +113,11 @@
               }
             },
             "url": {
-              "raw": "https://localhost:8443/api/rooms",
+              "raw": "https://localhost/api/rooms",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "rooms"
@@ -135,12 +132,11 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "https://localhost:8443/api/rooms/2",
+              "raw": "https://localhost/api/rooms/2",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "rooms",
@@ -157,7 +153,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n\t\"name\": \"Habitacion4\",\r\n    \"capacity\": 30,\r\n    \"camp\": \"MOSTOLES\",\r\n    \"place\": \"Calle Argentina N81\",\r\n    \"coordenades\":\"40.334619, -3.874812\",\r\n    \"software\": [{\"id\":1},{\"id\":2}]\r\n}",
+              "raw": "{\r\n\t\"name\": \"Habitacion4\",\r\n    \"capacity\": 30,\r\n    \"campusId\": 1,\r\n    \"place\": \"Calle Argentina N81\",\r\n    \"coordenades\":\"40.334619, -3.874812\",\r\n    \"software\": [{\"id\":1},{\"id\":2}]\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -165,12 +161,11 @@
               }
             },
             "url": {
-              "raw": "http://localhost:8080/api/rooms/2",
-              "protocol": "http",
+              "raw": "https://localhost/api/rooms/2",
+              "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8080",
               "path": [
                 "api",
                 "rooms",
@@ -193,12 +188,11 @@
               "raw": "{ \"email\": \"ana@alumnos.urjc.es\" }"
             },
             "url": {
-              "raw": "https://localhost:8443/api/rooms/1/stats?date=2026-03-02",
+              "raw": "https://localhost/api/rooms/1/stats?date=2026-03-02",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "rooms",
@@ -208,8 +202,7 @@
               "query": [
                 {
                   "key": "date",
-                  "value": "2026-03-02",
-                  "type": "text"
+                  "value": "2026-03-02"
                 }
               ]
             }
@@ -222,12 +215,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://localhost:8443/api/rooms/1/image",
+              "raw": "https://localhost/api/rooms/1/image",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "rooms",
@@ -255,12 +247,11 @@
               ]
             },
             "url": {
-              "raw": "https://localhost:8443/api/rooms/1/image?file",
+              "raw": "https://localhost/api/rooms/1/image",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "rooms",
@@ -271,7 +262,7 @@
                 {
                   "key": "file",
                   "value": null,
-                  "type": "text"
+                  "disabled": true
                 }
               ]
             }
@@ -291,12 +282,11 @@
               "raw": "{\r\n  \"username\": \"carlos@urjc.es\",\r\n  \"password\": \"1234aA..\"\r\n}"
             },
             "url": {
-              "raw": "https://localhost:8443/api/rooms/1/calendar?start=2026-03-01&end=2026-03-31",
+              "raw": "https://localhost/api/rooms/1/calendar?start=2026-03-01&end=2026-03-31",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "rooms",
@@ -306,13 +296,11 @@
               "query": [
                 {
                   "key": "start",
-                  "value": "2026-03-01",
-                  "type": "text"
+                  "value": "2026-03-01"
                 },
                 {
                   "key": "end",
-                  "value": "2026-03-31",
-                  "type": "text"
+                  "value": "2026-03-31"
                 }
               ]
             }
@@ -342,12 +330,11 @@
               }
             },
             "url": {
-              "raw": "https://localhost:8443/api/users",
+              "raw": "https://localhost/api/users",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "users"
@@ -362,12 +349,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://localhost:8443/api/users/4",
+              "raw": "https://localhost/api/users/4",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "users",
@@ -407,12 +393,11 @@
               }
             },
             "url": {
-              "raw": "https://localhost:8443/api/users",
+              "raw": "https://localhost/api/users",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "users"
@@ -431,42 +416,11 @@
               "raw": "{\r\n\t\"name\": \"Habitacion2\",\r\n    \"capacity\": 30,\r\n    \"camp\": \"MOSTOLES\",\r\n    \"place\": \"Calle Argentina N80\",\r\n    \"coordenades\":\"40.334619, -3.874812\"\r\n}"
             },
             "url": {
-              "raw": "https://localhost:8443/api/users/7",
+              "raw": "https://localhost/api/users/7",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
-              "path": [
-                "api",
-                "users",
-                "7"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Admin Put User",
-          "request": {
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"email\": \"emaildeejemplo@aprobar.com\",\r\n    \"password\": \"12345678\",\r\n    \"name\": \"Antoniooo\",\r\n    \"type\": \"USER_REGISTERED\" \r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "https://localhost:8443/api/users/7",
-              "protocol": "https",
-              "host": [
-                "localhost"
-              ],
-              "port": "8443",
               "path": [
                 "api",
                 "users",
@@ -491,12 +445,11 @@
               }
             },
             "url": {
-              "raw": "https://localhost:8443/api/users/7",
+              "raw": "https://localhost/api/users/7",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "users",
@@ -516,12 +469,11 @@
               "raw": "{ \"email\": \"ana@alumnos.urjc.es\" }"
             },
             "url": {
-              "raw": "https://localhost:8443/api/users/2/role?role=ADMIN",
+              "raw": "https://localhost/api/users/2/role?role=ADMIN",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "users",
@@ -548,17 +500,45 @@
               "raw": "{ \"email\": \"ana@alumnos.urjc.es\" }"
             },
             "url": {
-              "raw": "https://localhost:8443/api/users/2/block",
+              "raw": "https://localhost/api/users/2/block",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "users",
                 "2",
                 "block"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Put User",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"emaildeejemplo@aprobar.com\",\r\n    \"password\": \"12345678\",\r\n    \"name\": \"Antoniooo\",\r\n    \"type\": \"USER_REGISTERED\" \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://localhost/api/users/7",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "users",
+                "7"
               ]
             }
           },
@@ -577,16 +557,15 @@
               "raw": "{ \"email\": \"ana@alumnos.urjc.es\" }"
             },
             "url": {
-              "raw": "https://localhost:8443/api/users/3/reservations",
+              "raw": "https://localhost/api/users/4/reservations",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "users",
-                "3",
+                "4",
                 "reservations"
               ]
             }
@@ -594,7 +573,7 @@
           "response": []
         },
         {
-          "name": "Get user image",
+          "name": "Admin and Own User Get user image",
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           },
@@ -606,12 +585,11 @@
               "raw": "{ \"email\": \"ana@alumnos.urjc.es\" }"
             },
             "url": {
-              "raw": "https://localhost:8443/api/users/5/image",
+              "raw": "https://localhost/api/users/5/image",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "users",
@@ -639,23 +617,16 @@
               ]
             },
             "url": {
-              "raw": "https://localhost:8443/api/users/4/image?file",
+              "raw": "https://localhost/api/users/4/image",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "users",
                 "4",
                 "image"
-              ],
-              "query": [
-                {
-                  "key": "file",
-                  "value": null
-                }
               ]
             }
           },
@@ -672,12 +643,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://localhost:8443/api/reservations/1",
+              "raw": "https://localhost/api/reservations/1",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "reservations",
@@ -693,12 +663,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://localhost:8443/api/reservations",
+              "raw": "https://localhost/api/reservations",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "reservations"
@@ -729,7 +698,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{  \r\n   \"roomId\": 5,\r\n   \"startDate\": \"2026-06-09T15:00:00\",\r\n   \"endDate\": \"2026-06-09T16:30:00\",\r\n   \"reason\": \"Reserva de prueba en la lejania\"\r\n}",
+              "raw": "{  \r\n   \"roomId\": 4,\r\n   \"startDate\": \"2026-03-30T08:00:00+02:00\",\r\n   \"endDate\": \"2026-03-30T09:00:00+02:00\",\r\n   \"reason\": \"Reserva por conflicto\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -737,12 +706,11 @@
               }
             },
             "url": {
-              "raw": "https://localhost:8443/api/reservations",
+              "raw": "https://localhost/api/reservations",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "reservations"
@@ -757,12 +725,11 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "https://localhost:8443/api/reservations/3",
+              "raw": "https://localhost/api/reservations/3",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "reservations",
@@ -779,7 +746,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \r\n  \"startDate\": \"2025-11-10T10:00:00.000+00:00\",\r\n  \"endDate\": \"2025-11-10T11:00:00.000+00:00\",\r\n  \"roomId\": 2,\r\n  \"userId\": 1,\r\n  \"reason\": \"Nueva Razón: Reunión de TFG con Tutor\"\r\n\r\n}",
+              "raw": "{\r\n    \r\n  \"startDate\": \"2026-11-10T10:00:00.000+02:00\",\r\n  \"endDate\": \"2026-11-10T11:00:00.000+02:00\",\r\n  \"roomId\": 2,\r\n  \"userId\": 1,\r\n  \"reason\": \"Nueva Razón: Reunión de TFG con Tutor\"\r\n\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -787,16 +754,15 @@
               }
             },
             "url": {
-              "raw": "https://localhost:8443/api/reservations/1",
+              "raw": "https://localhost/api/reservations/9",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "reservations",
-                "1"
+                "9"
               ]
             }
           },
@@ -809,7 +775,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n   \"startDate\": \"2025-11-03T10:00:09.000+00:00\",\r\n    \"endDate\": \"2025-11-06T12:10:00.000+00:00\",\r\n    \"reason\": \"Reunión de planificación de sprintttttttttttttttt\"\r\n    \r\n    \r\n\r\n}",
+              "raw": "{\r\n   \"startDate\": \"2026-11-06T10:00:00.000+02:00\",\r\n    \"endDate\": \"2026-11-06T12:00:00.000+02:00\",\r\n    \"reason\": \"Reunión de planificación de sprintttttttttttttttt\"\r\n    \r\n    \r\n\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -817,16 +783,15 @@
               }
             },
             "url": {
-              "raw": "https://localhost:8443/api/reservations/1",
+              "raw": "https://localhost/api/reservations/9",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "reservations",
-                "1"
+                "9"
               ]
             }
           },
@@ -838,12 +803,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://localhost:8443/api/reservations/my-reservations?page=0",
+              "raw": "https://localhost/api/reservations/my-reservations?page=0",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "reservations",
@@ -852,8 +816,7 @@
               "query": [
                 {
                   "key": "page",
-                  "value": "0",
-                  "type": "text"
+                  "value": "0"
                 }
               ]
             }
@@ -870,15 +833,19 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \r\n  \"startDate\": \"2025-11-10T10:00:00.000+00:00\",\r\n  \"endDate\": \"2025-11-10T11:00:00.000+00:00\",\r\n  \"roomId\": 2,\r\n  \"userId\": 1,\r\n  \"reason\": \"Nueva Razón: Reunión de TFG con Tutor\"\r\n\r\n}"
+              "raw": "{\r\n    \r\n  \"startDate\": \"2026-11-10T10:00:00.000+02:00\",\r\n  \"endDate\": \"2026-11-10T11:00:00.000+02:00\",\r\n  \"roomId\": 2,\r\n  \"userId\": 1,\r\n  \"reason\": \"Nueva Razón: Reunión de TFG con Tutor\"\r\n\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "https://localhost:8443/api/reservations/check-availability?roomId=1&date=2026-03-02",
+              "raw": "https://localhost/api/reservations/check-availability?roomId=1&date=2026-03-02",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "reservations",
@@ -892,33 +859,6 @@
                 {
                   "key": "date",
                   "value": "2026-03-02"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Verify reservation",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "https://localhost:8443/api/reservations/verify?token=92c3c76b-2aa4-4044-b67f-8a9e378e4c95",
-              "protocol": "https",
-              "host": [
-                "localhost"
-              ],
-              "port": "8443",
-              "path": [
-                "api",
-                "reservations",
-                "verify"
-              ],
-              "query": [
-                {
-                  "key": "token",
-                  "value": "92c3c76b-2aa4-4044-b67f-8a9e378e4c95"
                 }
               ]
             }
@@ -940,12 +880,11 @@
               }
             },
             "url": {
-              "raw": "https://localhost:8443/api/reservations/5/cancel",
+              "raw": "https://localhost/api/reservations/5/cancel",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "reservations",
@@ -971,12 +910,11 @@
               }
             },
             "url": {
-              "raw": "https://localhost:8443/api/reservations/admin/2/cancel",
+              "raw": "https://localhost/api/reservations/admin/2/cancel",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "reservations",
@@ -999,12 +937,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://localhost:8443/api/softwares",
+              "raw": "https://localhost/api/softwares",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "softwares"
@@ -1019,12 +956,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://localhost:8443/api/softwares/5",
+              "raw": "https://localhost/api/softwares/5",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "softwares",
@@ -1049,12 +985,11 @@
               }
             },
             "url": {
-              "raw": "https://localhost:8443/api/softwares",
+              "raw": "https://localhost/api/softwares",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "softwares"
@@ -1069,12 +1004,11 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "https://localhost:8443/api/softwares/1",
+              "raw": "https://localhost/api/softwares/1",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "softwares",
@@ -1099,12 +1033,11 @@
               }
             },
             "url": {
-              "raw": "https://localhost:8443/api/softwares/12",
+              "raw": "https://localhost/api/softwares/12",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "softwares",
@@ -1137,12 +1070,11 @@
                   }
                 },
                 "url": {
-                  "raw": "https://localhost:8443/api/auth/change-password",
+                  "raw": "https://localhost/api/auth/change-password",
                   "protocol": "https",
                   "host": [
                     "localhost"
                   ],
-                  "port": "8443",
                   "path": [
                     "api",
                     "auth",
@@ -1167,12 +1099,11 @@
                   }
                 },
                 "url": {
-                  "raw": "https://localhost:8443/api/auth/forgot-password",
+                  "raw": "https://localhost/api/auth/forgot-password",
                   "protocol": "https",
                   "host": [
                     "localhost"
                   ],
-                  "port": "8443",
                   "path": [
                     "api",
                     "auth",
@@ -1197,12 +1128,11 @@
                   }
                 },
                 "url": {
-                  "raw": "https://localhost:8443/api/auth/reset-password",
+                  "raw": "https://localhost/api/auth/reset-password",
                   "protocol": "https",
                   "host": [
                     "localhost"
                   ],
-                  "port": "8443",
                   "path": [
                     "api",
                     "auth",
@@ -1229,12 +1159,11 @@
               }
             },
             "url": {
-              "raw": "https://localhost:8443/api/auth/register",
+              "raw": "https://localhost/api/auth/register",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "auth",
@@ -1259,12 +1188,11 @@
               }
             },
             "url": {
-              "raw": "https://localhost:8443/api/auth/login",
+              "raw": "https://localhost/api/auth/login",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "auth",
@@ -1304,12 +1232,11 @@
               }
             },
             "url": {
-              "raw": "https://localhost:8443/api/auth/login",
+              "raw": "https://localhost/api/auth/login",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "auth",
@@ -1325,12 +1252,11 @@
             "method": "POST",
             "header": [],
             "url": {
-              "raw": "https://localhost:8443/api/auth/logout",
+              "raw": "https://localhost/api/auth/logout",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "auth",
@@ -1368,16 +1294,53 @@
               "raw": "{  \r\n   \"roomId\": 1,\r\n   \"startDate\": \"2026-06-09T15:00:00\",\r\n   \"endDate\": \"2026-06-09T16:30:00\",\r\n   \"reason\": \"Prueba de solapamiento\"\r\n}"
             },
             "url": {
-              "raw": "https://localhost:8443/api/auth/me",
+              "raw": "https://localhost/api/auth/me",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "auth",
                 "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Email",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n        }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://localhost/api/auth/verify-email?token=28262108-e31f-44d6-847e-0cd1a48b4d66",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "verify-email"
+              ],
+              "query": [
+                {
+                  "key": "token",
+                  "value": "28262108-e31f-44d6-847e-0cd1a48b4d66"
+                }
               ]
             }
           },
@@ -1394,12 +1357,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://localhost:8443/api/stats?date=2026-03-01",
+              "raw": "https://localhost/api/stats?date=2026-03-01",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "stats"
@@ -1425,12 +1387,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://localhost:8443/api/search/rooms?text=microsot ofi&minCapacity=5&campus=FUENLABRADA",
+              "raw": "https://localhost/api/search/rooms?text=microsot ofi&minCapacity=5&campus=FUENLABRADA",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "search",
@@ -1460,12 +1421,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://localhost:8443/api/reservations/smart-search?start=2026-03-05T08:00:00Z&end=2026-03-05T10:00:00Z",
+              "raw": "https://localhost/api/reservations/smart-search?start=2026-03-05T08:00:00Z&end=2026-03-05T10:00:00Z",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "reservations",
@@ -1474,13 +1434,11 @@
               "query": [
                 {
                   "key": "start",
-                  "value": "2026-03-05T08:00:00Z",
-                  "type": "text"
+                  "value": "2026-03-05T08:00:00Z"
                 },
                 {
                   "key": "end",
-                  "value": "2026-03-05T10:00:00Z",
-                  "type": "text"
+                  "value": "2026-03-05T10:00:00Z"
                 }
               ]
             }
@@ -1493,12 +1451,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://localhost:8443/api/search/reservations/me?text=laboratorio",
+              "raw": "https://localhost/api/search/reservations/me?text=laboratorio",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "search",
@@ -1508,8 +1465,7 @@
               "query": [
                 {
                   "key": "text",
-                  "value": "laboratorio",
-                  "type": "text"
+                  "value": "laboratorio"
                 }
               ]
             }
@@ -1522,12 +1478,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://localhost:8443/api/search/users?text=gmail.con&blocked=true",
+              "raw": "https://localhost/api/search/users?text=gmail.con&blocked=true",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "search",
@@ -1540,8 +1495,7 @@
                 },
                 {
                   "key": "blocked",
-                  "value": "true",
-                  "type": "text"
+                  "value": "true"
                 }
               ]
             }
@@ -1554,12 +1508,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://localhost:8443/api/search/softwares?minVersion=11",
+              "raw": "https://localhost/api/search/softwares?minVersion=11",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "search",
@@ -1568,8 +1521,7 @@
               "query": [
                 {
                   "key": "minVersion",
-                  "value": "11",
-                  "type": "text"
+                  "value": "11"
                 }
               ]
             }
@@ -1582,12 +1534,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "https://localhost:8443/api/search/reservations/user/2?text=laboratorio",
+              "raw": "https://localhost/api/search/reservations/user/2?text=laboratorio",
               "protocol": "https",
               "host": [
                 "localhost"
               ],
-              "port": "8443",
               "path": [
                 "api",
                 "search",
@@ -1598,9 +1549,109 @@
               "query": [
                 {
                   "key": "text",
-                  "value": "laboratorio",
-                  "type": "text"
+                  "value": "laboratorio"
                 }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Campus",
+      "item": [
+        {
+          "name": "Get Campus",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://localhost/api/campus",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "campus"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Post Campus",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Nuevo Campus Madrid\",\r\n    \"coordinates\": \"40.416, -3.703\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://localhost/api/campus",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "campus"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Put Campus",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Móstoles Editado\",\r\n    \"coordinates\": \"40.335, -3.877\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://localhost/api/campus/1",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "campus",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Delete Campus",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "https://localhost/api/campus/1",
+              "protocol": "https",
+              "host": [
+                "localhost"
+              ],
+              "path": [
+                "api",
+                "campus",
+                "1"
               ]
             }
           },

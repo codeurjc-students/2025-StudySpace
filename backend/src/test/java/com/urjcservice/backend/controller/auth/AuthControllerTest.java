@@ -364,4 +364,57 @@ public class AuthControllerTest {
                 .andExpect(jsonPath("$.message.password").exists());
     }
 
+    @Test
+    @DisplayName("Verify Email - Success when token is valid and user is not verified")
+    public void testVerifyEmail_Success() throws Exception {
+        // GIVEN
+        User mockUser = new User();
+        mockUser.setEmail("test@test.com");
+        mockUser.setEmailVerified(false);
+        mockUser.setVerificationToken("valid-token");
+
+        when(userService.findByVerificationToken("valid-token")).thenReturn(Optional.of(mockUser));
+
+        // WHEN & THEN
+        mockMvc.perform(get("/api/auth/verify-email")
+                .param("token", "valid-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Email successfully verified. You can now log in."));
+
+        verify(userService).save(mockUser);
+    }
+
+    @Test
+    @DisplayName("Verify Email - Success when token is valid but user was already verified")
+    public void testVerifyEmail_AlreadyVerified() throws Exception {
+        // GIVEN
+        User mockUser = new User();
+        mockUser.setEmail("test@test.com");
+        mockUser.setEmailVerified(true);
+
+        when(userService.findByVerificationToken("valid-token")).thenReturn(Optional.of(mockUser));
+
+        // WHEN & THEN
+        mockMvc.perform(get("/api/auth/verify-email")
+                .param("token", "valid-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Email is already verified."));
+    }
+
+    @Test
+    @DisplayName("Verify Email - Failure when token is invalid")
+    public void testVerifyEmail_InvalidToken() throws Exception {
+        // GIVEN
+        when(userService.findByVerificationToken("invalid-token")).thenReturn(Optional.empty());
+
+        // WHEN & THEN
+        mockMvc.perform(get("/api/auth/verify-email")
+                .param("token", "invalid-token"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("FAILURE"))
+                .andExpect(jsonPath("$.message").value("Invalid verification token."));
+    }
+
 }

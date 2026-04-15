@@ -66,6 +66,6 @@ describe('AppComponent', () => {
     } as any;
     const url = component.getUserImageUrl();
 
-    expect(url).toContain('https://localhost:8443/api/users/99/image');
+    expect(url).toContain('/api/users/99/image');
   });
 });

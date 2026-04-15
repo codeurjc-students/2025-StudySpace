@@ -37,6 +37,11 @@ public class User {
     private LocalDateTime resetPasswordTokenExpiry;
 
     @GenericField
+    private boolean emailVerified = false;
+    private String verificationToken;
+    private LocalDateTime verificationTokenExpiry;
+
+    @GenericField
     @ElementCollection(fetch = FetchType.EAGER) // for later autentication
     private List<String> roles;
 
@@ -161,4 +166,29 @@ public class User {
     public void setResetPasswordTokenExpiry(LocalDateTime resetPasswordTokenExpiry) {
         this.resetPasswordTokenExpiry = resetPasswordTokenExpiry;
     }
+
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
+    }
+
+    public String getVerificationToken() {
+        return verificationToken;
+    }
+
+    public void setVerificationToken(String verificationToken) {
+        this.verificationToken = verificationToken;
+    }
+
+    public LocalDateTime getVerificationTokenExpiry() {
+        return verificationTokenExpiry;
+    }
+
+    public void setVerificationTokenExpiry(LocalDateTime verificationTokenExpiry) {
+        this.verificationTokenExpiry = verificationTokenExpiry;
+    }
+
 }

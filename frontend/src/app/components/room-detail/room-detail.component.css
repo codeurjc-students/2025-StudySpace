@@ -14,7 +14,7 @@
 /* We make the cell occupy all the space and remove internal borders */
 ::ng-deep .fc-daygrid-day-frame {
   position: relative !important;
-  min-height: 120px !important;
+  min-height: 80px !important;
   overflow: hidden; /* It ensures that the color doesn't run. */
   z-index: 0;
 }
@@ -36,10 +36,12 @@
   top: 0;
   left: 0;
   width: 100%;
+  height: 100%;
   z-index: 100 !important; /* Top layer */
-  padding: 4px 8px;
+  padding: 0;
   display: flex;
-  justify-content: flex-end; /* rigth */
+  justify-content: center !important;
+  align-items: center !important; /*vertical*/
   pointer-events: none; /* Let the click pass to the background */
 }
 
@@ -49,7 +51,7 @@
   z-index: 101 !important;
   color: #343a40 !important;
   font-weight: 800 !important;
-  font-size: 1.1rem;
+  font-size: 2rem !important;
   text-decoration: none !important;
   pointer-events: auto;
   /* White border around the text so that it is always readable */
@@ -99,29 +101,29 @@
 
 /* Large buttons */
 ::ng-deep .fc-header-toolbar .btn {
-  padding: 0.4rem 1rem !important;
-  font-size: 1.1rem !important;
-  font-weight: 700 !important;
-  border-radius: 8px !important;
-  margin: 0 4px !important;
-  min-width: 45px;
+  padding: 0.25rem 0.75rem !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
+  margin: 0 3px !important;
+  min-width: 40px;
 }
 
 /* Button colors */
 ::ng-deep .fc-header-toolbar .btn-primary {
   background-color: #0d6efd !important;
   border: none !important;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 ::ng-deep .fc-header-toolbar .btn-primary:hover {
   background-color: #0b5ed7 !important;
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 ::ng-deep .fc-toolbar-title {
-  font-size: 1.8rem !important;
-  font-weight: 800 !important;
+  font-size: 1.4rem !important;
+  font-weight: 700 !important;
   color: #2c3e50;
   text-transform: capitalize;
 }
@@ -134,7 +136,7 @@
 
 /* Today's cell border */
 ::ng-deep .fc .fc-day-today .fc-daygrid-day-frame {
-  border: 3px solid #ffc107 !important;
+  border: 2px solid #ffc107 !important;
 }
 
 /* Circle in today's box */
@@ -142,8 +144,9 @@
   background-color: #ffc107;
   color: #000 !important;
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  width: 45px !important;
+  height: 45px !important;
+  font-size: 1.5rem !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -176,9 +179,9 @@
 }
 
 .hourly-chart-container {
-  height: 300px;
+  height: 250px;
 }
 
 .occupancy-chart-container {
-  height: 250px;
+  height: 200px;
 }

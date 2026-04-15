@@ -37,12 +37,46 @@ test.describe('User Reservation Management by Admin', () => {
         .locator('input[placeholder="Create a password"]')
         .fill(uniqueUserPass);
 
-      const dialogPromise = page.waitForEvent('dialog');
       await page.getByRole('button', { name: 'Sign Up' }).click();
-      const dialog = await dialogPromise;
-      await dialog.dismiss();
+      const modal = page.getByRole('dialog');
+      await expect(modal).toBeVisible();
+      await modal.getByRole('button', { name: 'OK' }).click();
 
       await expect(page).toHaveURL('/login');
+    });
+
+    //wait for mailhog
+    await test.step('Verify user email via MailHog', async () => {
+      let message = null;
+      for (let i = 0; i < 15; i++) {
+        try {
+          const response = await request.get(
+            'http://127.0.0.1:8025/api/v2/messages',
+          );
+          if (response.ok()) {
+            const emailData = await response.json();
+            const found = emailData.items.find(
+              (msg: any) =>
+                msg.Content.Headers.To &&
+                msg.Content.Headers.To[0].includes(uniqueUserEmail),
+            );
+            if (found) {
+              message = found;
+              break;
+            }
+          }
+        } catch (e) {}
+        await page.waitForTimeout(1000);
+      }
+      expect(message, 'The user verification email was not found').toBeTruthy();
+      const cleanBody = message.Content.Body.replace(/=\r?\n/g, '');
+      const match = cleanBody.match(/token=([a-zA-Z0-9-]+)/);
+      expect(match).toBeTruthy();
+
+      await page.goto(`/verify-email?token=${match![1]}`);
+      await expect(page.getByText(/Email Verified/i)).toBeVisible({
+        timeout: 15000,
+      });
     });
 
     // ==========================================
@@ -102,53 +136,11 @@ test.describe('User Reservation Management by Admin', () => {
       await page.locator('textarea[name="reason"]').fill(uniqueReason);
       await page.getByRole('button', { name: 'Confirm Reservation' }).click();
 
-      // ---------------------------------------------------------
-      // LÓGICA DE MAILHOG
-      // ---------------------------------------------------------
-      let message = null;
-      for (let i = 0; i < 15; i++) {
-        try {
-          const response = await request.get(
-            'http://127.0.0.1:8025/api/v2/messages',
-          );
-          if (response.ok()) {
-            const emailData = await response.json();
-            const found = emailData.items.find(
-              (msg: any) =>
-                msg.Content.Headers.To &&
-                msg.Content.Headers.To[0].includes(uniqueUserEmail),
-            );
-            if (found) {
-              message = found;
-              break;
-            }
-          }
-        } catch (e) {}
-        await page.waitForTimeout(1000);
-      }
+      const confirmModal = page.getByRole('dialog');
+      await expect(confirmModal).toBeVisible();
+      await confirmModal.getByRole('button', { name: 'OK' }).click();
 
-      expect(
-        message,
-        'The verification email was not found in MailHog',
-      ).toBeTruthy();
-
-      const cleanBody = message.Content.Body.replace(/=\r?\n/g, '');
-
-      const match = cleanBody.match(/token=([a-zA-Z0-9-]+)/);
-
-      if (match) {
-        const token = match[1];
-        await page.goto(`/verify-reservation?token=${token}`);
-        await expect(
-          page.getByText(/confirmed successfully|Reservation Confirmed/i),
-        ).toBeVisible();
-      } else {
-        throw new Error(
-          `Token not found in email. Text received: ${cleanBody}`,
-        );
-      }
-
-      await page.goto('/');
+      await expect(page).toHaveURL('/');
     });
 
     // ==========================================
@@ -178,8 +170,8 @@ test.describe('User Reservation Management by Admin', () => {
         .getByRole('button', { name: 'Log In' })
         .click();
 
-      await page.getByRole('button', { name: 'Admin Dashboard' }).click();
-      await page.getByRole('button', { name: 'Manage Users' }).click();
+      await page.getByRole('button', { name: /Admin Panel/i }).click();
+      await page.getByRole('button', { name: /Manage Users/i }).click();
 
       // ROBUST SEARCH FUNCTION
       const findUserRobustly = async (email: string) => {
@@ -260,7 +252,8 @@ test.describe('User Reservation Management by Admin', () => {
           });
 
         if (!page.url().includes('/admin/users')) {
-          await page.getByRole('button', { name: 'Manage Users' }).click();
+          await page.getByRole('button', { name: /Admin Panel/i }).click();
+          await page.getByRole('button', { name: /Manage Users/i }).click();
         }
 
         const foundAgain = await findUserRobustly(uniqueUserEmail);

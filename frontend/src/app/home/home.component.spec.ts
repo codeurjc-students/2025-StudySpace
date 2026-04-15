@@ -7,12 +7,14 @@ import { of, throwError } from 'rxjs';
 import { PaginationComponent } from '../components/pagination/pagination.component';
 import { FormsModule } from '@angular/forms';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { CampusService } from '../services/campus.service';
 
 describe('HomeComponent', () => {
   let component: HomeComponent;
   let fixture: ComponentFixture<HomeComponent>;
   let mockRoomsService: any;
   let mockLoginService: any;
+  let mockCampusService: any;
 
   const mockRoomsPage = {
     content: [
@@ -20,7 +22,7 @@ describe('HomeComponent', () => {
         id: 1,
         name: 'Aula Magna',
         capacity: 100,
-        camp: 'MOSTOLES',
+        campusId: 1,
         place: 'Aulario I',
         software: [],
       },
@@ -28,7 +30,7 @@ describe('HomeComponent', () => {
         id: 2,
         name: 'Lab 1',
         capacity: 20,
-        camp: 'ALCORCON',
+        campusId: 2,
         place: 'Lab II',
         software: [],
       },
@@ -42,6 +44,9 @@ describe('HomeComponent', () => {
   };
 
   beforeEach(async () => {
+    mockCampusService = {
+      getAllCampus: jasmine.createSpy('getAllCampus').and.returnValue(of([])),
+    };
     mockRoomsService = {
       getRooms: jasmine
         .createSpy('getRooms')
@@ -61,6 +66,7 @@ describe('HomeComponent', () => {
       providers: [
         { provide: RoomsService, useValue: mockRoomsService },
         { provide: LoginService, useValue: mockLoginService },
+        { provide: CampusService, useValue: mockCampusService },
       ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
@@ -97,14 +103,13 @@ describe('HomeComponent', () => {
   it('onSearch: should call clearSearch if all search fields are empty', () => {
     spyOn(component, 'clearSearch');
     component.searchText = '';
-    component.selectedCampus = '';
+    component.selectedCampusId = null;
     component.minCapacity = null;
 
     component.onSearch();
 
     expect(component.clearSearch).toHaveBeenCalled();
   });
-
   it('onSearch: should set isSearching to true and call loadPage if fields have data', () => {
     spyOn(component, 'loadPage');
     component.searchText = 'Aula';
@@ -118,14 +123,14 @@ describe('HomeComponent', () => {
   it('clearSearch: should reset search fields and reload page', () => {
     spyOn(component, 'loadPage');
     component.searchText = 'Lab';
-    component.selectedCampus = 'ALCORCON';
+    component.selectedCampusId = 2;
     component.minCapacity = 30;
     component.isSearching = true;
 
     component.clearSearch();
 
     expect(component.searchText).toBe('');
-    expect(component.selectedCampus).toBe('');
+    expect(component.selectedCampusId).toBeNull();
     expect(component.minCapacity).toBeNull();
     expect(component.isSearching).toBeFalse();
     expect(component.loadPage).toHaveBeenCalledWith(0);

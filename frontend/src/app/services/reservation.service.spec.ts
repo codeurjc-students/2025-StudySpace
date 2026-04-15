@@ -138,10 +138,10 @@ describe('ReservationService', () => {
   it('should perform smart search', () => {
     const start = new Date('2026-05-05T10:00:00Z');
     const end = new Date('2026-05-05T12:00:00Z');
-    service.smartSearch(start, end, 20, 'MOSTOLES').subscribe();
+    service.smartSearch(start, end, 20, 1).subscribe();
 
     const req = httpMock.expectOne(
-      `${BASE_URL}/smart-search?start=${start.toISOString()}&end=${end.toISOString()}&minCapacity=20&campus=MOSTOLES`,
+      `${BASE_URL}/smart-search?start=${start.toISOString()}&end=${end.toISOString()}&minCapacity=20&campusId=1`,
     );
     expect(req.request.method).toBe('GET');
     req.flush([]);

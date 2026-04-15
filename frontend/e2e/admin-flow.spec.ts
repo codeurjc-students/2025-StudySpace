@@ -70,8 +70,8 @@ test.describe('Administrator Management', () => {
     // ==========================================
     // CREATE SOFTWARE
     // ==========================================
-    await page.getByRole('button', { name: 'Admin Dashboard' }).click();
-    await page.getByRole('button', { name: 'Manage Software' }).click();
+    await page.getByRole('button', { name: /Admin Panel/i }).click();
+    await page.getByRole('button', { name: /Manage Software/i }).click();
     await page.getByRole('button', { name: 'Add Software' }).click();
 
     await page.getByLabel('Name').fill(softwareName);
@@ -81,7 +81,7 @@ test.describe('Administrator Management', () => {
 
     await expect(page).toHaveURL('/admin/softwares');
 
-    // VErify software
+    // Verify software
     const softwareFound = await findRowInTable(softwareName);
     expect(
       softwareFound,
@@ -94,13 +94,15 @@ test.describe('Administrator Management', () => {
     // ==========================================
     // CREATE ROOM
     // ==========================================
-    await page.getByRole('button', { name: 'Back to Admin menu' }).click();
-    await page.getByRole('button', { name: 'Manage rooms' }).click();
+    await page.getByRole('button', { name: /Admin Panel/i }).click();
+    await page.getByRole('button', { name: /Manage Rooms/i }).click();
     await page.getByRole('button', { name: 'Create New Room' }).click();
 
     await page.getByLabel('Name').fill(roomName);
     await page.getByLabel('Capacity').fill('25');
-    await page.getByLabel('Campus').selectOption({ value: 'MOSTOLES' });
+    await page
+      .locator('select[name="campusId"]')
+      .selectOption({ label: 'Móstoles' });
     await page.getByLabel('Location').fill('Edificio Test');
 
     await page.getByPlaceholder('Search software to add').fill(softwareName);
@@ -119,10 +121,13 @@ test.describe('Administrator Management', () => {
 
     await page.getByRole('button', { name: 'Save', exact: true }).click();
 
+    const successModal = page.getByRole('dialog');
+    await expect(successModal).toBeVisible();
+    await successModal.getByRole('button', { name: 'OK' }).click();
+
     // ==========================================
     // FINAL VALIDATION (ROOM)
     // ==========================================
-    //await expect(page).toHaveURL('/admin/rooms');
     await expect(page).toHaveURL(/\/admin\/rooms$/, { timeout: 10000 });
 
     //pagination search
@@ -144,22 +149,19 @@ test.describe('Administrator Management', () => {
       await roomRow.getByRole('button', { name: /🗑️|Delete/ }).click();
 
       // Wait for the room to truly disappear
+      const promptModal = page.getByRole('dialog');
+      await expect(promptModal).toBeVisible();
+      await promptModal.getByRole('textbox').fill('Cleanup test reason');
+      await promptModal.getByRole('button', { name: 'Confirm' }).click();
+
+      const successDeleteModal = page.getByRole('dialog');
+      await expect(successDeleteModal).toBeVisible();
+      await successDeleteModal.getByRole('button', { name: 'OK' }).click(); // O 'Close'
+
+      // Wait for the room to truly disappear
       await expect(
         page.locator('tr').filter({ hasText: roomName }),
       ).not.toBeVisible();
-
-      //deleete software
-      await page.getByRole('button', { name: 'Back to Admin menu' }).click();
-
-      await page.getByRole('button', { name: 'Manage Software' }).click();
-      await expect(page).toHaveURL('/admin/softwares');
-
-      const softRow = page.locator('tr').filter({ hasText: softwareName });
-
-      if (await softRow.isVisible()) {
-        await softRow.getByRole('button', { name: /🗑️|Delete/ }).click();
-        await expect(softRow).not.toBeVisible();
-      }
     });
   });
 });

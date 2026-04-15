@@ -8,6 +8,8 @@ import { SoftwareService } from '../../services/software.service';
 import { LoginService } from '../../login/login.service';
 import { of, throwError } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
+import { DialogService } from '../../services/dialog.service';
+import { CampusService } from '../../services/campus.service';
 
 describe('RoomFormComponent', () => {
   let component: RoomFormComponent;
@@ -18,6 +20,9 @@ describe('RoomFormComponent', () => {
     updateRoom: jasmine.createSpy('updateRoom'),
     getRoom: jasmine.createSpy('getRoom'),
     uploadRoomImage: jasmine.createSpy('uploadRoomImage'),
+  };
+  const mockDialogService = {
+    alert: jasmine.createSpy('alert').and.returnValue(Promise.resolve()),
   };
 
   const mockSoftwareService = {
@@ -69,6 +74,7 @@ describe('RoomFormComponent', () => {
         { provide: RoomsService, useValue: mockRoomsService },
         { provide: SoftwareService, useValue: mockSoftwareService },
         { provide: Router, useValue: mockRouter },
+        { provide: DialogService, useValue: mockDialogService },
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: { get: () => '1' } } },
@@ -99,7 +105,7 @@ describe('RoomFormComponent', () => {
     component.room = {
       name: '',
       capacity: 0,
-      camp: 'MOSTOLES',
+      campusId: 1,
       place: '',
       coordenades: '',
       active: true,
@@ -159,9 +165,7 @@ describe('RoomFormComponent', () => {
 
     component.loadRoomData(5);
 
-    expect(component.currentImageUrl).toBe(
-      'https://localhost:8443/api/rooms/5/image',
-    );
+    expect(component.currentImageUrl).toBe('/api/rooms/5/image');
   });
 
   it('onFileSelected should store the file in selectedFile', () => {
@@ -207,19 +211,22 @@ describe('RoomFormComponent', () => {
     expect(mockRouter.navigate).toHaveBeenCalledWith(['/admin/rooms']);
   });
 
-  it('save should navigate immediately if NO file is selected', () => {
+  it('save should navigate immediately if NO file is selected', async () => {
     component.selectedFile = null;
     component.isEditMode = false;
 
+    mockRoomsService.createRoom.and.returnValue(of({ id: 55 }));
+
     component.save();
+    await fixture.whenStable();
 
     expect(mockRoomsService.createRoom).toHaveBeenCalled();
     expect(mockRoomsService.uploadRoomImage).not.toHaveBeenCalled();
+
     expect(mockRouter.navigate).toHaveBeenCalledWith(['/admin/rooms']);
   });
 
   it('uploadImageAndNavigate should alert and navigate even if upload fails', () => {
-    spyOn(window, 'alert');
     mockRoomsService.uploadRoomImage.and.returnValue(
       throwError(() => new Error('Upload failed')),
     );
@@ -227,8 +234,9 @@ describe('RoomFormComponent', () => {
     component.selectedFile = new File([''], 'fail.jpg');
     component.uploadImageAndNavigate(1);
 
-    expect(window.alert).toHaveBeenCalledWith(
-      jasmine.stringMatching(/upload failed/i),
+    expect(mockDialogService.alert).toHaveBeenCalledWith(
+      'Error',
+      'Room saved but image upload failed.',
     );
     expect(mockRouter.navigate).toHaveBeenCalledWith(['/admin/rooms']);
   });
@@ -292,5 +300,47 @@ describe('RoomFormComponent', () => {
 
     expect(component.room.softwareIds).not.toContain(2);
     expect(component.selectedSoftwares.length).toBe(2);
+  });
+
+  it('onCampusSelectChange: should activate isCreatingCampus if value is -1', () => {
+    component.onCampusSelectChange(-1);
+    expect(component.isCreatingCampus).toBeTrue();
+    expect(component.room.campusId).toBeNull();
+  });
+
+  it('searchSoftwareForDropdown: should handle search error', () => {
+    mockSoftwareService.searchSoftwares.and.returnValue(
+      throwError(() => new Error('API Error')),
+    );
+
+    component.softwareSearchText = 'test';
+    component.searchSoftwareForDropdown();
+
+    expect(component.availableSoftwares.length).toBe(0);
+  });
+
+  it('save: should handle Campus Creation if isCreatingCampus is true', () => {
+    component.isCreatingCampus = true;
+    component.newCampus = { id: 0, name: 'New Campus', coordinates: '40, -3' };
+
+    const campusService = TestBed.inject(CampusService);
+    spyOn(campusService, 'createCampus').and.returnValue(
+      of({ id: 99, name: 'New Campus', coordinates: '40, -3' }),
+    );
+
+    component.save();
+
+    expect(campusService.createCampus).toHaveBeenCalled();
+    expect(component.room.campusId).toBe(99);
+  });
+
+  it('removeSoftwareFromRoom: should do nothing if ID does not exist', () => {
+    component.room.softwareIds = [1];
+    component.selectedSoftwares = [{ id: 1 }] as any;
+
+    component.removeSoftwareFromRoom(999);
+
+    expect(component.room.softwareIds.length).toBe(1);
+    expect(component.selectedSoftwares.length).toBe(1);
   });
 });

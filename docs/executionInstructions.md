@@ -19,21 +19,18 @@ El primer paso antes de levantar cualquier entorno es obtener el código fuente 
 git clone https://github.com/codeurjc-students/2025-StudySpace
 cd 2025-StudySpace
 ```
+
 ---
 
-> **Nota importante: Certificado SSL y Visualización de Imágenes**
+> **Nota importante: Certificado SSL**
 >
-> Debido a que la aplicación utiliza un **certificado SSL auto-firmado**, el navegador bloqueará por defecto las peticiones al backend, lo que impedirá la correcta visualización de las imágenes.
+> Debido a que la aplicación utiliza un **certificado SSL auto-firmado**, el navegador bloqueará por defecto la visualizacion y acceso a la aplicación, a menos que se acepte el riesgo inicialemnete.
 >
-> **Antes de proceder con el despliegue**, es necesario autorizar el certificado en el navegador:
-> 1. Una vez levantado el entorno (paso siguiente), acceda a: [https://localhost:8443/api/users/1/image](https://localhost:8443/api/users/1/image) o a [https://localhost:8443/api/rooms/1/image](https://localhost:8443/api/rooms/1/image).
-> 2. En la pantalla de advertencia, haga clic en **"Configuración avanzada"** y seleccione **"Acceder a localhost (sitio no seguro)"**.
->
-> Este paso es fundamental para que el frontend pueda mostrar las imágenes de la aplicación, al no confiar en el certificado por ser auto-firmado.
+> Este paso es fundamental para que se muestre la aplicación, al no confiar en el certificado por ser auto-firmado.
 
 ### Levantar el entorno con Docker
 
-En la raíz del proyecto, ejecutar los siguientes comandos para levantar el entorno con Docker, asegurandonos de que Docker Desktop/Engine está arrancado:
+En la carpeta docker del proyecto, ejecutar los siguientes comandos para levantar el entorno con Docker, asegurandonos de que Docker Desktop/Engine está arrancado:
 
 ```bash
 docker-compose pull
@@ -48,7 +45,7 @@ docker-compose down
 
 ---
 
-Si quieres levantar el entorno de desarrollo:
+Si quieres levantar el entorno de desarrollo, ejecuta en la carpeta docker:
 
 ```bash
 docker-compose -f docker-compose-dev.yml up -d --build
@@ -97,7 +94,7 @@ ng test
 
 Para levantar el entorno de pruebas E2E es necesario seguir estos pasos.
 
-Desde la raíz del proyecto, asegúrate de apagar cualquier contenedor previo por si acaso:
+Desde la carpeta docker del proyecto, asegúrate de apagar cualquier contenedor previo por si acaso:
 
 ```bash
 docker-compose down
@@ -139,6 +136,68 @@ $env:BASE_URL="https://localhost:4200"; npx playwright test --ui
 Si lo ejecutas en PowerShell.
 
 Para cerrar Playwright una vez acabadas las pruebas, ejecutamos:
+
+```bash
+docker-compose -f docker-compose.e2e.yml down
+```
+
+---
+
+#### Pruebas de Carga y Estrés (con Artillery)
+
+Para realizar pruebas de concurrencia y estrés sobre el servidor y visualizar los resultados en un _dashboard_ interactivo, utilizamos Artillery conectado a **Artillery Cloud**, atacando el entorno E2E.
+
+Desde la carpeta docker del proyecto, asegúrate de apagar cualquier contenedor previo por si acaso:
+
+```bash
+docker-compose down
+```
+
+Levanta la infraestructura E2E (Base de datos de pruebas H2 y MailHog):
+
+```bash
+docker-compose -f docker-compose.e2e.yml up -d
+```
+
+Dentro de la carpeta `backend`, ejecutamos el servidor con el perfil de pruebas:
+
+```bash
+mvn spring-boot:run -Dspring-boot.run.profiles=e2e
+```
+
+No es necesario ejecutar el frontend para estas pruebas, ya que se centran en el backend.
+
+Abre otra terminal, dirígete a la carpeta donde están los tests de carga (dentro de `backend/src/test`).
+
+Si no quieres usar la clave de Artillery Cloud, puedes ejecutar los tests sin ella y no ver reporte visual alguno con:
+
+```bash
+artillery run load-test-phase-0.yml
+```
+
+Si quieres ver el reporte visual:
+Pasale la clave de Artillery Cloud como variable de entorno (por seguridad, esta clave se inyecta como variable de entorno).
+En PowerShell, ejecuta:
+
+```bash
+$env:ARTILLERY_CLOUD_API_KEY="LA_CLAVE_AQUI"
+```
+
+O si es en bash:
+
+```bash
+export ARTILLERY_CLOUD_API_KEY="LA_CLAVE_AQUI"
+```
+
+Una vez configurada la clave en la sesión actual de la terminal, ejecuta el test indicando que grabe los resultados con el flag --record:
+
+```bash
+artillery run --record load-test-phase-0.yml
+```
+
+Al finalizar la prueba, la consola imprimirá un Run URL (ej. https://app.artillery.io/...). Haz clic en ese enlace o cópialo en tu navegador para acceder al reporte interactivo, donde podrás analizar gráficas detalladas de latencia, distribución de códigos HTTP y rendimiento bajo estrés.
+
+Finalmente, puedes apagar el backend (con Ctrl+C). Luego apaga la infraestructura:
 
 ```bash
 docker-compose -f docker-compose.e2e.yml down

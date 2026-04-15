@@ -7,7 +7,6 @@ import { RegisterComponent } from './login/register/register.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { authGuard } from './security/auth.guard';
 import { ReservationFormComponent } from './components/reservation-form/reservation-form.component';
-import { AdminMenuComponent } from './components/admin-menu/admin-menu.component';
 import { ManageRoomsComponent } from './components/manage-rooms/manage-rooms.component';
 import { ManageUsersComponent } from './components/manage-users/manage-users.component';
 import { OccupancyStatsComponent } from './components/occupancy-stats/occupancy-stats.component';
@@ -18,7 +17,7 @@ import { SoftwareFormComponent } from './components/software-form/software-form.
 import { ManageReservationsComponent } from './components/manage-reservations/manage-reservations.component';
 import { ResetPasswordComponent } from './login/reset-password/reset-password.component';
 import { ForgotPasswordComponent } from './login/forgot-password/forgot-password.component';
-import { VerifyReservationComponent } from './components/verify-reservation/verify-reservation.component';
+import { VerifyEmailComponent } from './login/verify-email/verify-email.component';
 
 const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -28,6 +27,7 @@ const routes: Routes = [
   { path: 'profile', component: UserProfileComponent },
   { path: 'forgot-password', component: ForgotPasswordComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
+  { path: 'verify-email', component: VerifyEmailComponent },
   {
     path: 'profile',
     component: UserProfileComponent,
@@ -38,9 +38,9 @@ const routes: Routes = [
     component: ReservationFormComponent,
     canActivate: [authGuard], // only authenticated users can access
   },
-  { path: 'verify-reservation', component: VerifyReservationComponent }, //email of verification of reservation
+
   //admin routes
-  { path: 'admin', component: AdminMenuComponent, canActivate: [adminGuard] },
+
   {
     path: 'admin/rooms',
     component: ManageRoomsComponent,

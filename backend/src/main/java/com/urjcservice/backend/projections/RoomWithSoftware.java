@@ -1,5 +1,6 @@
 package com.urjcservice.backend.projections;
 
+import com.urjcservice.backend.entities.Campus;
 import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.entities.Software;
 import org.springframework.data.rest.core.config.Projection;
@@ -14,7 +15,7 @@ public interface RoomWithSoftware {
 
     Integer getCapacity();
 
-    Room.CampusType getCamp();
+    Campus getCampus();
 
     String getPlace();
 

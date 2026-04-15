@@ -1,0 +1,50 @@
+<div
+  class="modal-header"
+  [ngClass]="{
+    'bg-danger text-white': title.includes('Error') || title.includes('Denied'),
+    'bg-primary text-white':
+      !title.includes('Error') && !title.includes('Denied'),
+  }"
+>
+  <h4 class="modal-title fw-bold">{{ title }}</h4>
+  <button
+    type="button"
+    class="btn-close"
+    [ngClass]="{ 'btn-close-white': true }"
+    aria-label="Close"
+    (click)="dismiss()"
+  ></button>
+</div>
+<div class="modal-body">
+  <p style="white-space: pre-line">{{ message }}</p>
+
+  <div *ngIf="type === 'prompt'" class="mt-3">
+    <textarea
+      class="form-control"
+      [(ngModel)]="promptValue"
+      rows="3"
+      placeholder="Enter details here..."
+    ></textarea>
+  </div>
+</div>
+<div class="modal-footer">
+  <button
+    *ngIf="type !== 'alert'"
+    type="button"
+    class="btn btn-outline-secondary"
+    (click)="dismiss()"
+  >
+    Cancel
+  </button>
+  <button
+    type="button"
+    class="btn"
+    [ngClass]="{
+      'btn-danger': title.includes('Delete') || title.includes('Cancel'),
+      'btn-primary': !title.includes('Delete') && !title.includes('Cancel'),
+    }"
+    (click)="confirm()"
+  >
+    {{ type === "alert" ? "OK" : "Confirm" }}
+  </button>
+</div>

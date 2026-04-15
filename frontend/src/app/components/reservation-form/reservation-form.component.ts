@@ -4,6 +4,9 @@ import { ReservationService } from '../../services/reservation.service';
 import { RoomsService } from '../../services/rooms.service';
 import { RoomDTO } from '../../dtos/room.dto';
 import { ReservationLogic } from '../../utils/reservation-logic.util';
+import { DialogService } from '../../services/dialog.service';
+import { CampusDTO } from '../../dtos/campus.dto';
+import { CampusService } from '../../services/campus.service';
 
 @Component({
   selector: 'app-reservation-form',
@@ -27,7 +30,8 @@ export class ReservationFormComponent implements OnInit {
   occupiedSlots: any[] = [];
 
   roomSearchText: string = '';
-  selectedCampus: string = '';
+  campus: CampusDTO[] = [];
+  selectedCampusId: number | null = null;
   minCapacity: number | null = null;
   visibleRooms: RoomDTO[] = [];
 
@@ -42,6 +46,8 @@ export class ReservationFormComponent implements OnInit {
     private readonly router: Router,
     private readonly reservationService: ReservationService,
     private readonly roomsService: RoomsService,
+    private readonly dialogService: DialogService,
+    private readonly campusService: CampusService,
   ) {}
 
   ngOnInit(): void {
@@ -49,6 +55,10 @@ export class ReservationFormComponent implements OnInit {
     const today = new Date();
     this.minDate = today.toISOString().split('T')[0];
 
+    this.campusService.getAllCampus().subscribe({
+      next: (data) => (this.campus = data),
+      error: (err) => console.error('Error loading campus', err),
+    });
     this.searchRooms();
     this.generateAllPossibleTimes();
   }
@@ -111,14 +121,21 @@ export class ReservationFormComponent implements OnInit {
         .createReservation(this.roomId, start, end, this.reason)
         .subscribe({
           next: () => {
-            alert(
-              'Reservation successfully created! Now its time to verify it or it will be automatically cancelled 1 hour before the start time',
-            );
-            this.router.navigate(['/']);
+            this.dialogService
+              .alert(
+                'Success',
+                'Reservation successfully created! We have sent a confirmation email with the calendar details attached.',
+              )
+              .then(() => {
+                this.router.navigate(['/']);
+              });
           },
           error: (err) => {
             console.error(err);
-            alert(err.error || 'Error creating reservation');
+            this.dialogService.alert(
+              'Error',
+              err.error || 'Error creating reservation',
+            );
           },
         });
     }
@@ -134,7 +151,7 @@ export class ReservationFormComponent implements OnInit {
       .searchRooms(
         this.roomSearchText,
         this.minCapacity || undefined,
-        this.selectedCampus || undefined,
+        this.selectedCampusId || undefined,
         true,
         0,
         100,
@@ -156,7 +173,7 @@ export class ReservationFormComponent implements OnInit {
 
   clearRoomSearch() {
     this.roomSearchText = '';
-    this.selectedCampus = '';
+    this.selectedCampusId = null;
     this.minCapacity = null;
     this.searchRooms();
   }
@@ -171,18 +188,17 @@ export class ReservationFormComponent implements OnInit {
     const end = new Date(`${this.selectedDate}T${this.desiredEndTime}:00`);
 
     const targetRoom = this.visibleRooms.find((r) => r.id === this.roomId);
-    const targetCampus = targetRoom
-      ? targetRoom.camp
-      : this.selectedCampus || undefined;
+    const targetCampusId = targetRoom?.campus?.id || this.selectedCampusId || undefined;
 
     this.reservationService
-      .smartSearch(start, end, this.minCapacity || undefined, targetCampus)
+      .smartSearch(start, end, this.minCapacity || undefined, targetCampusId)
       .subscribe({
         next: (data) => {
           this.smartSuggestions = data;
           this.smartSearchLoading = false;
           if (data.length === 0) {
-            alert(
+            this.dialogService.alert(
+              'Error',
               'No alternatives found. Try changing the date or your filters.',
             );
           }

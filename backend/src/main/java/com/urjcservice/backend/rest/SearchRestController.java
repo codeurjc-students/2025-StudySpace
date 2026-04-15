@@ -32,11 +32,11 @@ public class SearchRestController {
     public ResponseEntity<Page<Room>> searchRooms(
             @RequestParam(required = false) String text,
             @RequestParam(required = false) Integer minCapacity,
-            @RequestParam(required = false) Room.CampusType campus,
+            @RequestParam(required = false) Long campusId,
             @RequestParam(required = false) Boolean active,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(searchService.searchRooms(text, minCapacity, campus, active, page, size));
+        return ResponseEntity.ok(searchService.searchRooms(text, minCapacity, campusId, active, page, size));
     }
 
     @GetMapping("/users")

@@ -2,6 +2,7 @@ import { Component, ViewChild, TemplateRef } from '@angular/core';
 import { LoginService } from './login.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Router, ActivatedRoute } from '@angular/router';
+import { DialogService } from '../services/dialog.service';
 
 @Component({
   selector: 'app-login',
@@ -18,6 +19,7 @@ export class LoginComponent {
     private readonly modalService: NgbModal,
     private readonly router: Router,
     private readonly route: ActivatedRoute,
+    private readonly dialogService: DialogService,
   ) {}
 
   logIn() {
@@ -37,20 +39,40 @@ export class LoginComponent {
         error: (err: any) => {
           console.error('Login error:', err);
 
-          if (err.status === 401) {
-            const errorMsg = err.error?.message || err.error?.error || '';
+          if (err.status === 401 || err.status === 403) {
+            const errorMsg =
+              err.error?.message || err.error?.error || err.message || '';
+            const lowerMsg = errorMsg.toLowerCase();
 
-            if (errorMsg.toLowerCase().includes('locked')) {
-              alert(
-                '⛔ ACCESS DENIED\n\n Your account has been LOCKED by an administrator.\n Contact support.',
+            if (lowerMsg.includes('locked')) {
+              this.dialogService
+                .alert(
+                  '⛔ ACCESS DENIED ⛔',
+                  'Your account has been LOCKED by an administrator.\nContact support.',
+                )
+                .then(() => {
+                  this.loginService.logOut();
+                  this.router.navigate(['/']);
+                });
+            } else if (
+              lowerMsg.includes('verify') ||
+              lowerMsg.includes('disabled')
+            ) {
+              this.dialogService.alert(
+                'Verification Required',
+                'You must verify your email address before logging in. Please check your inbox for the activation link.',
               );
-              this.loginService.logOut();
-              this.router.navigate(['/']);
             } else {
-              this.modalService.open(this.loginErrorModal);
+              this.dialogService.alert(
+                'Login Error',
+                'Incorrect username or password. Please try again.',
+              );
             }
           } else {
-            this.modalService.open(this.loginErrorModal);
+            this.dialogService.alert(
+              'Login Error',
+              'A server error occurred. Please try again later.',
+            );
           }
         },
       });

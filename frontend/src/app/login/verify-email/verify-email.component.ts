@@ -3,11 +3,11 @@ import { ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 
 @Component({
-  selector: 'app-verify-reservation',
-  templateUrl: './verify-reservation.component.html',
-  styleUrls: ['./verify-reservation.component.css'],
+  selector: 'app-verify-email',
+  templateUrl: './verify-email.component.html',
+  styleUrls: ['./verify-email.component.css'],
 })
-export class VerifyReservationComponent implements OnInit {
+export class VerifyEmailComponent implements OnInit {
   loading = true;
   success = false;
   errorMessage = '';
@@ -29,18 +29,19 @@ export class VerifyReservationComponent implements OnInit {
 
   verifyToken(token: string) {
     this.http
-      .get('/api/reservations/verify', {
+      .get<any>('/api/auth/verify-email', {
         params: { token: token },
-        responseType: 'text',
       })
       .subscribe({
-        next: () => {
+        next: (res) => {
           this.loading = false;
           this.success = true;
         },
         error: (err) => {
           const msg =
-            err.error || 'The verification link is invalid or has expired.';
+            err.error?.message ||
+            err.error ||
+            'The verification link is invalid or has expired.';
           this.handleError(msg);
         },
       });

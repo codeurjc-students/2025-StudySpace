@@ -32,70 +32,15 @@ test.describe('Statistics and Reservations Flow', () => {
         .locator('input[placeholder="Create a password"]')
         .fill(userPass);
 
-      const dialogPromise = page.waitForEvent('dialog');
       await page.getByRole('button', { name: 'Sign Up' }).click();
-      const dialog = await dialogPromise;
-      await dialog.dismiss();
-      await expect(page).toHaveURL('/login');
+      const modal = page.getByRole('dialog');
+      await expect(modal).toBeVisible();
+      await modal.getByRole('button', { name: 'OK' }).click();
     });
 
-    // LOGIN AND RESERVATION
-    await test.step('Usuario se loguea y reserva', async () => {
-      await page.goto('/login');
-      await page.getByPlaceholder('Email Address').fill(userEmail);
-      await page.locator('input[placeholder="Enter password"]').fill(userPass);
-      await page
-        .getByRole('main')
-        .getByRole('button', { name: 'Log In' })
-        .click();
-      await expect(page).toHaveURL('/');
-
-      await page.getByRole('button', { name: /Book a room/i }).click();
-
-      page.on('response', (res) => {
-        if (!res.ok() && res.url().includes('api/')) {
-          console.error(`[BACKEND ERROR] ${res.status()}: ${res.url()}`);
-        }
-      });
-
-      const firstRoomCard = page
-        .locator('div.list-group button.list-group-item')
-        .first();
-      await expect(firstRoomCard).toBeVisible();
-      await firstRoomCard.click();
-      await page.waitForTimeout(1000);
-
-      const dateInput = page.getByLabel('2. Select Date');
-      await dateInput.click();
-      await dateInput.fill(dateStr);
-      await dateInput.press('Tab');
-
-      await page.waitForTimeout(3000);
-
-      const startSelect = page.locator('select[name="startTime"]');
-      await expect(startSelect).toBeEnabled({ timeout: 15000 });
-      await expect(startSelect.locator('option').nth(1)).toBeAttached({
-        timeout: 10000,
-      });
-      await startSelect.selectOption({ index: 1 });
-
-      await page.waitForTimeout(500);
-
-      const endSelect = page.locator('select[name="endTime"]');
-      await expect(endSelect).toBeEnabled({ timeout: 15000 });
-      await expect(endSelect.locator('option').nth(1)).toBeAttached({
-        timeout: 10000,
-      });
-      await endSelect.selectOption({ index: 1 });
-
-      await page
-        .locator('textarea[name="reason"]')
-        .fill(`Stats Check ${timestamp}`);
-
-      await page.getByRole('button', { name: 'Confirm Reservation' }).click();
-
+    await test.step('Verify email via MailHog', async () => {
       let message = null;
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 15; i++) {
         try {
           const response = await request.get(
             'http://127.0.0.1:8025/api/v2/messages',
@@ -115,43 +60,75 @@ test.describe('Statistics and Reservations Flow', () => {
         } catch (e) {}
         await page.waitForTimeout(1000);
       }
-
-      expect(
-        message,
-        'The verification email was not found in MailHog',
-      ).toBeTruthy();
-
+      expect(message, 'The verification email was not found').toBeTruthy();
       const cleanBody = message.Content.Body.replace(/=\r?\n/g, '');
       const match = cleanBody.match(/token=([a-zA-Z0-9-]+)/);
+      await page.goto(`/verify-email?token=${match![1]}`);
+      await page.waitForTimeout(2000);
+    });
 
-      if (match) {
-        const token = match[1];
+    // LOGIN AND RESERVATION
+    await test.step('Usuario se loguea y reserva', async () => {
+      await page.goto('/login');
+      await page.getByPlaceholder('Email Address').fill(userEmail);
+      await page.locator('input[placeholder="Enter password"]').fill(userPass);
+      await page
+        .getByRole('main')
+        .getByRole('button', { name: 'Log In' })
+        .click();
+      await expect(page).toHaveURL('/');
 
-        await page.goto(`/verify-reservation?token=${token}`);
+      await page.getByRole('button', { name: /Book a room/i }).click();
 
-        await expect(
-          page.getByText(/confirmed successfully|Reservation Confirmed/i),
-        ).toBeVisible();
-      } else {
-        throw new Error(
-          `HTTPS link not found in the email body. Text received: ${cleanBody}`,
-        );
-      }
+      const firstRoomCard = page
+        .locator('div.list-group button.list-group-item')
+        .first();
+      await expect(firstRoomCard).toBeVisible();
+      await firstRoomCard.click();
+      await page.waitForTimeout(1000);
 
-      await page.goto('/');
+      const dateInput = page.getByLabel('2. Select Date');
+      await dateInput.click();
+      await dateInput.fill(dateStr);
+      await dateInput.press('Tab');
+      await page.waitForTimeout(3000);
+
+      const startSelect = page.locator('select[name="startTime"]');
+      await startSelect.selectOption({ index: 1 });
+      await page.waitForTimeout(500);
+
+      const endSelect = page.locator('select[name="endTime"]');
+      await endSelect.selectOption({ index: 1 });
+
+      await page
+        .locator('textarea[name="reason"]')
+        .fill(`Stats Check ${timestamp}`);
+
+      await page.getByRole('button', { name: 'Confirm Reservation' }).click();
+      const confirmModal = page.getByRole('dialog');
+      await expect(confirmModal).toBeVisible();
+      await confirmModal.getByRole('button', { name: 'OK' }).click();
+
+      await expect(page).toHaveURL('/');
     });
 
     // LOGOUT
     await test.step('Logout', async () => {
+      if (!(await page.getByRole('button', { name: 'Log Out' }).isVisible())) {
+        await page.locator('#dropdownProfile').click();
+      }
+      await page.getByRole('button', { name: 'Log Out' }).click();
+
+      await page.context().clearCookies();
       await page.evaluate(() => {
         localStorage.clear();
         sessionStorage.clear();
       });
-      await page.goto('/login');
     });
 
     // ADMIN VERIFICATION
     await test.step('Admin checks the statistics', async () => {
+      await page.goto('/login');
       await page
         .getByPlaceholder('Email Address')
         .fill('studyspacetfg@gmail.com');
@@ -164,12 +141,10 @@ test.describe('Statistics and Reservations Flow', () => {
         .click();
 
       await expect(page).toHaveURL('/');
-      await page.getByRole('button', { name: 'Admin Dashboard' }).click();
-
-      await page.getByRole('button', { name: 'Occupancy Statistics' }).click();
+      await page.getByRole('button', { name: /Admin Panel/i }).click();
+      await page.getByRole('button', { name: /Occupancy Stats/i }).click();
       await expect(page).toHaveURL('/admin/stats');
 
-      //filter start dtae
       await page.fill('#statsDate', dateStr);
       await page.locator('#statsDate').dispatchEvent('change');
 

@@ -3,6 +3,9 @@ import { RoomsService } from '../../services/rooms.service';
 import { RoomDTO } from '../../dtos/room.dto';
 import { Page } from '../../dtos/page.model';
 import { PaginationUtil } from '../../utils/pagination.util';
+import { DialogService } from '../../services/dialog.service';
+import { CampusService } from '../../services/campus.service';
+import { CampusDTO } from '../../dtos/campus.dto';
 
 @Component({
   selector: 'app-manage-rooms',
@@ -15,14 +18,24 @@ export class ManageRoomsComponent implements OnInit {
 
   //for search filter algorithm
   public searchText: string = '';
-  public selectedCampus: string = '';
+  public campus: CampusDTO[] = [];
+  public selectedCampusId: number | null = null;
   public filterActive: string = '';
   public minCapacity: number | null = null;
   public isSearching: boolean = false;
 
-  constructor(private readonly roomsService: RoomsService) {}
+  showCampusModal = false;
+  editingCampus: CampusDTO | null = null;
+  newCampus: CampusDTO = { id: 0, name: '', coordinates: '' };
+
+  constructor(
+    private readonly roomsService: RoomsService,
+    private readonly dialogService: DialogService,
+    private readonly campusService: CampusService,
+  ) {}
 
   ngOnInit(): void {
+    this.campusService.getAllCampus().subscribe((data) => (this.campus = data));
     this.loadRooms(0);
   }
 
@@ -36,7 +49,7 @@ export class ManageRoomsComponent implements OnInit {
         .searchRooms(
           this.searchText,
           this.minCapacity || undefined,
-          this.selectedCampus || undefined,
+          this.selectedCampusId || undefined,
           activeParam,
           page,
         )
@@ -64,26 +77,32 @@ export class ManageRoomsComponent implements OnInit {
   }
 
   deleteRoom(id: number) {
-    const reason = prompt(
-      '⚠️⚠️ You are going to delete this room and cancel ALL its future bookings permanently.⚠️⚠️\n Be sure after making this action because this action cannot be undone.\n\n Please write the reason to notify affected users by email:',
-    );
-    if (reason === null) return;
-    this.roomsService.deleteRoom(id, reason).subscribe({
-      next: () => {
-        this.rooms = this.rooms.filter((room) => room.id !== id);
-        alert('Classroom successfully removed.✅');
-        this.loadRooms(this.currentPage);
-      },
-      error: (err) => {
-        console.error('Error deleting:', err);
-      },
-    });
+    this.dialogService
+      .prompt(
+        'Delete Room',
+        '⚠️⚠️ You are going to delete this room and cancel ALL its future bookings permanently.⚠️⚠️\n Be sure after making this action because this action cannot be undone.\n\n Please write the reason to notify affected users by email:',
+      )
+      .then((reason) => {
+        if (!reason) return; // Si cancela o deja vacío
+
+        this.roomsService.deleteRoom(id, reason).subscribe({
+          next: () => {
+            this.rooms = this.rooms.filter((room) => room.id !== id);
+            this.dialogService
+              .alert('Success', 'Classroom successfully removed.✅')
+              .then(() => {
+                this.loadRooms(this.currentPage);
+              });
+          },
+          error: (err) => console.error('Error deleting:', err),
+        });
+      });
   }
 
   onSearch() {
     if (
       !this.searchText &&
-      !this.selectedCampus &&
+      !this.selectedCampusId &&
       !this.minCapacity &&
       !this.filterActive
     ) {
@@ -96,11 +115,87 @@ export class ManageRoomsComponent implements OnInit {
 
   clearSearch() {
     this.searchText = '';
-    this.selectedCampus = '';
+    this.selectedCampusId = null;
     this.minCapacity = null;
-    this.filterActive = ''; 
-    
+    this.filterActive = '';
+
     this.isSearching = false;
     this.loadRooms(0);
+  }
+
+  openCampusModal() {
+    this.showCampusModal = true;
+    this.resetCampusForm();
+  }
+
+  closeCampusModal() {
+    this.showCampusModal = false;
+    this.loadRooms(this.currentPage);
+  }
+
+  resetCampusForm() {
+    this.editingCampus = null;
+    this.newCampus = { id: 0, name: '', coordinates: '' };
+  }
+
+  startEditCampus(c: CampusDTO) {
+    this.editingCampus = { ...c };
+  }
+
+  saveCampus() {
+    const coords = this.editingCampus
+      ? this.editingCampus.coordinates
+      : this.newCampus.coordinates;
+    const coordRegex = /^-?\d+(\.\d+)?,\s*-?\d+(\.\d+)?$/;
+
+    if (!coords || !coordRegex.test(coords)) {
+      this.dialogService.alert(
+        'Error',
+        'Invalid coordinates format. Please use "Latitude, Longitude" (e.g. 40.28, -3.82)',
+      );
+      return;
+    }
+    if (this.editingCampus) {
+      // EDIT
+      this.campusService
+        .updateCampus(this.editingCampus.id, this.editingCampus)
+        .subscribe({
+          next: (updated) => {
+            const index = this.campus.findIndex((c) => c.id === updated.id);
+            if (index !== -1) this.campus[index] = updated;
+            this.dialogService.alert('Success', 'Campus updated correctly.');
+            this.resetCampusForm();
+          },
+          error: () =>
+            this.dialogService.alert('Error', 'Name already exists.'),
+        });
+    } else if (this.newCampus.name) {
+      // CREATE
+      this.campusService.createCampus(this.newCampus).subscribe({
+        next: (created) => {
+          this.campus.push(created);
+          this.dialogService.alert('Success', 'Campus created correctly.');
+          this.resetCampusForm();
+        },
+        error: () => this.dialogService.alert('Error', 'Name already exists.'),
+      });
+    }
+  }
+
+  deleteCampusAction(id: number) {
+    if (
+      confirm(
+        '⚠️ WARNING: Deleting a Campus will permanently delete ALL rooms associated with it. Are you absolutely sure?',
+      )
+    ) {
+      this.campusService.deleteCampus(id).subscribe({
+        next: () => {
+          this.campus = this.campus.filter((c) => c.id !== id);
+          this.dialogService.alert('Deleted', 'Campus and its rooms removed.');
+          this.resetCampusForm();
+        },
+        error: (err) => console.error('Error deleting campus', err),
+      });
+    }
   }
 }

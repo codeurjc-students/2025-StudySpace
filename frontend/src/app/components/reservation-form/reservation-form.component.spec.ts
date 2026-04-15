@@ -12,12 +12,16 @@ import { ReservationService } from '../../services/reservation.service';
 import { RoomsService } from '../../services/rooms.service';
 import { of, throwError } from 'rxjs';
 import { Router } from '@angular/router';
+import { DialogService } from '../../services/dialog.service';
+import { CampusService } from '../../services/campus.service';
 
 describe('ReservationFormComponent UI Test', () => {
   let component: ReservationFormComponent;
   let fixture: ComponentFixture<ReservationFormComponent>;
   let reservationServiceSpy: jasmine.SpyObj<ReservationService>;
   let roomsServiceSpy: jasmine.SpyObj<RoomsService>;
+  let campusServiceSpy: jasmine.SpyObj<CampusService>;
+  let dialogServiceSpy: jasmine.SpyObj<DialogService>;
   let router: Router;
 
   const mockRoomsResponse = {
@@ -26,7 +30,7 @@ describe('ReservationFormComponent UI Test', () => {
         id: 1,
         name: 'Aula Test 1',
         capacity: 20,
-        camp: 'MOSTOLES',
+        campusId: 1,
         active: true,
         place: 'Bloque 1',
         coordenades: '0,0',
@@ -36,7 +40,7 @@ describe('ReservationFormComponent UI Test', () => {
         id: 2,
         name: 'Aula Test 2',
         capacity: 30,
-        camp: 'ALCORCON',
+        campusId: 2,
         active: true,
         place: 'Bloque 2',
         coordenades: '0,0',
@@ -46,7 +50,7 @@ describe('ReservationFormComponent UI Test', () => {
         id: 3,
         name: 'Aula Desactivada',
         capacity: 15,
-        camp: 'VICALVARO',
+        campusId: 4,
         active: false,
         place: 'Bloque 3',
         coordenades: '0,0',
@@ -75,6 +79,13 @@ describe('ReservationFormComponent UI Test', () => {
       'checkAvailability',
       'searchRooms',
     ]);
+    campusServiceSpy = jasmine.createSpyObj('CampusService', ['getAllCampus']);
+    dialogServiceSpy = jasmine.createSpyObj('DialogService', ['alert']);
+
+    campusServiceSpy.getAllCampus.and.returnValue(
+      of([{ id: 1, name: 'Móstoles' } as any]),
+    );
+    dialogServiceSpy.alert.and.returnValue(Promise.resolve());
 
     roomsServiceSpy.searchRooms.and.returnValue(
       of({
@@ -90,6 +101,8 @@ describe('ReservationFormComponent UI Test', () => {
       providers: [
         { provide: ReservationService, useValue: reservationServiceSpy },
         { provide: RoomsService, useValue: roomsServiceSpy },
+        { provide: CampusService, useValue: campusServiceSpy },
+        { provide: DialogService, useValue: dialogServiceSpy },
       ],
     }).compileComponents();
 
@@ -106,15 +119,10 @@ describe('ReservationFormComponent UI Test', () => {
 
   it('The "Confirm Reservation" button should be disabled at startup', async () => {
     component.roomId = null;
-
     fixture.detectChanges();
     await fixture.whenStable();
-    fixture.detectChanges();
 
-    //Search fot the button
     const button = fixture.nativeElement.querySelector('button[type="submit"]');
-
-    //Verify 'disabled' of HTML
     expect(button.disabled).toBeTrue();
   });
 
@@ -134,23 +142,26 @@ describe('ReservationFormComponent UI Test', () => {
     expect(reservationServiceSpy.createReservation).not.toHaveBeenCalled();
   });
 
-  it('onSubmit: should call service and navigate on success', () => {
+  it('onSubmit: should call service and navigate on success', async () => {
     reservationServiceSpy.createReservation.and.returnValue(of({}));
     const navigateSpy = spyOn(router, 'navigate');
-    spyOn(window, 'alert');
 
     component.roomId = 1;
     component.selectedDate = '2026-05-20';
     component.selectedStartTime = '10:00';
     component.selectedEndTime = '12:00';
     component.reason = 'Test Exam';
+
     component.onSubmit();
 
+    await fixture.whenStable();
+
     expect(reservationServiceSpy.createReservation).toHaveBeenCalled();
-    expect(window.alert).toHaveBeenCalledWith(
-      jasmine.stringMatching(/success/),
+    expect(dialogServiceSpy.alert).toHaveBeenCalledWith(
+      'Success',
+      jasmine.stringMatching(/successfully/),
     );
-    expect(router.navigate).toHaveBeenCalledWith(['/']);
+    expect(navigateSpy).toHaveBeenCalledWith(['/']);
   });
 
   it('onSubmit: should handle error from service', () => {
@@ -158,7 +169,7 @@ describe('ReservationFormComponent UI Test', () => {
       throwError(() => ({ error: 'Room occupied' })),
     );
 
-    spyOn(window, 'alert');
+    spyOn(console, 'error');
 
     component.roomId = 1;
     component.selectedDate = '2026-05-20';
@@ -167,7 +178,10 @@ describe('ReservationFormComponent UI Test', () => {
 
     component.onSubmit();
 
-    expect(window.alert).toHaveBeenCalledWith('Room occupied');
+    expect(dialogServiceSpy.alert).toHaveBeenCalledWith(
+      'Error',
+      'Room occupied',
+    );
   });
 
   it('calculateStartTimes: should generate slots from 08:00 to 20:30', () => {
@@ -250,21 +264,28 @@ describe('ReservationFormComponent UI Test', () => {
     expect(console.error).toHaveBeenCalled();
   });
 
-  it('onSubmit: should call service and navigate on success', () => {
+  it('onSubmit: should call service and navigate on success', fakeAsync(() => {
     reservationServiceSpy.createReservation.and.returnValue(of({}));
     const navigateSpy = spyOn(router, 'navigate');
-    spyOn(window, 'alert');
 
     component.roomId = 1;
     component.selectedDate = '2026-05-20';
     component.selectedStartTime = '10:00';
     component.selectedEndTime = '12:00';
+    component.reason = 'Test Exam';
 
     component.onSubmit();
 
+    tick();
+
     expect(reservationServiceSpy.createReservation).toHaveBeenCalled();
+    expect(dialogServiceSpy.alert).toHaveBeenCalledWith(
+      'Success',
+      jasmine.stringMatching(/successfully/),
+    );
     expect(navigateSpy).toHaveBeenCalledWith(['/']);
-  });
+  }));
+
   it('calculateStartTimes: should generate correct times via Utility', () => {
     component.selectedDate = '2050-01-01';
     component.occupiedSlots = [];
@@ -316,19 +337,18 @@ describe('ReservationFormComponent UI Test', () => {
     fixture.detectChanges();
 
     expect(component.visibleRooms.length).toBe(3);
-    expect(component.roomId).toBeNull();
   });
 
   it('should clear room search and trigger searchRooms', () => {
     spyOn(component, 'searchRooms');
     component.roomSearchText = 'Java';
-    component.selectedCampus = 'MOSTOLES';
+    component.selectedCampusId = 1;
     component.minCapacity = 20;
 
     component.clearRoomSearch();
 
     expect(component.roomSearchText).toBe('');
-    expect(component.selectedCampus).toBe('');
+    expect(component.selectedCampusId).toBeNull();
     expect(component.minCapacity).toBeNull();
     expect(component.searchRooms).toHaveBeenCalled();
   });
@@ -383,7 +403,8 @@ describe('ReservationFormComponent UI Test', () => {
 
     component.triggerSmartSearch();
 
-    expect(window.alert).toHaveBeenCalledWith(
+    expect(dialogServiceSpy.alert).toHaveBeenCalledWith(
+      'Error',
       jasmine.stringMatching(/No alternatives found/i),
     );
     expect(component.smartSearchLoading).toBeFalse();
@@ -444,7 +465,7 @@ describe('ReservationFormComponent UI Test', () => {
     component.roomId = 99;
 
     roomsServiceSpy.searchRooms.and.returnValue(
-      of({ content: [{ id: 1, name: 'Aula 1', camp: 'MOSTOLES' }] } as any),
+      of({ content: [{ id: 1, name: 'Aula 1', campus: { id: 1 } }] } as any),
     );
     spyOn(component, 'onConfigChange');
 

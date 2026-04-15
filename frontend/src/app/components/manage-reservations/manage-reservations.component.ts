@@ -6,6 +6,7 @@ import { RoomDTO } from '../../dtos/room.dto';
 import { Page } from '../../dtos/page.model';
 import { PaginationUtil } from '../../utils/pagination.util';
 import { ReservationLogic } from '../../utils/reservation-logic.util';
+import { DialogService } from '../../services/dialog.service';
 
 @Component({
   selector: 'app-manage-reservations',
@@ -38,6 +39,7 @@ export class ManageReservationsComponent implements OnInit {
     private readonly route: ActivatedRoute,
     private readonly reservationService: ReservationService,
     private readonly roomsService: RoomsService,
+    private readonly dialogService: DialogService,
   ) {}
 
   ngOnInit(): void {
@@ -91,10 +93,14 @@ export class ManageReservationsComponent implements OnInit {
     if (confirm('Are you sure you want to delete this reservation?')) {
       this.reservationService.deleteReservation(id).subscribe({
         next: () => {
-          alert('Reservation deleted successfully.');
+          this.dialogService.alert(
+            'Success',
+            'Reservation deleted successfully.',
+          );
           this.loadReservations(this.currentPage);
         },
-        error: () => alert('Error deleting'),
+        error: () =>
+          this.dialogService.alert('Error', 'Error deleting reservation.'),
       });
     }
   }
@@ -148,13 +154,16 @@ export class ManageReservationsComponent implements OnInit {
         .updateReservationAdmin(this.editingReservation.id, reservationData)
         .subscribe({
           next: (updated) => {
-            alert('Reservation updated and user notified via email!');
+            this.dialogService.alert(
+              'Success',
+              'Reservation updated and user notified via email!',
+            );
             this.cancelEdit();
             this.loadReservations(this.currentPage);
           },
           error: (err) => {
             console.error(err);
-            alert('Error updating reservation.');
+            this.dialogService.alert('Error', 'Error updating reservation.');
           },
         });
     }
@@ -168,26 +177,34 @@ export class ManageReservationsComponent implements OnInit {
     return !res.cancelled && end > now;
   }
 
-  performCancel(id: number) {
-    const reason = prompt(
+  async performCancel(id: number) {
+    const reason = await this.dialogService.prompt(
+      'Cancel Reservation',
       'Please enter the reason for cancellation (We will notify the user via email notification):',
     );
+
     if (reason === null) return;
 
-    if (confirm('Are you sure you want to cancel this reservation?')) {
-      this.reservationService.cancelReservationAdmin(id, reason).subscribe({
-        next: () => {
-          alert(
-            'Reservation successfully cancelled and user notified via email.',
-          );
-          this.loadReservations(this.currentPage);
-        },
-        error: (err) => {
-          console.error(err);
-          alert('Cancellation error:');
-        },
-      });
-    }
+    const confirmed = await this.dialogService.confirm(
+      'Confirm Action',
+      'Are you sure you want to cancel this reservation?',
+    );
+
+    if (!confirmed) return;
+
+    this.reservationService.cancelReservationAdmin(id, reason).subscribe({
+      next: async () => {
+        await this.dialogService.alert(
+          'Success',
+          'Reservation successfully cancelled and user notified via email.',
+        );
+        this.loadReservations(this.currentPage);
+      },
+      error: (err) => {
+        console.error(err);
+        this.dialogService.alert('Error', 'Cancellation error.');
+      },
+    });
   }
 
   onConfigChange(isInit: boolean = false) {

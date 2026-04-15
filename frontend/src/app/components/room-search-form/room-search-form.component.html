@@ -20,15 +20,11 @@
       class="form-select"
       id="campus"
       name="campus"
-      [ngModel]="campus"
+      [ngModel]="campusId"
       (ngModelChange)="onCampusChange($event)"
     >
-      <option value="">All</option>
-      <option value="ALCORCON">Alcorcón</option>
-      <option value="MOSTOLES">Móstoles</option>
-      <option value="VICALVARO">Vicálvaro</option>
-      <option value="FUENLABRADA">Fuenlabrada</option>
-      <option value="QUINTANA">Quintana</option>
+      <option [ngValue]="null">All</option>
+      <option *ngFor="let c of campus" [ngValue]="c.id">{{ c.name }}</option>
     </select>
   </div>
 

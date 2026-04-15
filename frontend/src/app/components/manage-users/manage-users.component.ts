@@ -7,6 +7,7 @@ import { UserDTO } from '../../dtos/user.dto';
 import { RoomDTO } from '../../dtos/room.dto';
 import { Page } from '../../dtos/page.model';
 import { PaginationUtil } from '../../utils/pagination.util';
+import { DialogService } from '../../services/dialog.service';
 
 @Component({
   selector: 'app-manage-users',
@@ -32,12 +33,12 @@ export class ManageUsersComponent implements OnInit {
     private readonly loginService: LoginService,
     private readonly roomsService: RoomsService,
     private readonly router: Router,
+    private readonly dialogService: DialogService,
   ) {}
 
   ngOnInit(): void {
     this.loadUsers(0);
   }
-
 
   getVisiblePages(): number[] {
     return PaginationUtil.getVisiblePages(this.pageData, this.currentPage);
@@ -57,18 +58,24 @@ export class ManageUsersComponent implements OnInit {
   }
 
   deleteUser(user: UserDTO) {
-    if (confirm(`Are you sure you want to delete user ${user.name}?`)) {
-      this.userService.deleteUser(user.id).subscribe({
-        next: () => {
-          this.loadUsers(this.currentPage);
-        },
-
-        error: (err) => {
-          console.error(err);
-          alert('Error deleting user');
-        },
+    this.dialogService
+      .confirm(
+        'Delete User',
+        `Are you sure you want to delete user ${user.name}?`,
+      )
+      .then((confirmed) => {
+        if (confirmed) {
+          this.userService.deleteUser(user.id).subscribe({
+            next: () => {
+              this.loadUsers(this.currentPage);
+            },
+            error: (err) => {
+              console.error(err);
+              this.dialogService.alert('Error', 'Error deleting user');
+            },
+          });
+        }
       });
-    }
   }
 
   //to see bookings
@@ -116,7 +123,7 @@ export class ManageUsersComponent implements OnInit {
           this.users = data.content.filter((user) => user.id !== currentUserId);
           this.currentPage = data.number;
         },
-        error: (err) => console.error(err) 
+        error: (err) => console.error(err),
       });
     }
   }

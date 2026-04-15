@@ -9,6 +9,7 @@ import {
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, switchMap, filter, take } from 'rxjs/operators';
 import { LoginService } from '../login/login.service';
+import { DialogService } from '../services/dialog.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -63,8 +64,17 @@ export class AuthInterceptor implements HttpInterceptor {
           this.isRefreshing = false;
           console.error('Failure when refreshing the token:', err);
 
-          alert('🔒Your session has permanently expired. Please log in again.');
-          loginService.logOut();
+          const dialogService = this.injector.get(DialogService);
+
+          dialogService
+            .alert(
+              'Session Expired',
+              '🔒 Your session has permanently expired. Please log in again.',
+            )
+            .then(() => {
+              loginService.logOut();
+            });
+
           return throwError(() => err);
         }),
       );

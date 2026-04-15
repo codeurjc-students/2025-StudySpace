@@ -31,15 +31,59 @@
         </div>
 
         <div class="col-md-6 mb-3">
-          <label for="camp" class="form-label fw-bold">Campus</label>
-          <select
-            id="camp"
-            name="camp"
-            [(ngModel)]="room.camp"
-            class="form-select"
+          <label for="campusId" class="form-label fw-bold">Campus</label>
+
+          <div *ngIf="!isCreatingCampus">
+            <select
+              id="campusId"
+              name="campusId"
+              [ngModel]="room.campusId"
+              (ngModelChange)="
+                room.campusId = $event; onCampusSelectChange($event)
+              "
+              class="form-select"
+              [required]="!isCreatingCampus"
+            >
+              <option [ngValue]="null" disabled>-- Select Campus --</option>
+              <option *ngFor="let c of campus" [ngValue]="c.id">
+                {{ c.name }}
+              </option>
+
+              <option [ngValue]="-1" class="text-primary fw-bold">
+                ➕ Create New Campus...
+              </option>
+            </select>
+          </div>
+
+          <div
+            *ngIf="isCreatingCampus"
+            class="border p-3 rounded bg-white shadow-sm"
           >
-            <option *ngFor="let c of campusOptions" [value]="c">{{ c }}</option>
-          </select>
+            <h6 class="text-primary fw-bold mb-2">New Campus Details</h6>
+            <input
+              type="text"
+              class="form-control form-control-sm mb-2"
+              placeholder="Name (e.g. Fuenlabrada)"
+              name="newCampName"
+              [(ngModel)]="newCampus.name"
+              [required]="isCreatingCampus"
+            />
+            <input
+              type="text"
+              class="form-control form-control-sm mb-3"
+              placeholder="Coords (e.g. 40.28, -3.82)"
+              name="newCampCoords"
+              [(ngModel)]="newCampus.coordinates"
+              [required]="isCreatingCampus"
+            />
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-secondary w-100"
+              (click)="isCreatingCampus = false"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       </div>
 

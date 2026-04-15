@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { LoginService } from '../login.service';
+import { DialogService } from '../../services/dialog.service';
 
 @Component({
   selector: 'app-register',
@@ -13,12 +14,13 @@ export class RegisterComponent {
   constructor(
     private readonly loginService: LoginService,
     private readonly router: Router,
+    private readonly dialogService: DialogService,
   ) {}
 
   onRegister() {
     const { name, email, password } = this.registerData;
     if (!name || !email || !password) {
-      alert('Please fill in all fields.');
+      this.dialogService.alert('Missing Info', 'Please fill in all fields.');
       return;
     }
 
@@ -26,7 +28,8 @@ export class RegisterComponent {
     //text + @ + text + . + text (at least 2 leters)
     const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailPattern.test(email)) {
-      alert(
+      this.dialogService.alert(
+        'Incorrect Info',
         'Please enter a valid email address (e.g., userexample@gmail.com).',
       );
       return;
@@ -36,7 +39,8 @@ export class RegisterComponent {
     const passwordPattern =
       /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&.])(?=\S+$).{8,}$/;
     if (!passwordPattern.test(password)) {
-      alert(
+      this.dialogService.alert(
+        'Incorrect Info',
         'Password must contain:\n- At least 8 characters\n- One uppercase letter\n- One lowercase letter\n- One number\n- One special character (@$!%*?&.)',
       );
       return;
@@ -44,17 +48,27 @@ export class RegisterComponent {
 
     this.loginService.register(name, email, password).subscribe({
       next: (response) => {
-        alert('User successfully registered. You can now log in.');
-        this.router.navigate(['/login']); // Redirect to login page
+        this.dialogService
+          .alert(
+            'Registration Successful',
+            'User successfully registered, now you have 1 day to verify your email. Please check your email inbox to verify your account before logging in.',
+          )
+          .then(() => {
+            this.router.navigate(['/login']);
+          });
       },
       error: (err) => {
         console.error(err);
         if (err.status === 409) {
-          alert(
+          this.dialogService.alert(
+            'Email Already Registered',
             'That email is already registered. Please use a different email.',
           );
         } else {
-          alert('Error registering user. Please try again.');
+          this.dialogService.alert(
+            'Error',
+            'Error registering user. Please try again.',
+          );
         }
       },
     });

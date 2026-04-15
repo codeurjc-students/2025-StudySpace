@@ -1,0 +1,37 @@
+config:
+  target: "http://127.0.0.1:8080/api"
+  tls:
+    rejectUnauthorized: false
+  processor: "./processor.js"
+  phases:
+    - duration: 5
+      arrivalRate: 10
+      name: "Automated concurrency test"
+  payload:
+    - path: "users.csv"
+      fields:
+        - "email"
+        - "password"
+      order: "random"
+  variables:
+    roomId: "1"
+    reason: "Concurrent stress test"
+
+scenarios:
+  - name: "Concurrent Login and Reservation"
+    flow:
+      - function: "setupDates"
+
+      - post:
+          url: "/auth/login"
+          json:
+            username: "{{ email }}"
+            password: "{{ password }}"
+
+      - post:
+          url: "/reservations"
+          json:
+            roomId: "{{ roomId }}"
+            startDate: "{{ dynamicStartDate }}"
+            endDate: "{{ dynamicEndDate }}"
+            reason: "{{ reason }}"

@@ -7,13 +7,50 @@
 
   <div class="navbar-right">
     <ng-container *ngIf="!loginService.isLogged()">
-      <button class="btn btn-outline-light me-2" (click)="goToLogIn()">
+      <button
+        class="btn btn-light text-primary btn-lg fw-bold px-4 shadow-sm border-0 me-3"
+        (click)="goToLogIn()"
+      >
         Log In
       </button>
-      <button class="btn btn-outline-light ms-2" routerLink="/register">
+      <button
+        class="btn btn-light text-primary btn-lg fw-bold px-4 shadow-sm border-0"
+        routerLink="/register"
+      >
         Register
       </button>
     </ng-container>
+
+    <div
+      *ngIf="loginService.isAdmin()"
+      ngbDropdown
+      placement="bottom-end"
+      class="d-inline-block ms-3"
+    >
+      <button
+        class="btn btn-light text-primary btn-lg fw-bold px-4 shadow-sm border-0"
+        id="dropdownAdmin"
+        ngbDropdownToggle
+      >
+        <i class="bi bi-gear-fill me-1"></i> Admin Panel
+      </button>
+
+      <div ngbDropdownMenu aria-labelledby="dropdownAdmin" class="shadow mt-2">
+        <button ngbDropdownItem routerLink="/admin/rooms" class="py-2">
+          <i class="bi bi-door-open me-2 text-primary"></i> Manage Rooms
+        </button>
+        <button ngbDropdownItem routerLink="/admin/softwares" class="py-2">
+          <i class="bi bi-pc-display me-2 text-info"></i> Manage Software
+        </button>
+        <button ngbDropdownItem routerLink="/admin/users" class="py-2">
+          <i class="bi bi-people-fill me-2 text-success"></i> Manage Users
+        </button>
+        <div class="dropdown-divider"></div>
+        <button ngbDropdownItem routerLink="/admin/stats" class="py-2">
+          <i class="bi bi-bar-chart-fill me-2 text-warning"></i> Occupancy Stats
+        </button>
+      </div>
+    </div>
 
     <div
       *ngIf="loginService.isLogged()"
@@ -32,8 +69,8 @@
           alt="Profile"
           class="rounded-circle profile-icon-header"
           style="
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             object-fit: cover;
             border: 2px solid white;
           "
@@ -45,7 +82,7 @@
 
         <span
           class="text-white small mt-1"
-          style="font-size: 0.8rem; font-weight: 500"
+          style="font-size: 0.95rem; font-weight: 600"
         >
           {{ loginService.currentUser?.name }}
         </span>

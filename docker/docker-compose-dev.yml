@@ -1,17 +1,16 @@
 version: "3.8"
 
 services:
-  #MySQL
+  # Data Base MySQL
   mysql:
     image: mysql:8.0
     container_name: study_space_mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: toor
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: study_space_db
+
       TZ: Europe/Madrid
-    ports:
-      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -21,42 +20,39 @@ services:
 
   # Backend (Spring Boot)
   backend:
-    image: ${DOCKER_USERNAME}/studyspace-backend:${TAG:-latest}
+    build: ../backend
     container_name: study_space_backend
     restart: always
-    ports:
-      - "8443:8443"
     depends_on:
       mysql:
         condition: service_healthy
     environment:
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 50
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/study_space_db
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: toor
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
+      NORMAL_PASSWORD: ${NORMAL_PASSWORD}
+      SUPERADMIN_PASSWORD: ${SUPERADMIN_PASSWORD}
 
-      SERVER_PORT: 8443
-      SERVER_SSL_ENABLED: "true"
-      SERVER_SSL_KEY_STORE: "file:/app/keystore.jks"
-      SERVER_SSL_KEY_STORE_PASSWORD: "password"
-      SERVER_SSL_KEY_STORE_TYPE: "PKCS12"
+      SERVER_PORT: 8080
 
       TZ: Europe/Madrid
       JAVA_TOOL_OPTIONS: "-Duser.timezone=Europe/Madrid"
 
     volumes:
-      - ./backend/uploads:/app/uploads
+      - ../backend/uploads:/app/uploads
 
-  # Frontend (Angular)
+  # 3. Frontend (Angular)
   frontend:
-    image: ${DOCKER_USERNAME}/studyspace-frontend:${TAG:-latest}
+    build: ../frontend
     container_name: study_space_frontend
     restart: always
     ports:
       - "443:443"
     volumes:
-      - ./frontend/certs:/etc/nginx/certs
-      - ./backend/uploads:/usr/share/nginx/html/uploads
+      - ../frontend/certs:/etc/nginx/certs
+      - ../backend/uploads:/usr/share/nginx/html/uploads
     depends_on:
       - backend
 

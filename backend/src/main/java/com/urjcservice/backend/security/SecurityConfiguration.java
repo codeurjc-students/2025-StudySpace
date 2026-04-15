@@ -69,6 +69,8 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET, "/api/search/rooms").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reservations/check-availability").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reservations/verify").permitAll()
+                        .requestMatchers("/api/auth/verify-email").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/campus/**").permitAll()
 
                         // User
                         .requestMatchers("/api/auth/me", "/api/auth/change-password", "/api/auth/logout")

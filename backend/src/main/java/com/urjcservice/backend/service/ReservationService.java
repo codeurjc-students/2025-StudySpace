@@ -1,6 +1,7 @@
 package com.urjcservice.backend.service;
 
 import com.urjcservice.backend.dtos.SmartSuggestionDTO;
+import com.urjcservice.backend.entities.Campus;
 import com.urjcservice.backend.entities.Reservation;
 import com.urjcservice.backend.entities.User;
 import com.urjcservice.backend.entities.Room;
@@ -12,7 +13,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.slf4j.Logger;
@@ -252,11 +253,12 @@ public class ReservationService {
         return updateReservation(id, partialReservation);
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Reservation createReservation(ReservationRequest request, String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MSG));
 
-        Room room = roomRepository.findById(request.getRoomId())
+        Room room = roomRepository.findByIdForUpdate(request.getRoomId())
                 .orElseThrow(() -> new IllegalArgumentException("Room not found"));
 
         if (!room.isActive()) {
@@ -284,10 +286,10 @@ public class ReservationService {
             throw new IllegalArgumentException("A single reservation cannot exceed 3 hours.");
         }
 
-        Page<Reservation> overlaps = reservationRepository.findOverlappingReservations(
-                request.getRoomId(), request.getStartDate(), request.getEndDate(), PageRequest.of(0, 1));
+        List<Reservation> overlaps = reservationRepository.findOverlappingReservationsForUpdate(
+                request.getRoomId(), request.getStartDate(), request.getEndDate());
 
-        if (overlaps.hasContent()) {
+        if (!overlaps.isEmpty()) {
             throw new IllegalStateException("The room is already reserved for this time.");
         }
 
@@ -302,60 +304,11 @@ public class ReservationService {
         reservation.setRoom(room);
         reservation.setCancelled(false);
 
-        reservation.setVerified(false);
-        reservation.setVerificationToken(java.util.UUID.randomUUID().toString());
-
-        Date now = new Date();
-        Date expiration = new Date(now.getTime() + 3600000); // 1 hour
-        reservation.setTokenExpirationDate(expiration);
-
         // first save reservation
         Reservation savedReservation = reservationRepository.save(reservation);
 
         // try confirmation email
         try {
-            emailService.sendVerificationEmail(
-                    user.getEmail(),
-                    user.getName(),
-                    savedReservation.getVerificationToken());
-        } catch (Exception e) {
-            log.error("Error sending verification email: {}", e.getMessage(), e);
-        }
-
-        return savedReservation;
-    }
-
-    public void verifyReservation(String token) {
-        Reservation reservation = reservationRepository.findByVerificationToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid verification token."));
-
-        // is verified?
-        if (reservation.isVerified()) {
-            throw new IllegalStateException("Reservation is already verified.");
-        }
-
-        // token expired?
-        if (reservation.getTokenExpirationDate() != null &&
-                reservation.getTokenExpirationDate().before(new Date())) {
-
-            // if expired delete the reservation
-            reservationRepository.delete(reservation);
-
-            throw new IllegalStateException(
-                    "Verification link has expired. The reservation has been cancelled. Please book again.");
-        }
-
-        reservation.setVerified(true);
-        reservation.setVerificationToken(null); // delete token
-        reservation.setTokenExpirationDate(null); // delete token date
-
-        Reservation savedReservation = reservationRepository.save(reservation);
-
-        // send email with calendar event
-        try {
-            User user = savedReservation.getUser();
-            Room room = savedReservation.getRoom();
-
             emailService.sendReservationConfirmationEmail(
                     user.getEmail(),
                     user.getName(),
@@ -367,15 +320,8 @@ public class ReservationService {
         } catch (Exception e) {
             log.error("Error sending confirmation email: {}", e.getMessage(), e);
         }
-    }
 
-    @Scheduled(fixedRate = 60000) // every minute we search for new reservations that are not verified and have
-                                  // expired token
-    @Transactional
-    public void deleteExpiredUnverifiedReservations() {
-        Date now = new Date();
-
-        reservationRepository.deleteExpiredReservations(now);
+        return savedReservation;
     }
 
     public Page<Reservation> getReservationsByUserEmail(String email, Pageable pageable) {
@@ -468,7 +414,7 @@ public class ReservationService {
             Date requestedStart,
             Date requestedEnd,
             Integer minCapacity,
-            Room.CampusType campus) {
+            Campus requestedCampus) {
 
         List<SmartSuggestionDTO> suggestions = new ArrayList<>();
         List<Room> candidateRooms = roomRepository.findAll().stream()
@@ -480,13 +426,13 @@ public class ReservationService {
 
         for (Room room : candidateRooms) {
 
-            int penalty = calculateCampusPenalty(campus, room.getCamp());
+            int penalty = calculateCampusPenalty(requestedCampus, room.getCampus());
 
             List<Reservation> overlaps = reservationRepository.findActiveReservationsByRoomIdAndDateRange(
                     room.getId(), requestedStart, requestedEnd);
 
             if (overlaps.isEmpty()) {
-                addExactOrSimilarSuggestion(room, requestedStart, requestedEnd, campus, penalty, suggestions);
+                addExactOrSimilarSuggestion(room, requestedStart, requestedEnd, requestedCampus, penalty, suggestions);
             } else {
                 // +30 minutes
                 checkAndAddAlternativeTime(room, requestedStart, durationMillis, 30 * 60000L, 80 - penalty,
@@ -507,35 +453,57 @@ public class ReservationService {
         return suggestions.stream().limit(10).toList();
     }
 
-    private int calculateCampusPenalty(Room.CampusType requested, Room.CampusType alternative) {
-        if (requested == null || alternative == null || requested == alternative) {
-            return 0; // Same campus no penalization
+    private int calculateCampusPenalty(Campus requested, Campus alternative) {
+        if (requested == null || alternative == null)
+            return 0;
+        if (requested.getId().equals(alternative.getId()))
+            return 0; // same campus
+
+        try {
+            double distanceKm = calculateDistanceInKm(requested.getCoordinates(), alternative.getCoordinates());
+
+            // each kilometer -2
+            // max penalty in 60 points
+            int penalty = (int) (distanceKm * 2.0);
+            return Math.min(penalty, 60);
+
+        } catch (Exception e) {
+            log.warn("Error calculating distance between campuses. Applying default penalty.", e);
+            return 30; // Penalization if coordenades fail
         }
-
-        boolean reqIsSur = (requested == Room.CampusType.MOSTOLES ||
-                requested == Room.CampusType.ALCORCON ||
-                requested == Room.CampusType.FUENLABRADA);
-
-        boolean altIsSur = (alternative == Room.CampusType.MOSTOLES ||
-                alternative == Room.CampusType.ALCORCON ||
-                alternative == Room.CampusType.FUENLABRADA);
-
-        if (reqIsSur && altIsSur) {
-            return 20; // low penalization
-        }
-
-        if (!reqIsSur && !altIsSur) {
-            return 20; // low penalization
-        }
-
-        return 50; // high penalization
     }
 
-    private void addExactOrSimilarSuggestion(Room room, Date start, Date end, Room.CampusType requestedCampus,
+    private double calculateDistanceInKm(String coord1, String coord2) {
+        if (coord1 == null || coord2 == null || coord1.isBlank() || coord2.isBlank())
+            return 0;
+
+        String[] c1 = coord1.split(",");
+        String[] c2 = coord2.split(",");
+
+        double lat1 = Double.parseDouble(c1[0].trim());
+        double lon1 = Double.parseDouble(c1[1].trim());
+        double lat2 = Double.parseDouble(c2[0].trim());
+        double lon2 = Double.parseDouble(c2[1].trim());
+
+        int earthRadius = 6371; // earth radius in km
+
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                        * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return earthRadius * c;
+    }
+
+    private void addExactOrSimilarSuggestion(Room room, Date start, Date end, Campus requestedCampus,
             int penalty, List<SmartSuggestionDTO> suggestions) {
         int score = 100 - penalty;
         if (score > 30) {
-            String reason = (requestedCampus != null && requestedCampus != room.getCamp()) ? "SIMILAR_ROOM"
+            String reason = (requestedCampus != null && requestedCampus != room.getCampus()) ? "SIMILAR_ROOM"
                     : "EXACT_MATCH";
             suggestions.add(new SmartSuggestionDTO(room, start, end, reason, score));
         }

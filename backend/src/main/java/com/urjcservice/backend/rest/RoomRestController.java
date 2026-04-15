@@ -6,6 +6,7 @@ import com.urjcservice.backend.entities.Software;
 import com.urjcservice.backend.service.FileStorageService;
 import com.urjcservice.backend.service.RoomService;
 import com.urjcservice.backend.service.SoftwareService;
+import com.urjcservice.backend.service.CampusService;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -33,19 +34,21 @@ public class RoomRestController {
     private final RoomService roomService;
     private final SoftwareService softwareService;
     private final FileStorageService fileStorageService;
+    private final CampusService campusService;
 
     public RoomRestController(RoomService roomService, SoftwareService softwareService,
-            FileStorageService fileStorageService) {
+            FileStorageService fileStorageService, CampusService campusService) {
         this.roomService = roomService;
         this.softwareService = softwareService;
         this.fileStorageService = fileStorageService;
+        this.campusService = campusService;
     }
 
     // internal DTO for room requests on frontend
     public static class RoomRequest {
         private String name;
         private Integer capacity;
-        private Room.CampusType camp;
+        private Long campusId;
         private String place;
         private String coordenades;
         private List<Long> softwareIds;
@@ -67,12 +70,12 @@ public class RoomRestController {
             this.capacity = capacity;
         }
 
-        public Room.CampusType getCamp() {
-            return camp;
+        public Long getCampusId() {
+            return campusId;
         }
 
-        public void setCamp(Room.CampusType camp) {
-            this.camp = camp;
+        public void setCampusId(Long campusId) {
+            this.campusId = campusId;
         }
 
         public String getPlace() {
@@ -174,8 +177,8 @@ public class RoomRestController {
             room.setName(request.name);
         if (request.capacity != null)
             room.setCapacity(request.capacity);
-        if (request.camp != null)
-            room.setCamp(request.camp);
+        if (request.campusId != null)
+            room.setCampus(campusService.findById(request.campusId).orElse(null));
         if (request.place != null)
             room.setPlace(request.place);
         if (request.coordenades != null)

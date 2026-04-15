@@ -12,7 +12,8 @@
     <div class="card-body bg-light">
       <app-room-search-form
         [(searchText)]="searchText"
-        [(campus)]="selectedCampus"
+        [campus]="campus"
+        [(campusId)]="selectedCampusId"
         [(capacity)]="minCapacity"
         [isSearching]="isSearching"
         (searchTriggered)="onSearch()"
@@ -38,7 +39,7 @@
 
         <div class="card-body">
           <p class="card-text">
-            <strong>Campus:</strong> {{ room.camp }}<br />
+            <strong>Campus:</strong> {{ room.campus?.name }}<br />
             <strong>Ubication:</strong> {{ room.place }}<br />
             <strong>Capacity:</strong> {{ room.capacity }} people
           </p>
@@ -86,14 +87,6 @@
       class="btn btn-success btn-lg shadow px-5"
     >
       📅 Book a room
-    </button>
-
-    <button
-      *ngIf="loginService.isAdmin()"
-      [routerLink]="['/admin']"
-      class="btn btn-dark btn-lg shadow px-5 ms-2"
-    >
-      ⚙️ Admin Dashboard
     </button>
   </div>
 </div>

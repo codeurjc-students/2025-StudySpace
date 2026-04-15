@@ -12,7 +12,7 @@
           <i class="fa fa-ban me-1"></i> DISABLED
         </span>
       </div>
-      <span class="badge bg-light text-dark fs-6">{{ room.camp }}</span>
+      <span class="badge bg-light text-dark fs-6">{{ room.campus?.name }}</span>
     </div>
 
     <div class="card-body">
@@ -35,7 +35,7 @@
           <img
             [src]="
               room.imageName
-                ? 'https://localhost:8443/api/rooms/' + room.id + '/image'
+                ? '/api/rooms/' + room.id + '/image'
                 : 'assets/default_image.png'
             "
             alt="Appearance of the room {{ room.name }}"
@@ -121,14 +121,14 @@
       </div>
     </div>
 
-    <div class="card-body">
-      <div class="mb-5 w-100">
+    <div class="card-body px-md-5">
+      <div class="mb-5 mx-auto w-100" style="max-width: 1000px">
         <full-calendar [options]="calendarOptions"></full-calendar>
       </div>
 
       <hr class="mb-4 text-muted" />
 
-      <div class="row" id="stats-section">
+      <div class="row mx-auto" id="stats-section" style="max-width: 1000px">
         <div class="col-md-8 mb-4 mb-md-0">
           <h6 class="text-center text-muted fw-bold mb-3">
             Hourly Schedule (8:00 - 21:00)

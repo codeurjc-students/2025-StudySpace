@@ -91,7 +91,7 @@
                 <img
                   [src]="
                     user.imageName
-                      ? 'https://localhost:8443/api/users/' + user.id + '/image'
+                      ? '/api/users/' + user.id + '/image'
                       : 'assets/user_placeholder.png'
                   "
                   alt="Avatar of {{ user.name }}"
@@ -174,8 +174,8 @@
   </app-pagination>
 
   <div class="d-flex justify-content-start mb-5 mt-4">
-    <button class="btn btn-outline-secondary" routerLink="/admin">
-      &laquo; Back to Admin Menu
+    <button class="btn btn-outline-secondary" routerLink="/">
+      &laquo; Back to Home
     </button>
   </div>
 </div>

@@ -32,7 +32,7 @@ public class AdvancedSearchService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Room> searchRooms(String text, Integer minCapacity, Room.CampusType campus, Boolean active, int page,
+    public Page<Room> searchRooms(String text, Integer minCapacity, Long campusId, Boolean active, int page,
             int size) {
         SearchSession searchSession = Search.session(entityManager);
         SearchResult<Room> result = searchSession.search(Room.class)
@@ -42,8 +42,8 @@ public class AdvancedSearchService {
                     applyTextSearch(f, b, text, "name", "place", "software.name");
                     if (minCapacity != null)
                         b.must(f.range().field("capacity").atLeast(minCapacity));
-                    if (campus != null)
-                        b.must(f.match().field("Camp").matching(campus));
+                    if (campusId != null)
+                        b.must(f.match().field("campus.id").matching(campusId));
                 })).fetch(page * size, size);
 
         return new PageImpl<>(result.hits(), PageRequest.of(page, size), result.total().hitCount());

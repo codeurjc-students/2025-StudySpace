@@ -32,7 +32,7 @@ public class AdvancedSearchServiceTest {
 
     @Test
     public void testSearchRooms() {
-        Page<Room> resultFull = advancedSearchService.searchRooms("Lab", 20, Room.CampusType.MOSTOLES, true, 0, 10);
+        Page<Room> resultFull = advancedSearchService.searchRooms("Lab", 20, 1L, true, 0, 10);
         assertNotNull(resultFull, "The page must not be null");
 
         Page<Room> resultEmpty = advancedSearchService.searchRooms(null, null, null, null, 0, 10);

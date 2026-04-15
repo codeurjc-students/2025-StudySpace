@@ -137,7 +137,7 @@ public class RoomService {
     private void updateRoomBasicInfo(Room existing, Room updated) {
         existing.setName(updated.getName());
         existing.setCapacity(updated.getCapacity());
-        existing.setCamp(updated.getCamp());
+        existing.setCampus(updated.getCampus());
         existing.setPlace(updated.getPlace());
         existing.setCoordenades(updated.getCoordenades());
         existing.setActive(updated.isActive());
@@ -207,8 +207,8 @@ public class RoomService {
         if (partial.getCapacity() != null) {
             existing.setCapacity(partial.getCapacity());
         }
-        if (partial.getCamp() != null)
-            existing.setCamp(partial.getCamp());
+        if (partial.getCampus() != null)
+            existing.setCampus(partial.getCampus());
         if (partial.getPlace() != null)
             existing.setPlace(partial.getPlace());
         if (partial.getCoordenades() != null)
