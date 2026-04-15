@@ -4,7 +4,6 @@ import com.urjcservice.backend.entities.Room;
 import com.urjcservice.backend.entities.Software;
 import com.urjcservice.backend.dtos.RoomCalendarDTO;
 import com.urjcservice.backend.entities.Reservation;
-import com.urjcservice.backend.repositories.CampusRepository;
 import com.urjcservice.backend.repositories.ReservationRepository;
 import com.urjcservice.backend.repositories.RoomRepository;
 import com.urjcservice.backend.repositories.SoftwareRepository;
@@ -38,20 +37,17 @@ public class RoomService {
     private final ReservationRepository reservationRepository;
     private final EmailService emailService;
     private final FileStorageService fileStorageService;
-    private final CampusRepository campusRepository;
 
     public RoomService(RoomRepository roomRepository,
             SoftwareRepository softwareRepository,
             ReservationRepository reservationRepository,
             EmailService emailService,
-            FileStorageService fileStorageService,
-            CampusRepository campusRepository) {
+            FileStorageService fileStorageService) {
         this.roomRepository = roomRepository;
         this.softwareRepository = softwareRepository;
         this.reservationRepository = reservationRepository;
         this.emailService = emailService;
         this.fileStorageService = fileStorageService;
-        this.campusRepository = campusRepository;
     }
 
     public Page<Room> findAll(Pageable pageable) {

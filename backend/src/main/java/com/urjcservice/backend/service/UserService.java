@@ -6,6 +6,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +17,7 @@ import java.util.Arrays;
 
 @Service
 public class UserService {
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
     private final PasswordEncoder passwordEncoder;
 
     private final UserRepository userRepository;
@@ -143,7 +146,7 @@ public class UserService {
                     && user.getVerificationTokenExpiry().isBefore(LocalDateTime.now())) {
 
                 userRepository.delete(user);
-                System.out.println("Deleted unverified user: " + user.getEmail());
+                logger.info("Deleted unverified user: {}", user.getEmail());
             }
         });
     }

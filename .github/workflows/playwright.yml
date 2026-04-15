@@ -29,7 +29,7 @@ jobs:
       mysql-e2e:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: toor
+          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_PASSWORD }}
           MYSQL_DATABASE: study_space_e2e_db
           TZ: Europe/Madrid
         ports:
@@ -89,23 +89,19 @@ jobs:
           # DB Mysql(mysql-e2e on port 3307)
           SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3307/study_space_e2e_db
           SPRING_DATASOURCE_USERNAME: root
-          SPRING_DATASOURCE_PASSWORD: toor
+          SPRING_DATASOURCE_PASSWORD: ${{ secrets.DB_PASSWORD }}
 
           # Email ( mailhog on port 1025)
           SPRING_MAIL_HOST: localhost
           SPRING_MAIL_PORT: 1025
           SPRING_MAIL_USERNAME: test
-          SPRING_MAIL_PASSWORD: test
+          SPRING_MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
           SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: false
           SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: false
 
           #SSL (https)
-          SERVER_PORT: 8443
-          SERVER_SSL_ENABLED: true
-          SERVER_SSL_KEY_STORE: classpath:keystore.p12
-          SERVER_SSL_KEY_STORE_PASSWORD: password
-          SERVER_SSL_KEY_STORE_TYPE: PKCS12
-          SERVER_SSL_KEY_ALIAS: studyspace
+          SERVER_PORT: 8080
+          SERVER_SSL_ENABLED: false
         run: |
           nohup mvn spring-boot:run -Dspring-boot.run.profiles=test > backend.log 2>&1 &
         #nohup mvn spring-boot:run -Dspring-boot.run.profiles=test &
@@ -135,8 +131,8 @@ jobs:
       # Wait till backend
       - name: Wait for Backend to start
         run: |
-          echo "Waiting for the backend on port 8443..."
-          timeout 300 bash -c 'until curl --insecure --silent --cookie "dummy=1" https://localhost:8443/actuator/health > /dev/null; do sleep 5; done'
+          echo "Waiting for the backend on port 8080..."
+          timeout 300 bash -c 'until curl --silent http://127.0.0.1:8080/actuator/health > /dev/null; do sleep 5; done'
           echo "Backend operational!"
 
       # Frontend and test

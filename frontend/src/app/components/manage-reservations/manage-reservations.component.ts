@@ -177,43 +177,34 @@ export class ManageReservationsComponent implements OnInit {
     return !res.cancelled && end > now;
   }
 
-  performCancel(id: number) {
-    this.dialogService
-      .prompt(
-        'Cancel Reservation',
-        'Please enter the reason for cancellation (We will notify the user via email notification):',
-      )
-      .then((reason) => {
-        if (reason === null) return;
+  async performCancel(id: number) {
+    const reason = await this.dialogService.prompt(
+      'Cancel Reservation',
+      'Please enter the reason for cancellation (We will notify the user via email notification):',
+    );
 
-        this.dialogService
-          .confirm(
-            'Confirm Action',
-            'Are you sure you want to cancel this reservation?',
-          )
-          .then((confirmed) => {
-            if (confirmed) {
-              this.reservationService
-                .cancelReservationAdmin(id, reason)
-                .subscribe({
-                  next: () => {
-                    this.dialogService
-                      .alert(
-                        'Success',
-                        'Reservation successfully cancelled and user notified via email.',
-                      )
-                      .then(() => {
-                        this.loadReservations(this.currentPage);
-                      });
-                  },
-                  error: (err) => {
-                    console.error(err);
-                    this.dialogService.alert('Error', 'Cancellation error.');
-                  },
-                });
-            }
-          });
-      });
+    if (reason === null) return;
+
+    const confirmed = await this.dialogService.confirm(
+      'Confirm Action',
+      'Are you sure you want to cancel this reservation?',
+    );
+
+    if (!confirmed) return;
+
+    this.reservationService.cancelReservationAdmin(id, reason).subscribe({
+      next: async () => {
+        await this.dialogService.alert(
+          'Success',
+          'Reservation successfully cancelled and user notified via email.',
+        );
+        this.loadReservations(this.currentPage);
+      },
+      error: (err) => {
+        console.error(err);
+        this.dialogService.alert('Error', 'Cancellation error.');
+      },
+    });
   }
 
   onConfigChange(isInit: boolean = false) {

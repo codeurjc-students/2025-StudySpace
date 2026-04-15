@@ -6,7 +6,7 @@ import { SharedModalComponent } from '../components/shared-modal/shared-modal.co
   providedIn: 'root',
 })
 export class DialogService {
-  constructor(private modalService: NgbModal) {}
+  constructor(private readonly modalService: NgbModal) {}
 
   //alert()
   alert(title: string, message: string): Promise<any> {
