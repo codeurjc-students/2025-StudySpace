@@ -9,6 +9,8 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import software.amazon.awssdk.services.s3.S3Client;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,14 +24,15 @@ class FileStorageServiceTest {
     Path tempDir;
 
     private FileStorageService fileStorageService;
+    private S3Client s3ClientMock;
 
     @BeforeEach
     void setUp() {
-        fileStorageService = new FileStorageService();
+        s3ClientMock = mock(S3Client.class);
+        fileStorageService = new FileStorageService(s3ClientMock);
 
-        ReflectionTestUtils.setField(fileStorageService, "storageLocation", tempDir.toString());
+        ReflectionTestUtils.setField(fileStorageService, "bucketName", "test-bucket");
 
-        fileStorageService.init();
     }
 
     // --- TEST STORE (Save) ---
@@ -116,16 +119,6 @@ class FileStorageServiceTest {
         assertFalse(Files.exists(filePath), "El fichero debería haber sido eliminado");
     }
 
-    // --- TEST INIT ---
-
-    @Test
-    @DisplayName("Init should create directory if not exists")
-    void testInit() {
-
-        fileStorageService.init();
-        assertTrue(Files.exists(tempDir));
-    }
-
     @Test
     @DisplayName("Store should throw RuntimeException when IOException occurs")
     void testStore_Failure_IOException() throws IOException {
@@ -157,23 +150,4 @@ class FileStorageServiceTest {
         assertTrue(Files.exists(dirPath));
     }
 
-    @Test
-    @DisplayName("Init should throw RuntimeException if directory creation fails")
-    void testInit_Failure() throws IOException {
-        // GIVEN
-        String clashName = "im-a-file-not-a-dir";
-        Path existingFile = tempDir.resolve(clashName);
-        Files.createFile(existingFile);
-
-        FileStorageService serviceWithError = new FileStorageService();
-
-        ReflectionTestUtils.setField(serviceWithError, "storageLocation", existingFile.toString());
-
-        // WHEN & THEN
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> {
-            serviceWithError.init();
-        });
-
-        assertTrue(ex.getMessage().contains("The storage folder could not be initialized"));
-    }
 }
