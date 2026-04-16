@@ -4,6 +4,7 @@ import java.util.Date;
 
 import javax.crypto.SecretKey;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -12,14 +13,21 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 
 @Component
 public class JwtTokenProvider {
 
-	private final SecretKey jwtSecret = Jwts.SIG.HS256.key().build();
-	private final JwtParser jwtParser = Jwts.parser().verifyWith(jwtSecret).build();
+	private final SecretKey jwtSecret /* = Jwts.SIG.HS256.key().build() */;
+	private final JwtParser jwtParser /* = Jwts.parser().verifyWith(jwtSecret).build() */;
+
+	public JwtTokenProvider(
+			@Value("${jwt.secret:MiClaveSecretaSuperSeguraDeMasDe32CaracteresParaElTFG}") String secretString) {
+		this.jwtSecret = Keys.hmacShaKeyFor(secretString.getBytes());
+		this.jwtParser = Jwts.parser().verifyWith(this.jwtSecret).build();
+	}
 
 	public String tokenStringFromHeaders(HttpServletRequest req) {
 		String bearerToken = req.getHeader(HttpHeaders.AUTHORIZATION);

@@ -20,6 +20,12 @@ module.exports = {
     //dinamic dates for artillery
     context.vars.dynamicStartDate = testStartDate;
     context.vars.dynamicEndDate = testEndDate;
+    if (context.vars.email) {
+      context.vars.email = context.vars.email.trim();
+    }
+    if (context.vars.password) {
+      context.vars.password = context.vars.password.trim();
+    }
     return done();
   }
 };

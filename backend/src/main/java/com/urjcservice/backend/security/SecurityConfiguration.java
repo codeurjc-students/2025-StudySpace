@@ -60,6 +60,9 @@ public class SecurityConfiguration {
                         // Public
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/", "/error").permitAll()
+                        .requestMatchers("/index.html", "/*.js", "/*.css", "/*.ico", "/*.png", "/*.jpg", "/assets/**")
+                        .permitAll()
+                        .requestMatchers("/login", "/register", "/verify-email", "/forgot-password").permitAll()
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh").permitAll()
                         .requestMatchers("/api/auth/forgot-password", "/api/auth/reset-password").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/rooms/**").permitAll()

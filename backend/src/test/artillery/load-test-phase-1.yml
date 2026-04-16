@@ -1,0 +1,65 @@
+config:
+  target: "https://localhost/api"
+  tls:
+    rejectUnauthorized: false
+  processor: "./processor.js"
+  payload:
+    - path: "users.csv"
+      fields:
+        - "email"
+        - "password"
+      order: "random"
+      skipHeader: true
+  phases:
+    - duration: 15
+      arrivalRate: 2
+      name: "Warm up"
+    - duration: 30
+      arrivalRate: 5
+      name: "Sustained Load"
+  variables:
+    roomId: "1"
+    reason: "Concurrent stress test HAProxy"
+
+scenarios:
+  - name: "Concurrent Login and Reservation via HAProxy"
+    flow:
+      - function: "setupDates"
+      - log: "Attempting to log in with -> Email: {{ email }} | Pass: {{ password }}"
+
+      - post:
+          url: "/auth/login"
+          cookie:
+            dummy: "1"
+          json:
+            username: "{{ email }}"
+            password: "{{ password }}"
+          expect:
+            - statusCode: 200
+
+      - think: 1
+
+      - get:
+          url: "/auth/me"
+          expect:
+            - statusCode: 200
+
+      - get:
+          url: "/rooms"
+          expect:
+            - statusCode: 200
+
+      - think: 1
+
+      - post:
+          url: "/reservations"
+          json:
+            roomId: "{{ roomId }}"
+            startDate: "{{ dynamicStartDate }}"
+            endDate: "{{ dynamicEndDate }}"
+            reason: "{{ reason }}"
+          expect:
+            - statusCode: 201
+
+      - post:
+          url: "/auth/logout"

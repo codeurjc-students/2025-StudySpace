@@ -1,0 +1,49 @@
+version: "3.8"
+
+services:
+  # Load Balancer HAProxy
+  haproxy:
+    image: haproxy:2.8
+    container_name: haproxy_loadbalancer
+    ports:
+      - "443:443"
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      # certs for certificate
+      - ./certs:/etc/ssl/certs:ro
+    depends_on:
+      - study-space
+
+  study-space:
+    build:
+      context: ../ # root of the project
+      dockerfile: docker/Dockerfile
+    expose:
+      - "8080" # port for docker
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/study_space_db?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-toor}
+      JWT_SECRET: ${JWT_SECRET_KEY:-una_clave_secreta_muy_larga_por_defecto_para_desarrollo}
+
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      NORMAL_PASSWORD: ${NORMAL_PASSWORD}
+      SUPERADMIN_PASSWORD: ${SUPERADMIN_PASSWORD}
+    volumes:
+      - shared_uploads:/app/uploads
+    deploy:
+      replicas: 3 # 3 containersof the same app
+
+  # Database MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: study_space_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-toor}
+      MYSQL_DATABASE: study_space_db
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
+  shared_uploads:
