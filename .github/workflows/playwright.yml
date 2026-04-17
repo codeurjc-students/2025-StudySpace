@@ -102,6 +102,11 @@ jobs:
           #SSL (https)
           SERVER_PORT: 8080
           SERVER_SSL_ENABLED: false
+
+          MINIO_URL: http://127.0.0.1:9000
+          MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY  }}
+          MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY  }}
+
         run: |
           nohup mvn spring-boot:run -Dspring-boot.run.profiles=test > backend.log 2>&1 &
         #nohup mvn spring-boot:run -Dspring-boot.run.profiles=test &

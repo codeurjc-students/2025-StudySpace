@@ -172,7 +172,7 @@ Abre otra terminal, dirígete a la carpeta donde están los tests de carga (dent
 Si no quieres usar la clave de Artillery Cloud, puedes ejecutar los tests sin ella y no ver reporte visual alguno con:
 
 ```bash
-artillery run load-test-phase-0.yml
+artillery run load-test-phase-1.yml
 ```
 
 Si quieres ver el reporte visual:
@@ -192,7 +192,7 @@ export ARTILLERY_CLOUD_API_KEY="LA_CLAVE_AQUI"
 Una vez configurada la clave en la sesión actual de la terminal, ejecuta el test indicando que grabe los resultados con el flag --record:
 
 ```bash
-artillery run --record load-test-phase-0.yml
+artillery run --record load-test-phase-1.yml
 ```
 
 Al finalizar la prueba, la consola imprimirá un Run URL (ej. https://app.artillery.io/...). Haz clic en ese enlace o cópialo en tu navegador para acceder al reporte interactivo, donde podrás analizar gráficas detalladas de latencia, distribución de códigos HTTP y rendimiento bajo estrés.
@@ -200,5 +200,5 @@ Al finalizar la prueba, la consola imprimirá un Run URL (ej. https://app.artill
 Finalmente, puedes apagar el backend (con Ctrl+C). Luego apaga la infraestructura:
 
 ```bash
-docker-compose -f docker-compose.e2e.yml down
+docker-compose -f docker-compose.e2e.yml down -v
 ```

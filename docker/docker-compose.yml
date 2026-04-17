@@ -1,7 +1,46 @@
 version: "3.8"
 
 services:
-  #MySQL
+  # Load Balancer HAProxy
+  haproxy:
+    image: haproxy:2.8
+    container_name: haproxy_loadbalancer
+    restart: always
+    ports:
+      - "443:443"
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./certs:/etc/ssl/certs:ro
+    depends_on:
+      - study-space
+
+  study-space:
+    image: ${DOCKER_USERNAME}/studyspace-app:${TAG:-latest}
+    restart: always
+    expose:
+      - "8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/study_space_db?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET_KEY}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      NORMAL_PASSWORD: ${NORMAL_PASSWORD}
+      SUPERADMIN_PASSWORD: ${SUPERADMIN_PASSWORD}
+
+      MINIO_URL: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET: studyspace-images
+    deploy:
+      replicas: 3
+    depends_on:
+      mysql:
+        condition: service_healthy
+      minio:
+        condition: service_started
+
+  # Database MySQL
   mysql:
     image: mysql:8.0
     container_name: study_space_mysql
@@ -9,8 +48,6 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: study_space_db
-      TZ: Europe/Madrid
-
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -18,44 +55,37 @@ services:
       timeout: 20s
       retries: 10
 
-  # Backend (Spring Boot)
-  backend:
-    image: ${DOCKER_USERNAME}/studyspace-backend:${TAG:-latest}
-    container_name: study_space_backend
+  minio:
+    image: minio/minio
+    container_name: study_space_minio
     restart: always
-
-    depends_on:
-      mysql:
-        condition: service_healthy
     environment:
-      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 50
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/study_space_db
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      MAIL_PASSWORD: ${MAIL_PASSWORD}
-      NORMAL_PASSWORD: ${NORMAL_PASSWORD}
-      SUPERADMIN_PASSWORD: ${SUPERADMIN_PASSWORD}
-
-      SERVER_PORT: 8080
-
-      TZ: Europe/Madrid
-      JAVA_TOOL_OPTIONS: "-Duser.timezone=Europe/Madrid"
-
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    command: server /data --console-address ":9001"
+    expose:
+      - "9000"
+      - "9001"
     volumes:
-      - ../backend/uploads:/app/uploads
+      - minio_data:/data
 
-  # Frontend (Angular)
-  frontend:
-    image: ${DOCKER_USERNAME}/studyspace-frontend:${TAG:-latest}
-    container_name: study_space_frontend
-    restart: always
-    ports:
-      - "443:443"
-    volumes:
-      - ../frontend/certs:/etc/nginx/certs
-      - ../backend/uploads:/usr/share/nginx/html/uploads
+  minio-setup:
+    image: minio/mc
+    container_name: study_space_minio_setup
     depends_on:
-      - backend
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      echo 'Waiting for MinIO to start...';
+      until /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY}; do
+        sleep 2;
+      done;
+      echo 'MinIO done. Configuring bucket...';
+      /usr/bin/mc mb myminio/studyspace-images --ignore-existing;
+      /usr/bin/mc anonymous set download myminio/studyspace-images;
+      exit 0;
+      "
 
 volumes:
   mysql_data:
+  minio_data:

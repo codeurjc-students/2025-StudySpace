@@ -3,42 +3,45 @@ package com.urjcservice.backend.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
-
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class FileStorageServiceTest {
 
-    @TempDir
-    Path tempDir;
-
     private FileStorageService fileStorageService;
     private S3Client s3ClientMock;
+    private final String bucketName = "test-bucket";
 
     @BeforeEach
     void setUp() {
         s3ClientMock = mock(S3Client.class);
         fileStorageService = new FileStorageService(s3ClientMock);
 
-        ReflectionTestUtils.setField(fileStorageService, "bucketName", "test-bucket");
-
+        // Inject the bucket name using reflection since it's populated by @Value
+        ReflectionTestUtils.setField(fileStorageService, "bucketName", bucketName);
     }
 
     // --- TEST STORE (Save) ---
 
     @Test
-    @DisplayName("Store should save the file in the directory")
+    @DisplayName("Store should upload the file to S3/MinIO")
     void testStoreFile_Success() throws IOException {
         // GIVEN
         String filename = "test-image.jpg";
@@ -53,12 +56,10 @@ class FileStorageServiceTest {
 
         // THEN
         assertNotNull(storedFilename);
+        assertTrue(storedFilename.endsWith("_" + filename));
 
-        // file exists
-        Path expectedPath = tempDir.resolve(storedFilename);
-        assertTrue(Files.exists(expectedPath), "El fichero debería existir en el disco");
-
-        assertArrayEquals("fake-image-content".getBytes(), Files.readAllBytes(expectedPath));
+        // Verify that s3Client.putObject was called exactly once with any RequestBody
+        verify(s3ClientMock, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
     }
 
     @Test
@@ -68,20 +69,47 @@ class FileStorageServiceTest {
         MockMultipartFile emptyFile = new MockMultipartFile("file", "", "image/jpeg", new byte[0]);
 
         // WHEN & THEN
-        assertThrows(RuntimeException.class, () -> {
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             fileStorageService.store(emptyFile);
+        });
+        assertEquals("Error: empty file.", exception.getMessage());
+
+        // Verify s3 was never called
+        verify(s3ClientMock, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+    }
+
+    @Test
+    @DisplayName("Store should throw IllegalStateException when IOException occurs")
+    void testStore_Failure_IOException() throws IOException {
+        // GIVEN
+        MultipartFile mockFile = mock(MultipartFile.class);
+
+        when(mockFile.isEmpty()).thenReturn(false);
+        when(mockFile.getOriginalFilename()).thenReturn("fail.txt");
+        // Simulate an IO error when reading the file stream
+        when(mockFile.getInputStream()).thenThrow(new IOException("Simulated Stream Error"));
+
+        // WHEN & THEN
+        assertThrows(IllegalStateException.class, () -> {
+            fileStorageService.store(mockFile);
         });
     }
 
     // --- TEST LOAD ---
 
     @Test
-    @DisplayName("LoadAsResource should return a readable resource")
+    @DisplayName("LoadAsResource should return an InputStreamResource from S3")
     void testLoadAsResource_Success() throws IOException {
         // GIVEN
         String filename = "manual-file.txt";
-        Path filePath = tempDir.resolve(filename);
-        Files.writeString(filePath, "Contenido de prueba");
+        byte[] fakeData = "Contenido de prueba".getBytes();
+
+        // Mock the response from S3
+        ResponseInputStream<GetObjectResponse> mockS3Response = new ResponseInputStream<>(
+                GetObjectResponse.builder().build(),
+                new ByteArrayInputStream(fakeData));
+
+        when(s3ClientMock.getObject(any(GetObjectRequest.class))).thenReturn(mockS3Response);
 
         // WHEN
         Resource resource = fileStorageService.loadAsResource(filename);
@@ -89,14 +117,20 @@ class FileStorageServiceTest {
         // THEN
         assertNotNull(resource);
         assertTrue(resource.exists());
-        assertTrue(resource.isReadable());
+
+        // Verify S3 client was called to get the object
+        verify(s3ClientMock, times(1)).getObject(any(GetObjectRequest.class));
     }
 
     @Test
-    @DisplayName("LoadAsResource should throw exception or fail if file not found")
+    @DisplayName("LoadAsResource should throw exception if S3 throws an error")
     void testLoadAsResource_NotFound() {
+        // GIVEN
+        when(s3ClientMock.getObject(any(GetObjectRequest.class)))
+                .thenThrow(S3Exception.builder().message("File not found").build());
+
         // WHEN & THEN
-        Exception exception = assertThrows(RuntimeException.class, () -> {
+        assertThrows(IllegalArgumentException.class, () -> {
             fileStorageService.loadAsResource("no-existe.txt");
         });
     }
@@ -104,50 +138,34 @@ class FileStorageServiceTest {
     // --- TEST DELETE ---
 
     @Test
-    @DisplayName("Delete should remove the file")
-    void testDelete_Success() throws IOException {
+    @DisplayName("Delete should call S3 deleteObject")
+    void testDelete_Success() {
         // GIVEN
         String filename = "borrame.txt";
-        Path filePath = tempDir.resolve(filename);
-        Files.createFile(filePath);
-        assertTrue(Files.exists(filePath));
 
         // WHEN
         fileStorageService.delete(filename);
 
         // THEN
-        assertFalse(Files.exists(filePath), "El fichero debería haber sido eliminado");
+        // Verify that s3Client.deleteObject was called exactly once
+        verify(s3ClientMock, times(1)).deleteObject(any(DeleteObjectRequest.class));
     }
 
     @Test
-    @DisplayName("Store should throw RuntimeException when IOException occurs")
-    void testStore_Failure_IOException() throws IOException {
+    @DisplayName("Delete should not throw exception even if S3 fails (catches exception)")
+    void testDelete_Failure_Handled() {
         // GIVEN
-        MultipartFile mockFile = mock(MultipartFile.class);
+        String filename = "file-that-causes-error.txt";
 
-        when(mockFile.isEmpty()).thenReturn(false);
-        when(mockFile.getOriginalFilename()).thenReturn("fail.txt");
-        when(mockFile.getInputStream()).thenThrow(new IOException("Simulated Disk Error"));
+        // Simulate S3 throwing an error when trying to delete
+        doThrow(S3Exception.builder().message("Simulated S3 Error").build())
+                .when(s3ClientMock).deleteObject(any(DeleteObjectRequest.class));
 
         // WHEN & THEN
-        assertThrows(RuntimeException.class, () -> {
-            fileStorageService.store(mockFile);
-        });
+        // Your code catches the exception and logs it, so it should NOT throw to the
+        // caller
+        assertDoesNotThrow(() -> fileStorageService.delete(filename));
+
+        verify(s3ClientMock, times(1)).deleteObject(any(DeleteObjectRequest.class));
     }
-
-    @Test
-    @DisplayName("Delete should catch IOException (e.g., trying to delete non-empty dir)")
-    void testDelete_Failure_IOException() throws IOException {
-        // GIVEN
-        String dirName = "folder-with-data";
-        Path dirPath = tempDir.resolve(dirName);
-        Files.createDirectory(dirPath);
-        Files.createFile(dirPath.resolve("child.txt"));
-
-        // WHEN & THEN
-        assertDoesNotThrow(() -> fileStorageService.delete(dirName));
-
-        assertTrue(Files.exists(dirPath));
-    }
-
 }

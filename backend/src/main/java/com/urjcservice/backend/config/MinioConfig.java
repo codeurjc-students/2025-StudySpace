@@ -13,13 +13,13 @@ import java.net.URI;
 @Configuration
 public class MinioConfig {
 
-    @Value("${MINIO_URL}")
+    @Value("${minio.url}")
     private String minioUrl;
 
-    @Value("${MINIO_ACCESS_KEY}")
+    @Value("${minio.access-key}")
     private String accessKey;
 
-    @Value("${MINIO_SECRET_KEY}")
+    @Value("${minio.secret-key}")
     private String secretKey;
 
     @Bean
