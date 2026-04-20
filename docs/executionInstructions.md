@@ -9,6 +9,9 @@ Para poder levantar el entorno de desarrollo y ejecutar las pruebas, es necesari
 - Node.js (v18+) y su gestor de paquetes npm.
 - Angular CLI (para la ejecución de pruebas del frontend con ng).
 
+En caso de querer únicamente ejecutar la aplicación, bastará con tener Docker Desktop instalado y en ejecución, y solo requerirá de descargar la carpeta docker del proyecto, sin necesidad de instalar Java, Node o Angular CLI, ya que la aplicación se ejecuta completamente dentro de contenedores Docker.
+De no ser este el caso siga con los pasos a continuación.
+
 ---
 
 ### Clonado del repositorio
@@ -24,13 +27,13 @@ cd 2025-StudySpace
 
 > **Nota importante: Certificado SSL**
 >
-> Debido a que la aplicación utiliza un **certificado SSL auto-firmado**, el navegador bloqueará por defecto la visualizacion y acceso a la aplicación, a menos que se acepte el riesgo inicialemnete.
+> Debido a que la aplicación utiliza un **certificado SSL auto-firmado**, el navegador bloqueará por defecto la visualización y acceso a la aplicación, a menos que se acepte el riesgo inicialmente.
 >
 > Este paso es fundamental para que se muestre la aplicación, al no confiar en el certificado por ser auto-firmado.
 
 ### Levantar el entorno con Docker
 
-En la carpeta docker del proyecto, ejecutar los siguientes comandos para levantar el entorno con Docker, asegurandonos de que Docker Desktop/Engine está arrancado:
+En la carpeta docker del proyecto, ejecutar los siguientes comandos para levantar el entorno con Docker, asegurándonos de que Docker Desktop/Engine está arrancado:
 
 ```bash
 docker-compose pull
@@ -80,7 +83,7 @@ Dentro de la carpeta `frontend`, ejecutar (Si no tienes los node_modules instala
 npm install
 ```
 
-Antes de probar los test para instalar las dependencias necesarias.
+Antes de probar los tests para instalar las dependencias necesarias.
 
 Para estos test ejecutar en la misma carpeta frontend:
 
@@ -119,7 +122,7 @@ Y dentro de la carpeta `frontend`, ejecutamos:
 npm start
 ```
 
-Si aun no tienes los node_modules instalados, ejecuta `npm install` antes de `npm start`.
+Si aún no tienes los node_modules instalados, ejecuta `npm install` antes de `npm start`.
 
 Como último paso, realizamos las pruebas E2E con Playwright, en la carpeta `frontend`, ejecutamos:
 
@@ -159,6 +162,14 @@ Levanta la infraestructura E2E (Base de datos de pruebas H2 y MailHog):
 docker-compose -f docker-compose.e2e.yml up -d
 ```
 
+> Si vas a ejecutar la prueba de carga de la fase 1 esta se realiza directamente sobre el docker-compose de desarrollo, no sobre el e2e, ya que prueba que el balanceador de carga funcione correctamente. Para ello deberá ejecutar:
+>
+> ```bash
+> docker-compose -f docker-compose-dev.yml up -d --build
+> ```
+>
+> Luego sáltese el paso de levantar el backend en local, ya que el docker-compose-dev.yml ya levanta la aplicación con 3 réplicas.
+
 Dentro de la carpeta `backend`, ejecutamos el servidor con el perfil de pruebas:
 
 ```bash
@@ -172,11 +183,11 @@ Abre otra terminal, dirígete a la carpeta donde están los tests de carga (dent
 Si no quieres usar la clave de Artillery Cloud, puedes ejecutar los tests sin ella y no ver reporte visual alguno con:
 
 ```bash
-artillery run load-test-phase-0.yml
+artillery run load-test-phase-1.yml
 ```
 
 Si quieres ver el reporte visual:
-Pasale la clave de Artillery Cloud como variable de entorno (por seguridad, esta clave se inyecta como variable de entorno).
+Pásale la clave de Artillery Cloud como variable de entorno (por seguridad, esta clave se inyecta como variable de entorno).
 En PowerShell, ejecuta:
 
 ```bash
@@ -192,7 +203,7 @@ export ARTILLERY_CLOUD_API_KEY="LA_CLAVE_AQUI"
 Una vez configurada la clave en la sesión actual de la terminal, ejecuta el test indicando que grabe los resultados con el flag --record:
 
 ```bash
-artillery run --record load-test-phase-0.yml
+artillery run --record load-test-phase-1.yml
 ```
 
 Al finalizar la prueba, la consola imprimirá un Run URL (ej. https://app.artillery.io/...). Haz clic en ese enlace o cópialo en tu navegador para acceder al reporte interactivo, donde podrás analizar gráficas detalladas de latencia, distribución de códigos HTTP y rendimiento bajo estrés.
@@ -200,5 +211,11 @@ Al finalizar la prueba, la consola imprimirá un Run URL (ej. https://app.artill
 Finalmente, puedes apagar el backend (con Ctrl+C). Luego apaga la infraestructura:
 
 ```bash
-docker-compose -f docker-compose.e2e.yml down
+docker-compose -f docker-compose.e2e.yml down -v
 ```
+
+> O con el docker-compose de desarrollo si has levantado ese entorno:
+>
+> ```bash
+> docker-compose -f docker-compose-dev.yml down -v
+> ```

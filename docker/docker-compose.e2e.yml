@@ -5,10 +5,42 @@ services:
     image: mysql:8.0
     container_name: study_space_mysql_e2e
     environment:
-      MYSQL_ROOT_PASSWORD: toor
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-toor}
       MYSQL_DATABASE: study_space_e2e_db
     ports:
       - "3307:3306" # port 3307 to not collide with local data base
+    volumes:
+      - mysql_data_e2e:/var/lib/mysql
+
+  minio:
+    image: minio/minio
+    container_name: study_space_minio_e2e
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadminpassword}
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data_e2e:/data
+
+  minio-setup:
+    image: minio/mc
+    container_name: study_space_minio_setup_e2e
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      echo 'Waiting for MinIO to start...';
+      until /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ACCESS_KEY:-minioadmin} ${MINIO_SECRET_KEY:-minioadminpassword}; do
+        sleep 2;
+      done;
+      echo 'MinIO done. Configuring bucket...';
+      /usr/bin/mc mb myminio/studyspace-images --ignore-existing;
+      /usr/bin/mc anonymous set download myminio/studyspace-images;
+      exit 0;
+      "
 
   mailhog:
     image: mailhog/mailhog
@@ -16,3 +48,6 @@ services:
     ports:
       - "1025:1025"
       - "8025:8025"
+volumes:
+  mysql_data_e2e:
+  minio_data_e2e:

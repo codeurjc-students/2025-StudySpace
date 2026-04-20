@@ -12,8 +12,7 @@ on:
   workflow_dispatch:
 
 env:
-  DOCKER_IMAGE_BACKEND: ${{ secrets.DOCKER_USERNAME }}/studyspace-backend
-  DOCKER_IMAGE_FRONTEND: ${{ secrets.DOCKER_USERNAME }}/studyspace-frontend
+  DOCKER_IMAGE_APP: ${{ secrets.DOCKER_USERNAME }}/studyspace-app
   DOCKER_IMAGE_CONFIG: ${{ secrets.DOCKER_USERNAME }}/studyspace-compose
 
 jobs:
@@ -41,14 +40,12 @@ jobs:
             VERSION=${{ github.event.release.tag_name }}
             VERSION=${VERSION#v}
             
-            echo "TAGS_BACKEND=${{ env.DOCKER_IMAGE_BACKEND }}:${VERSION},${{ env.DOCKER_IMAGE_BACKEND }}:latest" >> $GITHUB_ENV
-            echo "TAGS_FRONTEND=${{ env.DOCKER_IMAGE_FRONTEND }}:${VERSION},${{ env.DOCKER_IMAGE_FRONTEND }}:latest" >> $GITHUB_ENV
+            echo "TAGS_APP=${{ env.DOCKER_IMAGE_APP }}:${VERSION},${{ env.DOCKER_IMAGE_APP }}:latest" >> $GITHUB_ENV
             echo "TAG_OCI=${VERSION}" >> $GITHUB_ENV
             echo "IS_RELEASE=true" >> $GITHUB_ENV
 
           elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "TAGS_BACKEND=${{ env.DOCKER_IMAGE_BACKEND }}:dev" >> $GITHUB_ENV
-            echo "TAGS_FRONTEND=${{ env.DOCKER_IMAGE_FRONTEND }}:dev" >> $GITHUB_ENV
+            echo "TAGS_APP=${{ env.DOCKER_IMAGE_APP }}:dev" >> $GITHUB_ENV
             echo "TAG_OCI=dev" >> $GITHUB_ENV
             echo "IS_RELEASE=false" >> $GITHUB_ENV
 
@@ -59,41 +56,21 @@ jobs:
             SAFE_BRANCH=$(echo $BRANCH_NAME | tr / -)
             CUSTOM_TAG="${SAFE_BRANCH}-${TIMESTAMP}-${SHORT_SHA}"
             
-            echo "TAGS_BACKEND=${{ env.DOCKER_IMAGE_BACKEND }}:${CUSTOM_TAG}" >> $GITHUB_ENV
-            echo "TAGS_FRONTEND=${{ env.DOCKER_IMAGE_FRONTEND }}:${CUSTOM_TAG}" >> $GITHUB_ENV
+            echo "TAGS_APP=${{ env.DOCKER_IMAGE_APP }}:${CUSTOM_TAG}" >> $GITHUB_ENV
             echo "TAG_OCI=${CUSTOM_TAG}" >> $GITHUB_ENV
             echo "IS_RELEASE=false" >> $GITHUB_ENV
           fi
 
-      - name: Build and push Backend
+      - name: Build and push Unified App
         uses: docker/build-push-action@v5
         with:
-          context: ./backend
-          file: ./backend/Dockerfile
+          context: .
+          file: ./docker/Dockerfile
           push: true
-          tags: ${{ env.TAGS_BACKEND }}
+          tags: ${{ env.TAGS_APP }}
 
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Build and push Frontend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
-          file: ./frontend/Dockerfile
-          push: true
-          tags: ${{ env.TAGS_FRONTEND }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Prepare Docker Compose for Artifact
-        run: |
-          sed -i 's|build: ./backend|image: ${{ env.DOCKER_IMAGE_BACKEND }}:${{ env.TAG_OCI }}|g' docker/docker-compose.yml
-
-          sed -i 's|build: ./frontend|image: ${{ env.DOCKER_IMAGE_FRONTEND }}:${{ env.TAG_OCI }}|g' docker/docker-compose.yml
-
-          #shows file for logs
-          cat docker/docker-compose.yml
 
       - name: Package Docker Compose as OCI Artifact
         run: |
