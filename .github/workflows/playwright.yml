@@ -94,7 +94,7 @@ jobs:
 
       - name: Setup MinIO Bucket
         run: |
-          docker run --rm --network host minio/mc sh -c "\
+          docker run --rm --network host --entrypoint sh minio/mc -c "\
           mc alias set myminio http://127.0.0.1:9000 minioadmin minioadminpassword && \
           mc mb myminio/studyspace-images --ignore-existing && \
           mc anonymous set download myminio/studyspace-images"
