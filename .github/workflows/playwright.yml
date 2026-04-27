@@ -47,6 +47,16 @@ jobs:
           - 1025:1025 # SMTP (backend send)
           - 8025:8025 # API Web port(for emails)
 
+      minio:
+        image: minio/minio
+        ports:
+          - 9000:9000
+          - 9001:9001
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadminpassword
+        command: server /data --console-address ":9001"
+
     steps:
       - uses: actions/checkout@v4
 
@@ -81,6 +91,13 @@ jobs:
             -storetype PKCS12 -keystore backend/src/main/resources/keystore.p12 \
             -validity 3650 -storepass password -keypass password \
             -dname "CN=localhost, OU=StudySpace, O=URJC, L=Madrid, S=Madrid, C=ES"
+
+      - name: Setup MinIO Bucket
+        run: |
+          docker run --rm --network host --entrypoint sh minio/mc -c "\
+          mc alias set myminio http://127.0.0.1:9000 minioadmin minioadminpassword && \
+          mc mb myminio/studyspace-images --ignore-existing && \
+          mc anonymous set download myminio/studyspace-images"
 
       #backend
       - name: Start Backend
