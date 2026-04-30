@@ -15,18 +15,18 @@ config:
       arrivalRate: 2
       name: "Warm up"
     - duration: 30
-      arrivalRate: 3
-      name: "Sustained Load"
+      arrivalRate: 2
+      name: "Sustained Heavy Load"
   variables:
     roomId: "1"
-    reason: "Concurrent stress test HAProxy"
 
 scenarios:
-  - name: "Concurrent Login and Reservation via HAProxy"
+  - name: "Heavy Processing Flow (Search, Stats, Smart-Search, Calendar)"
     flow:
       - function: "setupDates"
-      - log: "Attempting to log in with -> Email: {{ email }} | Pass: {{ password }}"
+      - log: "Heavy Load VU executing -> Email: {{ email }}"
 
+      # 1. Login
       - post:
           url: "/auth/login"
           cookie:
@@ -39,27 +39,32 @@ scenarios:
 
       - think: 1
 
+      # 2. Stats
       - get:
-          url: "/auth/me"
+          url: "/stats"
           expect:
             - statusCode: 200
 
+      # 3. Advance search (Hibernate Search - Full Text)
       - get:
-          url: "/rooms"
+          url: "/search/rooms?text=a&minCapacity=5"
           expect:
             - statusCode: 200
 
       - think: 1
 
-      - post:
-          url: "/reservations"
-          json:
-            roomId: "{{ roomId }}"
-            startDate: "{{ dynamicStartDate }}"
-            endDate: "{{ dynamicEndDate }}"
-            reason: "{{ reason }}"
+      # 4. Smart Search (Haversine and overlapping)
+      - get:
+          url: "/reservations/smart-search?start={{ encodedStartDate }}&end={{ encodedEndDate }}&minCapacity=2"
           expect:
-            - statusCode: 201
+            - statusCode: 200
 
+      # 5. Calendar
+      - get:
+          url: "/rooms/{{ roomId }}/calendar?start={{ encodedStartDate }}&end={{ encodedEndDate }}"
+          expect:
+            - statusCode: 200
+
+      # 6. Logout
       - post:
           url: "/auth/logout"

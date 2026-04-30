@@ -70,28 +70,69 @@ Esta prueba establece una línea base atacando directamente a una única instanc
 
 - Conclusiones de la prueba: La aplicación maneja correctamente la concurrencia a nivel de base de datos, permitiendo solo una reserva exitosa y rechazando las demás. Sin embargo, el tiempo de respuesta p95 de 433ms indica que bajo esta carga, la aplicación puede experimentar cierta latencia, lo que sugiere que la arquitectura monolítica sin balanceo de carga puede no ser óptima para manejar cargas más altas.
 
-### Fase 1(load-test-phase-1): Prueba de carga y concurrencia local sostenida en arquitectura distribuida (con balanceador de carga)
+### Fase 1A(load-test-phase-1): Prueba de carga y concurrencia local sostenida en arquitectura distribuida (con balanceador de carga)
 
 Esta prueba evalúa la aplicación contenerizada completa (el docker-compose-dev.yml para desarrollo), atacando al balanceador de carga HAProxy (https://localhost/api) que funciona con un Round Robin gestionando las 3 replicas de la aplicación.
 
 - Configuración de carga:
   - Fase de calentamiento (Warm up): 15 segundos a 2 UVs/seg.
 
-  - Fase de carga sostenida: 30 segundos a 5 UVs/seg.
+  - Fase de carga sostenida: 30 segundos a 3 UVs/seg(se tuvo que bajar de 5UV/seg a 3UV/seg debido a que si no la CPU no daba a basto a tantas peticiones y algunas fallarian por ETIMEDOUT, y aun a pesar de este ajuste solo los test iniciales que se realizan estan libres de ETIMEDOUT por lo que esta es la cifra limite de aforo para la aplicación en local).
 
-  - Total generado: 180 Usuarios.
+  - Total generado: 120 Usuarios.
 
 - Algoritmo de Balanceo: Dynamic Round Robin.
 
-- Resultados Esperados: El sistema debe distribuir la carga entre las 3 réplicas del backend, manteniendo tiempos de respuesta razonables. De las 180 peticiones concurrentes para reservar la misma sala, se espera obtener exactamente un código HTTP 201 (reserva exitosa) y 179 códigos HTTP 400 (rechazo por concurrencia), demostrando que el bloqueo de la base de datos sigue funcionando correctamente incluso bajo una carga más alta y distribuida.
+- Resultados Esperados: El sistema debe distribuir la carga entre las 3 réplicas del backend, manteniendo tiempos de respuesta razonables. De las 120 peticiones concurrentes para reservar la misma sala, se espera obtener exactamente un código HTTP 201 (reserva exitosa) y 119 códigos HTTP 400 (rechazo por concurrencia), demostrando que el bloqueo de la base de datos sigue funcionando correctamente incluso bajo una carga más alta y distribuida.
 
 - Resultados de ejecución:
-  - Completados: 174 UVs completados con éxito. Hubo 6 fallos menores por ETIMEDOUT (3.3%), algo esperado al saturar la red interna de Docker en localhost y no disponer de más recursos para estos 6 usuarios.
-  - Tiempos de respuesta: Mediana (p50) de 35ms y un p95 de 162ms.
+  - Completados: 118 UVs completados con éxito. Hubo 2 fallos menores por ETIMEDOUT (1.67%), algo esperado al saturar la red interna de Docker en localhost y no disponer de más recursos para estos 2 usuarios mostrando que el umbral tolerable para mi aplicación esta en 3 usuarios por segundo ya que pruebas más alla de eso generan muchos más usuarios con errores ETIMEDOUT y con 3 usuarios por segundo el primer test que se corre de artillery es capaz de pasar completamente limpio y al segundo ya comienzan a aparecer errores de ETIMEDOUT.
+  - Tiempos de respuesta: Mediana (p50) de 34ms y un p95 de 105ms.
 
   - Captura de pantalla de Artillery Cloud de este test:
 
-    ![Captura resultados test 1 de artillery](../images/screenshots-artillery/load-test-phase-1.png)
+    ![Captura resultados test 1A de artillery](../images/screenshots-artillery/load-test-phase-1.png)
+    [Enlace al reporte completo en Artillery Cloud](https://app.artillery.io/opmgtbvasi7hy/load-tests/tdqza_e6dxacbw3rc3bka5p7bjckrdg5dy7_3emn)
+
+  - Captura de pantalla de Artillery Cloud de este test con mas usuarios por segundo para mostrar la diferencia y el aforo limite de la aplicación en local para este test:
+
+    ![Captura resultados test 1A de artillery](../images/screenshots-artillery/load-test-phase-1A-primero.png)
     [Enlace al reporte completo en Artillery Cloud](https://app.artillery.io/opmgtbvasi7hy/load-tests/tyttk_hcf64ykt5a67dhz9y7r56xk89c8cw_9j6b)
 
-- Conclusiones de la prueba: A pesar de inyectar más del triple de usuarios virtuales que en la Fase 0, la arquitectura distribuida redujo el tiempo de respuesta p95 de 433ms a 162ms. Nuevamente, la regla de concurrencia se mantuvo sólida: 1 única reserva exitosa (HTTP 201) y 173 rechazos controlados (HTTP 400).
+- Conclusiones de la prueba: A pesar de inyectar más del doble de usuarios virtuales que en la Fase 0, la arquitectura distribuida redujo el tiempo de respuesta p95 de 433ms a 162ms. Nuevamente, la regla de concurrencia se mantuvo sólida: 1 única reserva exitosa (HTTP 201) y 117 rechazos controlados (HTTP 400).
+
+### Fase 1B(load-test-phase-1-heavy): Prueba de carga de procesamiento intensivo en entorno local
+
+Tras validar la concurrencia y el limite de usuarios por segundo en local en mi máquina en la prueba anterior(1A), esta prueba busca estresar la CPU y la base de datos mediante endpoints que requieren cálculos complejos, búsquedas avanzadas y agregaciones de datos.
+Con el fin de evaluar el rendimiento de la arquitectura ante lógica de negocio costosa aprovechando propiedades de la aplicación como:
+
+- Hibernate Search: Búsquedas difusas (fuzzy search) y full-text.
+
+- Cálculos geográficos: Uso de la fórmula de Haversine para distancias entre campus.
+
+- Generación de mapas de calor: Procesamiento iterativo de calendarios y disponibilidad.
+
+- Estadísticas dinámicas: Agregaciones en tiempo real de la ocupación.
+
+- Configuración de carga:
+  - Fase de calentamiento: 15 segundos a 2 UV/seg.
+
+  - Fase de carga sostenida: 30 segundos a 2 UV/seg(se tuvo que bajar de 3UV/seg a 2UV/seg debido a que si no la CPU no daba a basto a tantas peticiones).
+
+  - Total generado: 90 Usuarios (flujo completo de 6 peticiones pesadas por usuario).
+
+- Algoritmo de Balanceo: Dynamic Round Robin.
+
+- Resultados Esperados: El sistema debe gestionar la carga de procesamiento intensivo sin degradar significativamente los tiempos de respuesta. Se espera que el sistema mantenga,aunque sean superiores, unos tiempos de respuesta razonables no muy distantes a los obtenidos en la prueba 1A, demostrando que la arquitectura puede manejar operaciones complejas incluso bajo carga.
+
+- Resultados de ejecución:
+  - Completados: 90 UVs (100% de éxito).
+
+  - Tiempos de respuesta: Mediana (p50) de 34ms y un p95 de 116ms. A pesar de la complejidad de los cálculos (Smart Search y Calendar), la distribución en 3 réplicas permite mantener latencias por debajo de los 100ms para el 95% de los usuarios.
+
+  - Captura de pantalla de Artillery Cloud de este test:
+
+    ![Captura resultados test 1B de artillery](../images/screenshots-artillery/load-test-phase-1-heavy.png)
+    [Enlace al reporte completo en Artillery Cloud](https://app.artillery.io/opmgtbvasi7hy/load-tests/txe97_jxk3jxxjr8ht4q6cnf43xggqewz7p_t448)
+
+Conclusiones de la prueba: La aplicación demuestra una alta capacidad de cómputo en local manteniendo unos tiempos de respuesta razonables para los procesos que se le piden, a pesar de las limitaciones del hardware sobre el que se ejecutan las pruebas, ante consultas bastante estresantes debido a la cantidad de computo que llevan.
