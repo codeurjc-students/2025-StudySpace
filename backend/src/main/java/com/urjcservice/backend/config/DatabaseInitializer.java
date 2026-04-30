@@ -317,8 +317,6 @@ public class DatabaseInitializer implements CommandLineRunner {
                         student3.setType(User.UserType.USER_REGISTERED);
                         student3.setEmailVerified(true);
 
-                        student3.setImageName("fran_perfil.jpg");
-
                         // ADMIN user
                         User miAdmin = new User();
                         miAdmin.setName("Guillermo");
@@ -413,7 +411,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                                         User u = new User();
                                         u.setName("Test User " + i);
                                         u.setEmail(email);
-                                        u.setEncodedPassword(passwordEncoder.encode(normalPassword)); 
+                                        u.setEncodedPassword(passwordEncoder.encode(normalPassword));
                                         u.setRoles(Arrays.asList("USER"));
                                         u.setType(User.UserType.USER_REGISTERED);
                                         u.setEmailVerified(true);
