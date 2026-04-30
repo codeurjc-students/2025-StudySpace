@@ -17,9 +17,14 @@ const testEndDate = `${year}-${month}-${day}T12:00:00.000+02:00`;
 
 module.exports = {
   setupDates: function(context, events, done) {
-    //dinamic dates for artillery
+    //dinamic dates for artillery on JSON format
     context.vars.dynamicStartDate = testStartDate;
     context.vars.dynamicEndDate = testEndDate;
+    
+    //dinamic dates for artilleryfor URL encoding
+    context.vars.encodedStartDate = encodeURIComponent(testStartDate);
+    context.vars.encodedEndDate = encodeURIComponent(testEndDate);
+
     if (context.vars.email) {
       context.vars.email = context.vars.email.trim();
     }

@@ -162,7 +162,7 @@ Levanta la infraestructura E2E (Base de datos de pruebas H2 y MailHog):
 docker-compose -f docker-compose.e2e.yml up -d
 ```
 
-> Si vas a ejecutar la prueba de carga de la fase 1 esta se realiza directamente sobre el docker-compose de desarrollo, no sobre el e2e, ya que prueba que el balanceador de carga funcione correctamente. Para ello deberá ejecutar:
+> Si vas a ejecutar la prueba de carga de la fase 1 (tanto la 1 como la 1-heavy) esta se realiza directamente sobre el docker-compose de desarrollo, no sobre el e2e, ya que prueba que el balanceador de carga funcione correctamente. Para ello deberá ejecutar:
 >
 > ```bash
 > docker-compose -f docker-compose-dev.yml up -d --build
