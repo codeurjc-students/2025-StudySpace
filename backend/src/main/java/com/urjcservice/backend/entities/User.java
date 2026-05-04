@@ -23,6 +23,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @GenericField
     private Long id;
+    @Column(unique = true)
     @FullTextField(analyzer = "standard")
     private String email; // Primary key
     private String encodedPassword;

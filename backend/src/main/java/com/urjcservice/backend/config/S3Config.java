@@ -8,18 +8,12 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
-import java.net.URI;
-
 @Configuration
-public class MinioConfig {
-
-    @Value("${minio.url}")
-    private String minioUrl;
-
-    @Value("${minio.access-key}")
+public class S3Config {
+    @Value("${AWS_ACCESS_KEY_ID}")
     private String accessKey;
 
-    @Value("${minio.secret-key}")
+    @Value("${AWS_SECRET_ACCESS_KEY}")
     private String secretKey;
 
     @Bean
@@ -27,10 +21,8 @@ public class MinioConfig {
         AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
 
         return S3Client.builder()
-                .endpointOverride(URI.create(minioUrl))
                 .region(Region.EU_SOUTH_2)
                 .credentialsProvider(StaticCredentialsProvider.create(credentials))
-                .forcePathStyle(true)
                 .build();
     }
 }
