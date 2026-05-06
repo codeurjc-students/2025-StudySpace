@@ -10,10 +10,10 @@ import software.amazon.awssdk.services.s3.S3Client;
 
 @Configuration
 public class S3Config {
-    @Value("${AWS_ACCESS_KEY_ID}")
+    @Value("${AWS_ACCESS_KEY_ID:test-key}")
     private String accessKey;
 
-    @Value("${AWS_SECRET_ACCESS_KEY}")
+    @Value("${AWS_SECRET_ACCESS_KEY:test-secret}")
     private String secretKey;
 
     @Bean

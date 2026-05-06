@@ -620,12 +620,12 @@ public class DatabaseInitializer implements CommandLineRunner {
                                 logger.info(" Database initialized with test data:");
                                 logger.info(" Rooms created: 12");
                                 logger.info(" Software created: 10");
-                                logger.info(" Users created: 9");
+                                logger.info(" Users created: 109");
                                 logger.info(" Reservations created: 18");
                                 logger.info("--------------------------------------");
                         }
                 } catch (Exception e) {
-                        logger.warn("⚠️ Colisión al inicializar la base de datos");
+                        logger.warn("⚠️ Collision when initializing the database");
                         logger.warn("Collision message:" + e.getMessage());
                 }
         }
