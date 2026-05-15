@@ -29,6 +29,10 @@ public class EmailService {
 
     @Value("${spring.mail.username}")
     private String fromEmail;
+
+    @Value("${app.frontend.url:https://localhost}")
+    private String frontendUrl;
+
     private static final String GREETING_DEAR = "Dear ";
 
     public void sendResetPasswordEmail(String to, String resetUrl) {
@@ -141,7 +145,7 @@ public class EmailService {
         message.setFrom(fromEmail);
         message.setTo(to);
         message.setSubject("Action Required: Confirm your StudySpace Reservation");
-        String verificationLink = "https://localhost/verify-reservation?token=" + token;
+        String verificationLink = frontendUrl + "/verify-reservation?token=" + token;
 
         message.setText(GREETING_DEAR + userName + ",\n\n" +
                 "You have requested a reservation on StudySpace.\n" +
@@ -158,7 +162,7 @@ public class EmailService {
         message.setTo(to);
         message.setSubject("Action Required: Verify your StudySpace Account");
 
-        String verificationLink = "https://localhost/verify-email?token=" + token;
+        String verificationLink = frontendUrl + "/verify-email?token=" + token;
 
         message.setText(GREETING_DEAR + userName + ",\n\n" +
                 "Thank you for registering on StudySpace.\n" +

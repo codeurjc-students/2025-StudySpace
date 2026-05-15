@@ -1,0 +1,224 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Automation of the deployment of StudySpace TFG: EC2, RDS, S3 and Security'
+
+Parameters:
+  KeyName:
+    Description: Choose existing .pem key to log in via SSH
+    Type: AWS::EC2::KeyPair::KeyName
+  DBPassword:
+    NoEcho: true
+    Description: Password for the production MySQL database
+    Type: String
+  JWTSecret:
+    NoEcho: true
+    Description: The long secret to signing the JWTs
+    Type: String
+  MailPassword:
+    NoEcho: true
+    Description: Gmail app password
+    Type: String
+
+Resources:
+  # BUCKET S3 (Add the account number to the name to make it unique worldwide)
+  StudySpaceBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "studyspace-images-${AWS::AccountId}"
+
+  # SECURITY GROUP FOR EC2 (Open port 80 web and 22 SSH)
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP/HTTPS traffic to the web and SSH for administration
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443    
+          ToPort: 443  
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  # SECURITY GROUP FOR RDS (Only lets enter the EC2)
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: MySQL SecurityGroup - Only accessible from EC2
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !GetAtt EC2SecurityGroup.GroupId
+
+  # RDS
+  StudySpaceDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBName: study_space_db
+      DBInstanceClass: db.t3.micro
+      AllocatedStorage: 20
+      Engine: mysql
+      EngineVersion: '8.0'
+      MasterUsername: admin
+      MasterUserPassword: !Ref DBPassword
+      VPCSecurityGroups:
+        - !GetAtt RDSSecurityGroup.GroupId
+
+  # IAM ROL FOR EC2 (to access S3)
+  EC2S3Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ec2.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref EC2S3Role
+
+  # EC2 
+  StudySpaceServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t3.micro
+      ImageId: ami-0f77db91f4f6a52b2 # Ubuntu 24.04 on eu-south-2
+      KeyName: !Ref KeyName
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      SecurityGroupIds:
+        - !GetAtt EC2SecurityGroup.GroupId
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          # Install Docker
+          apt-get update -y
+          apt-get install -y docker.io docker-compose-v2 openssl
+          systemctl start docker
+          systemctl enable docker
+          usermod -aG docker ubuntu
+
+          # CREATE 2GB SWAP FILE TO PREVENT OOM
+          sudo fallocate -l 2G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+          # For IP on register
+          TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+          PUBLIC_IP=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/public-ipv4)
+
+          # Prepare environment
+          mkdir -p /home/ubuntu/app/certs
+          cd /home/ubuntu/app
+
+          # Create SSL Certificate Auto Signed
+          sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout certs/server.key -out certs/server.crt -subj "/C=ES/O=StudySpace/CN=studyspace.local"
+          sudo sh -c 'cat certs/server.crt certs/server.key > certs/haproxy.pem'
+
+          # Create basic HAProxy
+          cat << 'EOF' > haproxy.cfg
+          global
+              maxconn 1024
+          defaults
+              mode http
+              timeout connect 5000ms
+              timeout client 50000ms
+              timeout server 50000ms
+          frontend https-in
+              bind *:443 ssl crt /etc/ssl/certs/haproxy.pem
+              bind *:80
+              http-request redirect scheme https unless { ssl_fc }
+              default_backend servers
+          backend servers
+              balance roundrobin
+              server backend1 backend1:8080 check
+              server backend2 backend2:8080 check
+          EOF
+
+          # Create the .env file with the secrets securely
+          cat <<EOF > .env
+          DB_PASSWORD=${DBPassword}
+          JWT_SECRET_KEY=${JWTSecret}
+          MAIL_PASSWORD=${MailPassword}
+          EOF
+
+          # Create the docker-compose.yml 
+          cat << 'EOF' > docker-compose.yml
+          x-backend-base: &backend-base
+            image: guiller25/studyspace-app:test-aws6
+            expose:
+              - "8080"
+            env_file:
+              - .env
+            restart: always
+
+          #Common schema
+          x-backend-env: &backend-env
+            APP_FRONTEND_URL: https://REPLACE_ME_PUBLIC_IP
+            SPRING_DATASOURCE_URL: jdbc:mysql://REPLACE_ME_DB_URL:3306/study_space_db?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
+            SPRING_DATASOURCE_USERNAME: admin
+            SPRING_DATASOURCE_PASSWORD: ${!DB_PASSWORD}
+            MINIO_BUCKET: REPLACE_ME_BUCKET
+            JWT_SECRET: ${!JWT_SECRET_KEY}
+            MAIL_PASSWORD: ${!MAIL_PASSWORD}
+            JAVA_OPTS: "-Xms256m -Xmx256m"
+
+          services:
+            haproxy:
+              image: haproxy:2.8
+              container_name: haproxy_loadbalancer
+              ports:
+                - "80:80"
+                - "443:443"
+              volumes:
+                - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+                - ./certs:/etc/ssl/certs:ro
+              depends_on:
+                - backend1
+                - backend2
+
+            #Initialize the database (RDS)
+            backend1:
+              <<: *backend-base
+              container_name: studyspace_prod_1
+              environment:
+                <<: *backend-env
+                APP_DB_INIT_ENABLED: "true"
+                SPRING_JPA_HIBERNATE_DDL_AUTO: update
+
+            backend2:
+              <<: *backend-base
+              container_name: studyspace_prod_2
+              depends_on:
+                - backend1
+              environment:
+                <<: *backend-env
+                APP_DB_INIT_ENABLED: "false"
+                SPRING_JPA_HIBERNATE_DDL_AUTO: none
+          EOF
+
+          # Transform !Sub output syntax so bash leaves it alone
+          sed -i "s/REPLACE_ME_DB_URL/${StudySpaceDB.Endpoint.Address}/g" docker-compose.yml
+          sed -i "s/REPLACE_ME_BUCKET/${StudySpaceBucket}/g" docker-compose.yml
+          sed -i "s/REPLACE_ME_PUBLIC_IP/$PUBLIC_IP/g" docker-compose.yml
+
+          # Launch the app
+          docker compose up -d
+
+Outputs:
+  WebURL:
+    Description: "Link to app"
+    Value: !Sub "https://${StudySpaceServer.PublicIp}"
