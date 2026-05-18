@@ -29,15 +29,11 @@ Resources:
   EC2SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow HTTP/HTTPS traffic to the web and SSH for administration
+      GroupDescription: Allow HTTP traffic to the web and SSH for administration
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 443    
-          ToPort: 443  
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 22
@@ -104,121 +100,49 @@ Resources:
           #!/bin/bash
           # Install Docker
           apt-get update -y
-          apt-get install -y docker.io docker-compose-v2 openssl
+          apt-get install -y docker.io docker-compose-v2
           systemctl start docker
           systemctl enable docker
           usermod -aG docker ubuntu
 
-          # CREATE 2GB SWAP FILE TO PREVENT OOM
-          sudo fallocate -l 2G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
-          echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-
-          # For IP on register
+          # GET PUBLIC IP FOR EMAILS (IMDSv2)
           TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
           PUBLIC_IP=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/public-ipv4)
 
           # Prepare environment
-          mkdir -p /home/ubuntu/app/certs
+          mkdir -p /home/ubuntu/app
           cd /home/ubuntu/app
-
-          # Create SSL Certificate Auto Signed
-          sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout certs/server.key -out certs/server.crt -subj "/C=ES/O=StudySpace/CN=studyspace.local"
-          sudo sh -c 'cat certs/server.crt certs/server.key > certs/haproxy.pem'
-
-          # Create basic HAProxy
-          cat << 'EOF' > haproxy.cfg
-          global
-              maxconn 1024
-          defaults
-              mode http
-              timeout connect 5000ms
-              timeout client 50000ms
-              timeout server 50000ms
-          frontend https-in
-              bind *:443 ssl crt /etc/ssl/certs/haproxy.pem
-              bind *:80
-              http-request redirect scheme https unless { ssl_fc }
-              default_backend servers
-          backend servers
-              balance roundrobin
-              server backend1 backend1:8080 check
-              server backend2 backend2:8080 check
-          EOF
-
-          # Create the .env file with the secrets securely
-          cat <<EOF > .env
-          DB_PASSWORD=${DBPassword}
-          JWT_SECRET_KEY=${JWTSecret}
-          MAIL_PASSWORD=${MailPassword}
-          EOF
 
           # Create the docker-compose.yml 
           cat << 'EOF' > docker-compose.yml
-          x-backend-base: &backend-base
-            image: guiller25/studyspace-app:test-aws6
-            expose:
-              - "8080"
-            env_file:
-              - .env
-            restart: always
-
-          #Common schema
-          x-backend-env: &backend-env
-            APP_FRONTEND_URL: https://REPLACE_ME_PUBLIC_IP
-            SPRING_DATASOURCE_URL: jdbc:mysql://REPLACE_ME_DB_URL:3306/study_space_db?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
-            SPRING_DATASOURCE_USERNAME: admin
-            SPRING_DATASOURCE_PASSWORD: ${!DB_PASSWORD}
-            MINIO_BUCKET: REPLACE_ME_BUCKET
-            JWT_SECRET: ${!JWT_SECRET_KEY}
-            MAIL_PASSWORD: ${!MAIL_PASSWORD}
-            JAVA_OPTS: "-Xms256m -Xmx256m"
-
           services:
-            haproxy:
-              image: haproxy:2.8
-              container_name: haproxy_loadbalancer
+            backend:
+              image: guiller25/studyspace-app:test-aws6
+              container_name: studyspace_prod
               ports:
-                - "80:80"
-                - "443:443"
-              volumes:
-                - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-                - ./certs:/etc/ssl/certs:ro
-              depends_on:
-                - backend1
-                - backend2
-
-            #Initialize the database (RDS)
-            backend1:
-              <<: *backend-base
-              container_name: studyspace_prod_1
+                - "80:8080"
               environment:
-                <<: *backend-env
-                APP_DB_INIT_ENABLED: "true"
-                SPRING_JPA_HIBERNATE_DDL_AUTO: update
-
-            backend2:
-              <<: *backend-base
-              container_name: studyspace_prod_2
-              depends_on:
-                - backend1
-              environment:
-                <<: *backend-env
-                APP_DB_INIT_ENABLED: "false"
-                SPRING_JPA_HIBERNATE_DDL_AUTO: none
+                - APP_FRONTEND_URL=http://REPLACE_ME_PUBLIC_IP
+                - SPRING_DATASOURCE_URL=jdbc:mysql://${StudySpaceDB.Endpoint.Address}:3306/study_space_db?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
+                - SPRING_DATASOURCE_USERNAME=admin
+                - SPRING_DATASOURCE_PASSWORD=${DBPassword}
+                - MINIO_BUCKET=${StudySpaceBucket}
+                - JWT_SECRET=${JWTSecret}
+                - MAIL_PASSWORD=${MailPassword}
+                - APP_DB_INIT_ENABLED=true
+                - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+                - AWS_ACCESS_KEY_ID=
+                - AWS_SECRET_ACCESS_KEY=
+              restart: always
           EOF
 
-          # Transform !Sub output syntax so bash leaves it alone
-          sed -i "s/REPLACE_ME_DB_URL/${StudySpaceDB.Endpoint.Address}/g" docker-compose.yml
-          sed -i "s/REPLACE_ME_BUCKET/${StudySpaceBucket}/g" docker-compose.yml
+          # Inject the dynamic public IP
           sed -i "s/REPLACE_ME_PUBLIC_IP/$PUBLIC_IP/g" docker-compose.yml
-
+          
           # Launch the app
           docker compose up -d
 
 Outputs:
   WebURL:
     Description: "Link to app"
-    Value: !Sub "https://${StudySpaceServer.PublicIp}"
+    Value: !Sub "http://${StudySpaceServer.PublicIp}"

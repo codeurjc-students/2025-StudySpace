@@ -25,6 +25,7 @@ En los siguientes documentos se detalla toda la información relevante sobre el 
 | [**domain_model.md**](docs/domain_model.md)                         | Modelo de dominio.                                                                                    |
 | [**app_images.md**](docs/app_images.md)                             | Links a las imagenes de DockerHub de la aplicación.                                                   |
 | [**artillery.md**](docs/artillery.md)                               | Pruebas de carga de la aplicación.                                                                    |
+| [**minIO.md**](docs/minIO.md)                               | Transición de alamcenamiento de ficheros de la aplicación.                                                                    |
 
 ---
 
