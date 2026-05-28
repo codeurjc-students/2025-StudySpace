@@ -9,6 +9,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,6 +96,7 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    @Async
     public void sendReservationConfirmationEmail(String to, String userName, String roomName,
             String place, String coordinates,
             Date startRaw, Date endRaw) {
