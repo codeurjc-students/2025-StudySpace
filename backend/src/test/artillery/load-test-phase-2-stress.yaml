@@ -1,0 +1,88 @@
+config:
+  target: "http://localhost" 
+  processor: "./processor-multi-room.js"
+  payload:
+    - path: "users.csv"
+      fields:
+        - "email"
+        - "password"
+      order: "random"
+      skipHeader: true
+  variables:
+    reason: "Automated Stress Test"
+  phases:
+    - duration: 60
+      arrivalRate: 2
+      name: "Phase 1: Warm up (Warming up the JVM and pool Hikari)"
+    - duration: 120
+      arrivalRate: 2
+      rampTo: 10 
+      name: "Phase 2: Aggressive ramp up (Looking for the bottleneck)"
+    - duration: 120
+      arrivalRate: 10
+      rampTo: 12
+      name: "Phase 3: Approaching Limit"
+    - duration: 120
+      arrivalRate: 12
+      name: "Phase 4: Sustained peak"
+
+scenarios:
+  - name: "Login and room search"
+    weight: 70
+    flow:
+      - function: "setupDatesAndRooms" 
+      - post:
+          url: "/api/auth/login"
+          json:
+            username: "{{ email }}"
+            password: "{{ password }}"
+      - think: 2
+      - get:
+          # home search
+          url: "/api/search/rooms?text={{searchText}}&campusId={{searchCampusId}}&minCapacity={{searchCapacity}}&active=true&page=0&size=10"
+      - think: 5
+
+  - name: "Login, consult and direct booking"
+    weight: 20
+    flow:
+      - function: "setupDatesAndRooms"
+      - post:
+          url: "/api/auth/login"
+          json:
+            username: "{{ email }}"
+            password: "{{ password }}"
+      - think: 2
+      - get:
+          url: "/api/search/rooms?text={{searchText}}&active=true&page=0&size=10"
+      - think: 4
+      - post:
+          url: "/api/reservations"
+          json:
+            roomId: "{{ roomId }}"
+            startDate: "{{ dynamicStartDate }}"
+            endDate: "{{ dynamicEndDate }}"
+            reason: "{{ reason }}"
+
+  - name: "Smart Search and alternative book"
+    weight: 10
+    flow:
+      - function: "setupDatesAndRooms"
+      - post:
+          url: "/api/auth/login"
+          json:
+            username: "{{ email }}"
+            password: "{{ password }}"
+      - think: 2
+      - get:
+          url: "/api/search/rooms?text={{searchText}}&active=true&page=0&size=10"
+      - think: 4
+      - get:
+          url: "/api/reservations/smart-search?start={{encodedStartDate}}&end={{encodedEndDate}}"
+      - think: 3
+      - post:
+          url: "/api/reservations"
+          json:
+            roomId: "{{ roomId }}" 
+            startDate: "{{ dynamicStartDate }}"
+            endDate: "{{ dynamicEndDate }}"
+            reason: "{{ reason }} - Smart Search"

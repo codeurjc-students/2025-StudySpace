@@ -150,16 +150,24 @@ public class DatabaseInitializer implements CommandLineRunner {
                                 postman.setVersion(10.15f);
                                 postman.setDescription("Herramienta para pruebas de API REST.");
 
-                                softwareRepository.saveAll(Arrays.asList(
+                                Software linux = new Software();
+                                postman.setName("Linux");
+                                postman.setVersion(6.6f);
+                                postman.setDescription("Sistema operativo.");
+
+                               List<Software> allSoftware = Arrays.asList(
                                                 eclipse, matlab, autocad, office, vscode,
-                                                intellij, spss, solidworks, python, rstudio, docker, git, postman));
+                                                intellij, spss, solidworks, python, rstudio, docker, git, postman, linux);
+                                softwareRepository.saveAll(allSoftware);
 
                                 // Campus
                                 Campus mostoles = new Campus("Móstoles", "40.335618, -3.877206");
                                 Campus alcorcon = new Campus("Alcorcón", "40.346632, -3.846051");
                                 Campus fuenlabrada = new Campus("Fuenlabrada", "40.281123, -3.818319");
                                 Campus vicalvaro = new Campus("Vicálvaro", "40.406149, -3.610711");
-                                campusRepository.saveAll(Arrays.asList(mostoles, alcorcon, fuenlabrada, vicalvaro));
+                                Campus arguelles = new Campus("Argüelles", "40.427247, -3.718563");
+                                List<Campus> allCampuses = Arrays.asList(mostoles, alcorcon, fuenlabrada, vicalvaro, arguelles);
+                                campusRepository.saveAll(allCampuses);
 
                                 // --- ROOMS ---
                                 Room lab1 = new Room();
@@ -221,7 +229,7 @@ public class DatabaseInitializer implements CommandLineRunner {
                                 Room tallerArqui = new Room();
                                 tallerArqui.setName("Taller de Arquitectura");
                                 tallerArqui.setCapacity(60);
-                                tallerArqui.setCampus(fuenlabrada);
+                                tallerArqui.setCampus(arguelles);
                                 tallerArqui.setPlace("Pabellón A");
                                 tallerArqui.setCoordenades("40.285, -3.823");
                                 tallerArqui.setSoftware(Arrays.asList(autocad, office));
@@ -290,6 +298,33 @@ public class DatabaseInitializer implements CommandLineRunner {
                                                 aulaMagna, salaReuniones, labBio,
                                                 tallerArqui, zonaSilencio, estudioGrupal, aula204,
                                                 aulaMantenimiento, labCerrado, aulaMultimedia));
+
+
+                                logger.info("Generating 100 additional test rooms for load testing...");
+                                List<Room> extraRooms = new ArrayList<>();
+                                String[] searchKeywords = {"Laboratorio", "Aula", "Mac", "Windows", "Linux", "Proyector", "Reuniones", "204", "Informatica", "Eclipse" ,"Magna"};
+
+                                for (int i = 1; i <= 100; i++) {
+                                        Room r = new Room();
+                                        String keyword = searchKeywords[i % searchKeywords.length];
+                                        r.setName(keyword + " " + (1000 + i));
+                                        
+                                        r.setCapacity(10 + (i % 40)); //BETWEEN 10-49 CAP
+                                        r.setCampus(allCampuses.get(i % allCampuses.size()));
+                                        r.setPlace("Edificio " + (i % 5));
+                                        r.setCoordenades("40.3" + i + ", -3.8" + i); 
+                                        r.setActive(true);
+
+                                        List<Software> roomSw = new ArrayList<>();
+                                        roomSw.add(allSoftware.get(i % allSoftware.size()));
+                                        if (i % 2 == 0) {
+                                                roomSw.add(allSoftware.get((i + 3) % allSoftware.size()));
+                                        }
+                                        r.setSoftware(roomSw);
+
+                                        extraRooms.add(r);
+                                }
+                                roomRepository.saveAll(extraRooms);
 
                                 // --- USERS ---
                                 User student1 = new User();
@@ -618,8 +653,9 @@ public class DatabaseInitializer implements CommandLineRunner {
 
                                 logger.info("--------------------------------------");
                                 logger.info(" Database initialized with test data:");
-                                logger.info(" Rooms created: 12");
-                                logger.info(" Software created: 10");
+                                logger.info(" Software created: 14");
+                                logger.info(" Campus created: 5");
+                                logger.info(" Rooms created: 113");
                                 logger.info(" Users created: 109");
                                 logger.info(" Reservations created: 18");
                                 logger.info("--------------------------------------");
