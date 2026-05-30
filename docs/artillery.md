@@ -165,34 +165,69 @@ Conclusiones de la prueba: La aplicación demuestra una alta capacidad de cómpu
 
 ### Fase 2A(load-test-phase-2-stress): Prueba de Esfuerzo y Límite en entorno AWS con una replica
 
-El objetivo de esta prueba fue estresar la capacidad de procesamiento de la infraestructura en la nube bajo un escenario que simula el comportamiento de picos grandes de usuarios. Se buscó forzar los endpoints críticos del backend mediante tres perfiles de usuarios simulados:
+El objetivo de esta prueba fue estresar la capacidad de procesamiento de la infraestructura en la nube bajo un escenario que simula el comportamiento de picos de demanda. Se buscó forzar los endpoints críticos del backend mediante tres perfiles de usuarios simulados:
 
-- **Perfil de Consulta Pura (70% de la carga):** Usuarios que acceden a la plataforma de forma exclusiva para listar y filtrar espacios universitarios (`/api/search/rooms`), simulando un comportamiento pasivo de obtención de datos.
+- **Perfil de Consulta Pura (70% de la carga):** Usuarios que acceden a la plataforma para listar y filtrar espacios universitarios (`/api/search/rooms`), simulando un comportamiento pasivo.
 - **Perfil de Reserva Directa (20% de la carga):** Usuarios activos que efectúan consultas y proceden a intentar registrar de forma inmediata una reserva fija (`/api/reservations`).
-- **Perfil de Búsqueda Inteligente (10% de la carga):** Usuarios que, al encontrar el espacio inicial ocupado, invocan de manera intensiva el algoritmo avanzado de sugerencias alternativas y disponibilidad temporal (`/api/reservations/smart-search`).
+- **Perfil de Búsqueda Inteligente (10% de la carga):** Usuarios que invocan de manera intensiva el algoritmo avanzado de sugerencias alternativas y disponibilidad temporal (`/api/reservations/smart-search`).
 
 #### Configuración de la carga:
-La prueba se estructuró en cuatro fases progresivas de inyección en Artillery: una fase de calentamiento a 2 UV/seg durante 60 segundos, seguida de una rampa agresiva incrementando hasta 10 UV/seg durante 120 segundos, aproximándose al límite teórico entre 10 y 12 UV/seg en los siguientes 120 segundos, y finalizando con un pico sostenido de 12 UV/seg durante 120 segundos adicionales.
+La primera prueba se estructuró en cuatro fases progresivas de inyección en Artillery: 
+una fase de calentamiento a 2 UV/seg durante 60 segundos, seguida de una rampa agresiva incrementando hasta 10 UV/seg durante 120 segundos, aproximándose al límite teórico entre 10 y 12 UV/seg en los siguientes 120 segundos, y finalizando con un pico sostenido de 12 UV/seg durante 120 segundos adicionales.
+
+La segunda prueba se estructuró también en cuatro fases progresivas: 
+las 2 primeras fases fueron iguales a las del test anterior después seguimos entre 10 y 15 UV/seg en los siguientes 120 segundos, y finalizamos con un pico sostenido de 17 UV/seg durante 120 segundos adicionales.
 
 
-#### Resultados de ejecución:
+#### Resultados de ejecución del primer test:
 - **Completados con éxito lógico:** 100% de los usuarios virtuales completaron sus flujos de navegación sin provocar caídas del servicio de aplicaciones o interrupciones críticas del contenedor (cero errores HTTP 500).
-- **Rendimiento por Endpoint y Códigos HTTP:**
-  - `/api/auth/login` y `/api/search/rooms`: 100% de respuestas exitosas (HTTP 200). La infraestructura absorbió eficientemente las búsquedas de texto plano indexadas con Apache Lucene / Hibernate Search.
-  - `/api/reservations`: Se registraron un volumen masivo de respuestas con código **HTTP 400 Bad Request** (~83.74% de las peticiones de este endpoint específico) frente a una fracción reducida de confirmaciones exitosas con código **HTTP 201 Created**.
-  - **Tiempos de respuesta (Latencia):** Mientras que las lecturas mantuvieron una mediana (p50) baja y estable en torno a los 105ms, los intentos de escrituras concurrentes provocaron picos de degradación en los percentiles más altos, alcanzando un p95 de 686ms y un p99 de 1.4 segundos.
+- **Rendimiento por Endpoint:**
+  - `/api/auth/login`, `/api/search/rooms` y `/api/reservations/smart-search`: 100% de respuestas exitosas (HTTP 200). La infraestructura absorbió eficientemente las búsquedas de texto plano indexadas con Apache Lucene / Hibernate Search.
+  - `/api/reservations`: Se registro un 0,37% (4 respuestas del total mandado a este endpoint) de las respuestas como **HTTP 400 Bad Request** debido a la generación aleatoria de reservas que alguna coincidencia accidental genera, frente a las 1065 (99,63%) confirmaciones exitosas con código **HTTP 201 Created**.
+  - **Tiempos de respuesta (Latencia):** Mientras que las lecturas mantuvieron una mediana (p50) baja y estable en torno a los 133ms y media de 190ms, los intentos de escrituras concurrentes provocaron picos de degradación en los percentiles más altos, alcanzando un p95 de 478ms y un p99 de 983 ms.
 
-#### Captura de pantalla de Artillery Cloud de este test:
+
+#### Captura de pantalla de Artillery Cloud del primer test:
 
 ![Captura resultados test 2A de artillery](../images/screenshots-artillery/load-test-phase-2stress.png)
-[Enlace al reporte completo en Artillery Cloud](https://app.artillery.io/opmgtbvasi7hy/load-tests/tbbh3_6zhnak567qt66awzqrwhhygg4r74b_ktca)
+[Enlace al reporte completo en Artillery Cloud](https://app.artillery.io/opmgtbvasi7hy/load-tests/tcgay_x4yjnawbjrekhhebmx3x7eznmeyxr_ch6t)
 
-#### Conclusiones de la prueba de esfuerzo:
-El comportamiento arrojado por el test de esfuerzo es completamente correcto y esperado desde la perspectiva de la lógica de negocio de la aplicación. La presencia generalizada de códigos HTTP 400 no responde a un fallo de la aplicación bloqueando reservas validas, sino a la protección activa del modelo de datos frente al *overbooking*. 
+#### Conclusiones de la primera prueba de esfuerzo:
+En la gráfica se pueden apreciar ciertos picos al inicio de cada fase de este test cuando los usuarios subian drasticamente. A partir de los 10 usuarios en adelante al finalizar la fase 2 estos picos se volvieron más y más pronunciados en cuanto al tiempo máximo de espera de p95 de la aplicación. 
+Si nos fijamos en la linea naranja, verde  y azul veremos que justo cuando la aplicación presenciaba una caida en la demanda de peticiones y un pico en los usuarios activos en la aplicación justo en ese momento los tiempos de respuesta se disparaban puesto que la aplicación no pudo procesar tan rápido ese aumento en los usuarios activos. 
+Esto nos muestra que nuestra aplicación cuando esta rondando los 90 usuarios activos aproximadamente (dentro de las limitaciones que ofrece una replica en la capa gratuita de AWS) permanece con unos tiempos de respuesta bajos acordes al número de peticiones que llegan, pero cuando estos usuarios activos suben por encima de los 90, la aplicación comienza a no dar a basto para atender todas las peticiones y comienza a ponerlas en cola, lo que genera que se disparen los tiempos de respuesta. Aun asi en este test se puede apreciar que los 3600 usuarios generados pudieron completar con éxito sus cometidos (salvo esos 4 errores 400 debidos a unas reservas que no cumplian con las reglas de negocio de la aplicación debido la generación aleatoria de estas para lograr abastecer más de 1000 solicitudes de reserva).
 
-Debido a que el sistema utiliza un mecanismo de bloqueo pesimista en la capa de persistencia (`@Lock(LockModeType.PESSIMISTIC_WRITE)` en las operaciones de solapamiento del `ReservationRepository`(las reservas)), cuando cientos de hilos concurrentes intentan registrar reservas superpuestas sobre las mismas aulas y en la misma franja de horas, la base de datos encola las transacciones y procesa secuencialmente la primera solicitud válida (HTTP 201). El resto de hilos en espera detectan la colisión de disponibilidad temporal inmediatamente después de liberarse el cerrojo de fila y rechazan la petición de forma segura mediante excepciones controladas de lógica de negocio (HTTP 400). 
+Esto muestra que la aplicación soporta flujos de hasta 12 usuarios nuevos siendo solo 1 sola réplica, aunque la velocidad de la repuesta se deteriore a partir de 10 usuarios nuevos.
 
-La degradación en el percentil p99 se debe precisamente a este tiempo de retención que sufren los hilos de Tomcat en el pool de HikariCP mientras esperan a que se liberen los bloqueos exclusivos de las tuplas en MySQL, un compromiso ineludible si se desea garantizar la consistencia ACID de las reservas sin añadir réplicas de bases de datos con sincronización distribuida.
+
+
+#### Resultados de ejecución del segundo test:
+- **Completados con éxito lógico:** 63,38%% de los usuarios virtuales completaron sus flujos de navegación sin provocar errores HTTP 500. En cambio un 36,62% de los usuarios sufrieron de estos errores 500 debido al tiempo de espera que estuvieron en la cola por la saturación de esta prueba frente a la anterior.
+- **Rendimiento por Endpoint:**
+  - `/api/auth/login`, `/api/search/rooms` y `/api/reservations/smart-search`: 100% de respuestas exitosas (HTTP 200).
+  - `/api/reservations`: Se registro un 0,16% (1 respuesta del total mandado a este endpoint) de las respuestas como **HTTP 400 Bad Request** debido a la generación aleatoria de reservas que alguna coincidencia accidental genera, frente a las 628 (99,84%) confirmaciones exitosas.
+  - **Tiempos de respuesta (Latencia):** La mediana (p50) subio hasta los 268ms (más del doble que en la prueba anterior), la media también subio bastante de los 190ms hasta los 1,3 segundos(más de 6 veces el tiempo anterior). Los intentos de escrituras también aumentaron bastante en tiempo alcanzando un p95 de 6,9 segundos y un p99 de 7,8segundos. Siendo la peor respuesta de 8 segundos puesto que mas alla de este tiempo la aplicación no respondio a las peticiones.
+
+
+#### Captura de pantalla de Artillery Cloud del segundo test:
+
+![Captura resultados test 2A de artillery](../images/screenshots-artillery/load-test-phase-2stress2.png)
+[Enlace al reporte completo en Artillery Cloud](https://app.artillery.io/opmgtbvasi7hy/load-tests/tebjh_y6g9gaw5e6ejd4cjyq7pjy9kpn639_bh8b)
+
+#### Conclusiones de la segunda prueba de esfuerzo:
+Al mantenerse igual las 2 primeras fases la grafica genera resultados similares en estas. No es hasta la 3 fase que vemos cambios significativos donde podemos apreciar que los usuarios comienzan a fallar en cuanto las respuestas p95 comienzan a tardar mas debido al exceso de usuarios activos en la aplicación. Como podemos comprobar antes de fallar los usuarios activos en la aplicación rondan los 100 usuarios (120 en el momento antes de comenzar a perder peticiones por no dar a basto) como mencionamos en las conclusiones del test anterior con unos 90 usuarios activos a la vez pudimos ver que la aplicación comenzaba a tardar bastante tiempo pero lograba reponderlos a todos. Sin embargo aquí con 100 usuarios activos simultaneamente vemos que la aplicación comienza a fallar. 
+
+
+#### Conclusiones generales de las pruebas de esfuerzo:
+Estos dos test nos muestran que el cuello de botella de la aplicación se encuentra entre los 90 y 100 usuarios activos y entre los 12 y 15 usuarios generados por segundo, más alla de este límite (para la versión gratuita de AWS y una sola replica disponible) la aplicación no es capaz de abastecer a todas las peticiones pendientes. 
+También nos muestran estos resultados que el endpoint más crítico de la aplicación (debido a las comprobaciones que se lleban a cabo antes de completar una reserva asi como el  bloqueo de la base de datos para evitar reservas duplicadas en diferentes usuarios) es el endpoint de /api/reservations/ aunque el endpoint más lento sea api/reservations/smart-search debido a que sus tiempos son parejos a los de las reservas pero muchos menos usuarios estaban atacando este endpoint.
+Después de estos 2 endpoints el más rápido en base a los test realizados seria la barra de busqueda de aulas mediante api/search/rooms y el segundo más rápido el propio inicio de sesión de la página web en /api/auth/login. Estos endpoints, a diferencia de los anteriores que recibian menor carga de usuarios para simular un comportamiento real de la aplicación, recibieron el 100% de los usuarios, todos pasaron por ellos.
+Estas son las capturas de la primera prueba de estres (aunque para esta conclusión se han comparado los resultados de más pruebas para asegurarse):
+
+![Captura resultados test 2A endpoints](../images/screenshots-artillery/load-test-phase-2stressEndpoint.png)
+![Captura resultados test 2A endpoints](../images/screenshots-artillery/load-test-phase-2stressEndpoint2.png)
+
+
 
 ---
 

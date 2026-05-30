@@ -1,13 +1,11 @@
 config:
   target: "http://localhost" 
   processor: "./processor-multi-room.js"
-  payload:
-    - path: "users.csv"
-      fields:
-        - "email"
-        - "password"
-      order: "random"
-      skipHeader: true
+  http:        # Máximo de conexiones simultáneas desde tu PC
+    keepAlive: true  # Reutiliza las conexiones (salva los puertos de Windows)
+  
+
+  
   variables:
     reason: "Automated Stress Test"
   phases:
@@ -20,10 +18,10 @@ config:
       name: "Phase 2: Aggressive ramp up (Looking for the bottleneck)"
     - duration: 120
       arrivalRate: 10
-      rampTo: 12
+      rampTo: 15
       name: "Phase 3: Approaching Limit"
     - duration: 120
-      arrivalRate: 12
+      arrivalRate: 17
       name: "Phase 4: Sustained peak"
 
 scenarios:

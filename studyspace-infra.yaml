@@ -117,7 +117,7 @@ Resources:
           cat << 'EOF' > docker-compose.yml
           services:
             backend:
-              image: guiller25/studyspace-app:test-aws8
+              image: guiller25/studyspace-app:test-aws9
               container_name: studyspace_prod
               ports:
                 - "80:8080"

@@ -17,7 +17,7 @@ config:
       arrivalRate: 2
       name: "Phase 1: Warm up"
     - duration: 7200 # 2 hours
-      arrivalRate: 3
+      arrivalRate: 2
       name: "Soak test (Evaluating Memory Leaks)"
 
 scenarios:
