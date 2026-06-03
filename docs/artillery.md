@@ -261,10 +261,13 @@ una fase de calentamiento a 2 UV/seg durante 60 segundos, seguida de una fase so
 
 #### Captura de las gráficas de la primera prueba procesadas localmente mediante el script en Python:
 
-![Reporte de métricas e intervalos del Soak Test](../images/screenshots-artillery/load-test-phase-2-soak.png)
+![Reporte de métricas e intervalos del Soak Test barras](../images/screenshots-artillery/dashboard_graphs.png)
+![Reporte de métricas e intervalos del del Soak Test lineal](../images/screenshots-artillery/timeline_graph.png)
+![Reporte de métricas e intervalos de los endpoints del Soak Test](../images/screenshots-artillery/generic_graph.png)
 
 #### Conclusiones de la primera prueba de resistencia (Soak Test):
-Esta prueba evidenció el límite exacto de la instancia t3.micro de AWS. Sostener 5 usuarios nuevos por segundo de manera ininterrumpida devoró los recursos de la máquina en los primeros minutos. Al agotarse, AWS estranguló el procesamiento al 20%, lo que generó un cuello de botella masivo en el servidor Tomcat. Esto resulto en 8,999 peticiones perdidas por TIMEOUT mostrando que la instancia micro no puede sostener esta densidad de tráfico perpetuo, aunque el software en sí demostró no corromperse (0 errores HTTP 500).
+Esta prueba evidenció el límite exacto de la instancia t3.micro de AWS. Sostener 5 usuarios nuevos por segundo de manera ininterrumpida devoró los recursos de la máquina en los primeros minutos. Al agotarse, AWS estranguló el procesamiento al 20%, lo que generó un cese del servicio en esos picos que se ven en las graficas. Esto resulto en 8,999 peticiones perdidas por TIMEOUT mostrando que la instancia micro no puede sostener esta densidad de tráfico perpetuo, aunque el software en sí demostró no corromperse (0 errores HTTP 500).
+
 
 #### Resultados de ejecución de la segunda prueba:
 - **Volumen Total:** Se procesó un flujo de 14,520 usuarios virtuales creados, que generaron 28,979 peticiones HTTP. En esta ocasión, el 100% de las peticiones de red fueron procesadas y respondidas con éxito, logrando un flujo sin interrupciones a nivel de servidor.
@@ -273,12 +276,14 @@ Esta prueba evidenció el límite exacto de la instancia t3.micro de AWS. Sosten
   - Reservas confirmadas (HTTP 201): 1.453 peticiones.
   - Rechazos por reglas de negocio (HTTP 400):2 peticiones.
   - Timeouts de red (ETIMEDOUT): 0 peticiones.
-  - Usuarios abortados por Artillery (`vusers.failed`): 2,971 usuarios virtuales. Este fallo no se debió al servidor, sino a que el script de Artillery no pudo encontrar/extraer el campo $.token en el escenario específico de "reserva directa", abortando internamente esos flujos (Failed capture or match) pero sin afectar al rendimiento web.
+  - Usuarios abortados por Artillery (vusers.failed): 2.971 usuarios virtuales. Tras auditar la telemetría, se constata que estos fallos no reflejan una caída ni una saturación del servidor (el backend procesó estas peticiones devolviendo respuestas HTTP 200 OK de forma fluida). El origen de estos abortos reside en un defecto de configuración del propio script de pruebas automatizado para el escenario de "Reserva Directa". La herramienta intentaba extraer un parámetro de la respuesta mediante una instrucción capture, pero debido a un desfase o agotamiento en los datos de prueba inyectados durante las 2 horas, el formato de la respuesta no contenía el campo esperado. En consecuencia, Artillery abortó internamente la ejecución de esos usuarios (Failed capture or match).
 - **Estudio de Tiempos de Respuesta Sostenidos:** Bajo esta carga adaptada a la capacidad de la instancia, la latencia demostró un comportamiento excepcionalmente robusto y estable. La **mediana global (p50)** se mantuvo plana a lo largo de las dos horas de prueba marcando **125.2 ms**, alineada con una **media global de 141.2 ms**. Las latencias máximas registradas mostraron picos altamente controlados, alcanzando un **p95 de 133.0 ms** y un **p99 de 135.7 ms** en los momentos de mayor concurrencia. Esta mínima desviación estándar entre la mediana (p50) y el percentil 99 (p99) confirma la ausencia de contención en la base de datos y certifica que la infraestructura operó fluidamente.
 
 #### Captura de las gráficas de la segunda prueba procesadas localmente mediante el script en Python:
 
-![Reporte de métricas e intervalos del Soak Test](../images/screenshots-artillery/load-test-phase-2-soak.png)
+![Reporte de métricas e intervalos del Soak Test barras](../images/screenshots-artillery/dashboard_graphs2.png)
+![Reporte de métricas e intervalos del del Soak Test lineal](../images/screenshots-artillery/timeline_graph2.png)
+![Reporte de métricas e intervalos de los endpoints del Soak Test](../images/screenshots-artillery/generic_graph2.png)
 
 #### Conclusiones de la segunda prueba de resistencia (Soak Test):
 Al reducir la carga a 2 UV/s, la instancia logró un equilibrio perfecto entre la CPU consumida y la regeneración de créditos de AWS. El test demostró un éxito absoluto de infraestructura: cero caídas, cero timeouts y latencias estables durante 2 horas seguidas. Demostrando así en que franja de usuarios se encuentra el limite de mi aplicación con una sola replica desplegada en la infraestructura de AWS.
@@ -291,6 +296,8 @@ El cruce de ambas pruebas de resistencia ha permitido sacar estas conclusiones s
 - Ausencia confirmada de Fugas de Memoria (Memory Leaks): En la segunda prueba (2 UV/seg) la línea de latencia se mantuvo absolutamente plana. Si el sistema sufriera una mala gestión de la memoria o acumulara conexiones huérfanas en la base de datos, el tiempo de respuesta habría mostrado una degradación paulatina a lo largo de las 2 horas. La JVM gestionó y limpió con gran eficiencia cada sesión finalizada.
 
 - Dimensionamiento del Hardware en la Nube: Las pruebas han acotado matemáticamente que, para una infraestructura de capa gratuita (t3.micro sin escalado), la velocidad garantizada para operaciones complejas como búsquedas y transacciones con bases de datos relacionales se sitúa en 2 usuarios concurrentes por segundo. Para volúmenes sostenidos mayores, la arquitectura demanda forzosamente escalar la máquina a instancias de mayores prestaciones (escalado vetical) o añadir réplicas manejadas por un balanceador (escalado horizontal).
+
+También sacamos conclusiones de los endpoints, mostrando que de normal se mantiene el orden que comprobamos en la prueba anterior, de tiempo que tarda cada uno. Aunque cuando las peticiones se acumulan los tiempos de espera en estos endpoints más rapidos, en situciones muy especiales(como p95 o p99), pueden dispararse mucho más que las de los endpoints más dificiles de procesar, como pueden ser las reservas o la busqueda inteligente de aulas alternativas a la nuestra.
 
 
 

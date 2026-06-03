@@ -2,7 +2,7 @@ import json
 import pandas as pd
 import matplotlib.pyplot as plt
 
-def generate_graphs(json_filename, sufijo_salida):
+def generate_graphs(json_filename):
     try:
         with open(json_filename, 'r', encoding='utf-8') as f:
             data = json.load(f)
@@ -62,7 +62,7 @@ def generate_graphs(json_filename, sufijo_salida):
     l1 = ax1.plot(df['Tiempo'], df['ReqRate_Smooth'], color=color_req, linewidth=2.5, label='Request Rate (req/s)')
     ax1.fill_between(df['Tiempo'], df['ReqRate_Smooth'], color=color_req, alpha=0.1)
     
-    l2 = ax1.plot(df['Tiempo'], df['Errores_Agrupados'], color=color_err, linewidth=2, linestyle='--', label='Errores (Timeouts/4xx)')
+    l2 = ax1.plot(df['Tiempo'], df['Errores_Agrupados'], color=color_err, linewidth=2, linestyle='--', label='Errores (Timeouts)')
     
     ax1.set_xlabel('Tiempo (Minutos)', fontweight='bold')
     ax1.set_ylabel('Peticiones por Segundo', fontweight='bold')
@@ -83,10 +83,10 @@ def generate_graphs(json_filename, sufijo_salida):
     labels = [l.get_label() for l in lines]
     ax1.legend(lines, labels, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3, frameon=False, fontsize=11)
 
-    plt.title(f'Rendimiento del Servidor a lo largo del tiempo ({sufijo_salida})', fontweight='bold', fontsize=14, pad=15)
+    plt.title(f'Rendimiento del Servidor a lo largo del tiempo ()', fontweight='bold', fontsize=14, pad=15)
     plt.tight_layout()
     
-    file_timeline = f'grafica_timeline_{sufijo_salida}.png'
+    file_timeline = f'timeline_graph.png'
     plt.savefig(file_timeline, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"✅ Generated Timeline: {file_timeline}")
@@ -112,7 +112,7 @@ def generate_graphs(json_filename, sufijo_salida):
             ax_dist.plot(metrics_keys, values, marker='o', linewidth=2.5, markersize=6, 
                          color=colores[i % len(colores)], label=endpoint)
 
-        ax_dist.set_title(f'Distribución de Tiempos por Endpoint ({sufijo_salida})', fontsize=14, fontweight='bold', pad=15)
+        ax_dist.set_title(f'Distribución de Tiempos por Endpoint', fontsize=14, fontweight='bold', pad=15)
         ax_dist.set_ylabel('Milisegundos (ms)', fontweight='bold')
         ax_dist.set_ylim(bottom=0)
         ax_dist.grid(axis='x', linestyle='--', alpha=0.5)
@@ -120,7 +120,7 @@ def generate_graphs(json_filename, sufijo_salida):
         ax_dist.legend(title='Endpoints', loc='center left', bbox_to_anchor=(1.02, 0.5), fontsize=10)
         
         plt.tight_layout()
-        file_distribucion = f'grafica_distribucion_{sufijo_salida}.png'
+        file_distribucion = f'generic_graph.png'
         plt.savefig(file_distribucion, dpi=300, bbox_inches='tight')
         plt.close()
         print(f"✅ Endpoints generated: {file_distribucion}")
@@ -131,4 +131,4 @@ def generate_graphs(json_filename, sufijo_salida):
 
 
 
-generate_graphs('report.json', 'soak_5uv')
+generate_graphs('report.json')

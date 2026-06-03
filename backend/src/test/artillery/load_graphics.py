@@ -52,8 +52,7 @@ for i, interval in enumerate(intervals):
     })
 
 df_time = pd.DataFrame(records)
-df_time.to_excel('reporte_artillery_series.xlsx', index=False)
-print("✅ Excel Time Series generated: 'reporte_artillery_series.xlsx'")
+
 
 # Endpoints
 endpoint_records = []
@@ -74,9 +73,7 @@ for key, metrics in agg_summaries.items():
         })
 
 df_endpoints = pd.DataFrame(endpoint_records)
-if not df_endpoints.empty:
-    df_endpoints.to_excel('reporte_artillery_endpoints.xlsx', index=False)
-    print("✅ Excel de Endpoints generado: 'reporte_artillery_endpoints.xlsx'")
+
 
 #graphs
 plt.style.use('seaborn-v0_8-darkgrid')
@@ -144,9 +141,8 @@ ax4.set_ylabel('Cantidad de Peticiones')
 ax4.legend(loc='upper left')
 
 plt.tight_layout()
-plt.savefig('graficas_artillery_dashboard.png', dpi=300)
-print("✅ Dashboard temporal generado: 'graficas_artillery_dashboard.png'")
-
+plt.savefig('dashboard_graphs.png', dpi=300)
+print("✅ Temporary dashboard generated: 'artillery_dashboard.png'")
 #DASHBOARD 2: Breakdown by Endpoint (Grouped Bar Chart)
 if not df_endpoints.empty:
     # Sort by p95 in descending order so that the slowest endpoints appear first
@@ -169,7 +165,7 @@ if not df_endpoints.empty:
     plt.legend(title='Métricas de Latencia', bbox_to_anchor=(1.01, 1), loc='upper left')
     
     plt.tight_layout()
-    plt.savefig('graficas_endpoints_barras.png', dpi=300)
-    print("✅ Generated Endpoints Chart: 'graficas_endpoints_barras.png'")
+    plt.savefig('endpoints_barg_graph.png', dpi=300)
+    print("✅ Generated Endpoints Chart: 'endpoints_barg_graph.png'")
 else:
     print("⚠️ No endpoint metrics were found in the JSON (you need the metrics-by-endpoint plugin active in Artillery).")
