@@ -179,7 +179,7 @@ La segunda prueba se estructuró también en cuatro fases progresivas:
 las 2 primeras fases fueron iguales a las del test anterior después seguimos entre 10 y 15 UV/seg en los siguientes 120 segundos, y finalizamos con un pico sostenido de 17 UV/seg durante 120 segundos adicionales.
 
 
-#### Resultados de ejecución del primer test:
+#### Resultados de ejecución de la primera prueba:
 - **Completados con éxito lógico:** 100% de los usuarios virtuales completaron sus flujos de navegación sin provocar caídas del servicio de aplicaciones o interrupciones críticas del contenedor (cero errores HTTP 500).
 - **Rendimiento por Endpoint:**
   - `/api/auth/login`, `/api/search/rooms` y `/api/reservations/smart-search`: 100% de respuestas exitosas (HTTP 200). La infraestructura absorbió eficientemente las búsquedas de texto plano indexadas con Apache Lucene / Hibernate Search.
@@ -187,7 +187,7 @@ las 2 primeras fases fueron iguales a las del test anterior después seguimos en
   - **Tiempos de respuesta (Latencia):** Mientras que las lecturas mantuvieron una mediana (p50) baja y estable en torno a los 133ms y media de 190ms, los intentos de escrituras concurrentes provocaron picos de degradación en los percentiles más altos, alcanzando un p95 de 478ms y un p99 de 983 ms.
 
 
-#### Captura de pantalla de Artillery Cloud del primer test:
+#### Captura de pantalla de Artillery Cloud de la primera prueba:
 
 ![Captura resultados test 2A de artillery](../images/screenshots-artillery/load-test-phase-2stress.png)
 [Enlace al reporte completo en Artillery Cloud](https://app.artillery.io/opmgtbvasi7hy/load-tests/tcgay_x4yjnawbjrekhhebmx3x7eznmeyxr_ch6t)
@@ -201,7 +201,7 @@ Esto muestra que la aplicación soporta flujos de hasta 12 usuarios nuevos siend
 
 
 
-#### Resultados de ejecución del segundo test:
+#### Resultados de ejecución de la segunda prueba:
 - **Completados con éxito lógico:** 63,38%% de los usuarios virtuales completaron sus flujos de navegación sin provocar errores HTTP 500. En cambio un 36,62% de los usuarios sufrieron de estos errores 500 debido al tiempo de espera que estuvieron en la cola por la saturación de esta prueba frente a la anterior.
 - **Rendimiento por Endpoint:**
   - `/api/auth/login`, `/api/search/rooms` y `/api/reservations/smart-search`: 100% de respuestas exitosas (HTTP 200).
@@ -209,7 +209,7 @@ Esto muestra que la aplicación soporta flujos de hasta 12 usuarios nuevos siend
   - **Tiempos de respuesta (Latencia):** La mediana (p50) subio hasta los 268ms (más del doble que en la prueba anterior), la media también subio bastante de los 190ms hasta los 1,3 segundos(más de 6 veces el tiempo anterior). Los intentos de escrituras también aumentaron bastante en tiempo alcanzando un p95 de 6,9 segundos y un p99 de 7,8segundos. Siendo la peor respuesta de 8 segundos puesto que mas alla de este tiempo la aplicación no respondio a las peticiones.
 
 
-#### Captura de pantalla de Artillery Cloud del segundo test:
+#### Captura de pantalla de Artillery Cloud de la segunda prueba:
 
 ![Captura resultados test 2A de artillery](../images/screenshots-artillery/load-test-phase-2stress2.png)
 [Enlace al reporte completo en Artillery Cloud](https://app.artillery.io/opmgtbvasi7hy/load-tests/tebjh_y6g9gaw5e6ejd4cjyq7pjy9kpn639_bh8b)
@@ -231,43 +231,67 @@ Estas son las capturas de la primera prueba de estres (aunque para esta conclusi
 
 ---
 
-### Fase 2B (load-test-phase-2-soak): Prueba de Resistencia y Estabilidad Sostenida (Soak Test) en entorno AWS
+### Fase 2B (load-test-phase-2-soak): Prueba de Resistencia y Estabilidad Sostenida (Soak Test) en entorno AWS (Solo una réplica)
 
-El propósito de esta fase fue someter a la instancia única de AWS a una carga continua de usuarios virtuales (`arrivalRate: 5` usuarios por segundo) con el fin de evaluar la fatiga del sistema a lo largo del tiempo, vigilando el comportamiento del recolector de basura de la JVM (*Garbage Collector*), el uso sostenido del pool de conexiones de base de datos HikariCP y la posible presencia de fugas de memoria (*Memory Leaks*).
+El propósito de esta fase fue someter a la instancia única de AWS a una carga continua de usuarios virtuales con el fin de evaluar la fatiga del sistema a lo largo del tiempo, vigilando el comportamiento del recolector de basura de la JVM (*Garbage Collector*), el uso sostenido del pool de conexiones de base de datos HikariCP y la posible presencia de fugas de memoria (*Memory Leaks*). Los endpoints atacados en esta prueba seran excatamente los mismos que se expusieron en la prueba anterior (Fase 2A(load-test-phase-2-stress)).
 
 #### Limitación del plan gratuito de la herramienta Artillery Cloud:
 Debido a las políticas comerciales implementadas en la plataforma de Artillery, la visualización y captura de telemetría a través de su servicio en la nube (*Artillery Cloud*) se encuentra restringida a un máximo estricto de 30 minutos de duración en su plan gratuito. Dado que una prueba de resistencia requiere analizar el comportamiento persistente del sistema operativo y de los contenedores más allá de dicho umbral temporal, se optó por una estrategia diferente. 
 
-Se configuró Artillery para volcar todas las métricas e intervalos de telemetría del test en formato `.json`. Posteriormente, se diseñó e implementó un script automatizado en Python que procesa dicho JSON de forma local. Este script extrae de forma secuencial las métricas agregadas por periodos e implementa un generador de gráficos (gráficas de latencia percentilada, tasa de transferencia y volumen de códigos HTTP), garantizando graficas con el sufiente detalle como para suplir las de *Artillery Cloud*.
+Se configuró Artillery para volcar todas las métricas e intervalos de telemetría del test en formato `.json`. Posteriormente, se diseñó e implementó un script automatizado en Python que procesa dicho JSON de forma local. Este script extrae de forma secuencial las métricas agregadas por periodos e implementa un generador de gráficos, garantizando graficas con el sufiente detalle como para suplir las de *Artillery Cloud*.
 
-#### Resultados de ejecución y telemetría:
-- **Volumen Total:** Se procesó un flujo histórico masivo que superó los 36,120 usuarios virtuales creados, traduciéndose en un total acumulado de 72,502 peticiones HTTP procesadas por el servidor.
+
+#### Configuración de la carga:
+La primera prueba se estructuró en dos fases: 
+una fase de calentamiento a 2 UV/seg durante 60 segundos, seguida de una fase sostenida de 5 UV/seg durante las dos siguientes horas.
+
+La segunda prueba se estructuró en dos fases: 
+una fase de calentamiento a 2 UV/seg durante 60 segundos, seguida de una fase sostenida de 2 UV/seg durante las dos siguientes horas. Esto con el fin de mostrar una diferencia con una carga sostenida más leve que en la prueba anterior.
+
+
+#### Resultados de ejecución de la primera prueba:
+- **Volumen Total:** Se procesó un flujo masivo de 36,080 usuarios virtuales creados, que intentaron generar 63,373 peticiones HTTP. De estas, el servidor logró responder a 54,366, perdiéndose el resto debido a la asfixia del hardware de AWS tras superar su límite operativo.
 - **Códigos de Estado y Errores de Flujo:**
-  - Respuestas exitosas de sesión y lectura (HTTP 200): 68,783 peticiones.
-  - Reservas confirmadas (HTTP 201): 108 peticiones.
-  - Rechazos por reglas de negocio (HTTP 400): 3,611 peticiones.
-  - Usuarios abortados por Artillery (`vusers.failed`): 7,176 usuarios virtuales. 
-- **Estudio de Tiempos de Respuesta Sostenidos:** La mediana global (p50) demostró un comportamiento robusto, manteniéndose plana a lo largo de toda la línea de tiempo del test en un rango de entre 85ms y 115ms. Las latencias máximas registradas mostraron picos controlados que se estabilizaron en torno a los 1.5 y 1.8 segundos en los intervalos de máxima concurrencia de transacciones de escritura de reservas.
+  - Respuestas exitosas de sesión y lectura (HTTP 200): 51,615 peticiones.
+  - Reservas confirmadas (HTTP 201): 2,745 peticiones.
+  - Rechazos por reglas de negocio (HTTP 400): 0 peticiones.
+  - Timeouts de red (ETIMEDOUT): 8,999 peticiones cortadas por la herramienta al tardar demasiado en responder.
+  - Usuarios abortados por Artillery (vusers.failed): 14,515 usuarios virtuales que no pudieron terminar su flujo por culpa de los cortes de conexión. 
+- **Estudio de Tiempos de Respuesta Sostenidos:** Al analizar las peticiones que lograron completarse exitosamente antes y durante el estrangulamiento del hardware, el sistema arrojó una **media global de 199.8 ms** y una **mediana (p50) de 172.5 ms**. La degradación por la falta de CPU se hizo evidente en los percentiles superiores, estabilizándose tanto el **p95 como el p99 en 262.5 ms**. Es fundamental destacar que estas métricas representan únicamente el subconjunto de peticiones que "sobrevivieron" y lograron ser procesadas; la verdadera penalización del rendimiento en esta prueba no se reflejó en una latencia extrema, sino en los casi 9,000 *timeouts* de red de peticiones que se quedaron encoladas sin llegar a resolverse.
 
-#### Captura de las gráficas de telemetría procesadas localmente mediante el script en Python:
+#### Captura de las gráficas de la primera prueba procesadas localmente mediante el script en Python:
 
 ![Reporte de métricas e intervalos del Soak Test](../images/screenshots-artillery/load-test-phase-2-soak.png)
 
-#### Conclusiones de la prueba de resistencia (Soak Test):
-El test de resistencia mostro 2 grandes conclusiones de la infraestructura actual de la aplicación:
+#### Conclusiones de la primera prueba de resistencia (Soak Test):
+Esta prueba evidenció el límite exacto de la instancia t3.micro de AWS. Sostener 5 usuarios nuevos por segundo de manera ininterrumpida devoró los recursos de la máquina en los primeros minutos. Al agotarse, AWS estranguló el procesamiento al 20%, lo que generó un cuello de botella masivo en el servidor Tomcat. Esto resulto en 8,999 peticiones perdidas por TIMEOUT mostrando que la instancia micro no puede sostener esta densidad de tráfico perpetuo, aunque el software en sí demostró no corromperse (0 errores HTTP 500).
 
-1. **Ausencia de Fugas de Memoria (Memory Leaks):** La estabilidad absoluta de la mediana de tiempo de respuesta (p50) y la consistencia en el volumen de peticiones procesadas demuestran que el recolector de basura de Java es capaz de liberar eficientemente la memoria de los objetos de sesión descatalogados. Si existiera una fuga de memoria en el montón de la JVM o una retención indebida de conexiones en HikariCP, los tiempos de respuesta habrían mostrado una pendiente ascendente progresiva debido al *thrashing* de memoria o al agotamiento definitivo de los hilos de Tomcat, comportamiento que queda descartado al analizar las líneas planas de rendimiento.
+#### Resultados de ejecución de la segunda prueba:
+- **Volumen Total:** Se procesó un flujo de 14,520 usuarios virtuales creados, que generaron 28,979 peticiones HTTP. En esta ocasión, el 100% de las peticiones de red fueron procesadas y respondidas con éxito, logrando un flujo sin interrupciones a nivel de servidor.
+- **Códigos de Estado y Errores de Flujo:**
+  - Respuestas exitosas de sesión y lectura (HTTP 200): 27,524 peticiones.
+  - Reservas confirmadas (HTTP 201): 1.453 peticiones.
+  - Rechazos por reglas de negocio (HTTP 400):2 peticiones.
+  - Timeouts de red (ETIMEDOUT): 0 peticiones.
+  - Usuarios abortados por Artillery (`vusers.failed`): 2,971 usuarios virtuales. Este fallo no se debió al servidor, sino a que el script de Artillery no pudo encontrar/extraer el campo $.token en el escenario específico de "reserva directa", abortando internamente esos flujos (Failed capture or match) pero sin afectar al rendimiento web.
+- **Estudio de Tiempos de Respuesta Sostenidos:** Bajo esta carga adaptada a la capacidad de la instancia, la latencia demostró un comportamiento excepcionalmente robusto y estable. La **mediana global (p50)** se mantuvo plana a lo largo de las dos horas de prueba marcando **125.2 ms**, alineada con una **media global de 141.2 ms**. Las latencias máximas registradas mostraron picos altamente controlados, alcanzando un **p95 de 133.0 ms** y un **p99 de 135.7 ms** en los momentos de mayor concurrencia. Esta mínima desviación estándar entre la mediana (p50) y el percentil 99 (p99) confirma la ausencia de contención en la base de datos y certifica que la infraestructura operó fluidamente.
 
-2. **Causa raíz de los usuarios abortados por la herramienta:** El volumen de usuarios marcados como fallidos por Artillery (`vusers.failed: 7176`) es debio al escenario simulado en el archivo de configuración de Artillery. Al inyectar una carga fija de usuarios que competían secuencialmente por un número restringido de salas en idénticas horas, la inmensa mayoría de las solicitudes de reserva de la Fase 2 del flujo terminaban devolviendo un código 400 legítimo (sala no disponible). 
+#### Captura de las gráficas de la segunda prueba procesadas localmente mediante el script en Python:
 
-### Propuestas de optimización y líneas de mejora futuras de esta Fase 2
+![Reporte de métricas e intervalos del Soak Test](../images/screenshots-artillery/load-test-phase-2-soak.png)
 
-A partir de los cuellos de botella identificados en los entornos de esfuerzo y resistencia alojados en la nube, se proponen las siguientes optimizaciones de arquitectura de software para futuras versiones del sistema sin alterar la seguridad de los datos:
+#### Conclusiones de la segunda prueba de resistencia (Soak Test):
+Al reducir la carga a 2 UV/s, la instancia logró un equilibrio perfecto entre la CPU consumida y la regeneración de créditos de AWS. El test demostró un éxito absoluto de infraestructura: cero caídas, cero timeouts y latencias estables durante 2 horas seguidas. Demostrando así en que franja de usuarios se encuentra el limite de mi aplicación con una sola replica desplegada en la infraestructura de AWS.
 
-- **Dispersión Estocástica en Pruebas de Carga:** Para evaluar el rendimiento de la base de datos libre de bloqueos de lógica empresarial, se debe modificar el procesador JavaScript del generador de carga (`processor-multi-room.js`). Reemplazar las franjas horarias estáticas (como el bloque fijo de 10:00 a 12:00) por una asignación dinámica y aleatoria que distribuya las solicitudes a lo largo de toda la jornada universitaria operativa (de 08:00 a 21:00) y amplíe el rango de días. Esto aumentará el espacio de probabilidad transaccional a más de un millón de combinaciones, reduciendo las colisiones lógicas y permitiendo medir de forma pura la latencia de inserción en disco de la instancia RDS.
 
-- **Migración a Bloqueo Optimista (Optimistic Locking):** Para mitigar los picos de latencia en el percentil p99 provocados por la retención de hilos de base de datos bajo alta concurrencia, se propone sustituir los cerrojos pesimistas por un enfoque optimista basado en anotaciones `@Version` en la entidad `Reservation` de Hibernate. De este modo, en lugar de bloquear la base de datos de manera exclusiva mientras se procesa la disponibilidad, el sistema procesará las transacciones en paralelo y rechazará de forma instantánea en el commit las operaciones concurrentes que colisionen, reduciendo el tiempo de espera de los hilos de Tomcat de segundos a escasos milisegundos.
+#### Conclusiones generales de las pruebas de resistencia (Soak Test):
 
-- **Ajuste de Timeouts del Pool de Conexiones:** En el archivo `application.properties`, se debe añadir la directiva `spring.datasource.hikari.connection-timeout=5000`. Limitar el tiempo de espera de obtención de conexiones de Hikari a 5 segundos obligará al servidor a liberar hilos rápidamente bajo escenarios de estrés masivo, evitando la acumulación destructiva de solicitudes en cola en el servidor web.
+El cruce de ambas pruebas de resistencia ha permitido sacar estas conclusiones sobre la estabilidad técnica del sistema desarrollado:
+
+- Ausencia confirmada de Fugas de Memoria (Memory Leaks): En la segunda prueba (2 UV/seg) la línea de latencia se mantuvo absolutamente plana. Si el sistema sufriera una mala gestión de la memoria o acumulara conexiones huérfanas en la base de datos, el tiempo de respuesta habría mostrado una degradación paulatina a lo largo de las 2 horas. La JVM gestionó y limpió con gran eficiencia cada sesión finalizada.
+
+- Dimensionamiento del Hardware en la Nube: Las pruebas han acotado matemáticamente que, para una infraestructura de capa gratuita (t3.micro sin escalado), la velocidad garantizada para operaciones complejas como búsquedas y transacciones con bases de datos relacionales se sitúa en 2 usuarios concurrentes por segundo. Para volúmenes sostenidos mayores, la arquitectura demanda forzosamente escalar la máquina a instancias de mayores prestaciones (escalado vetical) o añadir réplicas manejadas por un balanceador (escalado horizontal).
+
+
 
 
