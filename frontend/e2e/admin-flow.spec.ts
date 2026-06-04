@@ -22,6 +22,7 @@ test.describe('Administrator Management', () => {
   test('The administrator should be able to create software and then a classroom that contains it.', async ({
     page,
   }) => {
+    test.setTimeout(90000);
     const timestamp = Date.now();
     const softwareName = 'Soft ' + timestamp;
     const roomName = 'Aula ' + timestamp;

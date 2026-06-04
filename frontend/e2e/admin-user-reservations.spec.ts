@@ -113,6 +113,10 @@ test.describe('User Reservation Management by Admin', () => {
       const dateInput = page.getByLabel('2. Select Date');
       await dateInput.click();
       await dateInput.fill(dateStr);
+
+
+      await dateInput.dispatchEvent('change'); 
+
       await dateInput.press('Tab');
 
       await page.waitForTimeout(3000);
