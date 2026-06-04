@@ -9,14 +9,16 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.TimeZone;
 import java.util.UUID;
 
 @Service
@@ -29,6 +31,10 @@ public class EmailService {
 
     @Value("${spring.mail.username}")
     private String fromEmail;
+
+    @Value("${app.frontend.url:https://localhost}")
+    private String frontendUrl;
+
     private static final String GREETING_DEAR = "Dear ";
 
     public void sendResetPasswordEmail(String to, String resetUrl) {
@@ -91,6 +97,7 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    @Async
     public void sendReservationConfirmationEmail(String to, String userName, String roomName,
             String place, String coordinates,
             Date startRaw, Date endRaw) {
@@ -102,9 +109,11 @@ public class EmailService {
             helper.setTo(to);
             helper.setSubject("Booking confirmation - " + roomName);
 
-            SimpleDateFormat printFormat = new SimpleDateFormat("HH:mm dd/MM/yyyy");
-            String startStr = printFormat.format(startRaw);
-            String endStr = printFormat.format(endRaw);
+            DateTimeFormatter printFormat = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy")
+                    .withZone(ZoneId.systemDefault());
+
+            String startStr = printFormat.format(startRaw.toInstant());
+            String endStr = printFormat.format(endRaw.toInstant());
 
             String locationText;
             if (coordinates != null && !coordinates.isEmpty()) {
@@ -141,7 +150,7 @@ public class EmailService {
         message.setFrom(fromEmail);
         message.setTo(to);
         message.setSubject("Action Required: Confirm your StudySpace Reservation");
-        String verificationLink = "https://localhost/verify-reservation?token=" + token;
+        String verificationLink = frontendUrl + "/verify-reservation?token=" + token;
 
         message.setText(GREETING_DEAR + userName + ",\n\n" +
                 "You have requested a reservation on StudySpace.\n" +
@@ -158,7 +167,7 @@ public class EmailService {
         message.setTo(to);
         message.setSubject("Action Required: Verify your StudySpace Account");
 
-        String verificationLink = "https://localhost/verify-email?token=" + token;
+        String verificationLink = frontendUrl + "/verify-email?token=" + token;
 
         message.setText(GREETING_DEAR + userName + ",\n\n" +
                 "Thank you for registering on StudySpace.\n" +
@@ -170,12 +179,12 @@ public class EmailService {
     }
 
     private String generateIcsContent(String roomName, String place, String coordinates, Date start, Date end) {
-        SimpleDateFormat icsFormat = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
-        icsFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        DateTimeFormatter icsFormat = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")
+                .withZone(ZoneId.of("UTC"));
 
-        String startIcs = icsFormat.format(start);
-        String endIcs = icsFormat.format(end);
-        String nowIcs = icsFormat.format(new Date());
+        String startIcs = icsFormat.format(start.toInstant());
+        String endIcs = icsFormat.format(end.toInstant());
+        String nowIcs = icsFormat.format(Instant.now());
         String uid = UUID.randomUUID().toString();
 
         String summary = escapeIcs("Reservation: " + roomName);

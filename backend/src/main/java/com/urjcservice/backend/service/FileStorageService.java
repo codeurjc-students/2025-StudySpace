@@ -33,25 +33,12 @@ public class FileStorageService {
 
     private final S3Client s3Client;
 
-    @Value("${MINIO_BUCKET:studyspace-images}")
+    @Value("${MINIO_BUCKET:studyspace.images}")
     private String bucketName;
 
     public FileStorageService(S3Client s3Client) {
         this.s3Client = s3Client;
     }
-
-    /*
-     * @PostConstruct
-     * public void init() {
-     * try {
-     * this.rootLocation = Paths.get(storageLocation);
-     * Files.createDirectories(this.rootLocation);
-     * } catch (IOException e) {
-     * throw new
-     * IllegalStateException("The storage folder could not be initialized", e);
-     * }
-     * }
-     */
 
     public String store(MultipartFile file) {
         try {
