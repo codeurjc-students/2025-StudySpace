@@ -5,7 +5,7 @@ import com.urjcservice.backend.security.jwt.AuthResponse;
 import com.urjcservice.backend.service.EmailService;
 import com.urjcservice.backend.service.UserService;
 
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,6 +20,7 @@ import jakarta.validation.constraints.Pattern;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Optional;
+import java.time.ZoneId;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -97,6 +98,17 @@ public class AuthController {
             this.newPassword = newPassword;
         }
     }
+    public static class UpdateMeRequest {
+        private String name;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
 
     @GetMapping("/me")
     public ResponseEntity<User> getCurrentUser() {
@@ -134,7 +146,7 @@ public class AuthController {
         String token = java.util.UUID.randomUUID().toString();
         newUser.setVerificationToken(token);
         newUser.setEmailVerified(false);
-        newUser.setVerificationTokenExpiry(LocalDateTime.now().plusHours(24));
+       newUser.setVerificationTokenExpiry(LocalDateTime.now(ZoneId.systemDefault()).plusHours(24));
         // Save on the repository
         userService.save(newUser);
 
@@ -164,7 +176,7 @@ public class AuthController {
     }
 
     @PutMapping("/me")
-    public ResponseEntity<User> updateMe(@RequestBody User request) {
+    public ResponseEntity<User> updateMe(@RequestBody UpdateMeRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

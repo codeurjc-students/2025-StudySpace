@@ -345,7 +345,7 @@ public class RoomService {
 
             // not weekends
             DayOfWeek dow = current.getDayOfWeek();
-            if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) {
+            if (dow.equals(DayOfWeek.SATURDAY) || dow.equals(DayOfWeek.SUNDAY)) {
                 current = current.plusDays(1);
                 continue;
             }
