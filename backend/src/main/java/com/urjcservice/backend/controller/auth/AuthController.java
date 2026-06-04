@@ -98,6 +98,17 @@ public class AuthController {
             this.newPassword = newPassword;
         }
     }
+    public static class UpdateMeRequest {
+        private String name;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
 
     @GetMapping("/me")
     public ResponseEntity<User> getCurrentUser() {
@@ -165,7 +176,7 @@ public class AuthController {
     }
 
     @PutMapping("/me")
-    public ResponseEntity<User> updateMe(@RequestBody User request) {
+    public ResponseEntity<User> updateMe(@RequestBody UpdateMeRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
