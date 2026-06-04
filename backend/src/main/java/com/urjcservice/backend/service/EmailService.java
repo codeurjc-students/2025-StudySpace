@@ -15,9 +15,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.TimeZone;
 import java.util.UUID;
 
 @Service
@@ -108,9 +109,11 @@ public class EmailService {
             helper.setTo(to);
             helper.setSubject("Booking confirmation - " + roomName);
 
-            SimpleDateFormat printFormat = new SimpleDateFormat("HH:mm dd/MM/yyyy");
-            String startStr = printFormat.format(startRaw);
-            String endStr = printFormat.format(endRaw);
+            DateTimeFormatter printFormat = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy")
+                    .withZone(ZoneId.systemDefault());
+
+            String startStr = printFormat.format(startRaw.toInstant());
+            String endStr = printFormat.format(endRaw.toInstant());
 
             String locationText;
             if (coordinates != null && !coordinates.isEmpty()) {
@@ -176,12 +179,12 @@ public class EmailService {
     }
 
     private String generateIcsContent(String roomName, String place, String coordinates, Date start, Date end) {
-        SimpleDateFormat icsFormat = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
-        icsFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        DateTimeFormatter icsFormat = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")
+                .withZone(ZoneId.of("UTC"));
 
-        String startIcs = icsFormat.format(start);
-        String endIcs = icsFormat.format(end);
-        String nowIcs = icsFormat.format(new Date());
+        String startIcs = icsFormat.format(start.toInstant());
+        String endIcs = icsFormat.format(end.toInstant());
+        String nowIcs = icsFormat.format(Instant.now());
         String uid = UUID.randomUUID().toString();
 
         String summary = escapeIcs("Reservation: " + roomName);
