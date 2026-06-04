@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -108,7 +108,7 @@ public class ReservationService {
                     : existingReservation.getEndDate();
             LocalDateTime startLDT = newStart.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
             LocalDateTime endLDT = newEnd.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-            long newDuration = java.time.Duration.between(startLDT, endLDT).toMinutes();
+            long newDuration = Duration.between(startLDT, endLDT).toMinutes();
 
             if (newDuration > 180) {
                 throw new IllegalArgumentException("A single reservation cannot exceed 3 hours.");
@@ -280,7 +280,7 @@ public class ReservationService {
 
         LocalDateTime start = request.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
         LocalDateTime end = request.getEndDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-        long newDuration = java.time.Duration.between(start, end).toMinutes();
+        long newDuration = Duration.between(request.getStartDate().toInstant(), request.getEndDate().toInstant()).toMinutes();
 
         if (newDuration > 180) {
             throw new IllegalArgumentException("A single reservation cannot exceed 3 hours.");
@@ -350,7 +350,7 @@ public class ReservationService {
         LocalDateTime start = startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
         LocalDateTime end = endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
 
-        if (start.isBefore(LocalDateTime.now())) {
+        if (start.isBefore(LocalDateTime.now(ZoneId.systemDefault()))) {
             throw new IllegalArgumentException("Cannot create reservations in the past.");
         }
 
@@ -359,7 +359,7 @@ public class ReservationService {
         }
 
         DayOfWeek day = start.getDayOfWeek();
-        if (day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY) {
+        if (day.equals(DayOfWeek.SATURDAY) || day.equals(DayOfWeek.SUNDAY)) {
             throw new IllegalArgumentException("Reservations are not allowed on weekends.");
         }
 
@@ -378,7 +378,7 @@ public class ReservationService {
                     "Reservations must start and end in 30-minute intervals (e.g., 10:00, 10:30).");
         }
 
-        long minutes = java.time.Duration.between(start, end).toMinutes();
+        long minutes = Duration.between(startDate.toInstant(), endDate.toInstant()).toMinutes();
         if (minutes < 30) {
             throw new IllegalArgumentException("Minimum reservation duration is 30 minutes.");
         }
@@ -389,11 +389,9 @@ public class ReservationService {
 
         long usedMinutes = existingReservations.stream()
                 .filter(r -> !r.getId().equals(excludeReservationId))
-                .mapToLong(r -> {
-                    LocalDateTime start = r.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-                    LocalDateTime end = r.getEndDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-                    return java.time.Duration.between(start, end).toMinutes();
-                })
+                .mapToLong(r -> 
+                    Duration.between(r.getStartDate().toInstant(), r.getEndDate().toInstant()).toMinutes()
+                )
                 .sum();
 
         // limit (3 hours = 180 minutes)

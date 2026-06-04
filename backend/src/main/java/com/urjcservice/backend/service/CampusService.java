@@ -10,7 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.Date;
@@ -92,12 +93,12 @@ public class CampusService {
     private void notifyUserCancellation(Reservation res, String reason) {
         if (res.getUser() != null) {
             try {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
+                DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
+                DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.systemDefault());
 
-                String dateStr = dateFormat.format(res.getStartDate());
-                String startStr = timeFormat.format(res.getStartDate());
-                String endStr = timeFormat.format(res.getEndDate());
+                String dateStr = dateFormat.format(res.getStartDate().toInstant());
+                String startStr = timeFormat.format(res.getStartDate().toInstant());
+                String endStr = timeFormat.format(res.getEndDate().toInstant());
                 String roomName = (res.getRoom() != null) ? res.getRoom().getName() : "Unknown room";
 
                 emailService.sendReservationCancellationEmail(

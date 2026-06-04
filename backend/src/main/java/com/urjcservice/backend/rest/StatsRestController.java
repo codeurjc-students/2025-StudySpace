@@ -4,6 +4,7 @@ import com.urjcservice.backend.dtos.DashboardStatsDTO;
 import com.urjcservice.backend.service.StatsService;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +29,7 @@ public class StatsRestController {
 
         // Today if no date given
         if (date == null) {
-            date = LocalDate.now();
+            date = LocalDate.now(ZoneId.systemDefault());
         }
 
         return ResponseEntity.ok(statsService.getStats(date));

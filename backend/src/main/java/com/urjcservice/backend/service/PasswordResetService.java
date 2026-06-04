@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.UUID;
 
 @Service
@@ -32,7 +33,7 @@ public class PasswordResetService {
         String token = UUID.randomUUID().toString();
 
         user.setResetPasswordToken(token);
-        user.setResetPasswordTokenExpiry(LocalDateTime.now().plusMinutes(15));
+        user.setResetPasswordTokenExpiry(LocalDateTime.now(ZoneId.systemDefault()).plusMinutes(15));
         userRepository.save(user);
 
         String resetLink = frontendUrl + "/reset-password?token=" + token;
@@ -44,7 +45,7 @@ public class PasswordResetService {
         User user = userRepository.findByResetPasswordToken(token)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid reset token"));
 
-        if (user.getResetPasswordTokenExpiry().isBefore(LocalDateTime.now())) {
+        if (user.getResetPasswordTokenExpiry().isBefore(LocalDateTime.now(ZoneId.systemDefault()))) {
             throw new IllegalStateException("The reset link has expired");
         }
 

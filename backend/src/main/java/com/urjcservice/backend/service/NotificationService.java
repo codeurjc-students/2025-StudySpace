@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 
@@ -38,16 +38,16 @@ public class NotificationService {
 
         List<Reservation> upcomingReservations = reservationRepository.findPendingReminders(now, limitEnd);
 
-        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
+        DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm").withZone(java.time.ZoneId.systemDefault());
 
         for (Reservation reservation : upcomingReservations) {
-            long diff = reservation.getStartDate().getTime() - now.getTime();
+        long diff = reservation.getStartDate().getTime() - now.getTime();
 
             if (diff > 0) {
                 String to = reservation.getUser().getEmail();
                 String userName = reservation.getUser().getName();
                 String roomName = reservation.getRoom().getName();
-                String time = timeFormat.format(reservation.getStartDate());
+                String time = timeFormat.format(reservation.getStartDate().toInstant());
 
                 emailService.sendReservationReminder(to, userName, roomName, time);
 

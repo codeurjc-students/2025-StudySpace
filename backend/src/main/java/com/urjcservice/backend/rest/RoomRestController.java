@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import java.net.URI;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -160,7 +161,7 @@ public class RoomRestController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
 
         if (date == null) {
-            date = LocalDate.now();
+            date = LocalDate.now(ZoneId.systemDefault());
         }
 
         // Verify the room exist
