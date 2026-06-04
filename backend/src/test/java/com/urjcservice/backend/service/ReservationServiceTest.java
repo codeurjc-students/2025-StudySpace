@@ -194,8 +194,12 @@ public class ReservationServiceTest {
 
         ReservationRequest request = new ReservationRequest();
         request.setRoomId(roomId);
-        request.setStartDate(toDate(LocalDateTime.of(2026, 5, 20, 10, 0)));
-        request.setEndDate(toDate(LocalDateTime.of(2026, 5, 20, 11, 0)));
+
+        Date start = getNextBusinessDate(1, 10); 
+        Date end = new Date(start.getTime() + 3600000); // + 1hour
+
+        request.setStartDate(start);
+        request.setEndDate(end);
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
         when(roomRepository.findByIdForUpdate(roomId)).thenReturn(Optional.of(activeRoom));
