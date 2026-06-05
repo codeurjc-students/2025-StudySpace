@@ -1,0 +1,317 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Automatizacion del despliegue de StudySpace TFG: VPC, ALB, ECS Fargate, Auto-escalado, RDS y S3'
+
+Parameters:
+  DBPassword:
+    NoEcho: true
+    Description: Password for the production MySQL database
+    Type: String
+  JWTSecret:
+    NoEcho: true
+    Description: The long secret to signing the JWTs
+    Type: String
+  MailPassword:
+    NoEcho: true
+    Description: Gmail app password
+    Type: String
+
+Resources:
+  # ========================================================================
+  # NETWORKS (VPC) AND SECURITY
+  # ========================================================================
+  StudySpaceVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref StudySpaceVPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref StudySpaceVPC
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  # ALB requires 2 subnets in different Availability Zones
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref StudySpaceVPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [0, !GetAZs '']
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref StudySpaceVPC
+      CidrBlock: 10.0.2.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [1, !GetAZs '']
+
+  Subnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  Subnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  # --- SECURITY GROUPS ---
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Permite trafico HTTP desde Internet
+      VpcId: !Ref StudySpaceVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  ECSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Permite trafico solo desde el Application Load Balancer
+      VpcId: !Ref StudySpaceVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          SourceSecurityGroupId: !Ref ALBSecurityGroup
+
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Permite entrada a MySQL solo desde los contenedores ECS
+      VpcId: !Ref StudySpaceVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !Ref ECSSecurityGroup 
+
+  # ========================================================================
+  # STORAGE (S3 AND RDS)
+  # ========================================================================
+  StudySpaceBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "studyspace-images-${AWS::AccountId}-${AWS::Region}"
+
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnets para la base de datos
+      SubnetIds:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+
+  StudySpaceDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBName: study_space_db
+      DBInstanceClass: db.t3.micro
+      AllocatedStorage: 20
+      Engine: mysql
+      EngineVersion: '8.0'
+      MasterUsername: admin
+      MasterUserPassword: !Ref DBPassword
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups:
+        - !GetAtt RDSSecurityGroup.GroupId
+      PubliclyAccessible: false
+
+  # ========================================================================
+  # LOAD BALANCER (ALB)
+  # ========================================================================
+  PublicLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internet-facing
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      SecurityGroups:
+        - !GetAtt ALBSecurityGroup.GroupId
+
+  ALBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Port: 8080
+      Protocol: HTTP
+      VpcId: !Ref StudySpaceVPC
+      TargetType: ip
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /  # The ALB will ping here. must returns 200 OK on to know the replica is alive.
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 4
+
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ALBTargetGroup
+      LoadBalancerArn: !Ref PublicLoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+  # ========================================================================
+  # ECS FARGATE AND ROLES
+  # ========================================================================
+  StudySpaceCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: studyspace-cluster
+
+  ECSExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+  ECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+
+  StudySpaceLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /ecs/studyspace
+      RetentionInDays: 7
+
+  StudySpaceTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: studyspace-app-task
+      RequiresCompatibilities:
+        - FARGATE
+      NetworkMode: awsvpc
+      Cpu: 512
+      Memory: 1024
+      ExecutionRoleArn: !GetAtt ECSExecutionRole.Arn
+      TaskRoleArn: !GetAtt ECSTaskRole.Arn
+      ContainerDefinitions:
+        - Name: studyspace-app
+          Image: guiller25/studyspace-app:test-aws9
+          PortMappings:
+            - ContainerPort: 8080
+              Protocol: tcp
+          Environment:
+            - Name: APP_FRONTEND_URL
+              Value: !Sub "http://${PublicLoadBalancer.DNSName}"
+            - Name: SPRING_DATASOURCE_URL
+              # CloudFormation waits for RDS to exist and injects its real address here
+              Value: !Sub "jdbc:mysql://${StudySpaceDB.Endpoint.Address}:3306/study_space_db?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true"
+            - Name: SPRING_DATASOURCE_USERNAME
+              Value: admin
+            - Name: SPRING_DATASOURCE_PASSWORD
+              Value: !Ref DBPassword
+            - Name: MINIO_BUCKET
+              Value: !Ref StudySpaceBucket
+            - Name: JWT_SECRET
+              Value: !Ref JWTSecret
+            - Name: MAIL_PASSWORD
+              Value: !Ref MailPassword
+            - Name: APP_DB_INIT_ENABLED
+              Value: "true"
+            - Name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              Value: "update"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref StudySpaceLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: ecs
+
+  StudySpaceService:
+    Type: AWS::ECS::Service
+    DependsOn: ALBListener # Wait until the load balancer is ready
+    Properties:
+      Cluster: !Ref StudySpaceCluster
+      ServiceName: studyspace-service
+      TaskDefinition: !Ref StudySpaceTaskDefinition
+      DesiredCount: 2
+      LaunchType: FARGATE
+      HealthCheckGracePeriodSeconds: 120 # 2 minutes for Spring to start
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref ECSSecurityGroup
+          Subnets:
+            - !Ref PublicSubnet1
+            - !Ref PublicSubnet2
+      LoadBalancers:
+        - ContainerName: studyspace-app
+          ContainerPort: 8080
+          TargetGroupArn: !Ref ALBTargetGroup
+
+  # ========================================================================
+  # AUTO-SCALING
+  # ========================================================================
+  StudySpaceScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: 10
+      MinCapacity: 2
+      ResourceId: !Sub "service/${StudySpaceCluster}/${StudySpaceService.Name}"
+      RoleARN: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+
+  StudySpaceScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: CPU-AutoScaling
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref StudySpaceScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        TargetValue: 70.0
+        ScaleInCooldown: 120
+        ScaleOutCooldown: 60
+
+Outputs:
+  WebURL:
+    Description: "URL de acceso a la aplicacion (Application Load Balancer)"
+    Value: !Sub "http://${PublicLoadBalancer.DNSName}"
