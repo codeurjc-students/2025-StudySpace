@@ -185,6 +185,9 @@ Resources:
     Type: AWS::ECS::Cluster
     Properties:
       ClusterName: studyspace-cluster
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
 
   ECSExecutionRole:
     Type: AWS::IAM::Role
@@ -269,7 +272,7 @@ Resources:
       Cluster: !Ref StudySpaceCluster
       ServiceName: studyspace-service
       TaskDefinition: !Ref StudySpaceTaskDefinition
-      DesiredCount: 2
+      DesiredCount: 1
       LaunchType: FARGATE
       HealthCheckGracePeriodSeconds: 120 # 2 minutes for Spring to start
       NetworkConfiguration:
@@ -292,7 +295,7 @@ Resources:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
       MaxCapacity: 10
-      MinCapacity: 2
+      MinCapacity: 1
       ResourceId: !Sub "service/${StudySpaceCluster}/${StudySpaceService.Name}"
       RoleARN: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
       ScalableDimension: ecs:service:DesiredCount
