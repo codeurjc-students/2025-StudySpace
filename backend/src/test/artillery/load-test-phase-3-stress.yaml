@@ -4,33 +4,33 @@ config:
   http:
     keepAlive: true
     timeout: 5        
-    pool: 150         
+    pool: 50         
   
   variables:
     reason: "Stress Test 3"
 
   phases:
-    - duration: 120
+    - duration: 60
       arrivalRate: 2
       name: "Warm up"
 
     - duration: 240
       arrivalRate: 2
-      rampTo: 15 
+      rampTo: 8 
       name: "Phase 2: Aggressive ramp up (Looking for the bottleneck)"
 
     - duration: 180
-      arrivalRate: 15
-      name: "Fase 3: Estabilización de las nuevas réplicas"
+      arrivalRate: 8
+      name: "Phase 3: Stabilization of the new replicas"
 
     - duration: 240
-      arrivalRate: 15
-      rampTo: 35
+      arrivalRate: 8
+      rampTo: 16
       name: "Phase 4: Pushing to the limit (Seeking the collapse of the system)"
 
     - duration: 120
-      arrivalRate: 35
-      name: "Phase 5: Sustained collapse"
+      arrivalRate: 2
+      name: "Phase 5: Little recovery"
 
 scenarios:
   - name: "Login and room search"

@@ -91,7 +91,7 @@ Esta prueba establece una línea base atacando directamente a una única instanc
   - Captura de pantalla de Artillery Cloud de este test:
 
     ![Captura resultados test 0 de artillery](../images/screenshots-artillery/load-test-phase-0.png)
-    [Enlace al reporte completo en Artillery Cloud](https://app.artillery.io/opmgtbvasi7hy/load-tests/ttrq9_5atq3hydrf5cr77xktqf8p85wxaqf_ybtm)
+    [Enlace al reporte completo en PDF](artillery_reports/artillery-test-0.pdf)
 
 - Conclusiones de la prueba: La aplicación maneja correctamente la concurrencia a nivel de base de datos, permitiendo solo una reserva exitosa y rechazando las demás. Sin embargo, el tiempo de respuesta p95 de 433ms indica que bajo esta carga, la aplicación puede experimentar cierta latencia, lo que sugiere que la arquitectura monolítica sin balanceo de carga puede no ser óptima para manejar cargas más altas.
 
@@ -117,12 +117,12 @@ Esta prueba evalúa la aplicación contenerizada completa (el docker-compose-dev
   - Captura de pantalla de Artillery Cloud de este test:
 
     ![Captura resultados test 1A de artillery](../images/screenshots-artillery/load-test-phase-1.png)
-    [Enlace al reporte completo en Artillery Cloud](https://app.artillery.io/opmgtbvasi7hy/load-tests/tdqza_e6dxacbw3rc3bka5p7bjckrdg5dy7_3emn)
+    [Enlace al reporte completo en PDF](artillery_reports/artillery-test-1A-primero.pdf)
 
   - Captura de pantalla de Artillery Cloud de este test con mas usuarios por segundo para mostrar la diferencia y el aforo limite de la aplicación en local para este test:
 
     ![Captura resultados test 1A de artillery](../images/screenshots-artillery/load-test-phase-1A-primero.png)
-    [Enlace al reporte completo en Artillery Cloud](https://app.artillery.io/opmgtbvasi7hy/load-tests/tyttk_hcf64ykt5a67dhz9y7r56xk89c8cw_9j6b)
+    [Enlace al reporte completo en PDF](artillery_reports/artillery-test-1A-segundo.pdf)
 
 - Conclusiones de la prueba: A pesar de inyectar más del doble de usuarios virtuales que en la Fase 0, la arquitectura distribuida redujo el tiempo de respuesta p95 de 433ms a 162ms. Nuevamente, la regla de concurrencia se mantuvo sólida: 1 única reserva exitosa (HTTP 201) y 117 rechazos controlados (HTTP 400).
 
@@ -158,7 +158,7 @@ Con el fin de evaluar el rendimiento de la arquitectura ante lógica de negocio 
   - Captura de pantalla de Artillery Cloud de este test:
 
     ![Captura resultados test 1B de artillery](../images/screenshots-artillery/load-test-phase-1-heavy.png)
-    [Enlace al reporte completo en Artillery Cloud](https://app.artillery.io/opmgtbvasi7hy/load-tests/txe97_jxk3jxxjr8ht4q6cnf43xggqewz7p_t448)
+    [Enlace al reporte completo en PDF](artillery_reports/artillery-test-1B.pdf)
 
 Conclusiones de la prueba: La aplicación demuestra una alta capacidad de cómputo en local manteniendo unos tiempos de respuesta razonables para los procesos que se le piden, a pesar de las limitaciones del hardware sobre el que se ejecutan las pruebas, ante consultas bastante estresantes debido a la cantidad de computo que llevan.
 
