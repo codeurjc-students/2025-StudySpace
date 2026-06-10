@@ -25,7 +25,7 @@ config:
 
     - duration: 240
       arrivalRate: 8
-      rampTo: 16
+      rampTo: 12
       name: "Phase 4: Pushing to the limit (Seeking the collapse of the system)"
 
     - duration: 120

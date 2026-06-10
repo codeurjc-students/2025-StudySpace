@@ -20,7 +20,7 @@ Estas pruebas se llevaron a cabo en mi ordenador local con estas especificacione
 
 - Almacenamiento: [238 GB SSD ]
 
-##### Fase 2   REVISAR ESTOOOOOO  SO? HAY MAS ESPECIFICACIONES IMPORTANTES?
+##### Fase 2  
 En esta fase se desplegó la infraestructura en Amazon Web Services (AWS) mediante una plantilla de CloudFormation, utilizando recursos limitados correspondientes a la capa gratuita para establecer un entorno de pruebas controlado y de bajo coste:
 
 - **Instancia EC2 (Servidor de Aplicaciones):** instancia `t3.micro` (2 vCPU, 1 GB de memoria RAM), ejecutando una única instancia contenerizada de la aplicación mediante Docker, sin réplicas ni políticas de auto-escalado activas.
