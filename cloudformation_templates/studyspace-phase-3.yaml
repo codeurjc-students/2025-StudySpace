@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Automatizacion del despliegue de StudySpace TFG: VPC, ALB, ECS Fargate, Auto-escalado, RDS y S3'
+Description: 'Automation of StudySpace deployment TFG: VPC, ALB, ECS Fargate, Auto-scaling, RDS and S3'
 
 Parameters:
   DBPassword:
@@ -81,7 +81,7 @@ Resources:
   ALBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Permite trafico HTTP desde Internet
+      GroupDescription: Allows HTTP traffic from the Internet
       VpcId: !Ref StudySpaceVPC
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -92,7 +92,7 @@ Resources:
   ECSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Permite trafico solo desde el Application Load Balancer
+      GroupDescription: Allows traffic only from the Application Load Balancer
       VpcId: !Ref StudySpaceVPC
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -103,7 +103,7 @@ Resources:
   RDSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Permite entrada a MySQL solo desde los contenedores ECS
+      GroupDescription: Allows access to MySQL only from ECS containers
       VpcId: !Ref StudySpaceVPC
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -122,7 +122,7 @@ Resources:
   DBSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
-      DBSubnetGroupDescription: Subnets para la base de datos
+      DBSubnetGroupDescription: Subnets for the database
       SubnetIds:
         - !Ref PublicSubnet1
         - !Ref PublicSubnet2
@@ -234,7 +234,7 @@ Resources:
       TaskRoleArn: !GetAtt ECSTaskRole.Arn
       ContainerDefinitions:
         - Name: studyspace-app
-          Image: guiller25/studyspace-app:test-aws9
+          Image: guiller25/studyspace-app:latest
           PortMappings:
             - ContainerPort: 8080
               Protocol: tcp
@@ -272,7 +272,7 @@ Resources:
       Cluster: !Ref StudySpaceCluster
       ServiceName: studyspace-service
       TaskDefinition: !Ref StudySpaceTaskDefinition
-      DesiredCount: 1
+      DesiredCount: 2
       LaunchType: FARGATE
       HealthCheckGracePeriodSeconds: 120 # 2 minutes for Spring to start
       NetworkConfiguration:
@@ -295,7 +295,7 @@ Resources:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
       MaxCapacity: 10
-      MinCapacity: 1
+      MinCapacity: 2
       ResourceId: !Sub "service/${StudySpaceCluster}/${StudySpaceService.Name}"
       RoleARN: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
       ScalableDimension: ecs:service:DesiredCount
@@ -310,9 +310,9 @@ Resources:
       TargetTrackingScalingPolicyConfiguration:
         PredefinedMetricSpecification:
           PredefinedMetricType: ECSServiceAverageCPUUtilization
-        TargetValue: 70.0
+        TargetValue: 50.0 
         ScaleInCooldown: 120
-        ScaleOutCooldown: 60
+        ScaleOutCooldown: 30 
 
 Outputs:
   WebURL:

@@ -1,33 +1,27 @@
 config:
-  target: "http://localhost" 
-  processor: "./processor-multi-room.js"
+  target: "http://localhost"
+  processor: "./processor-multi-room-2.js"
   http:
     keepAlive: true
-    timeout: 5
-    pool: 50
+    timeout: 5        
+    pool: 100         
       
   variables:
-    reason: "Step Load Test ECS"
+    reason: "Spike Test"
 
   phases:
     - duration: 60
       arrivalRate: 2
-      name: "Phase 1: Warm-up"
-    - duration: 240
-      arrivalRate: 2
-      rampTo: 12
-      name: "Phase 2: Progressive Ramp (Forcing Auto-scaling)"
-    - duration: 300 
-      arrivalRate: 12
-      name: "Phase 3: Sustained high load (New replicas come into operation)"
-    # Survive the "ScaleInCooldown" (120s) so that CloudWatch sees that
-    # there is no longer any danger and starts destroying the remaining containers.
+      name: "Warm up"
+    - duration: 60
+      arrivalRate: 25
+      name: "Peak of reservations"
     - duration: 300
       arrivalRate: 2
-      name: "Phase 4: Cooling (Activating Scale-In)"
+      name: "Recover "
 
 scenarios:
-  - name: "Login and room search"
+  - name: "Student desperate to book"
     weight: 70
     flow:
       - function: "setupDatesAndRooms" 
@@ -36,31 +30,46 @@ scenarios:
           json:
             username: "{{ email }}"
             password: "{{ password }}"
-      - think: 2
+            
+      - think: 1 
       - get:
           url: "/api/search/rooms?text={{searchText}}&campusId={{searchCampusId}}&minCapacity={{searchCapacity}}&active=true&page=0&size=10"
-      - think: 5
-
-  - name: "Smart Search and alternative book"
-    weight: 30
-    flow:
-      - function: "setupDatesAndRooms"
-      - post:
-          url: "/api/auth/login"
-          json:
-            username: "{{ email }}"
-            password: "{{ password }}"
       - think: 2
-      - get:
-          url: "/api/search/rooms?text={{searchText}}&active=true&page=0&size=10"
-      - think: 4
-      - get:
-          url: "/api/reservations/smart-search?start={{encodedStartDate}}&end={{encodedEndDate}}&capacity={{searchCapacity}}"
-      - think: 5
+
       - post:
           url: "/api/reservations"
           json:
             roomId: "{{ roomId }}"
             startDate: "{{ dynamicStartDate }}"
             endDate: "{{ dynamicEndDate }}"
-            reason: "Reserva estudio"
+            reason: "Reserva estudio exámenes finales"
+            
+  - name: "Student desperate to book with room conflict"
+    weight: 30
+    flow:
+      - function: "setupDatesAndRooms" 
+      - post:
+          url: "/api/auth/login"
+          json:
+            username: "{{ email }}"
+            password: "{{ password }}"
+            
+      - think: 1 
+      - get:
+          url: "/api/search/rooms?text={{searchText}}&campusId={{searchCampusId}}&minCapacity={{searchCapacity}}&active=true&page=0&size=10"
+      - think: 2
+
+      - get:
+          url: "/api/reservations/smart-search?start={{encodedStartDate}}&end={{encodedEndDate}}&capacity={{searchCapacity}}"
+      - think: 3
+
+      - post:
+          url: "/api/reservations"
+          json:
+            roomId: "{{ roomId }}"
+            startDate: "{{ dynamicStartDate }}"
+            endDate: "{{ dynamicEndDate }}"
+            reason: "Reserva estudio exámenes finales"
+            
+
+
