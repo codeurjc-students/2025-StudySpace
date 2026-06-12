@@ -241,6 +241,8 @@ Resources:
           Environment:
             - Name: APP_FRONTEND_URL
               Value: !Sub "http://${PublicLoadBalancer.DNSName}"
+            - Name: SERVER_FORWARD_HEADERS_STRATEGY
+              Value: "framework"
             - Name: SPRING_DATASOURCE_URL
               # CloudFormation waits for RDS to exist and injects its real address here
               Value: !Sub "jdbc:mysql://${StudySpaceDB.Endpoint.Address}:3306/study_space_db?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true"
@@ -314,7 +316,57 @@ Resources:
         ScaleInCooldown: 240
         ScaleOutCooldown: 60 
 
+  # ========================================================================
+  # CLOUDFRONT (HTTPS)
+  # ========================================================================
+  StudySpaceCloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        HttpVersion: http2
+        Comment: "CloudFront distribution to enable HTTPS in the StudySpace ALB"
+        Origins:
+          - Id: ALBOrigin
+            DomainName: !GetAtt PublicLoadBalancer.DNSName
+            CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginProtocolPolicy: http-only
+            OriginCustomHeaders:
+              - HeaderName: X-Forwarded-Proto
+                HeaderValue: https
+        DefaultCacheBehavior:
+          TargetOriginId: ALBOrigin
+          ViewerProtocolPolicy: redirect-to-https # Fuerza a los usuarios a usar HTTPS
+          AllowedMethods:
+            - DELETE
+            - GET
+            - HEAD
+            - OPTIONS
+            - PATCH
+            - POST
+            - PUT
+          CachedMethods:
+            - GET
+            - HEAD
+          ForwardedValues:
+            QueryString: true
+            Headers:
+              - Accept
+              - Authorization
+              - Content-Type
+              - Host
+              - Origin
+            Cookies:
+              Forward: all # keeps JWT cookies active between requests
+          MinTTL: 0
+          DefaultTTL: 0
+          MaxTTL: 0
+
 Outputs:
   WebURL:
     Description: "URL de acceso a la aplicacion (Application Load Balancer)"
-    Value: !Sub "http://${PublicLoadBalancer.DNSName}"
+    Value: !Sub "https://${StudySpaceCloudFrontDistribution.DomainName}"
+
+

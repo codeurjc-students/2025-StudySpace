@@ -1,13 +1,10 @@
 config:
   target: "http://localhost" 
   processor: "./processor-multi-room.js"
-  payload:
-    - path: "users.csv"
-      fields:
-        - "email"
-        - "password"
-      order: "random"
-      skipHeader: true        
+  http:
+    keepAlive: true
+    timeout: 5        
+    pool: 50         
       
   variables:
     reason: "Soak Test"
@@ -16,7 +13,7 @@ config:
       arrivalRate: 2
       name: "Phase 1: Warm up"
     - duration: 7200 # 2 hours
-      arrivalRate: 2
+      arrivalRate: 5
       name: "Soak test (Evaluating Memory Leaks)"
 
 scenarios:
