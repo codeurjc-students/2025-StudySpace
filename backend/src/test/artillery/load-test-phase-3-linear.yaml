@@ -3,8 +3,8 @@ config:
   processor: "./processor-multi-room.js"
   http:
     keepAlive: true
-    timeout: 5
-    pool: 50
+    timeout: 4
+    pool: 20
       
   variables:
     reason: "Step Load Test ECS"
@@ -15,10 +15,10 @@ config:
       name: "Phase 1: Warm-up"
     - duration: 240
       arrivalRate: 2
-      rampTo: 12
+      rampTo: 8
       name: "Phase 2: Progressive Ramp (Forcing Auto-scaling)"
     - duration: 300 
-      arrivalRate: 12
+      arrivalRate: 8
       name: "Phase 3: Sustained high load (New replicas come into operation)"
     # Survive the "ScaleInCooldown" (120s) so that CloudWatch sees that
     # there is no longer any danger and starts destroying the remaining containers.

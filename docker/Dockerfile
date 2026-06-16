@@ -13,34 +13,34 @@ COPY frontend/ ./
 RUN npm run build -- --configuration production
 
 # ==========================================
-# Build Backend (Spring Boot)
+# 2. Build Backend (Spring Boot Native)
 # ==========================================
-FROM maven:3.9.6-eclipse-temurin-17 AS backend-build
+#  This uses the standard Oracle Linux/glibc-based compiler.
+FROM ghcr.io/graalvm/native-image-community:17 AS backend-build
 WORKDIR /app/backend
 
-# Copy the pom.xml and the code
+COPY backend/.mvn ./.mvn
+COPY backend/mvnw ./
+RUN chmod +x ./mvnw
+
 COPY backend/pom.xml ./
 COPY backend/src ./src
 
-# create the static folder
 RUN mkdir -p src/main/resources/static
-
-# Copy Angular on the static folder we created
 COPY --from=frontend-build /app/frontend/dist/frontend/browser/ src/main/resources/static/
 
-# Copy .jar without tests
-RUN mvn clean package -DskipTests
+RUN ./mvnw -Pnative native:compile -DskipTests
 
 # ==========================================
-# Final Image
+# 3. Final Image (Debian Slim)
 # ==========================================
-FROM eclipse-temurin:17-jre-alpine
+#debian-slim instead of alpine. It is compatible with the glibc binary.
+FROM debian:bookworm-slim
 WORKDIR /app
 
-# Copy last .jar from the backend-build stage
-COPY --from=backend-build /app/backend/target/*.jar app.jar
 
-# port of backend 8080
+COPY --from=backend-build /app/backend/target/backend ./app-executable
+
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["./app-executable"]

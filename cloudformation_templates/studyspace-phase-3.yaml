@@ -234,7 +234,7 @@ Resources:
       TaskRoleArn: !GetAtt ECSTaskRole.Arn
       ContainerDefinitions:
         - Name: studyspace-app
-          Image: guiller25/studyspace-app:latest
+          Image: guiller25/studyspace-app:test-native1
           PortMappings:
             - ContainerPort: 8080
               Protocol: tcp
@@ -296,7 +296,7 @@ Resources:
   StudySpaceScalableTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
-      MaxCapacity: 10
+      MaxCapacity: 5
       MinCapacity: 2
       ResourceId: !Sub "service/${StudySpaceCluster}/${StudySpaceService.Name}"
       RoleARN: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
