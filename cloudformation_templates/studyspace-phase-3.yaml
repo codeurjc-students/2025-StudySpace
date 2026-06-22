@@ -234,7 +234,7 @@ Resources:
       TaskRoleArn: !GetAtt ECSTaskRole.Arn
       ContainerDefinitions:
         - Name: studyspace-app
-          Image: guiller25/studyspace-app:test-native1
+          Image: guiller25/studyspace-app:test-aot
           PortMappings:
             - ContainerPort: 8080
               Protocol: tcp

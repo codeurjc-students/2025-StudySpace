@@ -9,8 +9,11 @@ Para poder levantar el entorno de desarrollo y ejecutar las pruebas, es necesari
 - Node.js (v18+) y su gestor de paquetes npm.
 - Angular CLI (para la ejecución de pruebas del frontend con ng).
 
-En caso de querer únicamente ejecutar la aplicación, bastará con tener Docker Desktop instalado y en ejecución, y solo requerirá de descargar la carpeta docker del proyecto, sin necesidad de instalar Java, Node o Angular CLI, ya que la aplicación se ejecuta completamente dentro de contenedores Docker.
-De no ser este el caso siga con los pasos a continuación.
+> **Nota:** En caso de querer únicamente ejecutar la aplicación en local, bastará con tener Docker Desktop instalado y en ejecución, y solo requerirá de descargar la carpeta docker del proyecto, sin necesidad de instalar Java, Node o Angular CLI, ya que la aplicación se ejecuta completamente dentro de contenedores Docker. 
+>
+> Si solo desea ejecutarla en Amazon Web Services (AWS) solo necesitara subir a CloudFormation la plantilla (correspondiente a la fase que desee ejecutar) dentro de la carpeta `cloudformation_templates` en la raiz del proyecto.
+>
+> De no ser este el caso siga con los pasos a continuación.
 
 ---
 
@@ -30,6 +33,8 @@ cd 2025-StudySpace
 > Debido a que la aplicación utiliza un **certificado SSL auto-firmado**, el navegador bloqueará por defecto la visualización y acceso a la aplicación, a menos que se acepte el riesgo inicialmente.
 >
 > Este paso es fundamental para que se muestre la aplicación, al no confiar en el certificado por ser auto-firmado.
+>
+> **Nota:** Si la aplicación no es elevantada en local sino con Amazon Web Serrvices (AWS), no sera necesario aceptar ningun riesgo ya que el certificado nos lo proporcionara Amazon.
 
 ### Levantar el entorno con Docker
 
@@ -225,7 +230,7 @@ docker-compose -f docker-compose.e2e.yml down -v
 
 ##### Pruebas para la fase 2
 
-Para ejecutar las pruebas de la fase 2 tanto la de resistencia como la de estres se requiere de tener en **AWS(Amazon Web Sevices)** desplegada la aplicación mediante la plantilla que hay en la raiz del repositorio para **CloudFormation** que generara automaticamente todo lo necesario para que la aplicación funcione. En esta prueba la plantilla solo genera 1 replica de la aplicación sin balanceador de carga alguno por lo que las limitaciones de la aplicación son las que una `t3.micro` ofrece dentro de AWS. Para estas pruebas ya no sera necesario tener docker abierto ya que unicamente deberemos comunicarnos via terminal con la aplicación desplegada en AWS.
+Para ejecutar las pruebas de la fase 2 tanto la de resistencia como la de estres se requiere de tener en **Amazon Web Sevices (AWS)** desplegada la aplicación mediante la plantilla que hay en la raiz del repositorio para **CloudFormation** que generara automaticamente todo lo necesario para que la aplicación funcione. En esta prueba la plantilla solo genera 1 replica de la aplicación sin balanceador de carga alguno por lo que las limitaciones de la aplicación son las que una `t3.micro` ofrece dentro de AWS. Para estas pruebas ya no sera necesario tener docker abierto ya que unicamente deberemos comunicarnos via terminal con la aplicación desplegada en AWS.
 
 Una vez tenga levantada la aplicación en AWS esta le dara una ip donde se encuentra levantada para acceder. Guarde esa ip ya que la usaremos para los comandos que ejecutan las pruebas.
 
@@ -266,5 +271,5 @@ Sustituyendo la ip por la ip donde este desplegada nuestra aplicación como se m
 
 ##### Pruebas para la fase 3
 
-
+Es el mismo procedimiento que para las pruebas de la fase 2, sustituyendo la url por la url en la que este levantada la aplicación en ese momento y sustituyendo el test por el test pertinente dentro de los test de esta fase (todos contienen un "phase-3" en su nombre).
 

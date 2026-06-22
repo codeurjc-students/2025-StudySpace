@@ -16,12 +16,8 @@ RUN npm run build -- --configuration production
 # 2. Build Backend (Spring Boot Native)
 # ==========================================
 #  This uses the standard Oracle Linux/glibc-based compiler.
-FROM ghcr.io/graalvm/native-image-community:17 AS backend-build
+FROM maven:3.9.6-eclipse-temurin-17 AS backend-build
 WORKDIR /app/backend
-
-COPY backend/.mvn ./.mvn
-COPY backend/mvnw ./
-RUN chmod +x ./mvnw
 
 COPY backend/pom.xml ./
 COPY backend/src ./src
@@ -29,18 +25,20 @@ COPY backend/src ./src
 RUN mkdir -p src/main/resources/static
 COPY --from=frontend-build /app/frontend/dist/frontend/browser/ src/main/resources/static/
 
-RUN ./mvnw -Pnative native:compile -DskipTests
+RUN mvn clean package -DskipTests
+
+
 
 # ==========================================
 # 3. Final Image (Debian Slim)
 # ==========================================
 #debian-slim instead of alpine. It is compatible with the glibc binary.
-FROM debian:bookworm-slim
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-
-COPY --from=backend-build /app/backend/target/backend ./app-executable
+COPY --from=backend-build /app/backend/target/*.jar app.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["./app-executable"]
+# Arrancamos diciéndole a Spring que use la optimización a nivel de código (AOT)
+ENTRYPOINT ["java", "-Dspring.aot.enabled=true", "-XX:TieredStopAtLevel=1", "-noverify", "-jar", "app.jar"]
