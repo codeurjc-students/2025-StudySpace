@@ -162,7 +162,7 @@ Resources:
       Protocol: HTTP
       VpcId: !Ref StudySpaceVPC
       TargetType: ip
-      HealthCheckIntervalSeconds: 30
+      HealthCheckIntervalSeconds: 50
       HealthCheckPath: /  # The ALB will ping here. must returns 200 OK on to know the replica is alive.
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2
@@ -234,7 +234,7 @@ Resources:
       TaskRoleArn: !GetAtt ECSTaskRole.Arn
       ContainerDefinitions:
         - Name: studyspace-app
-          Image: guiller25/studyspace-app:test-aot
+          Image: guiller25/studyspace-app:test-noaot
           PortMappings:
             - ContainerPort: 8080
               Protocol: tcp
@@ -312,9 +312,9 @@ Resources:
       TargetTrackingScalingPolicyConfiguration:
         PredefinedMetricSpecification:
           PredefinedMetricType: ECSServiceAverageCPUUtilization
-        TargetValue: 65.0 
-        ScaleInCooldown: 240
-        ScaleOutCooldown: 60 
+        TargetValue: 60.0 
+        ScaleInCooldown: 180
+        ScaleOutCooldown: 50 
 
   # ========================================================================
   # CLOUDFRONT (HTTPS)
@@ -338,7 +338,7 @@ Resources:
                 HeaderValue: https
         DefaultCacheBehavior:
           TargetOriginId: ALBOrigin
-          ViewerProtocolPolicy: redirect-to-https # Fuerza a los usuarios a usar HTTPS
+          ViewerProtocolPolicy: redirect-to-https # Force to use HTTPS
           AllowedMethods:
             - DELETE
             - GET

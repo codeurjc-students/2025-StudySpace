@@ -3,7 +3,7 @@ config:
   processor: "./processor-multi-room.js"
   http:
     keepAlive: true
-    timeout: 4
+    timeout: 6
     pool: 20
       
   variables:

@@ -4,7 +4,7 @@ config:
   http:
     keepAlive: true
     timeout: 5        
-    pool: 50         
+    pool: 20         
       
   variables:
     reason: "Soak Test"

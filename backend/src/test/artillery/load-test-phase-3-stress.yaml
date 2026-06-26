@@ -3,8 +3,8 @@ config:
   processor: "./processor-multi-room.js"
   http:
     keepAlive: true
-    timeout: 5        
-    pool: 50         
+    timeout: 6        
+    pool: 20         
   
   variables:
     reason: "Stress Test 3"
@@ -16,16 +16,16 @@ config:
 
     - duration: 240
       arrivalRate: 2
-      rampTo: 8 
+      rampTo: 4 
       name: "Phase 2: Aggressive ramp up (Looking for the bottleneck)"
 
     - duration: 180
-      arrivalRate: 8
+      arrivalRate: 4
       name: "Phase 3: Stabilization of the new replicas"
 
     - duration: 240
-      arrivalRate: 8
-      rampTo: 12
+      arrivalRate: 5
+      rampTo: 7
       name: "Phase 4: Pushing to the limit (Seeking the collapse of the system)"
 
     - duration: 120

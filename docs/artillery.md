@@ -308,32 +308,166 @@ El objetivo de esta prueba fue el mismo que el de la prueba de esfuerzo de la fa
 - **Perfil de Reserva Directa (20% de la carga):** Usuarios activos que efectúan consultas y proceden a intentar registrar de forma inmediata una reserva fija (`/api/reservations`).
 - **Perfil de Búsqueda Inteligente (10% de la carga):** Usuarios que invocan de manera intensiva el algoritmo avanzado de sugerencias alternativas y disponibilidad temporal (`/api/reservations/smart-search`).
 
-#### Configuración de la carga:
+#### Configuración de la prueba:
 La prueba se estructuró en 5 fases progresivas de inyección en Artillery, buscando no colapsar la CPU y la base de datos antes de que se llegaran a implementar algunas de las replicas, para asi poder comprobar como el sistema se adaptaba mediante el balanceador de carga de AWS a la carga de la prueba. Se dividio en las siguinetes fases la prueba:  
 una fase de calentamiento a 2 UV/seg durante 60 segundos, seguida de un incremento hasta 8 UV/seg durante 240 segundos(4 minutos), después se sostuvo la carga de 8 UV/seg en los siguientes 180 segundos(3 minutos) con el fin de que se estabilizaran las nuevas replicas para que funcionaran para la carga con mas usuarios, se volvio a aumentar a 12 UV/seg durante otros 240 segundos y se finalizo con una pequeña fase de 120 segundos con una carga de 2 UV/seg para que volviera a un flujo calmado.
 
-########Revisar####################
+
+Se programo que ante un uso igual o superior al 65% de CPU se crearan nuevas replicas de la aplicación para solventar este consumo. Las replicas tardaron al rededor de 40 segundos en ponerse operativas, pidiendo una señal de vida de estas cada 50 segundos y retirandolas pasados 240 segundos de no recibir señal de estas mismas.
+
+
+#### Resultados de ejecución de la prueba:
+- **Completados con éxito lógico:** 42,11% de los usuarios virtuales completaron sus flujos de navegación completos. El resto de usuarios o bien por sobrepasar el tiempo maximo programado en las peticiones, o bien por fallo de las propias replicas al escalar (debido a la falta de CPU en algunos momentos de la ejecucion) recibieron errores HTTP 500 por ETIMEDOUT (time out).
+- **Rendimiento por Endpoint:**
+  - `/api/auth/login`, `/api/search/rooms`, `/api/reservations/smart-search` y `/api/reservations`: recibieron un 100% de respuestas exitosas (HTTP 200 y 201). Confirmando de esta forma que las peticiones que no se salieron del tiempo de espera fueron todas  exitosas. 
+  - **Tiempos de respuesta (Latencia):** La mediana (p50) estuvo en torno a los 608ms y media de 1,3 segundos, esto junto con el p95 de 4,4 segundos y el p99 de 4,8 segundos muestra que la aplicación ante picos de estres genera tiempos muy diferidos entre usuarios, siendo muy rapidos para algunos y muy lentos para otros. Esto también puede verse si comprobamos la diferencia entre el tiempo maximo de CPU dentro de la métricas que nos ofrece Amazon Cloud Watch.
+  ![Captura resultados test estres cloudWatch CPU](../images/screenshots-artillery/CPUStress3.png)
+  Como se puede apreciar en la grafica los tiempos medios llegado un punto de colapso de la CPU comienzan a diferir mucho dependiendo de si nuestra peticion esta en cola o no.
+
+
+
+#### Captura de pantalla de Artillery Cloud de la prueba de estres de esta fase:
+
+![Captura resultados test 2A de artillery](../images/screenshots-artillery/StressTest3ArtilleryCLoud.png)
+[Enlace al reporte completo en Artillery Cloud](https://app.artillery.io/opmgtbvasi7hy/load-tests/tgd34_59ta5qr5jztgy5hexjzebbrwqp4n3_hxqw)
+
+#### Capturas de pantalla de Amazon ECS Y CloudWatch de la prueba de estres de esta fase:
+![Captura resultados test estres de ECS](../images/screenshots-artillery/Cluster1Stress3.png)
+![Captura resultados test estres de ECS](../images/screenshots-artillery/Cluster2Stress3.png)
+![Captura resultados test estres de CloudWatch](../images/screenshots-artillery/CloudWatchStress3.png)
+
+#### Conclusiones de la prueba de esfuerzo:
+Como se puede apreciar en las graficas recientemente mostradas, la aplicacion tolera muy mal los picos grandes de carga costandola mucho adaprtase a ellos por tener la CPU muy facilmente colapsada.
+Al igual que se ve en la captura de pantalla del uso de CPU de Cloud Watch y ECS, con esta carga de usuarios para generar estres a la aplicación hemos logrado saturarla llevandola casia su limite de CPU. Aunque en algunos casos denego servicio por estar hasta arriba la CPU obligando a fallar por un gran tiempo de esepera en las peticiones realizadas. 
+
+La aplicación también ha mostrado que es capaz de escalar en estas situciones como se puede apreciar en la grafica de Tareas del servicio del cluster ECS, siendo 7 las replicas que idealmente querria disponer la aplicación en ese momento y unas 4 o 5 a la vez las que ha sido capaz de mantener aunque por la saturación de la CPU algunas pudieran cerrarse.
+
+A diferencia de lo que se mostro en este mismo tipo de test de la fase 2 la aplicación ha sido capaz de gestionar menos usuarios simultaneos activos debido a que no pudo esperar por sus tiempos de respuesta superiores a 5 segundos abortando las peticiones. Obteneiendo en este pico en el mejor de los casos picos de 84 usuarios activos simultaneamente y siendo el mejor de estos picos un pico de 94 usuarios activos a la vez, como se puede apreciar en la captura de pantalla del test en Artillery Cloud.
+
+A diferencia de su versión de la fase anterior este test lidió con más usuarios de los que la aplicación era capaz de lidiar en la fase anterior, siendo esta una diferencia de 1.800 usuarios más que el anterior primer test y 1.020 más que el segundo test, proporcionando unos resultados parecidos a los de estos test pero soportando más carga de usuarios.
+
+
+
+
+
+
+
+### Fase 3(load-test-phase-3-soak): Prueba de Resistencia en entorno AWS con un balanceador de carga
+
+El objetivo de esta prueba fue el mismo que el de la prueba de resistencia de la fase anterior, ver como se comporta la aplicación ante un flujo bajo pero constante de usuarios. Se buscó forzar los endpoints críticos del backend mediante los mismos tres perfiles de usuarios simulados usados en la fase anterior:
+
+- **Perfil de Consulta Pura (70% de la carga):** Usuarios que acceden a la plataforma para listar y filtrar espacios universitarios (`/api/search/rooms`), simulando un comportamiento pasivo.
+- **Perfil de Reserva Directa (20% de la carga):** Usuarios activos que efectúan consultas y proceden a intentar registrar de forma inmediata una reserva fija (`/api/reservations`).
+- **Perfil de Búsqueda Inteligente (10% de la carga):** Usuarios que invocan de manera intensiva el algoritmo avanzado de sugerencias alternativas y disponibilidad temporal (`/api/reservations/smart-search`).
+
+
+
+#### Configuración de la prueba:
+La prueba se estructuró en 2 fases progresivas de inyección en Artillery, buscando mantener una carga aceptable para la aplicación. Comenzando por 1 minuto con 2 UV/seg seguido de otra fase de 2 horas con 4 UV/seg.
+
+Se programo que ante un uso igual o superior al 65% de CPU se crearan nuevas replicas de la aplicación para solventar este consumo. Las replicas tardaron al rededor de 40 segundos en ponerse operativas, pidiendo una señal de vida de estas cada 50 segundos y retirandolas pasados 240 segundos de no recibir señal de estas mismas.
+
+
+#### Resultados de ejecución de la prueba:
+- **Volumen Total:** Se procesó un flujo de 28.920 usuarios virtuales creados, que intentaron generar 57.525 peticiones HTTP. De estas, el servidor logró responder a 57.508, perdiéndose el resto debido a la asfixia del hardware de AWS tras superar su límite operativo.
+- **Códigos de Estado y Errores de Flujo:**
+  - Respuestas exitosas de sesión y lectura (HTTP 200): 54.723 peticiones.
+  - Reservas confirmadas (HTTP 201): 2.778 peticiones.
+  - Rechazos por reglas de negocio (HTTP 400): 0 peticiones.
+  - Timeouts de red (ETIMEDOUT): 17 peticiones cortadas por la herramienta al tardar demasiado en responder.
+  - Usuarios abortados por Artillery (vusers.failed): 5.899 usuarios virtuales que no pudieron terminar su flujo por culpa de los cortes de conexión o fallos en las capturas esperadas.
+- **Estudio de Tiempos de Respuesta Sostenidos:** Al analizar las peticiones que lograron completarse exitosamente, el sistema arrojó una **media global de 181,3 ms** y una **mediana (p50) de 144 ms**. La degradación por la falta de CPU se hizo evidente en los percentiles superiores, estabilizándose el **p95 en 468,8 ms** y el **p99 en 727,9 ms**. Es fundamental destacar que estas métricas representan únicamente el subconjunto de peticiones que se completaron. 
+
+#########Revisa que el nuemero de time outs sea solo 17 con 500 usuarios fallidos#######
+
+
+#### Captura de pantalla de las tablas generadas de la prueba de ressitencia de esta fase:
+
+![Reporte de métricas e intervalos del Soak Test barras](../images/screenshots-artillery/dashboard_graphsSoak3.png)
+![Reporte de métricas e intervalos del del Soak Test lineal](../images/screenshots-artillery/timeline_graphSoak3.png)
+![Reporte de métricas e intervalos de los endpoints del Soak Test](../images/screenshots-artillery/generic_graphSoak3.png)
+
+#### Capturas de pantalla de Amazon ECS Y CloudWatch de la prueba de resistencia de esta fase:
+![Captura resultados test estres de ECS](../images/screenshots-artillery/Cluster1Soak3.png)
+![Captura resultados test estres de ECS](../images/screenshots-artillery/Cluster2Soak3.png)
+![Captura resultados test estres de CloudWatch](../images/screenshots-artillery/CloudWatchSoak3.png)
+
+
+
+
+
+
+#### Conclusiones de la prueba de resistencia:
+Esta prueba al ser más larga y no lanzar tantos usuarios de golpe se permite visualizar mejor como el sistema aguanta y escala ante cierto aumento en la CPU. 
+
+Como se puede comprobar en las graficas de utilización de CPU de ECS y CloudWatch aunque al incio reciben picos altos de demanda de CPU estos van estabilizandose llegado cierto punto del test hasta que se mantienen con unos valores estables hasta el final de este. 
+
+En esta misma grafica de utilización de CPU de ECS, se ve como al inicio las peticones comienzan a encolarse y el sistema empieza a crear replicas para sostener la carga (zona donde el grafico comienza a tener diferencias grandes entre los tiempos de respuesta medios, máximos y mínimos), pero una vez la carga se logra regular los tiempos de respuesta maximos y minimos llegan a un punto medio muy cercano los unos de los otros puesto que despues de escalar ahora la infraestrcutura es capaz de asumir la carga a la que esta siendo sometida.
+
+Siguiendo todo esto podemos apreciar en la grafica de tareas de servicio de ECS como la aplicación lucha por escalar en replicas hasta que logra un punto donde absatece perfectamente a todos los usuarios. Se queda ahi un tiempo hasta que retira algunas replicas puesto que ya no son tan necesarias con la carga actual que no varia apenas.
+
+También quiero añadir dos capturas más en este test puesto que creo aportan bastante, mostrando como cuando la aplicación ya es capaz de aguantar la carga comienza a quitarse los recursos que no le son necesarios:
+
+Primera captura con bastantes replicas:
+![Captura resultados test estres de ECS](../images/screenshots-artillery/Tareas1.png)
+
+Segunda captura con menos replicas al darse cuenta que no necesita tantas instancias:
+
+![Captura resultados test estres de CloudWatch](../images/screenshots-artillery/Tareas2.png)
+
+
+
+
+
+
+### Fase 3(load-test-phase-3-spike): Prueba de Pico de Tráfico en entorno AWS con un balanceador de carga
+
+
+Para esta prueba se simulo un ejemplo de época de examenes y las reservas que corresponderian a dicha etapa. A diferencia de las demas pruebas en esta se empleo el archivo javascript processor-multi-room-2.js en vez de el processor-multi-room.js debido a que se cambio la forma de hacer las reservas, ya que en una epoca de examenes no se espera que muchos usuarios realicen reservas en el tiempo y de forma calamada. En este nuevo archivo se creo un entrono que simula reservas rápidas para antes de 15 dias desde la fecha de uso del test. De esta forma se simula mejor como de caótico seria el escenario que queremos probar.
+Se buscó forzar los endpoints críticos del backend mediante perfiles de usuarios algo diferentes a los de los test anteriores:
+
+- **Perfil de Consulta y Reserva (70% de la carga):** Usuarios que acceden a la plataforma para listar y filtrar espacios universitarios (`/api/search/rooms`), simulando un comportamiento pasivo para acto seguido proceder a reservar aula (`/api/reservations`).
+- **Perfil de Búsqueda Inteligente con Reserva (30% de la carga):** Usuairos que llegan y hacen el flujo comentado en el 70% de la carga, pero antes de reservar se encuentran con el problema que por afluencia ya alguien ha ocupado el aula que ellos querian. Proceden aprovechando la busqueda inteligente (`/api/reservations/smart-search`) para buscar otro aula viable y reservarla.
+
+
+#### Configuración de la prueba:
+La prueba se estructuró en 3 fases siendo la primera de 1 minuto con 2 UV/seg, seguida de una fase de 1 minuto con 25 UV/seg (este es el pico de carga al que se somete la aplicación) y fianlizando con 5 minutos a 2 UV/seg buscando ver como la aplicación responde esos siguientes 5 minutos .
+
+Se programo que ante un uso igual o superior al 65% de CPU se crearan nuevas replicas de la aplicación para solventar este consumo. Las replicas tardaron al rededor de 40 segundos en ponerse operativas, pidiendo una señal de vida de estas cada 50 segundos y retirandolas pasados 240 segundos de no recibir señal de estas mismas.
+
 
 #### Resultados de ejecución de la primera prueba:
-- **Completados con éxito lógico:** 100% de los usuarios virtuales completaron sus flujos de navegación sin provocar caídas del servicio de aplicaciones o interrupciones críticas del contenedor (cero errores HTTP 500).
+- **Completados con éxito lógico:** 24,55% de los usuarios virtuales completaron sus flujos de navegación completos. El resto de usuarios o bien por sobrepasar el tiempo maximo programado en las peticiones, o bien por fallo de las propias replicas al escalar (debido a la falta de CPU en algunos momentos de la ejecucion) recibieron errores HTTP 500 por ETIMEDOUT (time out).
 - **Rendimiento por Endpoint:**
-  - `/api/auth/login`, `/api/search/rooms` y `/api/reservations/smart-search`: 100% de respuestas exitosas (HTTP 200). La infraestructura absorbió eficientemente las búsquedas de texto plano indexadas con Apache Lucene / Hibernate Search.
-  - `/api/reservations`: Se registro un 0,37% (4 respuestas del total mandado a este endpoint) de las respuestas como **HTTP 400 Bad Request** debido a la generación aleatoria de reservas que alguna coincidencia accidental genera, frente a las 1065 (99,63%) confirmaciones exitosas con código **HTTP 201 Created**.
-  - **Tiempos de respuesta (Latencia):** Mientras que las lecturas mantuvieron una mediana (p50) baja y estable en torno a los 133ms y media de 190ms, los intentos de escrituras concurrentes provocaron picos de degradación en los percentiles más altos, alcanzando un p95 de 478ms y un p99 de 983 ms.
+  - `/api/auth/login`, `/api/search/rooms` y `/api/reservations/smart-search`: recibieron un 100% de respuestas exitosas (HTTP 200). Confirmando de esta forma que las peticiones que no se salieron del tiempo de espera fueron todas exitosas. 
+  - `/api/reservations`: Un 13,76% (75 respuestas de 545 que llegaron al endpoint) fueron HTTP 400 denegando el aula debido al alto aforo programado para la prueba.
 
-
-#### Captura de pantalla de Artillery Cloud de la primera prueba:
-
-![Captura resultados test 2A de artillery](../images/screenshots-artillery/load-test-phase-2stress.png)
-[Enlace al reporte completo en Artillery Cloud](https://app.artillery.io/opmgtbvasi7hy/load-tests/tcgay_x4yjnawbjrekhhebmx3x7eznmeyxr_ch6t)
-
-#### Conclusiones de la primera prueba de esfuerzo:
-En la gráfica se pueden apreciar ciertos picos al inicio de cada fase de este test cuando los usuarios subian drasticamente. A partir de los 10 usuarios en adelante al finalizar la fase 2 estos picos se volvieron más y más pronunciados en cuanto al tiempo máximo de espera de p95 de la aplicación. 
-Si nos fijamos en la linea naranja, verde  y azul veremos que justo cuando la aplicación presenciaba una caida en la demanda de peticiones y un pico en los usuarios activos en la aplicación justo en ese momento los tiempos de respuesta se disparaban puesto que la aplicación no pudo procesar tan rápido ese aumento en los usuarios activos. 
-Esto nos muestra que nuestra aplicación cuando esta rondando los 90 usuarios activos aproximadamente (dentro de las limitaciones que ofrece una replica en la capa gratuita de AWS) permanece con unos tiempos de respuesta bajos acordes al número de peticiones que llegan, pero cuando estos usuarios activos suben por encima de los 90, la aplicación comienza a no dar a basto para atender todas las peticiones y comienza a ponerlas en cola, lo que genera que se disparen los tiempos de respuesta. Aun asi en este test se puede apreciar que los 3600 usuarios generados pudieron completar con éxito sus cometidos (salvo esos 4 errores 400 debidos a unas reservas que no cumplian con las reglas de negocio de la aplicación debido la generación aleatoria de estas para lograr abastecer más de 1000 solicitudes de reserva).
-
-Esto muestra que la aplicación soporta flujos de hasta 12 usuarios nuevos siendo solo 1 sola réplica, aunque la velocidad de la repuesta se deteriore a partir de 10 usuarios nuevos.
+  - **Tiempos de respuesta (Latencia):** La mediana (p50) estuvo en torno a los 392ms y media de 738 ms, esto junto con el p95 de 2,7 segundos y el p99 de 5,8 muestra que la aplicación dio un servicio medianamente rápido a casi todos los que logro atender antes de colapsar. 
 
 
 
+#### Captura de pantalla de Artillery Cloud de la prueba de pico de tráfico de esta fase:
 
+![Captura resultados test 2A de artillery](../images/screenshots-artillery/load-test-phase-3-spike.png)
+[Enlace al reporte completo en Artillery Cloud](https://app.artillery.io/opmgtbvasi7hy/load-tests/texeh_gbj6w7txjxnrjd3czbtcndxgaqa7r_nj97)
+
+
+
+#### Capturas de pantalla de Amazon ECS Y CloudWatch de la prueba de pico de tráfico de esta fase:
+![Captura resultados test estres de ECS](../images/screenshots-artillery/Cluster1Spike3.png)
+![Captura resultados test estres de ECS](../images/screenshots-artillery/Cluster2Spike3.png)
+![Captura resultados test estres de CloudWatch](../images/screenshots-artillery/CloudWatchSpike3.png)
+
+
+#### Conclusiones de la primera prueba de pico de tráfico:
+Como se puede apreciar en esta prueba la aplicación no tuvo posibilidad de aguantar, ya que no tuvo tiempo siquiera de escalar para soportar la demanda como podemos ver en la grafica de tareas del servicio de ECS.
+
+Se puede apreciar como al igual que en las demas pruebas de este estilo cuando la CPU se ve desbordada comienza a distar mucho los porcentajes de utilización de la CPU teniendo maquinas completamente saturadas sin lograr responder a las peticiones.
+
+A continuación se muestran las gráficas de los endpoints de Artillery Cloud ya que junto a la propia captura del pico de tráfico (usarios creados, usuarios activos, tasa de peticiones http, etc) se puede apreciar exactamente como el servicio cesa de responder ante este pico debido al exceso de peticiones por segundo:
+
+
+![Captura resultados test estres de ECS](../images/screenshots-artillery/Endpoints1Spike3.png)
+![Captura resultados test estres de CloudWatch](../images/screenshots-artillery/Endpoints2Spike3.png)
+
+Todos estos resultados mencionados muestran que la aplicación en su estado actual no es capaz de manejar grandes picos de trafico repentinos siendo capaz, como se vio en la prueba de resistencia de esta fase, de manejarlos si son sostenidos y mantenidos en el tiempo. 

@@ -3,8 +3,8 @@ config:
   processor: "./processor-multi-room-2.js"
   http:
     keepAlive: true
-    timeout: 7        
-    pool: 150         
+    timeout: 6        
+    pool: 20         
       
   variables:
     reason: "Spike Test"
