@@ -3,7 +3,7 @@ config:
   processor: "./processor-multi-room.js"
   http:
     keepAlive: true
-    timeout: 6
+    timeout: 5
     pool: 20
       
   variables:
@@ -13,12 +13,12 @@ config:
     - duration: 60
       arrivalRate: 2
       name: "Phase 1: Warm-up"
-    - duration: 240
+    - duration: 300
       arrivalRate: 2
-      rampTo: 8
+      rampTo: 5
       name: "Phase 2: Progressive Ramp (Forcing Auto-scaling)"
     - duration: 300 
-      arrivalRate: 8
+      arrivalRate: 7
       name: "Phase 3: Sustained high load (New replicas come into operation)"
     # Survive the "ScaleInCooldown" (120s) so that CloudWatch sees that
     # there is no longer any danger and starts destroying the remaining containers.
@@ -41,8 +41,8 @@ scenarios:
           url: "/api/search/rooms?text={{searchText}}&campusId={{searchCampusId}}&minCapacity={{searchCapacity}}&active=true&page=0&size=10"
       - think: 5
 
-  - name: "Smart Search and alternative book"
-    weight: 30
+  - name: "Login, consult and direct booking"
+    weight: 20
     flow:
       - function: "setupDatesAndRooms"
       - post:
@@ -53,14 +53,35 @@ scenarios:
       - think: 2
       - get:
           url: "/api/search/rooms?text={{searchText}}&active=true&page=0&size=10"
-      - think: 4
-      - get:
-          url: "/api/reservations/smart-search?start={{encodedStartDate}}&end={{encodedEndDate}}&capacity={{searchCapacity}}"
-      - think: 5
+      - think: 3
       - post:
           url: "/api/reservations"
           json:
             roomId: "{{ roomId }}"
             startDate: "{{ dynamicStartDate }}"
             endDate: "{{ dynamicEndDate }}"
-            reason: "Reserva estudio"
+            reason: "{{ reason }}"
+
+  - name: "Smart Search and alternative book"
+    weight: 10
+    flow:
+      - function: "setupDatesAndRooms"
+      - post:
+          url: "/api/auth/login"
+          json:
+            username: "{{ email }}"
+            password: "{{ password }}"
+      - think: 2
+      - get:
+          url: "/api/search/rooms?text={{searchText}}&active=true&page=0&size=10"
+      - think: 2
+      - get:
+          url: "/api/reservations/smart-search?start={{encodedStartDate}}&end={{encodedEndDate}}&capacity={{searchCapacity}}"
+      - think: 3
+      - post:
+          url: "/api/reservations"
+          json:
+            roomId: "{{ roomId }}"
+            startDate: "{{ dynamicStartDate }}"
+            endDate: "{{ dynamicEndDate }}"
+            reason: "{{ reason }}"
