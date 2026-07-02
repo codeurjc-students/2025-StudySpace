@@ -14,6 +14,10 @@ Parameters:
     NoEcho: true
     Description: Gmail app password
     Type: String
+  CloudFrontSecret:
+    NoEcho: true
+    Description: Secret password to connect CloudFront to the ALB
+    Type: String
 
 Resources:
   # ========================================================================
@@ -35,7 +39,7 @@ Resources:
       VpcId: !Ref StudySpaceVPC
       InternetGatewayId: !Ref InternetGateway
 
-  # --- SUBNETS PÚBLICAS (Para el ALB y el NAT Gateway) ---
+  # --- public subnets (For ALB and NAT Gateway) ---
   PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -52,7 +56,7 @@ Resources:
       MapPublicIpOnLaunch: true
       AvailabilityZone: !Select [1, !GetAZs '']
 
-  # --- SUBNETS PRIVADAS (Para ECS y RDS) ---
+  # --- private subnets (For ECS y RDS) ---
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -69,7 +73,7 @@ Resources:
       MapPublicIpOnLaunch: false
       AvailabilityZone: !Select [1, !GetAZs '']
 
-  # --- RUTAS PÚBLICAS ---
+  # public routes
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -95,7 +99,7 @@ Resources:
       SubnetId: !Ref PublicSubnet2
       RouteTableId: !Ref PublicRouteTable
 
-  # --- NAT GATEWAY Y RUTAS PRIVADAS (¡OJO, ESTO GENERA COSTE!) ---
+  #Private routes
   NatGatewayEIP:
     Type: AWS::EC2::EIP
     Properties:
@@ -105,7 +109,7 @@ Resources:
     Type: AWS::EC2::NatGateway
     Properties:
       AllocationId: !GetAtt NatGatewayEIP.AllocationId
-      SubnetId: !Ref PublicSubnet1 # El NAT vive en la subred pública
+      SubnetId: !Ref PublicSubnet1 
 
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
@@ -131,7 +135,7 @@ Resources:
       SubnetId: !Ref PrivateSubnet2
       RouteTableId: !Ref PrivateRouteTable
 
-  # --- VPC ENDPOINT PARA S3 (¡Gratis y mejora el rendimiento!) ---
+  # --- VPC for S3  ---
   S3VPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -188,7 +192,7 @@ Resources:
     Properties:
       DBSubnetGroupDescription: Subnets for the database
       SubnetIds:
-        - !Ref PrivateSubnet1 # Ahora la BD está aislada en subredes privadas
+        - !Ref PrivateSubnet1 
         - !Ref PrivateSubnet2
 
   StudySpaceDB:
@@ -235,12 +239,32 @@ Resources:
   ALBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
-      DefaultActions:
-        - Type: forward
-          TargetGroupArn: !Ref ALBTargetGroup
       LoadBalancerArn: !Ref PublicLoadBalancer
       Port: 80
       Protocol: HTTP
+      # By default, the ALB rejects any direct request.
+      DefaultActions:
+        - Type: fixed-response
+          FixedResponseConfig:
+            StatusCode: 403
+            ContentType: text/plain
+            MessageBody: "403 Forbidden: Acceso directo denegado. Utilice CloudFront."
+
+  # We only allow entry to the Target Group if they possess the secret.
+  ALBListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref ALBListener
+      Priority: 1
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref ALBTargetGroup
+      Conditions:
+        - Field: http-header
+          HttpHeaderConfig:
+            HttpHeaderName: X-Origin-Verify
+            Values:
+              - !Ref CloudFrontSecret
 
   # ========================================================================
   # ECS FARGATE AND ROLES
@@ -304,7 +328,7 @@ Resources:
               Protocol: tcp
           Environment:
             - Name: APP_FRONTEND_URL
-              Value: !Sub "http://${PublicLoadBalancer.DNSName}"
+              Value: !Sub "https://${StudySpaceCloudFrontDistribution.DomainName}"
             - Name: SERVER_FORWARD_HEADERS_STRATEGY
               Value: "framework"
             - Name: SPRING_DATASOURCE_URL
@@ -313,12 +337,10 @@ Resources:
               Value: admin
             - Name: SPRING_DATASOURCE_PASSWORD
               Value: !Ref DBPassword
-            # --- NUEVAS VARIABLES PARA LIMITAR HIKARICP ---
             - Name: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
               Value: "3"
             - Name: SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE
               Value: "1"
-            # ----------------------------------------------
             - Name: MINIO_BUCKET
               Value: !Ref StudySpaceBucket
             - Name: JWT_SECRET
@@ -348,11 +370,11 @@ Resources:
       HealthCheckGracePeriodSeconds: 120 
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: DISABLED # <--- MAGIA AQUÍ: Ya no piden IP pública
+          AssignPublicIp: DISABLED 
           SecurityGroups:
             - !Ref ECSSecurityGroup
           Subnets:
-            - !Ref PrivateSubnet1 # <--- Los contenedores viven en la capa privada
+            - !Ref PrivateSubnet1 
             - !Ref PrivateSubnet2
       LoadBalancers:
         - ContainerName: studyspace-app
@@ -405,6 +427,8 @@ Resources:
             OriginCustomHeaders:
               - HeaderName: X-Forwarded-Proto
                 HeaderValue: https
+              - HeaderName: X-Origin-Verify
+                HeaderValue: !Ref CloudFrontSecret
         DefaultCacheBehavior:
           TargetOriginId: ALBOrigin
           ViewerProtocolPolicy: redirect-to-https 

@@ -4,6 +4,7 @@ on:
   push:
     branches: ["main"]
     paths-ignore:
+      - "cloudformation_templates/**"
       - "docs/**"
       - "images/**"
       - "README.md"

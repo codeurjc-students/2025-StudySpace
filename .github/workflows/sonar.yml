@@ -4,12 +4,14 @@ on:
   push:
     branches: ["main"]
     paths-ignore:
+      - "cloudformation_templates/**"
       - "docs/**"
       - "images/**"
       - "README.md"
   pull_request:
     types: [opened, synchronize, reopened]
     paths-ignore:
+      - "cloudformation_templates/**"
       - "docs/**"
       - "images/**"
       - "README.md"

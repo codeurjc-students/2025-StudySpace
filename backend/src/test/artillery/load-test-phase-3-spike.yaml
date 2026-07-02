@@ -4,7 +4,7 @@ config:
   http:
     keepAlive: true
     timeout: 6        
-    pool: 20         
+    pool: 50         
       
   variables:
     reason: "Spike Test"

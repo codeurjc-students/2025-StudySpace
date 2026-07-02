@@ -47,7 +47,7 @@ La arquitectura de esta fase del proyecto se basa en la migración de la anterio
 
 - **💾 Amazon Simple Storage Service (S3):** Proporciona almacenamiento de objetos para la gestión de archivos e imágenes. Este servicio se encuentra fuera de la VPC por lo que tenemos que usar Amazon Identity and Access Management (IAM) para lograr comunicar la instancia EC2 con el servicio S3 mediante roles de identidad.
 
-- **Amazon Elastic Compute Cloud (EC2):** Despliega una instancia en base a la imagen docker que se le mencione en la plantilla que se suba a CloudFormation. Esta imagen docker proviene del repositorio de Docker Hub donde se encuentran las diferentes imágenes de la aplicación (dichos links a dichas imágenes se encuentran en la sección [**app_images.md**](app_images.md) de esta misma documentación). Esta instancia EC2 solo expone los puertos 80(frontend) y 8080 (API REST Backend) hacia internet fuera de la VPC de Amazon. Esta imagen unifica el Frontend y el Backend en un solo artefacto ejecutable:
+- **Amazon Elastic Compute Cloud (EC2):** Despliega una instancia en base a la imagen docker que se le mencione en la plantilla que se suba a CloudFormation. Esta imagen docker proviene del repositorio de Docker Hub donde se encuentran las diferentes imágenes de la aplicación (dichos links a dichas imágenes se encuentran en la sección [**app_images.md**](app_images.md) de esta misma documentación). Esta instancia EC2 solo expone los puertos 80 (frontend) y 8080 (API REST Backend) hacia internet fuera de la VPC de Amazon. Esta imagen unifica el Frontend y el Backend en un solo artefacto ejecutable:
   - **⚙️ Servidor Backend (Spring Boot):** Procesa toda la lógica de negocio, se conecta con RDS y S3.
 
   - **💻 Cliente Frontend (Angular):** Sirve los archivos estáticos generados por Angular. Se conecta con el backend mediante la API REST de este.
@@ -71,7 +71,7 @@ La arquitectura de esta fase del proyecto se basa en la continuación de la ante
 
 
 
--**Application Load Balancer (ALB) y CloudFront:** Actúan como la barrera frontal de la arquitectura y el punto de contacto con el usuario. El tráfico entrante seguro (HTTPS, puerto 443) es gestionado por una distribución de Amazon CloudFront, que redirige las peticiones al balanceador de carga (ALB). El ALB se encarga de enrutar el tráfico de forma inteligente hacia el interior de las subredes de la VPC. Gracias a las pruebas de salud (\textit{Health Checks}) constantes, el balanceador mantiene un registro en tiempo real de las réplicas sanas; si una réplica se satura o falla, desvía instantáneamente las peticiones hacia otra réplica disponible, enrutando el tráfico de red directamente a las direcciones IP de los contenedores.
+- **Application Load Balancer (ALB) y CloudFront:** Actúan como la barrera frontal de la arquitectura y el punto de contacto con el usuario. El tráfico entrante seguro (HTTPS, puerto 443) es gestionado por una distribución de Amazon CloudFront, que redirige las peticiones al balanceador de carga (ALB). El ALB se encarga de enrutar el tráfico de forma inteligente hacia el interior de las subredes de la VPC. Gracias a las pruebas de salud (\textit{Health Checks}) constantes, el balanceador mantiene un registro en tiempo real de las réplicas sanas; si una réplica se satura o falla, desvía instantáneamente las peticiones hacia otra réplica disponible, enrutando el tráfico de red directamente a las direcciones IP de los contenedores.
 
 
 

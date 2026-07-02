@@ -40,6 +40,5 @@ COPY --from=backend-build /app/backend/target/*.jar app.jar
 
 EXPOSE 8080
 
-# Arrancamos diciéndole a Spring que use la optimización a nivel de código (AOT)
+# Optimization at code level (AOT)
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-XX:TieredStopAtLevel=1", "-jar", "app.jar"]
-#ENTRYPOINT ["java", "-Dspring.aot.enabled=true", "-XX:TieredStopAtLevel=1", "-noverify", "-jar", "app.jar"]
