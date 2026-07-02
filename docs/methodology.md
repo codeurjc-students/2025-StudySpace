@@ -18,19 +18,17 @@ Las fases del 1º TFG se planificaron de la siguiente manera:
 
 Las fases del 2º TFG se planificaron de la siguiente manera:
 
-- **Fase 7:** Arreglar los apuntes mencionados en la defensa del primer TFG (Finalización: Aun por determinar)
+- **Fase 7:** Arreglar los apuntes mencionados en la defensa del primer TFG (Finalización: 16 de abril)
 
-- **Fase 8:** Docker Compose con replicas en el backend (Finalización: Aun por determinar)
+- **Fase 8:** Docker Compose con replicas en el backend (Finalización: 30 de abril)
 
-- **Fase 9:** Despliegue en AWS simple (Finalización: Aun por determinar)
+- **Fase 9:** Despliegue en AWS simple (Finalización: 4 de junio)
 
-- **Fase 10:** Despliegue en AWS avanzado (Finalización: Aun por determinar)
+- **Fase 10:** Despliegue en AWS avanzado (Finalización: X de julio)
 
-- **Fase 11:** Infraestructura como código y despliegue continuo (Finalización: Aun por determinar)
+- **Fase 11:** Memoria 2º TFG (Finalización: X de julio)
 
-- **Fase 12:** Memoria 2º TFG (Finalización: Aun por determinar)
-
-- **Fase 13:** Presentación y defensa 2º TFG (Finalización: Aun por determinar)
+- **Fase 12:** Presentación y defensa 2º TFG (Finalización: 8 de julio)
 
 Diagrama de Gantt 1º TFG:
 
@@ -39,4 +37,4 @@ Diagrama de Gantt 1º TFG:
 Diagrama de Gantt 2º TFG:
 
 
-<Por hacer>
+![Diagrama de Gantt](../images/diagrams/diagramaGantt2.png)

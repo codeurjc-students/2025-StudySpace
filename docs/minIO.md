@@ -1,10 +1,10 @@
-## Transicción de almacenamiento de ficheros en local a MinIO
+## Transición de almacenamiento de ficheros en local a MinIO
 
 En el diseño inicial, la aplicación guardaba las imágenes utilizando la API nativa de Java (java.nio.file) apuntando a una ruta del sistema de archivos local del contenedor (un directorio /uploads).
 
 Configuración y Variables: Se hacía uso de propiedades estáticas en el archivo application.properties como storage.location=/app/uploads.
 
-En lugar de transicionar inmediatamente a un servicio Cloud, se integró MinIO en el entorno de desarrollo local mediante Docker Compose de forma que se pudiera hacer una transición facil a Amazon S3 en AWS.
+En lugar de transicionar inmediatamente a un servicio Cloud, se integró MinIO en el entorno de desarrollo local mediante Docker Compose de forma que se pudiera hacer una transición fácil a Amazon S3 en AWS.
 
 Esto permitió integrar el SDK de AWS en el código fuente de Spring Boot (software.amazon.awssdk.services.s3.S3Client) y escribir toda la lógica de subida, descarga y borrado de ficheros como si la aplicación ya estuviera en la nube, pero trabajando en local. 
 Permitió desarrollar y probar intensivamente el módulo multimedia sin incurrir en costes de facturación en AWS ni depender de una conexión a internet.

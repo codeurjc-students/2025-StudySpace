@@ -1,15 +1,14 @@
 config:
   target: "http://localhost" 
   processor: "./processor-multi-room.js"
-
   payload:
-
     - path: "users.csv"
       fields:
         - "email"
         - "password"
       order: "random"
-      skipHeader: true
+      skipHeader: true        
+      
   variables:
     reason: "Soak Test"
   phases:

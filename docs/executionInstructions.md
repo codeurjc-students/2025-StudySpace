@@ -9,8 +9,11 @@ Para poder levantar el entorno de desarrollo y ejecutar las pruebas, es necesari
 - Node.js (v18+) y su gestor de paquetes npm.
 - Angular CLI (para la ejecución de pruebas del frontend con ng).
 
-En caso de querer únicamente ejecutar la aplicación, bastará con tener Docker Desktop instalado y en ejecución, y solo requerirá de descargar la carpeta docker del proyecto, sin necesidad de instalar Java, Node o Angular CLI, ya que la aplicación se ejecuta completamente dentro de contenedores Docker.
-De no ser este el caso siga con los pasos a continuación.
+> **Nota:** En caso de querer únicamente ejecutar la aplicación en local, bastará con tener Docker Desktop instalado y en ejecución, y solo requerirá de descargar la carpeta docker del proyecto, sin necesidad de instalar Java, Node o Angular CLI, ya que la aplicación se ejecuta completamente dentro de contenedores Docker. 
+>
+> Si solo desea ejecutarla en Amazon Web Services (AWS) solo necesitará subir a CloudFormation la plantilla (correspondiente a la fase que desee ejecutar) dentro de la carpeta `cloudformation_templates` en la raíz del proyecto.
+>
+> De no ser este el caso siga con los pasos a continuación.
 
 ---
 
@@ -30,6 +33,8 @@ cd 2025-StudySpace
 > Debido a que la aplicación utiliza un **certificado SSL auto-firmado**, el navegador bloqueará por defecto la visualización y acceso a la aplicación, a menos que se acepte el riesgo inicialmente.
 >
 > Este paso es fundamental para que se muestre la aplicación, al no confiar en el certificado por ser auto-firmado.
+>
+> **Nota:** Si la aplicación no es levantada en local sino con Amazon Web Services (AWS), no será necesario aceptar ningún riesgo ya que el certificado nos lo proporcionará Amazon.
 
 ### Levantar el entorno con Docker
 
@@ -148,7 +153,7 @@ docker-compose -f docker-compose.e2e.yml down
 
 #### Pruebas de Carga y Estrés (con Artillery)
 
-Para realizar pruebas de concurrencia y estrés sobre el servidor y visualizar los resultados en un _dashboard_ interactivo, utilizamos Artillery conectado a **Artillery Cloud**, atacando el entorno E2E. Salvo para las pruebas de duración superior a 30 minutos ya que la version gratuita de artillery cloud no permite mas de ese tiempo de duracion en los test.
+Para realizar pruebas de concurrencia y estrés sobre el servidor y visualizar los resultados en un _dashboard_ interactivo, utilizamos Artillery conectado a **Artillery Cloud**, atacando el entorno E2E. Salvo para las pruebas de duración superior a 30 minutos ya que la versión gratuita de artillery cloud no permite más de ese tiempo de duracion en los test.
 
 ##### Pruebas para las fases 0 y 1
 
@@ -225,32 +230,32 @@ docker-compose -f docker-compose.e2e.yml down -v
 
 ##### Pruebas para la fase 2
 
-Para ejecutar las pruebas de la fase 2 tanto la de resistencia como la de estres se requiere de tener en **AWS(Amazon Web Sevices)** desplegada la aplicación mediante la plantilla que hay en la raiz del repositorio para **CloudFormation** que generara automaticamente todo lo necesario para que la aplicación funcione. En esta prueba la plantilla solo genera 1 replica de la aplicación sin balanceador de carga alguno por lo que las limitaciones de la aplicación son las que una `t3.micro` ofrece dentro de AWS. Para estas pruebas ya no sera necesario tener docker abierto ya que unicamente deberemos comunicarnos via terminal con la aplicación desplegada en AWS.
+Para ejecutar las pruebas de la fase 2 tanto la de resistencia como la de estrés se requiere de tener en **Amazon Web Sevices (AWS)** desplegada la aplicación mediante la plantilla que hay en la raíz del repositorio para **CloudFormation** que generará automáticamente todo lo necesario para que la aplicación funcione. En esta prueba la plantilla solo genera 1 réplica de la aplicación sin balanceador de carga alguno por lo que las limitaciones de la aplicación son las que una `t3.micro` ofrece dentro de AWS. Para estas pruebas ya no será necesario tener docker abierto ya que únicamente deberemos comunicarnos vía terminal con la aplicación desplegada en AWS.
 
-Una vez tenga levantada la aplicación en AWS esta le dara una ip donde se encuentra levantada para acceder. Guarde esa ip ya que la usaremos para los comandos que ejecutan las pruebas.
+Una vez tenga levantada la aplicación en AWS esta le dará una ip donde se encuentra levantada para acceder. Guarde esa ip ya que la usaremos para los comandos que ejecutan las pruebas.
 
 
-Ejecutaremos el siguiente comando en la carpeta de artillery (donde esta el archivo de test ubicado) refiriendonos al archivo de test correspondiente y sustituyendo la ip del comando por nuestra ip actual de la aplicación que obtuvimos previamente:
+Ejecutaremos el siguiente comando en la carpeta de artillery (donde está el archivo de test ubicado) refiriéndonos al archivo de test correspondiente y sustituyendo la ip del comando por nuestra ip actual de la aplicación que obtuvimos previamente:
 
 
 ```bash
 artillery run -t http://51.94.127.96 --output report.json load-test-phase-2-soak.yaml
 ```
-Esto generara un archivo `report.json` en la misma carpeta.
-Si queremos ver graficos más detallados de este archivo necesitaremos el archivo `load_graphics.py` el cual se encuentra también en la misma carpeta de artillery y tener `python` instalado para que nuestra maquina reconozca el comando:
+Esto generará un archivo `report.json` en la misma carpeta.
+Si queremos ver gráficos más detallados de este archivo necesitaremos el archivo `load_graphics.py` el cual se encuentra también en la misma carpeta de artillery y tener `python` instalado para que nuestra maquina reconozca el comando:
 
 ```bash
 python load_graphics.py
 ```
 
-El cual nos generara un reporte visual en un archivo `.png` y un `.xlsx` donde podremos revisar de forma más visual los resultados.
+El cual nos generará un reporte visual en un archivo `.png` y un `.xlsx` donde podremos revisar de forma más visual los resultados.
 
 
 **Las instrucciones que acabamos de ver son aplicables para ambas pruebas de ejecución de esta fase.**
 
 >Si queremos el reporte de artillery solo podremos obtenerlo en la versión gratuita de la prueba de estres ya que la prueba de resistencia dura mas de 30 minutos.
 
-Para obtenr el reporte de artillery de la prueba de estres se inyecta la clave de artillery cloud como se muestra en las pruebas de las fases 0 y 1 ejecutando:
+Para obtener el reporte de artillery de la prueba de estrés se inyecta la clave de artillery cloud como se muestra en las pruebas de las fases 0 y 1 ejecutando:
 
 ```bash
 $env:ARTILLERY_CLOUD_API_KEY="LA_CLAVE_AQUI"
@@ -261,10 +266,10 @@ Para proceder a ejecutar este comando a continuación:
 ```bash
 artillery run -t http://51.94.127.96 --record load-test-phase-2-stress.yaml
 ```
-Sustituyendo la ip por la ip donde este desplegada nuestra aplicación como se menciono en parrafos anteriores.
+Sustituyendo la ip por la ip donde esté desplegada nuestra aplicación como se mencionó en párrafos anteriores.
 
 
 ##### Pruebas para la fase 3
 
-
+Es el mismo procedimiento que para las pruebas de la fase 2, sustituyendo la url por la url en la que esté levantada la aplicación en ese momento y sustituyendo el test por el test pertinente dentro de los test de esta fase (todos contienen un "phase-3" en su nombre).
 

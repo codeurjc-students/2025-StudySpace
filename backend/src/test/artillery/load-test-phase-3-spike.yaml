@@ -1,0 +1,75 @@
+config:
+  target: "http://localhost"
+  processor: "./processor-multi-room-2.js"
+  http:
+    keepAlive: true
+    timeout: 6        
+    pool: 50         
+      
+  variables:
+    reason: "Spike Test"
+
+  phases:
+    - duration: 60
+      arrivalRate: 2
+      name: "Warm up"
+    - duration: 60
+      arrivalRate: 25
+      name: "Peak of reservations"
+    - duration: 300
+      arrivalRate: 2
+      name: "Recover "
+
+scenarios:
+  - name: "Student desperate to book"
+    weight: 70
+    flow:
+      - function: "setupDatesAndRooms" 
+      - post:
+          url: "/api/auth/login"
+          json:
+            username: "{{ email }}"
+            password: "{{ password }}"
+            
+      - think: 1 
+      - get:
+          url: "/api/search/rooms?text={{searchText}}&campusId={{searchCampusId}}&minCapacity={{searchCapacity}}&active=true&page=0&size=10"
+      - think: 2
+
+      - post:
+          url: "/api/reservations"
+          json:
+            roomId: "{{ roomId }}"
+            startDate: "{{ dynamicStartDate }}"
+            endDate: "{{ dynamicEndDate }}"
+            reason: "Reserva estudio exámenes finales"
+            
+  - name: "Student desperate to book with room conflict"
+    weight: 30
+    flow:
+      - function: "setupDatesAndRooms" 
+      - post:
+          url: "/api/auth/login"
+          json:
+            username: "{{ email }}"
+            password: "{{ password }}"
+            
+      - think: 1 
+      - get:
+          url: "/api/search/rooms?text={{searchText}}&campusId={{searchCampusId}}&minCapacity={{searchCapacity}}&active=true&page=0&size=10"
+      - think: 2
+
+      - get:
+          url: "/api/reservations/smart-search?start={{encodedStartDate}}&end={{encodedEndDate}}&capacity={{searchCapacity}}"
+      - think: 3
+
+      - post:
+          url: "/api/reservations"
+          json:
+            roomId: "{{ roomId }}"
+            startDate: "{{ dynamicStartDate }}"
+            endDate: "{{ dynamicEndDate }}"
+            reason: "Reserva estudio exámenes finales"
+            
+
+
