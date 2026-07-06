@@ -24,9 +24,9 @@ Las fases del 2º TFG se planificaron de la siguiente manera:
 
 - **Fase 9:** Despliegue en AWS simple (Finalización: 4 de junio)
 
-- **Fase 10:** Despliegue en AWS avanzado (Finalización: X de julio)
+- **Fase 10:** Despliegue en AWS avanzado (Finalización: 3 de julio)
 
-- **Fase 11:** Memoria 2º TFG (Finalización: X de julio)
+- **Fase 11:** Memoria 2º TFG (Finalización: 4 de julio)
 
 - **Fase 12:** Presentación y defensa 2º TFG (Finalización: 8 de julio)
 
